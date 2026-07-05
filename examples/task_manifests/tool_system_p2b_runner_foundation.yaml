@@ -3,3 +3,46 @@ task_type: code_add
 target_repo: apolo183/tool-system
 target_branch: p2b-runner-foundation
 phase: P2_PATCH_AND_TEST_GATE
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P2_PATCH_AND_TEST_GATE
+scope:
+  summary: Add command runner support for change plan checks.
+  in_scope:
+    - src/tool_system/gate/command_runner.py
+    - src/tool_system/cli/execute_change_plan.py
+    - tests/test_command_runner.py
+    - examples/task_manifests/tool_system_p2b_runner_foundation.yaml
+    - examples/change_plans/tool_system_p2b_runner_foundation.yaml
+    - pyproject.toml
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Defines P2 gate objective and outputs.
+allowed_files:
+  - src/tool_system/gate/command_runner.py
+  - src/tool_system/cli/execute_change_plan.py
+  - tests/test_command_runner.py
+  - examples/task_manifests/tool_system_p2b_runner_foundation.yaml
+  - examples/change_plans/tool_system_p2b_runner_foundation.yaml
+  - pyproject.toml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p2b_runner_foundation.yaml
+  pass_conditions:
+    - pytest exits 0
+    - change plan validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
