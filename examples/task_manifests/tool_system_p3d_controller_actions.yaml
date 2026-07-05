@@ -1,0 +1,53 @@
+task_id: tool-system-p3d-controller-actions
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p3d-controller-actions
+phase: P3_REPO_WRITE_CONTROLLER
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P3_REPO_WRITE_CONTROLLER
+scope:
+  summary: Add controller action planning and execution primitives after repo write decision PASS.
+  in_scope:
+    - src/tool_system/repo_controller/actions.py
+    - examples/task_manifests/tool_system_p3d_controller_actions.yaml
+    - examples/change_plans/tool_system_p3d_controller_actions.yaml
+    - tests/test_controller_actions.py
+  out_of_scope:
+    - finance-os changes
+    - business-domain logic
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    line_range: P3_REPO_WRITE_CONTROLLER
+    why_relevant: Defines P3 repo write controller objective and outputs.
+  - repo: apolo183/tool-system
+    path: policy/repo_write_policy.yaml
+    line_range: merge_policy
+    why_relevant: Allows system merge after gates pass and uses squash by default.
+allowed_files:
+  - src/tool_system/repo_controller/actions.py
+  - examples/task_manifests/tool_system_p3d_controller_actions.yaml
+  - examples/change_plans/tool_system_p3d_controller_actions.yaml
+  - tests/test_controller_actions.py
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p3d_controller_actions.yaml
+  pass_conditions:
+    - pytest exits 0
+    - P3D change plan validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
