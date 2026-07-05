@@ -14,6 +14,7 @@ scope:
     - src/tool_system/cli/evaluate_repo_write.py
     - examples/repo_write_decisions/**
     - examples/task_manifests/tool_system_p3_repo_controller.yaml
+    - examples/change_plans/tool_system_p3_repo_controller.yaml
     - tests/test_repo_controller.py
     - pyproject.toml
 evidence:
@@ -25,6 +26,7 @@ allowed_files:
   - src/tool_system/cli/evaluate_repo_write.py
   - examples/repo_write_decisions/**
   - examples/task_manifests/tool_system_p3_repo_controller.yaml
+  - examples/change_plans/tool_system_p3_repo_controller.yaml
   - tests/test_repo_controller.py
   - pyproject.toml
 forbidden_files:
