@@ -1,0 +1,17 @@
+plan_id: tool-system-p3c-live-collector-plan
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p3c_live_collector.yaml
+changed_files:
+  - src/tool_system/repo_controller/live_github_collector.py
+  - examples/gate_decisions/pass.yaml
+  - examples/task_manifests/tool_system_p3c_live_collector.yaml
+  - examples/change_plans/tool_system_p3c_live_collector.yaml
+  - tests/test_live_github_collector.py
+  - AGENTS.md
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p3c_live_collector.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
