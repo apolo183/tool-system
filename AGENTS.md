@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-05 22:50 UTC+08:00
+updated_at: 2026-07-06 00:40 UTC+08:00
 
 ## 1. Mission
 
@@ -47,6 +47,6 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 8. Current phase
 
-Current phase: P1_AUTONOMY_FOUNDATION.
+Current phase: P3_REPO_WRITE_CONTROLLER.
 
-Allowed now: define milestone-level autonomy, refine write policy, refine agent operating rules, and prepare later patch and test gates.
+Allowed now: refine repo write controller, collect PR and workflow state, evaluate merge readiness through gates, record rollback references, and preserve tool-system/business-repo separation.
