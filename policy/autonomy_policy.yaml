@@ -1,3 +1,35 @@
 schema_version: 0.1
 policy: autonomy_policy
 status: draft
+
+purpose: milestone-level automation model for tool-system.
+
+authorization_model:
+  level: milestone_authorization
+  per_task_human_review_required: false
+  per_pr_human_review_required: false
+  milestone_result_human_review_required: true
+
+human_review_required_for:
+  - blueprint_change
+  - objective_change
+  - milestone_acceptance
+  - policy_boundary_change
+
+system_handled_when_manifest_allows:
+  - code_add
+  - code_modify
+  - test_add
+  - test_modify
+  - docs_update
+  - local_verification
+  - pr_create
+  - pr_ready
+  - pr_merge
+
+gates_before_system_merge:
+  - task_manifest_valid
+  - repo_write_policy_pass
+  - allowed_files_respected
+  - verification_commands_pass
+  - rollback_plan_present
