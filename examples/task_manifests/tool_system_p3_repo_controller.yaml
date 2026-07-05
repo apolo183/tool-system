@@ -1,0 +1,50 @@
+task_id: tool-system-p3-repo-controller
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p3-repo-controller
+phase: P3_REPO_WRITE_CONTROLLER
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P3_REPO_WRITE_CONTROLLER
+scope:
+  summary: Add repo write controller decision and audit primitives.
+  in_scope:
+    - src/tool_system/repo_controller/**
+    - src/tool_system/cli/evaluate_repo_write.py
+    - examples/repo_write_decisions/**
+    - examples/task_manifests/tool_system_p3_repo_controller.yaml
+    - examples/change_plans/tool_system_p3_repo_controller.yaml
+    - tests/test_repo_controller.py
+    - pyproject.toml
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Defines P3 repo write controller objective and outputs.
+allowed_files:
+  - src/tool_system/repo_controller/**
+  - src/tool_system/cli/evaluate_repo_write.py
+  - examples/repo_write_decisions/**
+  - examples/task_manifests/tool_system_p3_repo_controller.yaml
+  - examples/change_plans/tool_system_p3_repo_controller.yaml
+  - tests/test_repo_controller.py
+  - pyproject.toml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.evaluate_repo_write examples/repo_write_decisions/tool_system_p3_pass.yaml
+  pass_conditions:
+    - pytest exits 0
+    - repo write decision returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
