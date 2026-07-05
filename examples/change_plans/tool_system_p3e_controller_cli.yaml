@@ -1,0 +1,18 @@
+plan_id: tool-system-p3e-controller-cli-plan
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p3e_controller_cli.yaml
+changed_files:
+  - src/tool_system/repo_controller/artifact.py
+  - src/tool_system/repo_controller/controller_run.py
+  - src/tool_system/cli/controller_run.py
+  - examples/task_manifests/tool_system_p3e_controller_cli.yaml
+  - examples/change_plans/tool_system_p3e_controller_cli.yaml
+  - tests/test_controller_run.py
+  - pyproject.toml
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p3e_controller_cli.yaml
+rollback:
+  method: git_revert
+  reference: branch commit

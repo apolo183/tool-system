@@ -1,0 +1,55 @@
+task_id: tool-system-p3e-controller-cli
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p3e-controller-cli
+phase: P3_REPO_WRITE_CONTROLLER
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P3_REPO_WRITE_CONTROLLER
+scope:
+  summary: Add controller orchestration CLI and audit JSONL artifact output.
+  in_scope:
+    - src/tool_system/repo_controller/artifact.py
+    - src/tool_system/repo_controller/controller_run.py
+    - src/tool_system/cli/controller_run.py
+    - examples/task_manifests/tool_system_p3e_controller_cli.yaml
+    - examples/change_plans/tool_system_p3e_controller_cli.yaml
+    - tests/test_controller_run.py
+    - pyproject.toml
+  out_of_scope:
+    - finance-os changes
+    - business-domain logic
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    line_range: P3_REPO_WRITE_CONTROLLER
+    why_relevant: Defines repo write controller, rollback log, and audit trail outputs.
+allowed_files:
+  - src/tool_system/repo_controller/artifact.py
+  - src/tool_system/repo_controller/controller_run.py
+  - src/tool_system/cli/controller_run.py
+  - examples/task_manifests/tool_system_p3e_controller_cli.yaml
+  - examples/change_plans/tool_system_p3e_controller_cli.yaml
+  - tests/test_controller_run.py
+  - pyproject.toml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p3e_controller_cli.yaml
+  pass_conditions:
+    - pytest exits 0
+    - P3E change plan validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
