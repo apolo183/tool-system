@@ -2,77 +2,51 @@
 
 repo_rel_path: AGENTS.md  
 role: agent governance contract  
-purpose: define how agents may inspect, modify, test, and publish changes in tool-system  
+purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-05 20:00 UTC+08:00
+updated_at: 2026-07-05 22:50 UTC+08:00
 
 ## 1. Mission
 
-tool-system builds and controls agentic software-development workflows. It is domain-agnostic infrastructure.
-
-Agents operating in this repository must preserve the separation between:
-
-- tool-system: agent orchestration, harness, CI, patch control, repo control.
-- finance-os: market data, ranking, signal generation, risk, portfolio, execution.
+tool-system builds and controls automated software-development workflows. It is domain-agnostic infrastructure.
 
 ## 2. Evidence-first rule
 
-Before modifying any existing file, an agent must read the current file and cite the relevant path and content region in its plan.
+Before modifying an existing file, an agent reads the current file and cites the relevant path and content region in its plan.
 
-If evidence is missing, the agent must stop and request the smallest missing artifact or run a read-only inspection.
+If evidence is missing, the agent runs read-only inspection or stops at the smallest missing artifact.
 
-## 3. Write boundaries
+## 3. Autonomy model
 
-Agents may add or modify files only when the change is tied to an approved blueprint item.
+Human control is placed at blueprint, objective, policy boundary, and milestone review levels.
 
-Agents must not:
+Routine implementation work inside an authorized milestone is handled by the system after gates pass. Agents do not ask for human review for each ordinary implementation PR once the milestone and manifest are valid.
 
-- introduce finance-domain logic into tool-system;
-- modify target repositories without an explicit workflow gate;
-- write directly to main outside an approved bootstrap or controlled maintenance action;
-- bypass tests or policy checks;
-- mutate blueprint files unless explicitly authorized.
+Human review is required for blueprint changes, objective changes, policy boundary changes, and milestone acceptance.
 
-## 4. Required change record
+## 4. Write boundaries
 
-Every non-trivial change must state:
+Agents add or modify files only when the change is tied to an approved blueprint item and a valid task manifest.
 
-- scope;
-- files touched;
-- reason;
-- verification command;
-- rollback method.
+tool-system remains separate from business-domain repositories.
 
-## 5. Testing policy
+## 5. Change record
 
-Phase 0 has documentation-only bootstrap files. Later implementation phases must add CI before enabling autonomous patch application.
+Every non-trivial change records scope, files touched, reason, verification command, and rollback method.
 
-Minimum future gates:
+## 6. Testing policy
 
-- unit tests;
-- formatting/lint;
-- type checks where applicable;
-- spec compliance checks;
-- dry-run patch application.
+Implementation phases include verification before further automation.
 
-## 6. Rollback policy
+Minimum gates include unit tests, format or lint checks where available, type checks where applicable, spec checks, and dry-run patch application.
 
-Rollback must be based on Git history, commit SHAs, pull requests, or explicit patch reversal. Do not preserve broken implementations as active fallbacks.
+## 7. Rollback policy
 
-## 7. Current phase
+Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
-Current phase: `P0_BLUEPRINT_BOOTSTRAP`.
+## 8. Current phase
 
-Allowed now:
+Current phase: P1_AUTONOMY_FOUNDATION.
 
-- create blueprint and governance documentation;
-- define module boundaries;
-- define future milestones.
-
-Not allowed now:
-
-- autonomous repo mutation loop;
-- cross-repo write automation;
-- production scheduler;
-- finance-specific business logic.
+Allowed now: define milestone-level autonomy, refine write policy, refine agent operating rules, and prepare later patch and test gates.

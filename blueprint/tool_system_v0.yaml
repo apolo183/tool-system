@@ -1,27 +1,11 @@
-# repo_rel_path: blueprint/tool_system_v0.yaml
-# role: machine-readable phase-0 blueprint
-# purpose: define the initial domain-agnostic tool-system contract and milestones
-# author: ChatGPT / apolo183
-# created_at: 2026-07-05 20:00 UTC+08:00
-# updated_at: 2026-07-05 20:00 UTC+08:00
-
-schema_version: 0.1
+schema_version: 0.2
 system: tool-system
-phase: P0_BLUEPRINT_BOOTSTRAP
-status: bootstrap
+phase: P1_AUTONOMY_FOUNDATION
+status: active
 
 identity:
-  description: >-
-    Domain-agnostic agentic software factory for blueprint parsing, task
-    decomposition, patch generation, test execution, review gates, and repository
-    write control.
+  description: Domain-agnostic agentic software factory for blueprint parsing, task planning, patch generation, test execution, and repository control.
   domain_specific: false
-  forbidden_domains:
-    - trading_decisions
-    - market_data_processing
-    - alpha_generation
-    - portfolio_allocation
-    - investment_advice
 
 boundaries:
   owns:
@@ -32,6 +16,7 @@ boundaries:
     - test_gate
     - repo_write_controller
     - audit_log
+    - autonomy_policy
   does_not_own:
     - finance_signals
     - ranking_models
@@ -45,41 +30,20 @@ agents:
     permissions:
       - read_specs
       - propose_task_graph
-    forbidden:
-      - write_repo
-      - modify_business_logic
   coder:
     role: generate patches for approved tasks
     permissions:
       - read_repo
       - propose_patch
-    forbidden:
-      - direct_main_write
-      - modify_blueprint_without_approval
   tester:
     role: run verification commands and summarize failures
     permissions:
       - run_tests
       - read_logs
-    forbidden:
-      - edit_source_to_make_tests_pass
   reviewer:
     role: check patch, spec compliance, and rollback plan
     permissions:
       - approve_or_block_patch
-    forbidden:
-      - bypass_test_gate
-
-phase_0_allowed_outputs:
-  - README.md
-  - AGENTS.md
-  - blueprint/tool_system_v0.yaml
-
-phase_0_forbidden_outputs:
-  - autonomous_patch_loop
-  - cross_repo_write_controller
-  - production_scheduler
-  - finance_domain_modules
 
 milestones:
   P0_BLUEPRINT_BOOTSTRAP:
@@ -88,24 +52,33 @@ milestones:
       - README.md exists
       - AGENTS.md exists
       - blueprint/tool_system_v0.yaml exists
-  P1_MINIMAL_HARNESS:
-    objective: implement spec-to-task DAG and dry-run execution
+  P1A_MINIMAL_DRY_RUN_GATE:
+    objective: validate task manifests and repo policy in dry-run mode
     entry_requires:
       - P0_BLUEPRINT_BOOTSTRAP complete
     outputs:
-      - harness DAG model
-      - dry-run task planner
+      - task manifest loader
+      - repo policy checker
+      - validator CLI
       - smoke tests
+  P1B_AUTONOMY_POLICY:
+    objective: define milestone-level autonomy and avoid per-PR human review for routine implementation work
+    entry_requires:
+      - P1A_MINIMAL_DRY_RUN_GATE complete
+    outputs:
+      - policy/autonomy_policy.yaml
+      - updated repo write policy
+      - updated agent operating contract
   P2_PATCH_AND_TEST_GATE:
     objective: generate patches and block writes unless tests pass
     entry_requires:
-      - P1_MINIMAL_HARNESS complete
+      - P1B_AUTONOMY_POLICY complete
     outputs:
       - patch generator interface
       - test runner
       - spec compliance checker
   P3_REPO_WRITE_CONTROLLER:
-    objective: controlled repository modifications through approved gates
+    objective: controlled repository modifications through gates
     entry_requires:
       - P2_PATCH_AND_TEST_GATE complete
     outputs:
@@ -119,3 +92,5 @@ default_policy:
   require_test_gate_for_code_change: true
   require_rollback_plan: true
   business_logic_is_external: true
+  per_pr_human_review_required_for_routine_work: false
+  human_review_required_for_milestone_exit: true

@@ -10,6 +10,23 @@ def _match(path: str, patterns: list[str]) -> bool:
     return any(fnmatch(path, pattern) for pattern in patterns)
 
 
+def _collect_allowed_paths(repo_rules: dict[str, Any]) -> list[str]:
+    allowlist: list[str] = []
+    for key, value in repo_rules.items():
+        if key.endswith("_allowed_paths") or key == "allowed_bootstrap_paths":
+            if isinstance(value, list):
+                allowlist.extend(value)
+    return allowlist
+
+
+def _requires_per_pr_human_review(policy: dict[str, Any]) -> bool:
+    legacy = policy.get("approval") or {}
+    if legacy.get("explicit_user_approval_required") is True:
+        return True
+    model = policy.get("approval_model") or {}
+    return model.get("per_pr_human_review_required") is True
+
+
 def validate_repo_write_policy(manifest: dict[str, Any], policy: dict[str, Any]) -> tuple[bool, list[str]]:
     reasons: list[str] = []
     target_repo = manifest.get("target_repo")
@@ -27,9 +44,7 @@ def validate_repo_write_policy(manifest: dict[str, Any], policy: dict[str, Any])
         reasons.append("allowed_files must be non-empty")
         return False, reasons
 
-    allowlist = []
-    allowlist.extend(repo_rules.get("allowed_bootstrap_paths") or [])
-    allowlist.extend(repo_rules.get("phase_1_allowed_paths") or [])
+    allowlist = _collect_allowed_paths(repo_rules)
     blocklist = repo_rules.get("forbidden_paths") or []
 
     for path in paths:
@@ -38,10 +53,11 @@ def validate_repo_write_policy(manifest: dict[str, Any], policy: dict[str, Any])
         if allowlist and not _match(path, allowlist):
             reasons.append(f"path outside allowlist: {path}")
 
-    approval = manifest.get("approval") or {}
-    if approval.get("required") is not True:
-        reasons.append("approval.required must be true")
-    if not approval.get("approved_by"):
-        reasons.append("approval.approved_by is required")
+    if _requires_per_pr_human_review(policy):
+        approval = manifest.get("approval") or {}
+        if approval.get("required") is not True:
+            reasons.append("approval.required must be true")
+        if not approval.get("approved_by"):
+            reasons.append("approval.approved_by is required")
 
     return not reasons, reasons

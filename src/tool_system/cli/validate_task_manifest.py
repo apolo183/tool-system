@@ -6,28 +6,45 @@ from pathlib import Path
 
 from tool_system.manifest.task_manifest import load_yaml_file, validate_manifest_structure
 from tool_system.policy import repo_write_policy as policy_module
+from tool_system.policy.autonomy_policy import validate_autonomy_policy
 
 
-def validate(manifest_path: Path, policy_path: Path) -> dict[str, object]:
+def validate(
+    manifest_path: Path,
+    policy_path: Path,
+    autonomy_policy_path: Path | None = None,
+) -> dict[str, object]:
     manifest = load_yaml_file(manifest_path)
     policy = load_yaml_file(policy_path)
+
     structure_ok, structure_reasons = validate_manifest_structure(manifest)
     policy_ok, policy_reasons = policy_module.validate_repo_write_policy(manifest, policy)
-    reasons = structure_reasons + policy_reasons
-    return {
-        "status": "PASS" if structure_ok and policy_ok else "BLOCK",
+
+    autonomy_ok = True
+    autonomy_reasons: list[str] = []
+    if autonomy_policy_path is not None:
+        autonomy_policy = load_yaml_file(autonomy_policy_path)
+        autonomy_ok, autonomy_reasons = validate_autonomy_policy(autonomy_policy)
+
+    reasons = structure_reasons + policy_reasons + autonomy_reasons
+    result = {
+        "status": "PASS" if structure_ok and policy_ok and autonomy_ok else "BLOCK",
         "manifest_path": str(manifest_path),
         "policy_path": str(policy_path),
         "reasons": reasons,
     }
+    if autonomy_policy_path is not None:
+        result["autonomy_policy_path"] = str(autonomy_policy_path)
+    return result
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate a tool-system task manifest.")
     parser.add_argument("manifest", type=Path)
     parser.add_argument("--policy", type=Path, default=Path("policy/repo_write_policy.yaml"))
+    parser.add_argument("--autonomy-policy", type=Path, default=Path("policy/autonomy_policy.yaml"))
     args = parser.parse_args()
-    result = validate(args.manifest, args.policy)
+    result = validate(args.manifest, args.policy, args.autonomy_policy)
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     return 0 if result["status"] == "PASS" else 1
 
