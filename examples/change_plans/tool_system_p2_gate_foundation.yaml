@@ -3,6 +3,7 @@ target_repo: apolo183/tool-system
 task_manifest: examples/task_manifests/tool_system_p2_gate_foundation.yaml
 changed_files:
   - src/tool_system/gate/__init__.py
+  - src/tool_system/gate/README.md
   - src/tool_system/gate/change_plan.py
   - src/tool_system/gate/test_gate.py
   - src/tool_system/cli/validate_change_plan.py
