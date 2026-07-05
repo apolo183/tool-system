@@ -1,0 +1,122 @@
+# repo_rel_path: policy/repo_write_policy.yaml
+# role: repository write policy
+# purpose: define allowed repo targets, write modes, approvals, and hard blocks for tool-system workflows
+# author: ChatGPT / apolo183
+# created_at: 2026-07-05 20:20 UTC+08:00
+# updated_at: 2026-07-05 20:20 UTC+08:00
+
+schema_version: 0.1
+policy: repo_write_policy
+status: draft
+
+defaults:
+  direct_main_write: false
+  require_task_manifest: true
+  require_blueprint_reference: true
+  require_evidence_block: true
+  require_verification_plan: true
+  require_rollback_plan: true
+  prefer_pull_request: true
+
+approval:
+  explicit_user_approval_required: true
+  approval_must_name:
+    - target_repo
+    - task_scope
+    - allowed_files
+    - write_mode
+  valid_approval_sources:
+    - chat_user_message
+    - github_issue_comment
+    - approved_task_manifest
+
+allowed_target_repos:
+  apolo183/tool-system:
+    role: domain_agnostic_tooling_repo
+    default_write_mode: pull_request
+    bootstrap_direct_main_allowed: true
+    allowed_bootstrap_paths:
+      - README.md
+      - AGENTS.md
+      - blueprint/**
+      - policy/**
+      - harness/**
+    forbidden_paths:
+      - finance/**
+      - trading/**
+      - market/**
+      - portfolio/**
+    forbidden_content_domains:
+      - trading_decisions
+      - alpha_generation
+      - portfolio_allocation
+      - market_data_processing
+      - investment_advice
+  apolo183/finance-os:
+    role: quantitative_finance_business_repo
+    default_write_mode: pull_request
+    bootstrap_direct_main_allowed: true
+    allowed_bootstrap_paths:
+      - README.md
+      - AGENTS.md
+      - blueprint/**
+      - contracts/**
+    phase_1_allowed_paths:
+      - src/finance_os/**
+      - tests/**
+      - contracts/**
+      - blueprint/**
+      - pyproject.toml
+      - README.md
+      - AGENTS.md
+    forbidden_paths:
+      - harness/**
+      - agents/**
+      - repo_controller/**
+      - broker/**
+      - live_trading/**
+    forbidden_content_domains:
+      - broker_execution
+      - live_trading
+      - investment_recommendation
+      - autonomous_strategy_mutation
+
+write_modes:
+  read_only:
+    writes_repo: false
+    requires_ci: false
+  patch_only:
+    writes_repo: false
+    requires_ci: false
+  pull_request:
+    writes_repo: true
+    requires_ci: true
+    requires_review_gate: true
+  direct_bootstrap:
+    writes_repo: true
+    allowed_only_when:
+      - repo_bootstrap_or_contract_hardening
+      - explicit_user_approval
+      - files_match_bootstrap_allowlist
+
+hard_blocks:
+  - missing_task_manifest
+  - missing_blueprint_reference
+  - missing_evidence_block
+  - missing_rollback_plan
+  - unapproved_target_repo
+  - path_outside_allowlist
+  - finance_domain_logic_inside_tool_system
+  - harness_or_agent_logic_inside_finance_os
+  - live_trading_or_broker_logic_in_phase_1
+  - production_ready_claim_without_required_evidence
+
+rollback:
+  minimum_required_reference:
+    - commit_sha
+    - changed_file_list
+  accepted_methods:
+    - git_revert
+    - patch_reverse
+    - delete_added_files
+    - manual_review
