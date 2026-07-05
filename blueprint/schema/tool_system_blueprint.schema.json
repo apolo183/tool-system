@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/apolo183/tool-system/blueprint/schema/tool_system_blueprint.schema.json",
+  "$comment": "repo_rel_path: blueprint/schema/tool_system_blueprint.schema.json; role: schema contract; purpose: validate tool-system blueprint files; author: ChatGPT / apolo183; created_at: 2026-07-05 20:20 UTC+08:00; updated_at: 2026-07-05 20:20 UTC+08:00",
+  "title": "tool-system blueprint schema",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "system",
+    "phase",
+    "status",
+    "identity",
+    "boundaries",
+    "milestones",
+    "default_policy"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": ["number", "string"]
+    },
+    "system": {
+      "const": "tool-system"
+    },
+    "phase": {
+      "type": "string",
+      "pattern": "^P[0-9]+[A-Z0-9_]*$"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["bootstrap", "draft", "active", "frozen", "deprecated"]
+    },
+    "identity": {
+      "type": "object",
+      "required": ["description", "domain_specific", "forbidden_domains"],
+      "additionalProperties": false,
+      "properties": {
+        "description": {"type": "string", "minLength": 20},
+        "domain_specific": {"const": false},
+        "forbidden_domains": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"},
+          "contains": {"const": "trading_decisions"}
+        }
+      }
+    },
+    "boundaries": {
+      "type": "object",
+      "required": ["owns", "does_not_own"],
+      "additionalProperties": false,
+      "properties": {
+        "owns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "does_not_own": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"},
+          "contains": {"const": "finance_signals"}
+        }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["role", "permissions", "forbidden"],
+        "additionalProperties": false,
+        "properties": {
+          "role": {"type": "string", "minLength": 5},
+          "permissions": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "forbidden": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "phase_0_allowed_outputs": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "phase_0_forbidden_outputs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "contains": {"const": "finance_domain_modules"}
+    },
+    "milestones": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["objective"],
+        "additionalProperties": true,
+        "properties": {
+          "objective": {"type": "string", "minLength": 10},
+          "entry_requires": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "exit_criteria": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "outputs": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "default_policy": {
+      "type": "object",
+      "required": [
+        "no_direct_main_write",
+        "require_blueprint_item_for_change",
+        "require_test_gate_for_code_change",
+        "require_rollback_plan",
+        "business_logic_is_external"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "no_direct_main_write": {"const": true},
+        "require_blueprint_item_for_change": {"const": true},
+        "require_test_gate_for_code_change": {"const": true},
+        "require_rollback_plan": {"const": true},
+        "business_logic_is_external": {"const": true}
+      }
+    }
+  }
+}
