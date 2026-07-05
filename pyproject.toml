@@ -21,6 +21,7 @@ tool-system-validate-task-manifest = "tool_system.cli.validate_task_manifest:mai
 tool-system-validate-change-plan = "tool_system.cli.validate_change_plan:main"
 tool-system-execute-change-plan = "tool_system.cli.execute_change_plan:main"
 tool-system-evaluate-repo-write = "tool_system.cli.evaluate_repo_write:main"
+tool-system-evaluate-github-state = "tool_system.cli.evaluate_github_state:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

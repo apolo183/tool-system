@@ -1,0 +1,54 @@
+task_id: tool-system-p3b-controller-adapter
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p3b-controller-adapter
+phase: P3_REPO_WRITE_CONTROLLER
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P3_REPO_WRITE_CONTROLLER
+scope:
+  summary: Add adapter from GitHub PR and workflow state snapshots to repo write decision input.
+  in_scope:
+    - src/tool_system/repo_controller/github_state.py
+    - src/tool_system/cli/evaluate_github_state.py
+    - examples/github_states/**
+    - examples/task_manifests/tool_system_p3b_controller_adapter.yaml
+    - examples/change_plans/tool_system_p3b_controller_adapter.yaml
+    - tests/test_github_state_adapter.py
+    - pyproject.toml
+    - .github/workflows/tool-system-ci.yml
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Defines P3 repo write controller objective and outputs.
+allowed_files:
+  - src/tool_system/repo_controller/github_state.py
+  - src/tool_system/cli/evaluate_github_state.py
+  - examples/github_states/**
+  - examples/task_manifests/tool_system_p3b_controller_adapter.yaml
+  - examples/change_plans/tool_system_p3b_controller_adapter.yaml
+  - tests/test_github_state_adapter.py
+  - pyproject.toml
+  - .github/workflows/tool-system-ci.yml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p3b_controller_adapter.yaml
+    - python -m tool_system.cli.evaluate_github_state examples/github_states/tool_system_p3b_pass.yaml
+  pass_conditions:
+    - pytest exits 0
+    - change plan validation returns PASS
+    - GitHub state evaluation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization

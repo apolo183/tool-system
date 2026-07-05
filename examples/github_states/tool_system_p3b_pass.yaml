@@ -1,0 +1,20 @@
+repository_full_name: apolo183/tool-system
+pull_request:
+  number: 6
+  state: open
+  draft: false
+  mergeable: true
+  head_sha: example-head-sha
+  base: main
+gate_decision:
+  status: PASS
+  reasons: []
+workflow_runs:
+  - id: 1001
+    name: tool-system-ci
+    status: completed
+    conclusion: success
+merge_method: squash
+rollback:
+  method: git_revert
+  reference: future merge commit
