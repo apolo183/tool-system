@@ -1,3 +1,19 @@
 plan_id: tool-system-p3b-controller-adapter-plan
 target_repo: apolo183/tool-system
 task_manifest: examples/task_manifests/tool_system_p3b_controller_adapter.yaml
+changed_files:
+  - src/tool_system/repo_controller/github_state.py
+  - src/tool_system/cli/evaluate_github_state.py
+  - examples/github_states/tool_system_p3b_pass.yaml
+  - examples/task_manifests/tool_system_p3b_controller_adapter.yaml
+  - examples/change_plans/tool_system_p3b_controller_adapter.yaml
+  - tests/test_github_state_adapter.py
+  - pyproject.toml
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p3b_controller_adapter.yaml
+    - python -m tool_system.cli.evaluate_github_state examples/github_states/tool_system_p3b_pass.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
