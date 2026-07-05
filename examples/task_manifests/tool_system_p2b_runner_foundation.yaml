@@ -1,0 +1,5 @@
+task_id: tool-system-p2b-runner-foundation
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p2b-runner-foundation
+phase: P2_PATCH_AND_TEST_GATE
