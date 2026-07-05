@@ -19,6 +19,8 @@ human_review_required_for:
 system_handled_when_manifest_allows:
   - code_add
   - code_modify
+  - file_cleanup
+  - file_swap
   - test_add
   - test_modify
   - docs_update
