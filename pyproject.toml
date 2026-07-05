@@ -18,6 +18,7 @@ dev = [
 
 [project.scripts]
 tool-system-validate-task-manifest = "tool_system.cli.validate_task_manifest:main"
+tool-system-validate-change-plan = "tool_system.cli.validate_change_plan:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
