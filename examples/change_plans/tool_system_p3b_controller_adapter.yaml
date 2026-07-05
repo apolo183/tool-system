@@ -1,0 +1,3 @@
+plan_id: tool-system-p3b-controller-adapter-plan
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p3b_controller_adapter.yaml
