@@ -11,12 +11,11 @@ approved_blueprint_refs:
 scope:
   summary: Add minimal change plan and verification gate.
   in_scope:
-    - src/tool_system/gate/__init__.py
-    - src/tool_system/gate/change_plan.py
-    - src/tool_system/gate/test_gate.py
+    - src/tool_system/gate/**
     - src/tool_system/cli/validate_change_plan.py
     - examples/change_plans/tool_system_p2_gate_foundation.yaml
     - tests/test_change_plan_gate.py
+    - tests/test_change_plan_scope_extra.py
     - pyproject.toml
   out_of_scope:
     - business-domain logic
@@ -32,6 +31,7 @@ allowed_files:
   - examples/change_plans/**
   - examples/task_manifests/tool_system_p2_gate_foundation.yaml
   - tests/test_change_plan_gate.py
+  - tests/test_change_plan_scope_extra.py
   - pyproject.toml
 forbidden_files:
   - finance/**
@@ -48,7 +48,7 @@ verification:
     - change plan validation returns PASS
 rollback:
   method: git_revert
-  reference: future P2 pull request or commit SHA
+  reference: P2 branch or commit SHA
 approval:
   required: true
   approved_by: milestone_authorization
