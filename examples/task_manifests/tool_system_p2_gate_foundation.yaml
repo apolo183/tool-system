@@ -1,0 +1,54 @@
+task_id: tool-system-p2-gate-foundation
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p2-gate-foundation
+phase: P2_PATCH_AND_TEST_GATE
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P2_PATCH_AND_TEST_GATE
+    line_range: L74-L81
+scope:
+  summary: Add minimal change plan and verification gate.
+  in_scope:
+    - src/tool_system/gate/__init__.py
+    - src/tool_system/gate/change_plan.py
+    - src/tool_system/gate/test_gate.py
+    - src/tool_system/cli/validate_change_plan.py
+    - examples/change_plans/tool_system_p2_gate_foundation.yaml
+    - tests/test_change_plan_gate.py
+    - pyproject.toml
+  out_of_scope:
+    - business-domain logic
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    line_range: L74-L81
+    commit_sha: 0acca46cf97a87cc6fb5c250a06b79054af8cb77
+    why_relevant: Defines P2 gate objective and outputs.
+allowed_files:
+  - src/tool_system/gate/**
+  - src/tool_system/cli/validate_change_plan.py
+  - examples/change_plans/**
+  - examples/task_manifests/tool_system_p2_gate_foundation.yaml
+  - tests/test_change_plan_gate.py
+  - pyproject.toml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p2_gate_foundation.yaml
+  pass_conditions:
+    - pytest exits 0
+    - change plan validation returns PASS
+rollback:
+  method: git_revert
+  reference: future P2 pull request or commit SHA
+approval:
+  required: true
+  approved_by: milestone_authorization
