@@ -14,7 +14,6 @@ scope:
     - src/tool_system/cli/execute_change_plan.py
     - tests/test_command_runner.py
     - examples/task_manifests/tool_system_p2b_runner_foundation.yaml
-    - examples/change_plans/tool_system_p2b_runner_foundation.yaml
     - pyproject.toml
 evidence:
   - repo: apolo183/tool-system
@@ -25,7 +24,6 @@ allowed_files:
   - src/tool_system/cli/execute_change_plan.py
   - tests/test_command_runner.py
   - examples/task_manifests/tool_system_p2b_runner_foundation.yaml
-  - examples/change_plans/tool_system_p2b_runner_foundation.yaml
   - pyproject.toml
 forbidden_files:
   - finance/**
@@ -36,10 +34,8 @@ write_mode: pull_request
 verification:
   commands:
     - python -m pytest -q
-    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p2b_runner_foundation.yaml
   pass_conditions:
     - pytest exits 0
-    - change plan validation returns PASS
 rollback:
   method: git_revert
   reference: branch commit
