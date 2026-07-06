@@ -1,6 +1,8 @@
 schema_version: 0.1
 policy: autonomy_policy
-status: draft
+status: active
+approved_by: milestone_authorization
+approved_at: 2026-07-06 01:25 UTC+08:00
 
 purpose: milestone-level automation model for tool-system.
 

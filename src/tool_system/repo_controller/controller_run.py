@@ -14,6 +14,8 @@ def run_controller(
     gate_decision: dict[str, Any],
     repo_policy: dict[str, Any],
     audit_path: str | Path,
+    task_manifest: dict[str, Any],
+    change_plan: dict[str, Any],
     dry_run: bool = True,
     merge_method: str = "squash",
     collector_runner=run_gh_json,
@@ -26,6 +28,8 @@ def run_controller(
         repo_policy=repo_policy,
         runner=collector_runner,
         merge_method=merge_method,
+        task_manifest=task_manifest,
+        change_plan=change_plan,
     )
     action_plan = build_action_plan(
         decision=evaluation["decision"],

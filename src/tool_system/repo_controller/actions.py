@@ -32,6 +32,8 @@ def build_action_plan(
 ) -> dict[str, object]:
     if decision.get("status") != "PASS":
         return {"status": "BLOCK", "actions": [], "reasons": decision.get("reasons", [])}
+    if pull_request.get("draft") is True:
+        return {"status": "BLOCK", "actions": [], "reasons": ["pull request must not be draft before action planning"]}
 
     pr_number = pull_request.get("number")
     head_sha = pull_request.get("head_sha")
@@ -40,25 +42,20 @@ def build_action_plan(
     if not head_sha:
         return {"status": "BLOCK", "actions": [], "reasons": ["pull request head_sha is required"]}
 
-    actions = []
-    if pull_request.get("draft") is True:
-        actions.append({"action": "pr_ready", "pr_number": pr_number})
-    actions.append(
+    actions = [
         {
             "action": "pr_squash",
             "pr_number": pr_number,
             "expected_head_sha": head_sha,
             "merge_method": decision.get("merge_method", "squash"),
         }
-    )
+    ]
     return {"status": "PASS", "actions": actions, "reasons": []}
 
 
 def _command_for_action(repository_full_name: str, action: dict[str, Any]) -> list[str]:
     action_name = action.get("action")
     pr_number = str(action.get("pr_number"))
-    if action_name == "pr_ready":
-        return ["pr", "ready", pr_number, "--repo", repository_full_name]
     if action_name == "pr_squash":
         command = ["pr", "merge", pr_number, "--repo", repository_full_name, "--squash"]
         expected_head_sha = action.get("expected_head_sha")

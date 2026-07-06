@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
 GATE_DECISION = {"status": "PASS", "reasons": []}
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p3f_controller_self_check.yaml"
+MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_p3f_controller_self_check.yaml"
 
 
 def write_event(path: Path, number: int = 10) -> Path:
@@ -78,6 +79,8 @@ def test_run_self_check_is_dry_run_and_writes_audit(tmp_path: Path) -> None:
         event_path=event_path,
         gate_decision=GATE_DECISION,
         repo_policy=policy,
+        task_manifest=load_yaml_file(MANIFEST_PATH),
+        change_plan=load_yaml_file(CHANGE_PLAN_PATH),
         audit_path=audit_path,
         collector_runner=fake_collector_runner,
     )

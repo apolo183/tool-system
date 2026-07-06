@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
 GATE_DECISION_PATH = ROOT / "examples" / "gate_decisions" / "pass.yaml"
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p3c_live_collector.yaml"
+MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_p3c_live_collector.yaml"
 
 
 def fake_runner(args: list[str]) -> Any:
@@ -95,6 +96,8 @@ def test_evaluate_live_pull_request_passes_successful_state() -> None:
         gate_decision=gate_decision,
         repo_policy=policy,
         runner=fake_runner,
+        task_manifest=load_yaml_file(MANIFEST_PATH),
+        change_plan=load_yaml_file(CHANGE_PLAN_PATH),
     )
 
     assert output["decision"]["status"] == "PASS"

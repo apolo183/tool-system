@@ -1,6 +1,8 @@
 schema_version: 0.2
 policy: repo_write_policy
-status: draft
+status: active
+approved_by: milestone_authorization
+approved_at: 2026-07-06 01:25 UTC+08:00
 
 defaults:
   direct_main_write: false
@@ -41,6 +43,9 @@ allowed_target_repos:
       - policy/**
       - blueprint/**
       - harness/**
+      - README.md
+      - AGENTS.md
+      - .github/workflows/**
     forbidden_paths:
       - finance/**
       - trading/**
@@ -97,6 +102,7 @@ hard_blocks:
   - tool_repo_contains_business_logic
   - business_repo_contains_harness_logic
   - required_verification_failed
+  - inactive_policy
 
 merge_policy:
   default_method: squash

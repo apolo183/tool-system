@@ -1,0 +1,18 @@
+task_manifests:
+  - examples/task_manifests/tool_system_p2b_runner_foundation.yaml
+  - examples/task_manifests/tool_system_p3_repo_controller.yaml
+  - examples/task_manifests/tool_system_p3b_controller_adapter.yaml
+  - examples/task_manifests/tool_system_p3c_live_collector.yaml
+  - examples/task_manifests/tool_system_p3d_controller_actions.yaml
+  - examples/task_manifests/tool_system_p3e_controller_cli.yaml
+  - examples/task_manifests/tool_system_p3f_controller_self_check.yaml
+  - examples/task_manifests/tool_system_p3g_contract_hardening.yaml
+change_plans:
+  - examples/change_plans/tool_system_p2_gate_foundation.yaml
+  - examples/change_plans/tool_system_p3_repo_controller.yaml
+  - examples/change_plans/tool_system_p3b_controller_adapter.yaml
+  - examples/change_plans/tool_system_p3c_live_collector.yaml
+  - examples/change_plans/tool_system_p3d_controller_actions.yaml
+  - examples/change_plans/tool_system_p3e_controller_cli.yaml
+  - examples/change_plans/tool_system_p3f_controller_self_check.yaml
+  - examples/change_plans/tool_system_p3g_contract_hardening.yaml

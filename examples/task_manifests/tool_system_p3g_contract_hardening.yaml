@@ -1,0 +1,107 @@
+task_id: tool-system-p3g-contract-hardening
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: p3g-hardening
+phase: P3_REPO_WRITE_CONTROLLER
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P3_REPO_WRITE_CONTROLLER
+scope:
+  summary: Harden controller contracts, active policy status, policy-context checks, ready-only merge actions, and active CI gate index.
+  in_scope:
+    - README.md
+    - blueprint/tool_system_v0.yaml
+    - policy/repo_write_policy.yaml
+    - policy/autonomy_policy.yaml
+    - src/tool_system/policy/repo_write_policy.py
+    - src/tool_system/policy/autonomy_policy.py
+    - src/tool_system/repo_controller/controller.py
+    - src/tool_system/repo_controller/github_state.py
+    - src/tool_system/repo_controller/live_github_collector.py
+    - src/tool_system/repo_controller/controller_run.py
+    - src/tool_system/repo_controller/self_check.py
+    - src/tool_system/repo_controller/actions.py
+    - src/tool_system/cli/evaluate_repo_write.py
+    - src/tool_system/cli/evaluate_github_state.py
+    - src/tool_system/cli/controller_run.py
+    - src/tool_system/cli/controller_self_check.py
+    - src/tool_system/cli/validate_active_gates.py
+    - examples/active_gates.yaml
+    - examples/task_manifests/tool_system_p3g_contract_hardening.yaml
+    - examples/change_plans/tool_system_p3g_contract_hardening.yaml
+    - tests/test_repo_controller.py
+    - tests/test_github_state_adapter.py
+    - tests/test_live_github_collector.py
+    - tests/test_controller_run.py
+    - tests/test_controller_self_check.py
+    - tests/test_controller_actions.py
+    - tests/test_active_gates.py
+    - pyproject.toml
+    - .github/workflows/tool-system-ci.yml
+  out_of_scope:
+    - finance-os changes
+    - business-domain logic
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: README.md
+    why_relevant: README had stale Phase 0 wording while active controller work is P3.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Blueprint top-level phase had drifted from AGENTS current phase.
+  - repo: apolo183/tool-system
+    path: policy/repo_write_policy.yaml
+    why_relevant: Policy status was draft while merge policy allowed system merge.
+  - repo: apolo183/tool-system
+    path: src/tool_system/repo_controller/controller.py
+    why_relevant: Controller needed defense-in-depth checks beyond gate_decision PASS.
+allowed_files:
+  - README.md
+  - blueprint/tool_system_v0.yaml
+  - policy/repo_write_policy.yaml
+  - policy/autonomy_policy.yaml
+  - src/tool_system/policy/repo_write_policy.py
+  - src/tool_system/policy/autonomy_policy.py
+  - src/tool_system/repo_controller/controller.py
+  - src/tool_system/repo_controller/github_state.py
+  - src/tool_system/repo_controller/live_github_collector.py
+  - src/tool_system/repo_controller/controller_run.py
+  - src/tool_system/repo_controller/self_check.py
+  - src/tool_system/repo_controller/actions.py
+  - src/tool_system/cli/evaluate_repo_write.py
+  - src/tool_system/cli/evaluate_github_state.py
+  - src/tool_system/cli/controller_run.py
+  - src/tool_system/cli/controller_self_check.py
+  - src/tool_system/cli/validate_active_gates.py
+  - examples/active_gates.yaml
+  - examples/task_manifests/tool_system_p3g_contract_hardening.yaml
+  - examples/change_plans/tool_system_p3g_contract_hardening.yaml
+  - tests/test_repo_controller.py
+  - tests/test_github_state_adapter.py
+  - tests/test_live_github_collector.py
+  - tests/test_controller_run.py
+  - tests/test_controller_self_check.py
+  - tests/test_controller_actions.py
+  - tests/test_active_gates.py
+  - pyproject.toml
+  - .github/workflows/tool-system-ci.yml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization

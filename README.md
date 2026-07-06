@@ -2,10 +2,10 @@
 
 repo_rel_path: README.md  
 role: repository overview  
-purpose: define the domain-agnostic tool system boundary and bootstrap contract  
+purpose: define the domain-agnostic tool system boundary and current controller contract  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-05 20:00 UTC+08:00
+updated_at: 2026-07-06 01:25 UTC+08:00
 
 ## Definition
 
@@ -23,6 +23,8 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 - Run tests, lint, type checks, and policy checks.
 - Block writes when tests or policy checks fail.
 - Create auditable repository changes.
+- Collect pull request and workflow state for repo write decisions.
+- Execute approved repository write actions through explicit controller gates.
 
 ### Out of scope
 
@@ -33,15 +35,17 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 - Market-data ingestion.
 - Direct modification of business-system rules without explicit approval.
 
-## First milestone
+## Current phase
 
-Phase 0 initializes only the blueprint and agent governance contract. No autonomous code-writing loop is active yet.
+Current phase: `P3_REPO_WRITE_CONTROLLER`.
+
+The active objective is controlled repository modification through gates: task manifest, change plan, repo write policy, CI status, rollback reference, and audit artifact.
 
 ## Repository contract
 
-This repository is a tool layer. Business systems such as finance-os are downstream targets. tool-system may propose and apply code changes to target repositories only through explicit workflow, test, and review gates.
+This repository is a tool layer. Business systems such as finance-os are downstream targets. tool-system may propose and apply code changes to target repositories only through explicit workflow, test, policy, and review gates.
 
 ## Bootstrap files
 
 - `AGENTS.md`: operating contract for agents working in this repository.
-- `blueprint/tool_system_v0.yaml`: machine-readable phase-0 blueprint.
+- `blueprint/tool_system_v0.yaml`: machine-readable active blueprint.
