@@ -1,6 +1,6 @@
 schema_version: 0.2
 system: tool-system
-phase: P4_TARGET_REPO_DRY_RUN_ADAPTER
+phase: P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW
 status: active
 
 identity:
@@ -18,6 +18,7 @@ boundaries:
     - audit_log
     - autonomy_policy
     - target_repo_dry_run_adapter
+    - target_repo_pr_write_flow
   does_not_own:
     - finance_signals
     - ranking_models
@@ -53,10 +54,11 @@ agents:
       - open_pull_request
       - merge_after_gates
   target_adapter:
-    role: validate downstream target repository manifests without writing target repositories
+    role: validate downstream target repository manifests and prepare approved PR write flows through explicit gates
     permissions:
       - read_target_contract_refs
       - produce_dry_run_plan
+      - produce_pr_write_plan
       - write_tool_system_audit
 
 milestones:
@@ -105,6 +107,14 @@ milestones:
       - target repo manifest boundary validator
       - no-write dry-run plan
       - target adapter audit artifact
+  P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW:
+    objective: prepare approved downstream target repo pull-request write flow after P4 gates pass
+    entry_requires:
+      - P4_TARGET_REPO_DRY_RUN_ADAPTER accepted
+    outputs:
+      - approved target repo PR write planner
+      - target repo branch and PR mutation gate
+      - target repo write audit and rollback reference
 
 default_policy:
   no_direct_main_write: true
