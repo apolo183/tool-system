@@ -19,6 +19,7 @@ boundaries:
     - autonomy_policy
     - target_repo_dry_run_adapter
     - target_repo_pr_write_flow
+    - agent_role_taxonomy
   does_not_own:
     - finance_signals
     - ranking_models
@@ -27,39 +28,124 @@ boundaries:
     - market_data_contracts
 
 agents:
-  planner:
-    role: decompose approved blueprints into bounded tasks
+  request_intake:
+    group: intake
+    role: normalize user requests, classify scope, and detect milestone or policy boundaries
     permissions:
-      - read_specs
+      - read_user_request
+      - classify_scope
+      - request_missing_context
+  evidence_collector:
+    group: evidence
+    role: collect repo files, logs, PRs, CI state, and target contract references before action
+    permissions:
+      - read_repo
+      - read_pr_state
+      - read_ci_state
+      - read_target_contract_refs
+  blueprint_architect:
+    group: architecture
+    role: maintain blueprint, objective contracts, role taxonomy, and anti-drift boundaries
+    permissions:
+      - propose_blueprint_change
+      - update_contract_docs
+  task_decomposer:
+    group: planning
+    role: split approved objectives into bounded tasks with explicit inputs and outputs
+    permissions:
+      - propose_task_manifest
       - propose_task_graph
-  coder:
-    role: generate patches for approved tasks
+  dag_planner:
+    group: planning
+    role: order bounded tasks into a dependency graph with gates and rollback nodes
+    permissions:
+      - propose_dag
+      - assign_role_nodes
+  policy_guard:
+    group: policy
+    role: enforce no-go boundaries, approval requirements, and business-domain separation
+    permissions:
+      - evaluate_policy
+      - block_disallowed_actions
+  change_planner:
+    group: implementation
+    role: produce file-scoped change plans with validation commands and rollback references
+    permissions:
+      - propose_change_plan
+      - validate_change_scope
+  patch_author:
+    group: implementation
+    role: modify approved files only after evidence and change-plan gates
     permissions:
       - read_repo
       - propose_patch
-  tester:
-    role: run verification commands and summarize failures
+      - write_approved_branch
+  test_engineer:
+    group: verification
+    role: define and run tests, compile checks, and contract validations
     permissions:
       - run_tests
       - read_logs
-  reviewer:
-    role: check patch, spec compliance, and rollback plan
+  ci_operator:
+    group: verification
+    role: collect GitHub Actions state, jobs, steps, and failure evidence
+    permissions:
+      - read_ci_state
+      - read_ci_logs
+  code_reviewer:
+    group: review
+    role: review diffs for implementation, imports, behavior, and regression risk
     permissions:
       - read_diff
       - request_changes
+  contract_reviewer:
+    group: review
+    role: review blueprint, manifests, policies, active gates, and rollback records
+    permissions:
+      - read_contracts
+      - request_contract_changes
   repo_controller:
-    role: apply approved repository changes through explicit gates
+    group: repository
+    role: create branches, open pull requests, and merge after gates pass
     permissions:
       - create_branch
       - open_pull_request
       - merge_after_gates
-  target_adapter:
-    role: validate downstream target repository manifests and prepare approved PR write flows through explicit gates
+  target_repo_adapter:
+    group: target
+    role: prepare target repo dry-runs, write packets, execution gates, and command previews
     permissions:
       - read_target_contract_refs
       - produce_dry_run_plan
       - produce_pr_write_plan
       - write_tool_system_audit
+  target_repo_executor:
+    group: target
+    role: execute approved target repository branch, file, and PR mutations after separate approval
+    permissions:
+      - execute_target_branch_write_after_approval
+      - execute_target_file_write_after_approval
+      - execute_target_pr_open_after_approval
+  audit_recorder:
+    group: audit
+    role: write audit records, rollback references, and milestone evidence summaries
+    permissions:
+      - write_audit_record
+      - record_rollback_reference
+  cleanup_owner:
+    group: cleanup
+    role: identify and remove temporary branches, probes, stale refs, and residual artifacts after evidence
+    permissions:
+      - inspect_residue
+      - propose_cleanup
+      - delete_approved_residue
+
+role_control_rules:
+  no_single_role_may_approve_and_execute_target_mutation: true
+  target_mutation_requires_fresh_state: true
+  target_mutation_requires_execution_approval: true
+  business_domain_roles_forbidden_in_tool_system: true
+  dag_must_include_evidence_policy_verification_and_audit_nodes: true
 
 milestones:
   P1_BOOTSTRAP:
@@ -115,6 +201,7 @@ milestones:
       - approved target repo PR write planner
       - target repo branch and PR mutation gate
       - target repo write audit and rollback reference
+      - fine-grained agent role taxonomy
 
 default_policy:
   no_direct_main_write: true
