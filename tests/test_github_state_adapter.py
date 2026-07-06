@@ -15,6 +15,7 @@ from tool_system.repo_controller.github_state import (
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
 INPUT_PATH = ROOT / "examples" / "github_states" / "tool_system_p3b_pass.yaml"
+MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_p3b_controller_adapter.yaml"
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p3b_controller_adapter.yaml"
 
 
@@ -29,6 +30,8 @@ def test_github_state_evaluation_passes_successful_workflow_run() -> None:
         workflow_runs=value["workflow_runs"],
         rollback=value["rollback"],
         repository_full_name=value["repository_full_name"],
+        task_manifest=load_yaml_file(MANIFEST_PATH),
+        change_plan=load_yaml_file(CHANGE_PLAN_PATH),
     )
 
     assert output["decision"]["status"] == "PASS"
@@ -48,6 +51,8 @@ def test_github_state_evaluation_blocks_failed_workflow_run() -> None:
         workflow_runs=value["workflow_runs"],
         rollback=value["rollback"],
         repository_full_name=value["repository_full_name"],
+        task_manifest=load_yaml_file(MANIFEST_PATH),
+        change_plan=load_yaml_file(CHANGE_PLAN_PATH),
     )
 
     assert output["decision"]["status"] == "BLOCK"
@@ -62,11 +67,15 @@ def test_github_state_uses_workflow_jobs_when_available() -> None:
         workflow_runs=[{"name": "run", "status": "completed", "conclusion": "failure"}],
         workflow_jobs=[{"name": "verify", "status": "completed", "conclusion": "success"}],
         repository_full_name=value["repository_full_name"],
+        task_manifest=load_yaml_file(MANIFEST_PATH),
+        change_plan=load_yaml_file(CHANGE_PLAN_PATH),
     )
 
     assert output["status_checks"] == [
         {"name": "verify", "status": "completed", "conclusion": "success"}
     ]
+    assert output["task_manifest"]["task_id"] == "tool-system-p3b-controller-adapter"
+    assert output["change_plan"]["plan_id"] == "tool-system-p3b-controller-adapter-plan"
 
 
 def test_workflow_normalizers_preserve_status_and_conclusion() -> None:
