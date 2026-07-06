@@ -139,6 +139,8 @@ def evaluate_live_pull_request(
     runner: GhJsonRunner = run_gh_json,
     rollback: dict[str, Any] | None = None,
     merge_method: str = "squash",
+    task_manifest: dict[str, Any] | None = None,
+    change_plan: dict[str, Any] | None = None,
 ) -> dict[str, object]:
     snapshot = collect_github_state_snapshot(
         repository_full_name=repository_full_name,
@@ -156,5 +158,7 @@ def evaluate_live_pull_request(
         rollback=snapshot["rollback"],
         merge_method=snapshot["merge_method"],
         repository_full_name=snapshot["repository_full_name"],
+        task_manifest=task_manifest,
+        change_plan=change_plan,
     )
     return {"snapshot": snapshot, **output}
