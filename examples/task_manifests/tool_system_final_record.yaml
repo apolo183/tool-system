@@ -1,1 +1,52 @@
 task_id: tool-system-final-record
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p5h-plan-finalizer
+phase: P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW
+scope:
+  summary: Add final no-write target repository plan record after state collection.
+  in_scope:
+    - src/tool_system/target_repo/p5h_record.py
+    - tests/test_final_record.py
+    - examples/task_manifests/tool_system_final_record.yaml
+    - examples/change_plans/tool_system_final_record.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-os writes
+    - finance-os implementation changes
+    - target repository mutation
+    - business-domain logic
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/target_repo/state_collector.py
+    why_relevant: Final records depend on passing target repository state collection.
+allowed_files:
+  - src/tool_system/target_repo/p5h_record.py
+  - tests/test_final_record.py
+  - examples/task_manifests/tool_system_final_record.yaml
+  - examples/change_plans/tool_system_final_record.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+  - finance-os/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
