@@ -20,6 +20,7 @@ task_manifests:
   - examples/task_manifests/tool_system_mutation_command_packet.yaml
   - examples/task_manifests/tool_system_role_taxonomy.yaml
   - examples/task_manifests/tool_system_execution_state_snapshot.yaml
+  - examples/task_manifests/tool_system_state_collector.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -42,3 +43,4 @@ change_plans:
   - examples/change_plans/tool_system_mutation_command_packet.yaml
   - examples/change_plans/tool_system_role_taxonomy.yaml
   - examples/change_plans/tool_system_execution_state_snapshot.yaml
+  - examples/change_plans/tool_system_state_collector.yaml
