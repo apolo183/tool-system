@@ -9,7 +9,7 @@ from tool_system.runner.task_runner import run_task_pipeline
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_audit_bundle.yaml"
 PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_audit_bundle.yaml"
-P6_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_task_runner.yaml"
+P6_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_run_entry.yaml"
 
 
 def test_task_runner_validates_manifest_and_plan_without_commands(tmp_path: Path) -> None:
