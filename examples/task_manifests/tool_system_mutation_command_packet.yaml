@@ -1,0 +1,52 @@
+task_id: tool-system-mutation-command-packet
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p5d-command-packet
+phase: P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW
+scope:
+  summary: Add no-mutation target repository command packet preview.
+  in_scope:
+    - src/tool_system/target_repo/mutation_command_packet.py
+    - tests/test_mutation_command_packet.py
+    - examples/task_manifests/tool_system_mutation_command_packet.yaml
+    - examples/change_plans/tool_system_mutation_command_packet.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-os writes
+    - finance-os implementation changes
+    - target repository mutation
+    - business-domain logic
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/target_repo/execution_approval.py
+    why_relevant: Command packet preview depends on the execution approval gate.
+allowed_files:
+  - src/tool_system/target_repo/mutation_command_packet.py
+  - tests/test_mutation_command_packet.py
+  - examples/task_manifests/tool_system_mutation_command_packet.yaml
+  - examples/change_plans/tool_system_mutation_command_packet.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+  - finance-os/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
