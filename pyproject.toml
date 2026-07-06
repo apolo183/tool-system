@@ -27,6 +27,7 @@ tool-system-validate-active-gates = "tool_system.cli.validate_active_gates:main"
 tool-system-observe-main-ci = "tool_system.cli.observe_main_ci:main"
 tool-system-target-repo-dry-run = "tool_system.cli.target_repo_dry_run:main"
 tool-system-target-repo-pr-preview = "tool_system.cli.target_repo_pr_plan_preview:main"
+tool-system-run = "tool_system.cli.run_task:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
