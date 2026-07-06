@@ -4,6 +4,7 @@ from fnmatch import fnmatch
 from typing import Any
 
 VALID_MODES = {"read_only", "patch_only", "pull_request", "direct_bootstrap"}
+ACTIVE_POLICY_STATUS = "active"
 
 
 def _match(path: str, patterns: list[str]) -> bool:
@@ -29,11 +30,14 @@ def _requires_per_pr_human_review(policy: dict[str, Any]) -> bool:
 
 def validate_repo_write_policy(manifest: dict[str, Any], policy: dict[str, Any]) -> tuple[bool, list[str]]:
     reasons: list[str] = []
+    if policy.get("status") != ACTIVE_POLICY_STATUS:
+        reasons.append("repo_write_policy.status must be active")
+
     target_repo = manifest.get("target_repo")
     repos = policy.get("allowed_target_repos") or {}
     repo_rules = repos.get(target_repo)
     if not isinstance(repo_rules, dict):
-        return False, [f"target repo not allowed: {target_repo}"]
+        return False, [*reasons, f"target repo not allowed: {target_repo}"]
 
     mode = manifest.get("write_mode")
     if mode not in VALID_MODES:
