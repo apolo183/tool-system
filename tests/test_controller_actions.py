@@ -20,22 +20,17 @@ def test_action_plan_blocks_failed_decision() -> None:
     assert plan == {"status": "BLOCK", "actions": [], "reasons": ["ci failed"]}
 
 
-def test_action_plan_adds_ready_for_draft_pr() -> None:
+def test_action_plan_blocks_draft_pr() -> None:
     plan = build_action_plan(
         decision={"status": "PASS", "merge_method": "squash", "reasons": []},
         pull_request={"number": 8, "head_sha": "abc123", "draft": True},
     )
 
-    assert plan["status"] == "PASS"
-    assert plan["actions"] == [
-        {"action": "pr_ready", "pr_number": 8},
-        {
-            "action": "pr_squash",
-            "pr_number": 8,
-            "expected_head_sha": "abc123",
-            "merge_method": "squash",
-        },
-    ]
+    assert plan == {
+        "status": "BLOCK",
+        "actions": [],
+        "reasons": ["pull request must not be draft before action planning"],
+    }
 
 
 def test_execute_action_plan_dry_run_returns_commands() -> None:
