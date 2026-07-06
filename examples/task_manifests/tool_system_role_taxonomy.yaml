@@ -1,0 +1,55 @@
+task_id: tool-system-role-taxonomy
+task_type: contract_modify
+target_repo: apolo183/tool-system
+target_branch: p5e-role-taxonomy
+phase: P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: agents
+scope:
+  summary: Refine broad agent roles into a fine-grained anti-drift taxonomy before DAG runtime work.
+  in_scope:
+    - blueprint/tool_system_v0.yaml
+    - docs/agent_role_taxonomy_v1.md
+    - tests/test_agent_role_taxonomy.py
+    - examples/task_manifests/tool_system_role_taxonomy.yaml
+    - examples/change_plans/tool_system_role_taxonomy.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-os writes
+    - finance-os implementation changes
+    - target repository mutation
+    - business-domain logic
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Current agents were broad categories and need fine-grained DAG-safe roles.
+allowed_files:
+  - blueprint/tool_system_v0.yaml
+  - docs/agent_role_taxonomy_v1.md
+  - tests/test_agent_role_taxonomy.py
+  - examples/task_manifests/tool_system_role_taxonomy.yaml
+  - examples/change_plans/tool_system_role_taxonomy.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+  - finance-os/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: apolo183
+  approval_source: chat_user_message:role taxonomy should be refined to avoid drift
