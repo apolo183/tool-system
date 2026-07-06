@@ -12,6 +12,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p4a_finance_os_probe.yaml
   - examples/task_manifests/tool_system_p4b_pr_plan_preview.yaml
   - examples/task_manifests/tool_system_p4c_preview.yaml
+  - examples/task_manifests/tool_system_p4d_precheck.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -26,3 +27,4 @@ change_plans:
   - examples/change_plans/tool_system_p4a_finance_os_probe.yaml
   - examples/change_plans/tool_system_p4b_pr_plan_preview.yaml
   - examples/change_plans/tool_system_p4c_preview.yaml
+  - examples/change_plans/tool_system_p4d_precheck.yaml
