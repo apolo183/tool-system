@@ -15,6 +15,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p4d_precheck.yaml
   - examples/task_manifests/tool_system_write_intent_record.yaml
   - examples/task_manifests/tool_system_p5a_phase_entry.yaml
+  - examples/task_manifests/tool_system_write_packet.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -32,3 +33,4 @@ change_plans:
   - examples/change_plans/tool_system_p4d_precheck.yaml
   - examples/change_plans/tool_system_record_gate.yaml
   - examples/change_plans/tool_system_p5a_phase_entry.yaml
+  - examples/change_plans/tool_system_write_packet.yaml
