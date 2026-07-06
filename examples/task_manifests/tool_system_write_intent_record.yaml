@@ -13,7 +13,7 @@ scope:
     - src/tool_system/target_repo/write_intent_record.py
     - tests/test_write_intent.py
     - examples/task_manifests/tool_system_write_intent_record.yaml
-    - examples/change_plans/tool_system_write_intent_record.yaml
+    - examples/change_plans/tool_system_record_gate.yaml
     - examples/active_gates.yaml
   out_of_scope:
     - finance-os writes
@@ -28,7 +28,7 @@ allowed_files:
   - src/tool_system/target_repo/write_intent_record.py
   - tests/test_write_intent.py
   - examples/task_manifests/tool_system_write_intent_record.yaml
-  - examples/change_plans/tool_system_write_intent_record.yaml
+  - examples/change_plans/tool_system_record_gate.yaml
   - examples/active_gates.yaml
 forbidden_files:
   - finance/**
