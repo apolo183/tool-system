@@ -10,7 +10,7 @@ from tool_system.target_repo.p5h_record import run_p5h_record
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
 TARGET_MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "finance_os_p1b_minimal_ranking.yaml"
-CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p5h_record.yaml"
+CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_final_record.yaml"
 PLANNED_FILES = [
     "pyproject.toml",
     "src/finance_os/__init__.py",
