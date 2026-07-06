@@ -1,0 +1,16 @@
+plan_id: tool-system-p3f-controller-self-check-plan
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p3f_controller_self_check.yaml
+changed_files:
+  - src/tool_system/repo_controller/self_check.py
+  - src/tool_system/cli/controller_self_check.py
+  - examples/task_manifests/tool_system_p3f_controller_self_check.yaml
+  - examples/change_plans/tool_system_p3f_controller_self_check.yaml
+  - tests/test_controller_self_check.py
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p3f_controller_self_check.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
