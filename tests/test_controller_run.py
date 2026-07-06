@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
 GATE_DECISION = {"status": "PASS", "reasons": []}
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p3e_controller_cli.yaml"
+MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_p3e_controller_cli.yaml"
 
 
 def fake_collector_runner(args: list[str]) -> Any:
@@ -38,6 +39,14 @@ def fake_collector_runner(args: list[str]) -> Any:
     raise AssertionError(f"unexpected collector args: {args}")
 
 
+def _manifest() -> dict[str, Any]:
+    return load_yaml_file(MANIFEST_PATH)
+
+
+def _change_plan() -> dict[str, Any]:
+    return load_yaml_file(CHANGE_PLAN_PATH)
+
+
 def test_controller_dry_run_writes_audit_jsonl(tmp_path: Path) -> None:
     policy = load_yaml_file(POLICY_PATH)
     audit_path = tmp_path / "controller_audit.jsonl"
@@ -48,6 +57,8 @@ def test_controller_dry_run_writes_audit_jsonl(tmp_path: Path) -> None:
         gate_decision=GATE_DECISION,
         repo_policy=policy,
         audit_path=audit_path,
+        task_manifest=_manifest(),
+        change_plan=_change_plan(),
         dry_run=True,
         collector_runner=fake_collector_runner,
     )
@@ -76,6 +87,8 @@ def test_controller_apply_uses_injected_action_runner(tmp_path: Path) -> None:
         gate_decision=GATE_DECISION,
         repo_policy=policy,
         audit_path=tmp_path / "controller_audit.jsonl",
+        task_manifest=_manifest(),
+        change_plan=_change_plan(),
         dry_run=False,
         collector_runner=fake_collector_runner,
         action_runner=action_runner,
@@ -107,6 +120,8 @@ def test_controller_blocks_failed_action_and_writes_audit(tmp_path: Path) -> Non
         gate_decision=GATE_DECISION,
         repo_policy=policy,
         audit_path=audit_path,
+        task_manifest=_manifest(),
+        change_plan=_change_plan(),
         dry_run=False,
         collector_runner=fake_collector_runner,
         action_runner=action_runner,
