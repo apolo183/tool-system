@@ -45,6 +45,8 @@ def resolve_self_check_context(
 def run_self_check(
     gate_decision: dict[str, Any],
     repo_policy: dict[str, Any],
+    task_manifest: dict[str, Any],
+    change_plan: dict[str, Any],
     audit_path: str | Path,
     repository_full_name: str | None = None,
     pr_number: int | None = None,
@@ -62,6 +64,8 @@ def run_self_check(
         pr_number=int(context["pr_number"]),
         gate_decision=gate_decision,
         repo_policy=repo_policy,
+        task_manifest=task_manifest,
+        change_plan=change_plan,
         audit_path=audit_path,
         dry_run=True,
         collector_runner=collector_runner,
