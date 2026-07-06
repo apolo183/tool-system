@@ -9,7 +9,7 @@ from tool_system.repo_controller.main_ci import evaluate_commit_runs, observe_ma
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p3i_main_ci_observability.yaml"
+CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p3i_observability.yaml"
 
 
 def test_evaluate_commit_runs_passes_completed_success() -> None:
