@@ -1,0 +1,16 @@
+plan_id: tool-system-p4a-finance-os-probe-plan
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p4a_finance_os_probe.yaml
+changed_files:
+  - examples/target_repo_dry_runs/finance_os_p1b_minimal_ranking.jsonl
+  - tests/test_finance_os_dry_run_probe.py
+  - examples/task_manifests/tool_system_p4a_finance_os_probe.yaml
+  - examples/change_plans/tool_system_p4a_finance_os_probe.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
