@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-06 00:40 UTC+08:00
+updated_at: 2026-07-06 11:50 UTC+08:00
 
 ## 1. Mission
 
@@ -47,6 +47,8 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 8. Current phase
 
-Current phase: P3_REPO_WRITE_CONTROLLER.
+Current phase: P4_TARGET_REPO_DRY_RUN_ADAPTER.
 
-Allowed now: refine repo write controller, collect PR and workflow state, evaluate merge readiness through gates, record rollback references, and preserve tool-system/business-repo separation.
+Allowed now: validate target-repository task manifests, read target-repository contract references, generate dry-run plans, write audit artifacts, and preserve no-write boundaries for business repositories.
+
+Not allowed now: direct writes to finance-os, production deployment, live trading, broker integration, or business-domain implementation without a separate approved target-repo PR flow.
