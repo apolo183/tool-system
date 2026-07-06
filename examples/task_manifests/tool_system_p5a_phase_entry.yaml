@@ -1,0 +1,58 @@
+task_id: tool-system-p5a-phase-entry
+task_type: docs_modify
+target_repo: apolo183/tool-system
+target_branch: p5a-phase-entry
+phase: P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW
+scope:
+  summary: Enter P5 approved target repository pull-request write-flow milestone.
+  in_scope:
+    - AGENTS.md
+    - README.md
+    - blueprint/tool_system_v0.yaml
+    - examples/task_manifests/tool_system_p5a_phase_entry.yaml
+    - examples/change_plans/tool_system_p5a_phase_entry.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-os writes
+    - finance-os implementation changes
+    - business-domain logic
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    why_relevant: Defines current operating phase and target-repository write boundaries.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Defines active milestone contract and default policy.
+allowed_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/tool_system_v0.yaml
+  - examples/task_manifests/tool_system_p5a_phase_entry.yaml
+  - examples/change_plans/tool_system_p5a_phase_entry.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+  - finance-os/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: apolo183
+  approval_source: chat_user_message:批准 P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW
