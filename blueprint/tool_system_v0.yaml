@@ -1,6 +1,6 @@
 schema_version: 0.2
 system: tool-system
-phase: P1_AUTONOMY_FOUNDATION
+phase: P3_REPO_WRITE_CONTROLLER
 status: active
 
 identity:
@@ -43,30 +43,35 @@ agents:
   reviewer:
     role: check patch, spec compliance, and rollback plan
     permissions:
-      - approve_or_block_patch
+      - read_diff
+      - request_changes
+  repo_controller:
+    role: apply approved repository changes through explicit gates
+    permissions:
+      - create_branch
+      - open_pull_request
+      - merge_after_gates
 
 milestones:
-  P0_BLUEPRINT_BOOTSTRAP:
-    objective: establish repository identity and governance contract
-    exit_criteria:
-      - README.md exists
-      - AGENTS.md exists
-      - blueprint/tool_system_v0.yaml exists
-  P1A_MINIMAL_DRY_RUN_GATE:
-    objective: validate task manifests and repo policy in dry-run mode
-    entry_requires:
-      - P0_BLUEPRINT_BOOTSTRAP complete
+  P1_BOOTSTRAP:
+    objective: initialize tool-system repository contract and blueprint
     outputs:
-      - task manifest loader
-      - repo policy checker
-      - validator CLI
-      - smoke tests
+      - README.md
+      - AGENTS.md
+      - blueprint/tool_system_v0.yaml
+  P1A_DRY_RUN_GATE:
+    objective: validate a future downstream task manifest without writing target repo code
+    entry_requires:
+      - P1_BOOTSTRAP complete
+    outputs:
+      - manifest schema
+      - policy validator
+      - dry-run CLI
   P1B_AUTONOMY_POLICY:
-    objective: define milestone-level autonomy and avoid per-PR human review for routine implementation work
+    objective: establish milestone-level automation policy and human review boundaries
     entry_requires:
-      - P1A_MINIMAL_DRY_RUN_GATE complete
+      - P1A_DRY_RUN_GATE complete
     outputs:
-      - policy/autonomy_policy.yaml
       - updated repo write policy
       - updated agent operating contract
   P2_PATCH_AND_TEST_GATE:
@@ -93,4 +98,3 @@ default_policy:
   require_rollback_plan: true
   business_logic_is_external: true
   per_pr_human_review_required_for_routine_work: false
-  human_review_required_for_milestone_exit: true
