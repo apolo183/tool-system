@@ -32,14 +32,5 @@ jobs:
       - name: Run tests
         run: python -m pytest -q
 
-      - name: Validate finance-os P1B task manifest
-        run: python -m tool_system.cli.validate_task_manifest examples/task_manifests/finance_os_p1b_minimal_ranking.yaml
-
-      - name: Validate tool-system P2B task manifest
-        run: python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p2b_runner_foundation.yaml
-
-      - name: Validate P2 change plan
-        run: python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p2_gate_foundation.yaml
-
-      - name: Execute P2 change plan gate
-        run: python -m tool_system.cli.execute_change_plan examples/change_plans/tool_system_p2_gate_foundation.yaml
+      - name: Validate active gates
+        run: python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
