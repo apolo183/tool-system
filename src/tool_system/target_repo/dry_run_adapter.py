@@ -3,10 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tool_system.artifact import write_jsonl_record
 from tool_system.gate.change_plan import validate_change_plan_against_manifest, validate_change_plan_structure
 from tool_system.manifest.task_manifest import validate_manifest_structure
 from tool_system.policy.repo_write_policy import validate_repo_write_policy
+from tool_system.repo_controller.artifact import write_jsonl_record
 
 
 def _refs_for_repo(items: list[dict[str, Any]], target_repo: str) -> list[dict[str, Any]]:
