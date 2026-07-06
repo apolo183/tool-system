@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-06 18:05 UTC+08:00
+updated_at: 2026-07-06 22:45 UTC+08:00
 
 ## 1. Mission
 
@@ -47,8 +47,8 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 8. Current phase
 
-Current phase: P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW.
+Current phase: P6_RUNNER_PRODUCTIZATION.
 
-Allowed now: build and validate approved target-repository pull-request write flows, gated branch/PR plans, and audit records after P4D precheck and P4E write-intent gates pass.
+Allowed now: build and validate a unified local task runner that reads task manifests and change plans, runs gates, writes audit records, and prepares later repository actions after existing P5 no-mutation contracts pass.
 
-Not allowed now: direct target-repository main-branch mutation, direct finance-os mutation without separate explicit approval, production deployment, or business-domain implementation outside a valid approved PR flow.
+Not allowed now: direct target-repository main-branch mutation, direct downstream repository mutation without separate explicit approval, production deployment, or business-domain implementation outside a valid approved workflow.
