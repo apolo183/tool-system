@@ -1,0 +1,73 @@
+task_id: tool-system-p4-target-repo-dry-run
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p4-target-dry-run
+phase: P4_TARGET_REPO_DRY_RUN_ADAPTER
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P4_TARGET_REPO_DRY_RUN_ADAPTER
+scope:
+  summary: Add no-write target repository dry-run adapter for finance-os task manifests.
+  in_scope:
+    - AGENTS.md
+    - README.md
+    - blueprint/tool_system_v0.yaml
+    - src/tool_system/target_repo/__init__.py
+    - src/tool_system/target_repo/dry_run_adapter.py
+    - src/tool_system/cli/target_repo_dry_run.py
+    - tests/test_target_repo_dry_run.py
+    - examples/task_manifests/tool_system_p4_target_repo_dry_run.yaml
+    - examples/change_plans/tool_system_p4_target_repo_dry_run.yaml
+    - examples/active_gates.yaml
+    - pyproject.toml
+  out_of_scope:
+    - finance-os writes
+    - finance-os implementation changes
+    - business-domain logic
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    why_relevant: Defines tool-system phase and no-write separation from business repositories.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Defines P4 target repo dry-run adapter milestone.
+  - repo: apolo183/finance-os
+    path: AGENTS.md
+    why_relevant: Defines target repo phase and disallows harness/repo-controller logic in finance-os.
+  - repo: apolo183/finance-os
+    path: blueprint/finance_os_phase_1_v0.yaml
+    why_relevant: Defines finance-os P1 shadow top10 contract used for dry-run validation.
+allowed_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/tool_system_v0.yaml
+  - src/tool_system/target_repo/__init__.py
+  - src/tool_system/target_repo/dry_run_adapter.py
+  - src/tool_system/cli/target_repo_dry_run.py
+  - tests/test_target_repo_dry_run.py
+  - examples/task_manifests/tool_system_p4_target_repo_dry_run.yaml
+  - examples/change_plans/tool_system_p4_target_repo_dry_run.yaml
+  - examples/active_gates.yaml
+  - pyproject.toml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+  - finance-os/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
