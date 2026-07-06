@@ -1,0 +1,55 @@
+task_id: tool-system-p3f-controller-self-check
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p3f-controller-self-check
+phase: P3_REPO_WRITE_CONTROLLER
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P3_REPO_WRITE_CONTROLLER
+scope:
+  summary: Add dry-run controller self-check entrypoint that resolves PR context from GitHub event data.
+  in_scope:
+    - src/tool_system/repo_controller/self_check.py
+    - src/tool_system/cli/controller_self_check.py
+    - examples/task_manifests/tool_system_p3f_controller_self_check.yaml
+    - examples/change_plans/tool_system_p3f_controller_self_check.yaml
+    - tests/test_controller_self_check.py
+  out_of_scope:
+    - finance-os changes
+    - business-domain logic
+    - production deployment
+    - workflow permission changes
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    line_range: P3_REPO_WRITE_CONTROLLER
+    why_relevant: Defines repo write controller, rollback log, and audit trail outputs.
+  - repo: apolo183/tool-system
+    path: src/tool_system/repo_controller/controller_run.py
+    why_relevant: Provides controller orchestration used by self-check.
+allowed_files:
+  - src/tool_system/repo_controller/self_check.py
+  - src/tool_system/cli/controller_self_check.py
+  - examples/task_manifests/tool_system_p3f_controller_self_check.yaml
+  - examples/change_plans/tool_system_p3f_controller_self_check.yaml
+  - tests/test_controller_self_check.py
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p3f_controller_self_check.yaml
+  pass_conditions:
+    - pytest exits 0
+    - P3F change plan validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
