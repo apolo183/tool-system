@@ -1,0 +1,61 @@
+task_id: tool-system-p4d-precheck
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p4d-precheck
+phase: P4_TARGET_REPO_DRY_RUN_ADAPTER
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P4_TARGET_REPO_DRY_RUN_ADAPTER
+scope:
+  summary: Add no-write hard precheck before target repository writes are allowed.
+  in_scope:
+    - src/tool_system/target_repo/p4d_precheck.py
+    - tests/test_p4d_precheck.py
+    - examples/task_manifests/tool_system_p4d_precheck.yaml
+    - examples/change_plans/tool_system_p4d_precheck.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-os writes
+    - finance-os implementation changes
+    - business-domain logic
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    why_relevant: P4 permits dry-run plans and forbids direct finance-os writes.
+  - repo: apolo183/tool-system
+    path: src/tool_system/target_repo/dry_run_adapter.py
+    why_relevant: P4D requires passing no-write dry-run before precheck can pass.
+  - repo: apolo183/tool-system
+    path: src/tool_system/target_repo/pr_plan_preview.py
+    why_relevant: P4D requires passing PR preview before precheck can pass.
+  - repo: apolo183/tool-system
+    path: src/tool_system/target_repo/p4c_preview_module.py
+    why_relevant: P4D requires passing action-plan preview before precheck can pass.
+allowed_files:
+  - src/tool_system/target_repo/p4d_precheck.py
+  - tests/test_p4d_precheck.py
+  - examples/task_manifests/tool_system_p4d_precheck.yaml
+  - examples/change_plans/tool_system_p4d_precheck.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+  - finance-os/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
