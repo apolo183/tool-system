@@ -1,6 +1,6 @@
 schema_version: 0.2
 system: tool-system
-phase: P3_REPO_WRITE_CONTROLLER
+phase: P4_TARGET_REPO_DRY_RUN_ADAPTER
 status: active
 
 identity:
@@ -17,6 +17,7 @@ boundaries:
     - repo_write_controller
     - audit_log
     - autonomy_policy
+    - target_repo_dry_run_adapter
   does_not_own:
     - finance_signals
     - ranking_models
@@ -51,6 +52,12 @@ agents:
       - create_branch
       - open_pull_request
       - merge_after_gates
+  target_adapter:
+    role: validate downstream target repository manifests without writing target repositories
+    permissions:
+      - read_target_contract_refs
+      - produce_dry_run_plan
+      - write_tool_system_audit
 
 milestones:
   P1_BOOTSTRAP:
@@ -90,6 +97,14 @@ milestones:
       - repo write controller
       - rollback log
       - audit trail
+  P4_TARGET_REPO_DRY_RUN_ADAPTER:
+    objective: validate downstream target repo tasks and emit no-write dry-run plans
+    entry_requires:
+      - P3_REPO_WRITE_CONTROLLER foundation accepted
+    outputs:
+      - target repo manifest boundary validator
+      - no-write dry-run plan
+      - target adapter audit artifact
 
 default_policy:
   no_direct_main_write: true
@@ -98,3 +113,4 @@ default_policy:
   require_rollback_plan: true
   business_logic_is_external: true
   per_pr_human_review_required_for_routine_work: false
+  target_repo_writes_require_separate_approval: true

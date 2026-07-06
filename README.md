@@ -5,7 +5,7 @@ role: repository overview
 purpose: define the domain-agnostic tool system boundary and current controller contract  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-06 01:25 UTC+08:00
+updated_at: 2026-07-06 11:50 UTC+08:00
 
 ## Definition
 
@@ -25,6 +25,7 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 - Create auditable repository changes.
 - Collect pull request and workflow state for repo write decisions.
 - Execute approved repository write actions through explicit controller gates.
+- Validate downstream target-repository task manifests in dry-run mode.
 
 ### Out of scope
 
@@ -37,13 +38,13 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 
 ## Current phase
 
-Current phase: `P3_REPO_WRITE_CONTROLLER`.
+Current phase: `P4_TARGET_REPO_DRY_RUN_ADAPTER`.
 
-The active objective is controlled repository modification through gates: task manifest, change plan, repo write policy, CI status, rollback reference, and audit artifact.
+The active objective is target-repository dry-run adaptation: read target contract references, validate target repo boundaries, generate a no-write dry-run plan, and record an audit artifact.
 
 ## Repository contract
 
-This repository is a tool layer. Business systems such as finance-os are downstream targets. tool-system may propose and apply code changes to target repositories only through explicit workflow, test, policy, and review gates.
+This repository is a tool layer. Business systems such as finance-os are downstream targets. tool-system may propose and apply code changes to target repositories only through explicit workflow, test, policy, and review gates. In P4, finance-os is still dry-run only: tool-system does not write finance-os.
 
 ## Bootstrap files
 

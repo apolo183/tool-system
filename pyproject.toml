@@ -25,6 +25,7 @@ tool-system-evaluate-github-state = "tool_system.cli.evaluate_github_state:main"
 tool-system-controller-run = "tool_system.cli.controller_run:main"
 tool-system-validate-active-gates = "tool_system.cli.validate_active_gates:main"
 tool-system-observe-main-ci = "tool_system.cli.observe_main_ci:main"
+tool-system-target-repo-dry-run = "tool_system.cli.target_repo_dry_run:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

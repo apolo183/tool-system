@@ -8,6 +8,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p3f_controller_self_check.yaml
   - examples/task_manifests/tool_system_p3g_contract_hardening.yaml
   - examples/task_manifests/tool_system_p3i_observability.yaml
+  - examples/task_manifests/tool_system_p4_target_repo_dry_run.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -18,3 +19,4 @@ change_plans:
   - examples/change_plans/tool_system_p3f_controller_self_check.yaml
   - examples/change_plans/tool_system_p3g_contract_hardening.yaml
   - examples/change_plans/tool_system_p3i_observability.yaml
+  - examples/change_plans/tool_system_p4_target_repo_dry_run.yaml
