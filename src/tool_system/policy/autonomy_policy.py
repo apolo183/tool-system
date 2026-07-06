@@ -5,6 +5,7 @@ from typing import Any
 REQUIRED_TOP_LEVEL_KEYS = {
     "schema_version",
     "policy",
+    "status",
     "authorization_model",
     "human_review_required_for",
     "system_handled_when_manifest_allows",
@@ -56,6 +57,8 @@ def validate_autonomy_policy(policy: dict[str, Any]) -> tuple[bool, list[str]]:
 
     if policy.get("policy") != "autonomy_policy":
         reasons.append("policy must be autonomy_policy")
+    if policy.get("status") != "active":
+        reasons.append("autonomy_policy.status must be active")
 
     authorization = policy.get("authorization_model")
     if not isinstance(authorization, dict):
