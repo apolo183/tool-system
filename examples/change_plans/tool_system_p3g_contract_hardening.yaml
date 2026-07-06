@@ -28,6 +28,7 @@ changed_files:
   - tests/test_controller_run.py
   - tests/test_controller_self_check.py
   - tests/test_controller_actions.py
+  - tests/test_active_gates.py
   - pyproject.toml
   - .github/workflows/tool-system-ci.yml
 verification:
