@@ -1,0 +1,7 @@
+batch_id: tool-system-batch-runner
+halt_on_failure: true
+tasks:
+  - task_manifest: examples/task_manifests/tool_system_run_entry.yaml
+    change_plan: examples/change_plans/tool_system_run_entry.yaml
+  - task_manifest: examples/task_manifests/tool_system_audit_bundle.yaml
+    change_plan: examples/change_plans/tool_system_audit_bundle.yaml
