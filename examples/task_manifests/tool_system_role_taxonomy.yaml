@@ -12,6 +12,7 @@ scope:
   in_scope:
     - blueprint/tool_system_v0.yaml
     - docs/agent_role_taxonomy_v1.md
+    - policy/repo_write_policy.yaml
     - tests/test_agent_role_taxonomy.py
     - examples/task_manifests/tool_system_role_taxonomy.yaml
     - examples/change_plans/tool_system_role_taxonomy.yaml
@@ -28,6 +29,7 @@ evidence:
 allowed_files:
   - blueprint/tool_system_v0.yaml
   - docs/agent_role_taxonomy_v1.md
+  - policy/repo_write_policy.yaml
   - tests/test_agent_role_taxonomy.py
   - examples/task_manifests/tool_system_role_taxonomy.yaml
   - examples/change_plans/tool_system_role_taxonomy.yaml
