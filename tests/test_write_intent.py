@@ -11,7 +11,7 @@ from tool_system.target_repo.write_intent_record import run_write_intent_record
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
 TARGET_MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "finance_os_p1b_minimal_ranking.yaml"
-CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_write_intent_record.yaml"
+CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_record_gate.yaml"
 
 
 def _manifest() -> dict[str, object]:
