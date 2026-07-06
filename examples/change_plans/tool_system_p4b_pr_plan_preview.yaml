@@ -1,0 +1,19 @@
+plan_id: tool-system-p4b-pr-plan-preview-plan
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p4b_pr_plan_preview.yaml
+changed_files:
+  - src/tool_system/target_repo/pr_plan_preview.py
+  - src/tool_system/cli/target_repo_pr_plan_preview.py
+  - examples/target_repo_pr_previews/finance_os_p1b_minimal_ranking.jsonl
+  - tests/test_target_repo_pr_plan_preview.py
+  - examples/task_manifests/tool_system_p4b_pr_plan_preview.yaml
+  - examples/change_plans/tool_system_p4b_pr_plan_preview.yaml
+  - examples/active_gates.yaml
+  - pyproject.toml
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
