@@ -1,1 +1,53 @@
 task_id: tool-system-multi-task
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p6b-batch-runner
+phase: P6_RUNNER_PRODUCTIZATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    section_or_key: Current phase
+scope:
+  summary: Add multi-task local pipeline support for one-command grouped checks.
+  in_scope:
+    - src/tool_system/runner/task_runner.py
+    - src/tool_system/cli/run_batch.py
+    - tests/test_multi_task.py
+    - examples/batches/tool_system_batch_runner.yaml
+    - examples/task_manifests/tool_system_multi_task.yaml
+    - examples/change_plans/tool_system_batch_runner.yaml
+    - pyproject.toml
+  out_of_scope:
+    - business-domain logic
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/runner/task_runner.py
+    why_relevant: Multi-task support builds on the existing local task runner.
+allowed_files:
+  - src/tool_system/runner/task_runner.py
+  - src/tool_system/cli/run_batch.py
+  - tests/test_multi_task.py
+  - examples/batches/tool_system_batch_runner.yaml
+  - examples/task_manifests/tool_system_multi_task.yaml
+  - examples/change_plans/tool_system_batch_runner.yaml
+  - pyproject.toml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
