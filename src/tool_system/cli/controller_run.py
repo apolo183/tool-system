@@ -13,6 +13,8 @@ def main() -> int:
     parser.add_argument("repository_full_name")
     parser.add_argument("pr_number", type=int)
     parser.add_argument("--gate-decision", type=Path, required=True)
+    parser.add_argument("--task-manifest", type=Path, required=True)
+    parser.add_argument("--change-plan", type=Path, required=True)
     parser.add_argument("--policy", type=Path, default=Path("policy/repo_write_policy.yaml"))
     parser.add_argument("--audit-path", type=Path, default=Path("artifacts/controller_audit.jsonl"))
     parser.add_argument("--apply", action="store_true")
@@ -21,12 +23,16 @@ def main() -> int:
 
     gate_decision = load_yaml_file(args.gate_decision)
     policy = load_yaml_file(args.policy)
+    task_manifest = load_yaml_file(args.task_manifest)
+    change_plan = load_yaml_file(args.change_plan)
     output = run_controller(
         repository_full_name=args.repository_full_name,
         pr_number=args.pr_number,
         gate_decision=gate_decision,
         repo_policy=policy,
         audit_path=args.audit_path,
+        task_manifest=task_manifest,
+        change_plan=change_plan,
         dry_run=not args.apply,
         merge_method=args.merge_method,
     )
