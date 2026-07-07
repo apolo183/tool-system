@@ -1,0 +1,19 @@
+plan_id: tool-system-req-graph
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_req_graph.yaml
+changed_files:
+  - pyproject.toml
+  - src/tool_system/planner/requirement_graph.py
+  - src/tool_system/cli/plan_requirement.py
+  - tests/test_requirement_graph.py
+  - examples/requirements/tool_system_p7d.yaml
+  - examples/task_manifests/tool_system_req_graph.yaml
+  - examples/change_plans/tool_system_req_graph.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
