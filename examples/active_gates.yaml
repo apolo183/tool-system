@@ -31,6 +31,7 @@ task_manifests:
   - examples/task_manifests/tool_system_task_graph_planner.yaml
   - examples/task_manifests/tool_system_task_graph_batch.yaml
   - examples/task_manifests/tool_system_task_graph_active_gate.yaml
+  - examples/task_manifests/tool_system_graph_run.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -64,3 +65,4 @@ change_plans:
   - examples/change_plans/tool_system_task_graph_planner.yaml
   - examples/change_plans/tool_system_graph_batch.yaml
   - examples/change_plans/tool_system_task_graph_active_gate.yaml
+  - examples/change_plans/tool_system_graph_run.yaml
