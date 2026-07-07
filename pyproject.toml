@@ -31,6 +31,7 @@ tool-system-target-repo-pr-preview = "tool_system.cli.target_repo_pr_plan_previe
 tool-system-run = "tool_system.cli.run_task:main"
 tool-system-batch = "tool_system.cli.run_batch:main"
 tool-system-plan-graph = "tool_system.cli.plan_task_graph:main"
+tool-system-run-graph = "tool_system.cli.run_task_graph:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

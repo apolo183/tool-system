@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Sequence
 
+from tool_system.runner.task_graph_runner import run_task_graph_pipeline
 from tool_system.runner.task_runner import run_batch_file, run_task_pipeline
 
 
@@ -30,6 +31,12 @@ def build_parser() -> argparse.ArgumentParser:
     batch_parser.add_argument("batch", type=Path)
     batch_parser.add_argument("--audit-path", type=Path, default=Path("artifacts/batch_runner_audit.jsonl"))
     _add_common_options(batch_parser)
+
+    graph_parser = subparsers.add_parser("graph", help="Run a task graph through the compiled batch runner.")
+    graph_parser.add_argument("graph", type=Path)
+    graph_parser.add_argument("--blueprint", type=Path, default=Path("blueprint/tool_system_v0.yaml"))
+    graph_parser.add_argument("--audit-path", type=Path, default=Path("artifacts/task_graph_runner_audit.jsonl"))
+    _add_common_options(graph_parser)
     return parser
 
 
@@ -48,9 +55,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             audit_path=args.audit_path,
             execute_commands=not args.skip_commands,
         )
-    else:
+    elif args.command == "batch":
         output = run_batch_file(
             batch_path=args.batch,
+            active_gates_path=args.active_gates,
+            policy_path=args.policy,
+            autonomy_policy_path=args.autonomy_policy,
+            cwd=args.cwd,
+            audit_path=args.audit_path,
+            execute_commands=not args.skip_commands,
+        )
+    else:
+        output = run_task_graph_pipeline(
+            graph_path=args.graph,
+            blueprint_path=args.blueprint,
             active_gates_path=args.active_gates,
             policy_path=args.policy,
             autonomy_policy_path=args.autonomy_policy,

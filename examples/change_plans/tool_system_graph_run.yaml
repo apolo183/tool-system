@@ -1,0 +1,19 @@
+plan_id: tool-system-graph-run-plan
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_graph_run.yaml
+changed_files:
+  - pyproject.toml
+  - src/tool_system/runner/task_graph_runner.py
+  - src/tool_system/cli/run_task_graph.py
+  - src/tool_system/cli/main.py
+  - tests/test_task_graph_runner.py
+  - examples/task_manifests/tool_system_graph_run.yaml
+  - examples/change_plans/tool_system_graph_run.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
