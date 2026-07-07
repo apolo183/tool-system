@@ -17,7 +17,7 @@ scope:
     - tests/test_cleanup_plan.py
     - examples/cleanup/tool_system_residue_state.yaml
     - examples/task_manifests/tool_system_cleanup_plan.yaml
-    - examples/change_plans/tool_system_cleanup_plan.yaml
+    - examples/change_plans/tool_system_residue_review.yaml
     - examples/active_gates.yaml
   out_of_scope:
     - business-domain logic
@@ -37,7 +37,7 @@ allowed_files:
   - tests/test_cleanup_plan.py
   - examples/cleanup/tool_system_residue_state.yaml
   - examples/task_manifests/tool_system_cleanup_plan.yaml
-  - examples/change_plans/tool_system_cleanup_plan.yaml
+  - examples/change_plans/tool_system_residue_review.yaml
   - examples/active_gates.yaml
 forbidden_files:
   - finance/**
