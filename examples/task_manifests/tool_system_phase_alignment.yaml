@@ -1,0 +1,58 @@
+task_id: tool-system-phase-alignment
+task_type: contract_modify
+target_repo: apolo183/tool-system
+target_branch: contract-alignment
+phase: P6_RUNNER_PRODUCTIZATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    section_or_key: Current phase
+scope:
+  summary: Align README and blueprint current phase with AGENTS P6 runner productization.
+  in_scope:
+    - README.md
+    - blueprint/tool_system_v0.yaml
+    - tests/test_phase_alignment.py
+    - examples/task_manifests/tool_system_phase_alignment.yaml
+    - examples/change_plans/tool_system_phase_alignment.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - business-domain logic
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    why_relevant: AGENTS is already the P6 operating contract.
+  - repo: apolo183/tool-system
+    path: README.md
+    why_relevant: README still described the old P5 phase before this change.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Blueprint still described the old P5 phase before this change.
+allowed_files:
+  - README.md
+  - blueprint/tool_system_v0.yaml
+  - tests/test_phase_alignment.py
+  - examples/task_manifests/tool_system_phase_alignment.yaml
+  - examples/change_plans/tool_system_phase_alignment.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: apolo183
+  approval_source: chat_user_message:tool_system_phase_drift_audit
