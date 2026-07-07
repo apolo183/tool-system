@@ -1,6 +1,6 @@
 schema_version: 0.2
 system: tool-system
-phase: P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW
+phase: P6_RUNNER_PRODUCTIZATION
 status: active
 
 identity:
@@ -20,6 +20,7 @@ boundaries:
     - target_repo_dry_run_adapter
     - target_repo_pr_write_flow
     - agent_role_taxonomy
+    - task_runner_productization
   does_not_own:
     - finance_signals
     - ranking_models
@@ -202,6 +203,16 @@ milestones:
       - target repo branch and PR mutation gate
       - target repo write audit and rollback reference
       - fine-grained agent role taxonomy
+  P6_RUNNER_PRODUCTIZATION:
+    objective: provide a single local runner command for task manifest and change-plan validation, gate execution, and audit record creation
+    entry_requires:
+      - P5_TARGET_REPO_APPROVED_PR_WRITE_FLOW accepted
+    outputs:
+      - unified task runner API
+      - tool-system-run CLI
+      - grouped local checks CLI
+      - local audit artifact
+      - no-mutation runner contract
 
 default_policy:
   no_direct_main_write: true
