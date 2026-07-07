@@ -1,0 +1,60 @@
+task_id: tool-system-cleanup-plan
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p7c-cleanup-planner
+phase: P7_BLUEPRINT_TO_TASK_GRAPH
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: agents.cleanup_owner
+scope:
+  summary: Add no-write residue review planning for repository hygiene.
+  in_scope:
+    - pyproject.toml
+    - src/tool_system/cleanup/__init__.py
+    - src/tool_system/cleanup/residue_plan.py
+    - src/tool_system/cli/cleanup_plan.py
+    - tests/test_cleanup_plan.py
+    - examples/cleanup/tool_system_residue_state.yaml
+    - examples/task_manifests/tool_system_cleanup_plan.yaml
+    - examples/change_plans/tool_system_residue_review.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - business-domain logic
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Blueprint defines cleanup_owner as the role for residue review.
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    why_relevant: Operating contract requires rollback references and bounded write control.
+allowed_files:
+  - pyproject.toml
+  - src/tool_system/cleanup/__init__.py
+  - src/tool_system/cleanup/residue_plan.py
+  - src/tool_system/cli/cleanup_plan.py
+  - tests/test_cleanup_plan.py
+  - examples/cleanup/tool_system_residue_state.yaml
+  - examples/task_manifests/tool_system_cleanup_plan.yaml
+  - examples/change_plans/tool_system_residue_review.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization

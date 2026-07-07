@@ -1,0 +1,12 @@
+branches:
+  - main
+  - tmp_probe
+  - probe-old
+  - feature-keep
+pull_requests:
+  - number: 35
+    state: closed
+    head: probe-old
+artifacts:
+  - tmp/output.tmp
+  - artifacts/keep.jsonl
