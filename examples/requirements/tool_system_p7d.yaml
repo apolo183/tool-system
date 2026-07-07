@@ -1,1 +1,32 @@
 requirement_id: tool-system-p7d
+phase: P7_BLUEPRINT_TO_TASK_GRAPH
+objective: Compile structured input into a validated task graph and runnable graph output.
+target_graph_id: tool-system-p7d-compiled-graph
+source_blueprint:
+  repo: apolo183/tool-system
+  path: blueprint/tool_system_v0.yaml
+  section_or_key: milestones.P7_BLUEPRINT_TO_TASK_GRAPH
+work_items:
+  - item_id: collect-evidence
+    role: evidence_collector
+    task_manifest: examples/task_manifests/tool_system_phase_alignment.yaml
+    change_plan: examples/change_plans/tool_system_phase_alignment.yaml
+    depends_on: []
+  - item_id: enforce-policy
+    role: policy_guard
+    task_manifest: examples/task_manifests/tool_system_root_cli.yaml
+    change_plan: examples/change_plans/tool_system_root_cli.yaml
+    depends_on:
+      - collect-evidence
+  - item_id: verify-runner
+    role: test_engineer
+    task_manifest: examples/task_manifests/tool_system_active_gate_resolver.yaml
+    change_plan: examples/change_plans/tool_system_active_gate_resolver.yaml
+    depends_on:
+      - enforce-policy
+  - item_id: record-result
+    role: audit_recorder
+    task_manifest: examples/task_manifests/tool_system_audit_bundle.yaml
+    change_plan: examples/change_plans/tool_system_audit_bundle.yaml
+    depends_on:
+      - verify-runner
