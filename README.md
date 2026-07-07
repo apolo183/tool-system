@@ -5,7 +5,7 @@ role: repository overview
 purpose: define the domain-agnostic tool system boundary and current controller contract  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-06 22:55 UTC+08:00
+updated_at: 2026-07-07 22:45 UTC+08:00
 
 ## Definition
 
@@ -28,6 +28,7 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 - Validate downstream target-repository task manifests in dry-run mode.
 - Prepare approved downstream target-repository pull-request write flows after explicit gates pass.
 - Run local task-manifest and change-plan gates through productized runner commands.
+- Compile approved blueprint milestones into deterministic DAG plans with role assignments.
 
 ### Out of scope
 
@@ -40,13 +41,13 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 
 ## Current phase
 
-Current phase: `P6_RUNNER_PRODUCTIZATION`.
+Current phase: `P7_BLUEPRINT_TO_DAG_PLANNER`.
 
-The active objective is runner productization: provide a single local command path for task manifest validation, change-plan validation, optional verification command execution, and audit record creation while preserving the existing no-mutation target-repository boundary.
+The active objective is blueprint-to-DAG planning: compile approved blueprint milestones into deterministic dependency graphs with role assignments, required verification nodes, and audit nodes before runner execution.
 
 ## Repository contract
 
-This repository is a tool layer. Business systems are downstream targets. tool-system may propose and apply code changes to target repositories only through explicit workflow, test, policy, and review gates. In P6, target repositories still require separate explicit approval before the first real target-repository mutation.
+This repository is a tool layer. Business systems are downstream targets. tool-system may propose and apply code changes to target repositories only through explicit workflow, test, policy, and review gates. In P7, target repositories still require separate explicit approval before the first real target-repository mutation.
 
 ## Bootstrap files
 
