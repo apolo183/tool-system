@@ -7,7 +7,13 @@ from tool_system.manifest.task_manifest import load_yaml_file
 
 
 def _normalize_path(path: str | Path) -> str:
-    return Path(path).as_posix()
+    candidate = Path(path)
+    if candidate.is_absolute():
+        try:
+            candidate = candidate.relative_to(Path.cwd())
+        except ValueError:
+            pass
+    return candidate.as_posix()
 
 
 def _active_gate_entries(active_gates: dict[str, Any], key: str) -> list[str]:
