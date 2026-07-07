@@ -9,6 +9,7 @@ from tool_system.gate.command_runner import commands_from_change_plan, run_comma
 from tool_system.gate.test_gate import build_gate_decision
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.repo_controller.artifact import write_jsonl_record
+from tool_system.runner.active_gate_resolver import resolve_change_plan_from_active_gates
 
 
 def _load_optional_plan(change_plan_path: Path | None) -> dict[str, Any] | None:
@@ -21,17 +22,31 @@ def _status_from_reasons(reasons: list[str]) -> str:
     return "PASS" if not reasons else "BLOCK"
 
 
+def _resolved_plan_path(
+    task_manifest_path: Path,
+    change_plan_path: str | Path | None,
+    active_gates_path: str | Path | None,
+) -> tuple[Path | None, str | None]:
+    if change_plan_path is not None:
+        return Path(change_plan_path), "explicit"
+    if active_gates_path is None:
+        return None, None
+    resolved = resolve_change_plan_from_active_gates(task_manifest_path, active_gates_path)
+    return resolved, "active_gates" if resolved is not None else None
+
+
 def run_task_pipeline(
     task_manifest_path: str | Path,
     change_plan_path: str | Path | None = None,
     policy_path: str | Path = "policy/repo_write_policy.yaml",
     autonomy_policy_path: str | Path = "policy/autonomy_policy.yaml",
+    active_gates_path: str | Path | None = "examples/active_gates.yaml",
     cwd: str | Path | None = None,
     audit_path: str | Path | None = None,
     execute_commands: bool = True,
 ) -> dict[str, object]:
     manifest_path = Path(task_manifest_path)
-    plan_path = Path(change_plan_path) if change_plan_path is not None else None
+    plan_path, plan_resolution_source = _resolved_plan_path(manifest_path, change_plan_path, active_gates_path)
     policy = Path(policy_path)
     autonomy_policy = Path(autonomy_policy_path)
 
@@ -67,6 +82,8 @@ def run_task_pipeline(
         "mode": "tool_system_task_runner",
         "task_manifest_path": str(manifest_path),
         "change_plan_path": str(plan_path) if plan_path is not None else None,
+        "change_plan_resolution_source": plan_resolution_source,
+        "active_gates_path": str(active_gates_path) if active_gates_path is not None else None,
         "policy_path": str(policy),
         "autonomy_policy_path": str(autonomy_policy),
         "manifest_result": manifest_result,
@@ -93,6 +110,7 @@ def run_batch_pipeline(
     batch: dict[str, Any],
     policy_path: str | Path = "policy/repo_write_policy.yaml",
     autonomy_policy_path: str | Path = "policy/autonomy_policy.yaml",
+    active_gates_path: str | Path | None = "examples/active_gates.yaml",
     cwd: str | Path | None = None,
     audit_path: str | Path | None = None,
     execute_commands: bool = True,
@@ -112,17 +130,18 @@ def run_batch_pipeline(
                 break
             continue
         manifest_path = _resolve_batch_path(entry.get("task_manifest"))
-        plan_path = _resolve_batch_path(entry.get("change_plan"))
-        if manifest_path is None or plan_path is None:
-            reasons.append(f"batch task {index} requires task_manifest and change_plan")
+        if manifest_path is None:
+            reasons.append(f"batch task {index} requires task_manifest")
             if halt_on_failure:
                 break
             continue
+        plan_path = _resolve_batch_path(entry.get("change_plan"))
         result = run_task_pipeline(
             task_manifest_path=manifest_path,
             change_plan_path=plan_path,
             policy_path=policy_path,
             autonomy_policy_path=autonomy_policy_path,
+            active_gates_path=entry.get("active_gates") or active_gates_path,
             cwd=entry.get("cwd") or cwd,
             execute_commands=execute_commands,
         )
@@ -138,6 +157,7 @@ def run_batch_pipeline(
         "mode": "tool_system_batch_runner",
         "task_count": len(raw_tasks),
         "completed_task_count": len(task_results),
+        "active_gates_path": str(active_gates_path) if active_gates_path is not None else None,
         "task_results": task_results,
         "writes_target_repo": False,
         "executes_target_repo_mutation": False,
@@ -153,6 +173,7 @@ def run_batch_file(
     batch_path: str | Path,
     policy_path: str | Path = "policy/repo_write_policy.yaml",
     autonomy_policy_path: str | Path = "policy/autonomy_policy.yaml",
+    active_gates_path: str | Path | None = "examples/active_gates.yaml",
     cwd: str | Path | None = None,
     audit_path: str | Path | None = None,
     execute_commands: bool = True,
@@ -163,6 +184,7 @@ def run_batch_file(
         batch=batch,
         policy_path=policy_path,
         autonomy_policy_path=autonomy_policy_path,
+        active_gates_path=active_gates_path,
         cwd=cwd,
         audit_path=audit_path,
         execute_commands=execute_commands,
