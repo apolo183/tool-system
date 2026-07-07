@@ -7,6 +7,8 @@ from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.planner.task_graph import (
     compile_task_graph_file_to_batch,
     validate_task_graph,
+    validate_task_graph_active_gates,
+    validate_task_graph_active_gates_file,
     validate_task_graph_file,
     write_task_graph_batch_file,
 )
@@ -16,8 +18,10 @@ from tool_system.runner.task_runner import run_batch_file
 ROOT = Path(__file__).resolve().parents[1]
 GRAPH_PATH = ROOT / "examples" / "task_graphs" / "tool_system_p7a_task_graph.yaml"
 BLUEPRINT_PATH = ROOT / "blueprint" / "tool_system_v0.yaml"
+ACTIVE_GATES_PATH = ROOT / "examples" / "active_gates.yaml"
 P7A_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_task_graph_planner.yaml"
 P7B_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_graph_batch.yaml"
+P7C_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_task_graph_active_gate.yaml"
 
 
 def test_task_graph_planner_orders_tasks() -> None:
@@ -32,6 +36,25 @@ def test_task_graph_planner_orders_tasks() -> None:
     ]
     assert result["writes_target_repo"] is False
     assert result["executes_target_repo_mutation"] is False
+
+
+def test_task_graph_validates_active_gates() -> None:
+    result = validate_task_graph_active_gates_file(GRAPH_PATH, BLUEPRINT_PATH, ACTIVE_GATES_PATH)
+
+    assert result["status"] == "PASS"
+    assert len(result["active_gate_checks"]) == 4
+    assert all(check["resolved_change_plan"] for check in result["active_gate_checks"])
+
+
+def test_task_graph_blocks_inactive_manifest() -> None:
+    graph = load_yaml_file(GRAPH_PATH)
+    graph["tasks"][0]["task_manifest"] = "examples/task_manifests/not_active.yaml"
+    blueprint = load_yaml_file(BLUEPRINT_PATH)
+
+    result = validate_task_graph_active_gates(graph, blueprint, ACTIVE_GATES_PATH)
+
+    assert result["status"] == "BLOCK"
+    assert "task manifest is not active: examples/task_manifests/not_active.yaml" in result["reasons"]
 
 
 def test_task_graph_compiles_to_batch_in_order() -> None:
@@ -84,8 +107,11 @@ def test_task_graph_planner_requires_control_roles() -> None:
 def test_task_graph_change_plans_validate() -> None:
     p7a_result = validate_change_plan(P7A_PLAN_PATH)
     p7b_result = validate_change_plan(P7B_PLAN_PATH)
+    p7c_result = validate_change_plan(P7C_PLAN_PATH)
 
     assert p7a_result["status"] == "PASS"
     assert p7a_result["reasons"] == []
     assert p7b_result["status"] == "PASS"
     assert p7b_result["reasons"] == []
+    assert p7c_result["status"] == "PASS"
+    assert p7c_result["reasons"] == []
