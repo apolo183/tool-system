@@ -17,6 +17,7 @@ dev = [
 ]
 
 [project.scripts]
+tool-system = "tool_system.cli.main:main"
 tool-system-validate-task-manifest = "tool_system.cli.validate_task_manifest:main"
 tool-system-validate-change-plan = "tool_system.cli.validate_change_plan:main"
 tool-system-execute-change-plan = "tool_system.cli.execute_change_plan:main"
