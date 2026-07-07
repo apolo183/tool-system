@@ -10,7 +10,7 @@ from tool_system.runner.task_runner import run_batch_file, run_task_pipeline
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVE_GATES = ROOT / "examples" / "active_gates.yaml"
 MANIFEST = ROOT / "examples" / "task_manifests" / "tool_system_run_entry.yaml"
-RESOLVED_PLAN = ROOT / "examples" / "change_plans" / "tool_system_run_entry.yaml"
+RESOLVED_PLAN = Path("examples/change_plans/tool_system_run_entry.yaml")
 BATCH = ROOT / "examples" / "batches" / "tool_system_resolved_batch.yaml"
 P6E_PLAN = ROOT / "examples" / "change_plans" / "tool_system_active_gate_resolver.yaml"
 
