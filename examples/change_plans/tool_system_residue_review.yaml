@@ -1,1 +1,20 @@
 plan_id: tool-system-residue-review
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_cleanup_plan.yaml
+changed_files:
+  - pyproject.toml
+  - src/tool_system/cleanup/__init__.py
+  - src/tool_system/cleanup/residue_plan.py
+  - src/tool_system/cli/cleanup_plan.py
+  - tests/test_cleanup_plan.py
+  - examples/cleanup/tool_system_residue_state.yaml
+  - examples/task_manifests/tool_system_cleanup_plan.yaml
+  - examples/change_plans/tool_system_residue_review.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
