@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 GRAPH_PATH = ROOT / "examples" / "task_graphs" / "tool_system_p7a_task_graph.yaml"
 BLUEPRINT_PATH = ROOT / "blueprint" / "tool_system_v0.yaml"
 P7A_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_task_graph_planner.yaml"
-P7B_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_task_graph_batch.yaml"
+P7B_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_graph_batch.yaml"
 
 
 def test_task_graph_planner_orders_tasks() -> None:
