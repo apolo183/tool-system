@@ -30,9 +30,10 @@ def test_task_runner_validates_manifest_and_plan_without_commands(tmp_path: Path
     assert Path(result["audit_path"]).exists()
 
 
-def test_task_runner_blocks_without_change_plan(tmp_path: Path) -> None:
+def test_task_runner_blocks_without_change_plan_when_index_is_off(tmp_path: Path) -> None:
     result = run_task_pipeline(
         task_manifest_path=MANIFEST_PATH,
+        active_gates_path=None,
         audit_path=tmp_path / "blocked.jsonl",
         execute_commands=False,
     )
