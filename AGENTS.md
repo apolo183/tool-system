@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-06 22:45 UTC+08:00
+updated_at: 2026-07-07 22:45 UTC+08:00
 
 ## 1. Mission
 
@@ -47,8 +47,8 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 8. Current phase
 
-Current phase: P6_RUNNER_PRODUCTIZATION.
+Current phase: P7_BLUEPRINT_TO_DAG_PLANNER.
 
-Allowed now: build and validate a unified local task runner that reads task manifests and change plans, runs gates, writes audit records, and prepares later repository actions after existing P5 no-mutation contracts pass.
+Allowed now: build and validate blueprint-to-DAG planning, role-assigned task graph generation, deterministic planner contracts, and local runner integration after P6 runner productization.
 
 Not allowed now: direct target-repository main-branch mutation, direct downstream repository mutation without separate explicit approval, production deployment, or business-domain implementation outside a valid approved workflow.
