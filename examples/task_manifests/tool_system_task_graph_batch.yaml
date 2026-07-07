@@ -14,7 +14,7 @@ scope:
     - src/tool_system/cli/plan_task_graph.py
     - tests/test_task_graph.py
     - examples/task_manifests/tool_system_task_graph_batch.yaml
-    - examples/change_plans/tool_system_task_graph_batch.yaml
+    - examples/change_plans/tool_system_graph_batch.yaml
     - examples/active_gates.yaml
   out_of_scope:
     - business-domain logic
@@ -32,7 +32,7 @@ allowed_files:
   - src/tool_system/cli/plan_task_graph.py
   - tests/test_task_graph.py
   - examples/task_manifests/tool_system_task_graph_batch.yaml
-  - examples/change_plans/tool_system_task_graph_batch.yaml
+  - examples/change_plans/tool_system_graph_batch.yaml
   - examples/active_gates.yaml
 forbidden_files:
   - finance/**
