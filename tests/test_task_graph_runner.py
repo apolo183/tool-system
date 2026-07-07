@@ -10,7 +10,7 @@ from tool_system.runner.task_graph_runner import run_task_graph_pipeline
 ROOT = Path(__file__).resolve().parents[1]
 GRAPH_PATH = ROOT / "examples" / "task_graphs" / "tool_system_p7a_task_graph.yaml"
 BLUEPRINT_PATH = ROOT / "blueprint" / "tool_system_v0.yaml"
-CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_task_graph_runner.yaml"
+CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_graph_run.yaml"
 
 
 def test_task_graph_runner_executes_compiled_batch_without_commands(tmp_path: Path) -> None:
