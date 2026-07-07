@@ -1,1 +1,59 @@
 task_id: tool-system-req-graph
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p7d-requirements
+phase: P7_BLUEPRINT_TO_TASK_GRAPH
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P7_BLUEPRINT_TO_TASK_GRAPH
+scope:
+  summary: Compile structured input into validated task graphs.
+  in_scope:
+    - pyproject.toml
+    - src/tool_system/planner/requirement_graph.py
+    - src/tool_system/cli/plan_requirement.py
+    - tests/test_requirement_graph.py
+    - examples/requirements/tool_system_p7d.yaml
+    - examples/task_manifests/tool_system_req_graph.yaml
+    - examples/change_plans/tool_system_req_graph.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - business-domain logic
+    - target repository mutation
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/planner/task_graph.py
+    why_relevant: Compiler emits graphs validated by existing task graph planner.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Blueprint supplies phase and role contract for generated task graphs.
+allowed_files:
+  - pyproject.toml
+  - src/tool_system/planner/requirement_graph.py
+  - src/tool_system/cli/plan_requirement.py
+  - tests/test_requirement_graph.py
+  - examples/requirements/tool_system_p7d.yaml
+  - examples/task_manifests/tool_system_req_graph.yaml
+  - examples/change_plans/tool_system_req_graph.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
