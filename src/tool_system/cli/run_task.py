@@ -11,6 +11,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run a tool-system task manifest and optional change plan through one local gate pipeline.")
     parser.add_argument("task_manifest", type=Path)
     parser.add_argument("--change-plan", type=Path)
+    parser.add_argument("--active-gates", type=Path, default=Path("examples/active_gates.yaml"))
     parser.add_argument("--policy", type=Path, default=Path("policy/repo_write_policy.yaml"))
     parser.add_argument("--autonomy-policy", type=Path, default=Path("policy/autonomy_policy.yaml"))
     parser.add_argument("--cwd", type=Path, default=Path.cwd())
@@ -21,6 +22,7 @@ def main() -> int:
     output = run_task_pipeline(
         task_manifest_path=args.task_manifest,
         change_plan_path=args.change_plan,
+        active_gates_path=args.active_gates,
         policy_path=args.policy,
         autonomy_policy_path=args.autonomy_policy,
         cwd=args.cwd,
