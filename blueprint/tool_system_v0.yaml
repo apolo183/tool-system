@@ -1,6 +1,6 @@
 schema_version: 0.2
 system: tool-system
-phase: P6_RUNNER_PRODUCTIZATION
+phase: P7_BLUEPRINT_TO_DAG_PLANNER
 status: active
 
 identity:
@@ -21,6 +21,7 @@ boundaries:
     - target_repo_pr_write_flow
     - agent_role_taxonomy
     - task_runner_productization
+    - blueprint_to_dag_planner
   does_not_own:
     - finance_signals
     - ranking_models
@@ -213,6 +214,16 @@ milestones:
       - grouped local checks CLI
       - local audit artifact
       - no-mutation runner contract
+  P7_BLUEPRINT_TO_DAG_PLANNER:
+    objective: compile approved blueprint milestones into deterministic role-assigned DAG plans with evidence, policy, verification, and audit nodes
+    entry_requires:
+      - P6_RUNNER_PRODUCTIZATION accepted
+    outputs:
+      - blueprint milestone DAG compiler
+      - DAG validation contract
+      - topological execution order
+      - role-assigned planner nodes
+      - no-mutation planner contract
 
 default_policy:
   no_direct_main_write: true
