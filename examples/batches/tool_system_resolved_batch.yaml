@@ -1,0 +1,5 @@
+batch_id: tool-system-resolved-batch
+halt_on_failure: true
+tasks:
+  - task_manifest: examples/task_manifests/tool_system_run_entry.yaml
+  - task_manifest: examples/task_manifests/tool_system_audit_bundle.yaml
