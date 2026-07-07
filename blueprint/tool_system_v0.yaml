@@ -1,6 +1,6 @@
 schema_version: 0.2
 system: tool-system
-phase: P6_RUNNER_PRODUCTIZATION
+phase: P7_BLUEPRINT_TO_TASK_GRAPH
 status: active
 
 identity:
@@ -11,6 +11,7 @@ boundaries:
   owns:
     - blueprint_parser
     - task_planner
+    - task_graph_planner
     - harness_engine
     - agent_worker_interface
     - test_gate
@@ -213,6 +214,16 @@ milestones:
       - grouped local checks CLI
       - local audit artifact
       - no-mutation runner contract
+  P7_BLUEPRINT_TO_TASK_GRAPH:
+    objective: transform approved blueprint or requirement work into a validated dependency graph of bounded tasks with role assignments and control gates
+    entry_requires:
+      - P6_RUNNER_PRODUCTIZATION accepted
+    outputs:
+      - task graph planner API
+      - task graph planner CLI
+      - dependency ordering
+      - agent role assignment validation
+      - evidence policy verification audit node coverage
 
 default_policy:
   no_direct_main_write: true

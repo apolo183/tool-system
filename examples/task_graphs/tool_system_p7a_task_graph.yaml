@@ -1,0 +1,30 @@
+graph_id: tool-system-p7a-task-graph
+phase: P7_BLUEPRINT_TO_TASK_GRAPH
+source_blueprint:
+  repo: apolo183/tool-system
+  path: blueprint/tool_system_v0.yaml
+  section_or_key: milestones.P7_BLUEPRINT_TO_TASK_GRAPH
+tasks:
+  - task_id: collect-evidence
+    role: evidence_collector
+    task_manifest: examples/task_manifests/tool_system_phase_alignment.yaml
+    change_plan: examples/change_plans/tool_system_phase_alignment.yaml
+    depends_on: []
+  - task_id: enforce-policy
+    role: policy_guard
+    task_manifest: examples/task_manifests/tool_system_root_cli.yaml
+    change_plan: examples/change_plans/tool_system_root_cli.yaml
+    depends_on:
+      - collect-evidence
+  - task_id: verify-runner
+    role: test_engineer
+    task_manifest: examples/task_manifests/tool_system_active_gate_resolver.yaml
+    change_plan: examples/change_plans/tool_system_active_gate_resolver.yaml
+    depends_on:
+      - enforce-policy
+  - task_id: record-audit
+    role: audit_recorder
+    task_manifest: examples/task_manifests/tool_system_audit_bundle.yaml
+    change_plan: examples/change_plans/tool_system_audit_bundle.yaml
+    depends_on:
+      - verify-runner

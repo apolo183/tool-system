@@ -1,0 +1,24 @@
+plan_id: tool-system-task-graph-planner-plan
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_task_graph_planner.yaml
+changed_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/tool_system_v0.yaml
+  - pyproject.toml
+  - src/tool_system/planner/__init__.py
+  - src/tool_system/planner/task_graph.py
+  - src/tool_system/cli/plan_task_graph.py
+  - tests/test_task_graph.py
+  - tests/test_phase_alignment.py
+  - examples/task_graphs/tool_system_p7a_task_graph.yaml
+  - examples/task_manifests/tool_system_task_graph_planner.yaml
+  - examples/change_plans/tool_system_task_graph_planner.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
