@@ -14,6 +14,7 @@ scope:
     - README.md
     - blueprint/tool_system_v0.yaml
     - pyproject.toml
+    - src/tool_system/planner/__init__.py
     - src/tool_system/planner/task_graph.py
     - src/tool_system/cli/plan_task_graph.py
     - tests/test_task_graph.py
@@ -38,6 +39,7 @@ allowed_files:
   - README.md
   - blueprint/tool_system_v0.yaml
   - pyproject.toml
+  - src/tool_system/planner/__init__.py
   - src/tool_system/planner/task_graph.py
   - src/tool_system/cli/plan_task_graph.py
   - tests/test_task_graph.py
