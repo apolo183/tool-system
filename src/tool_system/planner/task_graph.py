@@ -7,6 +7,7 @@ from typing import Any
 import yaml
 
 from tool_system.manifest.task_manifest import load_yaml_file
+from tool_system.runner.active_gate_resolver import resolve_change_plan_from_active_gates
 
 REQUIRED_GRAPH_KEYS = {"graph_id", "phase", "tasks"}
 REQUIRED_TASK_KEYS = {"task_id", "task_manifest", "role"}
@@ -101,6 +102,12 @@ def _topological_order(tasks: list[dict[str, Any]]) -> tuple[list[str], list[str
     return order, []
 
 
+def _same_path(left: str | Path | None, right: str | Path | None) -> bool:
+    if left is None or right is None:
+        return False
+    return Path(str(left)).as_posix() == Path(str(right)).as_posix()
+
+
 def validate_task_graph(graph: dict[str, Any], blueprint: dict[str, Any]) -> dict[str, object]:
     reasons: list[str] = []
     missing = sorted(REQUIRED_GRAPH_KEYS - set(graph))
@@ -155,6 +162,57 @@ def validate_task_graph_file(
     blueprint = load_yaml_file(blueprint_path)
     result = validate_task_graph(graph, blueprint)
     return {**result, "graph_path": str(graph_path), "blueprint_path": str(blueprint_path)}
+
+
+def validate_task_graph_active_gates(
+    graph: dict[str, Any],
+    blueprint: dict[str, Any],
+    active_gates_path: str | Path = "examples/active_gates.yaml",
+) -> dict[str, object]:
+    graph_result = validate_task_graph(graph, blueprint)
+    reasons = list(graph_result.get("reasons") or [])
+    active_gate_checks: list[dict[str, object]] = []
+
+    if graph_result["status"] == "PASS":
+        for task in graph_result["execution_plan"]:
+            task_manifest = task.get("task_manifest")
+            declared_change_plan = task.get("change_plan")
+            resolved_change_plan = resolve_change_plan_from_active_gates(str(task_manifest), active_gates_path)
+            check = {
+                "task_id": task.get("task_id"),
+                "task_manifest": task_manifest,
+                "declared_change_plan": declared_change_plan,
+                "resolved_change_plan": str(resolved_change_plan) if resolved_change_plan is not None else None,
+            }
+            if resolved_change_plan is None:
+                reasons.append(f"task manifest is not active: {task_manifest}")
+            elif declared_change_plan and not _same_path(declared_change_plan, resolved_change_plan):
+                reasons.append(f"declared change plan does not match active gate for {task.get('task_id')}")
+            active_gate_checks.append(check)
+
+    return {
+        **graph_result,
+        "status": "PASS" if not reasons else "BLOCK",
+        "mode": "tool_system_task_graph_active_gate_validation",
+        "active_gates_path": str(active_gates_path),
+        "active_gate_checks": active_gate_checks,
+        "reasons": reasons,
+    }
+
+
+def validate_task_graph_active_gates_file(
+    graph_path: str | Path,
+    blueprint_path: str | Path = "blueprint/tool_system_v0.yaml",
+    active_gates_path: str | Path = "examples/active_gates.yaml",
+) -> dict[str, object]:
+    graph = load_yaml_file(graph_path)
+    blueprint = load_yaml_file(blueprint_path)
+    result = validate_task_graph_active_gates(graph, blueprint, active_gates_path)
+    return {
+        **result,
+        "graph_path": str(graph_path),
+        "blueprint_path": str(blueprint_path),
+    }
 
 
 def _batch_tasks_from_plan(execution_plan: list[dict[str, Any]]) -> list[dict[str, str]]:
