@@ -64,17 +64,26 @@ def validate_dag(dag: dict[str, object]) -> dict[str, object]:
     }
 
 
+def _ordered_node_ids(dag: dict[str, object]) -> list[str]:
+    node_ids: list[str] = []
+    for node in dag.get("nodes", []):
+        if isinstance(node, dict) and isinstance(node.get("id"), str):
+            node_ids.append(str(node["id"]))
+    return node_ids
+
+
 def topological_order(dag: dict[str, object]) -> list[str]:
-    nodes = {node["id"] for node in dag.get("nodes", []) if isinstance(node, dict)}
+    nodes = _ordered_node_ids(dag)
+    node_set = set(nodes)
     edges = dag.get("edges", [])
     incoming = {node: 0 for node in nodes}
     graph = {node: [] for node in nodes}
     for edge in edges:
-        if isinstance(edge, list) and len(edge) == 2:
+        if isinstance(edge, list) and len(edge) == 2 and edge[0] in node_set and edge[1] in node_set:
             graph[edge[0]].append(edge[1])
             incoming[edge[1]] += 1
 
-    queue = [node for node, count in incoming.items() if count == 0]
+    queue = [node for node in nodes if incoming[node] == 0]
     order: list[str] = []
     while queue:
         node = queue.pop(0)
