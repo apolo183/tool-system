@@ -32,6 +32,7 @@ tool-system-run = "tool_system.cli.run_task:main"
 tool-system-batch = "tool_system.cli.run_batch:main"
 tool-system-plan-graph = "tool_system.cli.plan_task_graph:main"
 tool-system-run-graph = "tool_system.cli.run_task_graph:main"
+tool-system-cleanup-plan = "tool_system.cli.cleanup_plan:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
