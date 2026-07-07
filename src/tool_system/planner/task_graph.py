@@ -4,6 +4,8 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from tool_system.manifest.task_manifest import load_yaml_file
 
 REQUIRED_GRAPH_KEYS = {"graph_id", "phase", "tasks"}
@@ -153,3 +155,58 @@ def validate_task_graph_file(
     blueprint = load_yaml_file(blueprint_path)
     result = validate_task_graph(graph, blueprint)
     return {**result, "graph_path": str(graph_path), "blueprint_path": str(blueprint_path)}
+
+
+def _batch_tasks_from_plan(execution_plan: list[dict[str, Any]]) -> list[dict[str, str]]:
+    batch_tasks: list[dict[str, str]] = []
+    for task in execution_plan:
+        batch_task = {"task_manifest": str(task.get("task_manifest"))}
+        if task.get("change_plan"):
+            batch_task["change_plan"] = str(task.get("change_plan"))
+        batch_tasks.append(batch_task)
+    return batch_tasks
+
+
+def compile_task_graph_to_batch(graph: dict[str, Any], blueprint: dict[str, Any]) -> dict[str, object]:
+    graph_result = validate_task_graph(graph, blueprint)
+    if graph_result["status"] != "PASS":
+        return {
+            **graph_result,
+            "mode": "tool_system_task_graph_batch_compile",
+            "batch": None,
+        }
+
+    batch = {
+        "batch_id": f"{graph_result['graph_id']}-compiled-batch",
+        "halt_on_failure": True,
+        "tasks": _batch_tasks_from_plan(graph_result["execution_plan"]),
+    }
+    return {
+        **graph_result,
+        "mode": "tool_system_task_graph_batch_compile",
+        "batch": batch,
+    }
+
+
+def compile_task_graph_file_to_batch(
+    graph_path: str | Path,
+    blueprint_path: str | Path = "blueprint/tool_system_v0.yaml",
+) -> dict[str, object]:
+    graph = load_yaml_file(graph_path)
+    blueprint = load_yaml_file(blueprint_path)
+    result = compile_task_graph_to_batch(graph, blueprint)
+    return {**result, "graph_path": str(graph_path), "blueprint_path": str(blueprint_path)}
+
+
+def write_task_graph_batch_file(
+    graph_path: str | Path,
+    output_path: str | Path,
+    blueprint_path: str | Path = "blueprint/tool_system_v0.yaml",
+) -> dict[str, object]:
+    result = compile_task_graph_file_to_batch(graph_path, blueprint_path)
+    if result["status"] != "PASS" or result.get("batch") is None:
+        return result
+    destination = Path(output_path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(yaml.safe_dump(result["batch"], sort_keys=False), encoding="utf-8")
+    return {**result, "batch_output_path": str(destination)}
