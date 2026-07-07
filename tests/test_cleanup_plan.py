@@ -8,7 +8,7 @@ from tool_system.cli.validate_change_plan import validate as validate_change_pla
 
 ROOT = Path(__file__).resolve().parents[1]
 STATE_PATH = ROOT / "examples" / "cleanup" / "tool_system_residue_state.yaml"
-CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_cleanup_plan.yaml"
+CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_residue_review.yaml"
 
 
 def test_cleanup_plan_marks_probe_residue_without_execution() -> None:
