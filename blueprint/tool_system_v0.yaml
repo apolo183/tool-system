@@ -1,6 +1,6 @@
 schema_version: 0.2
 system: tool-system
-phase: P7_BLUEPRINT_TO_TASK_GRAPH
+phase: P8_MULTI_AGENT_RUNTIME
 status: active
 
 identity:
@@ -12,6 +12,7 @@ boundaries:
     - blueprint_parser
     - task_planner
     - task_graph_planner
+    - multi_agent_runtime
     - harness_engine
     - agent_worker_interface
     - test_gate
@@ -224,6 +225,16 @@ milestones:
       - dependency ordering
       - agent role assignment validation
       - evidence policy verification audit node coverage
+  P8_MULTI_AGENT_RUNTIME:
+    objective: run validated task graphs through a no-mutation role-assigned runtime with evidence, verification, review, repository-control, audit, and rollback records
+    entry_requires:
+      - P7_BLUEPRINT_TO_TASK_GRAPH accepted
+    outputs:
+      - role step runtime contract
+      - no-mutation role execution records
+      - runtime audit bundle
+      - role transition gate
+      - rollback reference bundle
 
 default_policy:
   no_direct_main_write: true
