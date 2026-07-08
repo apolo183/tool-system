@@ -2,6 +2,7 @@ plan_id: tool-system-global-principles
 target_repo: apolo183/tool-system
 task_manifest: examples/task_manifests/tool_system_global_principles.yaml
 changed_files:
+  - AGENTS.md
   - README.md
   - docs/tool_system_global_development_principles_v1.md
   - tests/test_global_principles.py
