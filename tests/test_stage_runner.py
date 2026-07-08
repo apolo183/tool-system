@@ -10,7 +10,7 @@ from tool_system.runner.stage_runner import run_stage_pipeline
 ROOT = Path(__file__).resolve().parents[1]
 INPUT_PATH = ROOT / "examples" / "requirements" / "tool_system_p7d.yaml"
 BLUEPRINT_PATH = ROOT / "blueprint" / "tool_system_v0.yaml"
-CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_stage_runner.yaml"
+CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_stage.yaml"
 
 
 def test_stage_runner_executes_compiled_batch_without_commands(tmp_path: Path) -> None:
