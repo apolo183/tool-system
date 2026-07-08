@@ -35,6 +35,7 @@ task_manifests:
   - examples/task_manifests/tool_system_cleanup_plan.yaml
   - examples/task_manifests/tool_system_req_graph.yaml
   - examples/task_manifests/tool_system_stage.yaml
+  - examples/task_manifests/tool_system_global_principles.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -72,3 +73,4 @@ change_plans:
   - examples/change_plans/tool_system_residue_review.yaml
   - examples/change_plans/tool_system_req_graph.yaml
   - examples/change_plans/tool_system_stage.yaml
+  - examples/change_plans/tool_system_global_principles.yaml
