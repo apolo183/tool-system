@@ -1,0 +1,19 @@
+plan_id: tool-system-role-runtime
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_role_runtime.yaml
+changed_files:
+  - pyproject.toml
+  - src/tool_system/runtime/__init__.py
+  - src/tool_system/runtime/role_runtime.py
+  - src/tool_system/cli/run_role_graph.py
+  - tests/test_role_runtime.py
+  - examples/task_manifests/tool_system_role_runtime.yaml
+  - examples/change_plans/tool_system_role_runtime.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
