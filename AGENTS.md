@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-08 09:35 UTC+08:00
+updated_at: 2026-07-08 09:45 UTC+08:00
 
 ## 1. Mission
 
@@ -57,8 +57,8 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 9. Current phase
 
-Current phase: P7_BLUEPRINT_TO_TASK_GRAPH.
+Current phase: P8_MULTI_AGENT_RUNTIME.
 
-Allowed now: build and validate a blueprint-to-task-graph planning layer that orders bounded tasks, assigns agent roles, verifies control-role coverage, and prepares grouped runner execution after P6 gates pass.
+Allowed now: build and validate a no-mutation multi-role runtime that consumes validated task graphs, assigns agent roles, executes dry-run role steps, records evidence, and prepares audit and rollback bundles after P7 gates pass.
 
-Not allowed now: direct target-repository main-branch mutation, direct downstream repository mutation without separate explicit approval, production deployment, business-domain implementation outside a valid approved workflow, or cleanup execution without a separate execution gate.
+Not allowed now: direct target-repository main-branch mutation, direct downstream repository mutation without separate explicit approval, production deployment, business-domain implementation outside a valid approved workflow, cleanup execution without a separate execution gate, or autonomous patch execution outside approved tool-system branches.
