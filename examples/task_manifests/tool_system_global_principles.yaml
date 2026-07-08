@@ -1,0 +1,53 @@
+task_id: tool-system-global-principles
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: governance-contract
+phase: P7_BLUEPRINT_TO_TASK_GRAPH
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P7_BLUEPRINT_TO_TASK_GRAPH
+scope:
+  summary: Add project-wide tool-system development principles derived from existing cross-repo governance patterns.
+  in_scope:
+    - README.md
+    - docs/tool_system_global_development_principles_v1.md
+    - tests/test_global_principles.py
+    - examples/task_manifests/tool_system_global_principles.yaml
+    - examples/change_plans/tool_system_global_principles.yaml
+  out_of_scope:
+    - business-domain logic
+    - target repository mutation
+    - production deployment
+evidence:
+  - repo: apolo183/finance-app
+    path: docs/project_global_development_principles_v1.md
+    why_relevant: Source governance pattern for evidence hierarchy, drift gate, file disposition, and claims boundary.
+  - repo: apolo183/tool-system
+    path: README.md
+    why_relevant: Repository overview must expose the new project-wide principles file.
+allowed_files:
+  - README.md
+  - docs/tool_system_global_development_principles_v1.md
+  - tests/test_global_principles.py
+  - examples/task_manifests/tool_system_global_principles.yaml
+  - examples/change_plans/tool_system_global_principles.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization

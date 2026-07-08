@@ -5,7 +5,7 @@ role: repository overview
 purpose: define the domain-agnostic tool system boundary and current controller contract  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-07 22:30 UTC+08:00
+updated_at: 2026-07-08 09:25 UTC+08:00
 
 ## Definition
 
@@ -52,4 +52,5 @@ This repository is a tool layer. Business systems are downstream targets. tool-s
 ## Bootstrap files
 
 - `AGENTS.md`: operating contract for agents working in this repository.
+- `docs/tool_system_global_development_principles_v1.md`: project-wide engineering discipline contract for evidence, scope, cleanup planning, validation, rollback, and claims.
 - `blueprint/tool_system_v0.yaml`: machine-readable active blueprint.
