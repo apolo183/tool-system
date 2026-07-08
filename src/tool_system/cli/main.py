@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Sequence
 
+from tool_system.runtime.role_runtime import build_role_runtime_plan_file
 from tool_system.runner.task_graph_runner import run_task_graph_pipeline
 from tool_system.runner.task_runner import run_batch_file, run_task_pipeline
 
@@ -37,6 +38,12 @@ def build_parser() -> argparse.ArgumentParser:
     graph_parser.add_argument("--blueprint", type=Path, default=Path("blueprint/tool_system_v0.yaml"))
     graph_parser.add_argument("--audit-path", type=Path, default=Path("artifacts/task_graph_runner_audit.jsonl"))
     _add_common_options(graph_parser)
+
+    roles_parser = subparsers.add_parser("roles", help="Build a role runtime plan from a task graph.")
+    roles_parser.add_argument("graph", type=Path)
+    roles_parser.add_argument("--blueprint", type=Path, default=Path("blueprint/tool_system_v0.yaml"))
+    roles_parser.add_argument("--audit-path", type=Path, default=Path("artifacts/role_runtime_audit.jsonl"))
+    roles_parser.add_argument("--active-gates", type=Path, default=Path("examples/active_gates.yaml"))
     return parser
 
 
@@ -65,7 +72,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             audit_path=args.audit_path,
             execute_commands=not args.skip_commands,
         )
-    else:
+    elif args.command == "graph":
         output = run_task_graph_pipeline(
             graph_path=args.graph,
             blueprint_path=args.blueprint,
@@ -75,6 +82,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             cwd=args.cwd,
             audit_path=args.audit_path,
             execute_commands=not args.skip_commands,
+        )
+    else:
+        output = build_role_runtime_plan_file(
+            graph_path=args.graph,
+            blueprint_path=args.blueprint,
+            active_gates_path=args.active_gates,
+            audit_path=args.audit_path,
         )
 
     print(json.dumps(output, ensure_ascii=False, indent=2, sort_keys=True))
