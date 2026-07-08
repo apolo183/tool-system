@@ -1,1 +1,54 @@
 task_id: tool-system-root-roles
+task_type: code_update
+target_repo: apolo183/tool-system
+target_branch: runtime-cli
+phase: P8_MULTI_AGENT_RUNTIME
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P8_MULTI_AGENT_RUNTIME
+scope:
+  summary: Add root CLI access to the no-mutation role runtime planner.
+  in_scope:
+    - src/tool_system/cli/main.py
+    - tests/test_root_cli.py
+    - examples/task_manifests/tool_system_root_roles.yaml
+    - examples/change_plans/tool_system_root_roles.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - business-domain logic
+    - target repository mutation
+    - production deployment
+    - cleanup execution
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/runtime/role_runtime.py
+    why_relevant: Root CLI delegates to the role runtime planner.
+  - repo: apolo183/tool-system
+    path: src/tool_system/cli/main.py
+    why_relevant: Root CLI owns top-level subcommands.
+allowed_files:
+  - src/tool_system/cli/main.py
+  - tests/test_root_cli.py
+  - examples/task_manifests/tool_system_root_roles.yaml
+  - examples/change_plans/tool_system_root_roles.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
