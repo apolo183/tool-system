@@ -1,1 +1,60 @@
 task_id: tool-system-role-runtime
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: role-runtime
+phase: P8_MULTI_AGENT_RUNTIME
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P8_MULTI_AGENT_RUNTIME
+scope:
+  summary: Add no-mutation role runtime planning for validated task graphs.
+  in_scope:
+    - pyproject.toml
+    - src/tool_system/runtime/__init__.py
+    - src/tool_system/runtime/role_runtime.py
+    - src/tool_system/cli/run_role_graph.py
+    - tests/test_role_runtime.py
+    - examples/task_manifests/tool_system_role_runtime.yaml
+    - examples/change_plans/tool_system_role_runtime.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - business-domain logic
+    - target repository mutation
+    - production deployment
+    - cleanup execution
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/planner/task_graph.py
+    why_relevant: Role runtime consumes validated task graph execution plans.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    why_relevant: Global principles define no-mutation and claims boundaries for runtime records.
+allowed_files:
+  - pyproject.toml
+  - src/tool_system/runtime/__init__.py
+  - src/tool_system/runtime/role_runtime.py
+  - src/tool_system/cli/run_role_graph.py
+  - tests/test_role_runtime.py
+  - examples/task_manifests/tool_system_role_runtime.yaml
+  - examples/change_plans/tool_system_role_runtime.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - pytest exits 0
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commit
+approval:
+  required: true
+  approved_by: milestone_authorization
