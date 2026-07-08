@@ -1,7 +1,7 @@
 task_id: tool-system-global-principles
 task_type: code_add
 target_repo: apolo183/tool-system
-target_branch: governance-contract
+target_branch: agents-global
 phase: P7_BLUEPRINT_TO_TASK_GRAPH
 approved_blueprint_refs:
   - repo: apolo183/tool-system
@@ -10,6 +10,7 @@ approved_blueprint_refs:
 scope:
   summary: Add project-wide tool-system development principles derived from existing cross-repo governance patterns.
   in_scope:
+    - AGENTS.md
     - README.md
     - docs/tool_system_global_development_principles_v1.md
     - tests/test_global_principles.py
@@ -24,9 +25,10 @@ evidence:
     path: docs/project_global_development_principles_v1.md
     why_relevant: Source governance pattern for evidence hierarchy, drift gate, file disposition, and claims boundary.
   - repo: apolo183/tool-system
-    path: README.md
-    why_relevant: Repository overview must expose the new project-wide principles file.
+    path: AGENTS.md
+    why_relevant: Repository entrypoint must point agents to the new project-wide principles file.
 allowed_files:
+  - AGENTS.md
   - README.md
   - docs/tool_system_global_development_principles_v1.md
   - tests/test_global_principles.py

@@ -6,6 +6,7 @@ from tool_system.cli.validate_change_plan import validate as validate_change_pla
 
 
 ROOT = Path(__file__).resolve().parents[1]
+AGENTS = ROOT / "AGENTS.md"
 GLOBAL_PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 README = ROOT / "README.md"
 CHANGE_PLAN = ROOT / "examples" / "change_plans" / "tool_system_global_principles.yaml"
@@ -22,10 +23,12 @@ def test_global_principles_define_core_gates() -> None:
     assert "writes_target_repo" not in text
 
 
-def test_readme_points_to_global_principles() -> None:
-    text = README.read_text(encoding="utf-8")
+def test_entrypoints_point_to_global_principles() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+    agents_text = AGENTS.read_text(encoding="utf-8")
 
-    assert "docs/tool_system_global_development_principles_v1.md" in text
+    assert "docs/tool_system_global_development_principles_v1.md" in readme_text
+    assert "docs/tool_system_global_development_principles_v1.md" in agents_text
 
 
 def test_global_principles_change_plan_validates() -> None:
