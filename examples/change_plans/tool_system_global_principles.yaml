@@ -1,0 +1,16 @@
+plan_id: tool-system-global-principles
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_global_principles.yaml
+changed_files:
+  - README.md
+  - docs/tool_system_global_development_principles_v1.md
+  - tests/test_global_principles.py
+  - examples/task_manifests/tool_system_global_principles.yaml
+  - examples/change_plans/tool_system_global_principles.yaml
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
