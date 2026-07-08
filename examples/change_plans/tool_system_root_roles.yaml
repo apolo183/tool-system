@@ -1,0 +1,16 @@
+plan_id: tool-system-root-roles
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_root_roles.yaml
+changed_files:
+  - src/tool_system/cli/main.py
+  - tests/test_root_cli.py
+  - examples/task_manifests/tool_system_root_roles.yaml
+  - examples/change_plans/tool_system_root_roles.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commit
