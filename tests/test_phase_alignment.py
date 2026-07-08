@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ROOT / "AGENTS.md"
 README = ROOT / "README.md"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
-CHANGE_PLAN = ROOT / "examples" / "change_plans" / "tool_system_p8a_phase_entry.yaml"
+CHANGE_PLAN = ROOT / "examples" / "change_plans" / "tool_system_p8a.yaml"
 EXPECTED_PHASE = "P8_MULTI_AGENT_RUNTIME"
 
 
