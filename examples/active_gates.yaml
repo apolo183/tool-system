@@ -53,6 +53,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p9_rollback_rehearsal_evidence.yaml
   - examples/task_manifests/tool_system_p9_residue_cleanup_plan.yaml
   - examples/task_manifests/tool_system_p9_cleanup_readonly_verification.yaml
+  - examples/task_manifests/tool_system_p9_blueprint_alignment_control.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -108,3 +109,4 @@ change_plans:
   - examples/change_plans/tool_system_p9_rollback_rehearsal_evidence.yaml
   - examples/change_plans/tool_system_p9_residue_cleanup_plan.yaml
   - examples/change_plans/tool_system_p9_cleanup_readonly_verification.yaml
+  - examples/change_plans/tool_system_p9_blueprint_alignment_control.yaml
