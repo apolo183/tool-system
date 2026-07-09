@@ -1,0 +1,18 @@
+plan_id: tool-system-worker-adapter-contract
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_worker_adapter_contract.yaml
+changed_files:
+  - src/tool_system/worker_adapter/__init__.py
+  - src/tool_system/worker_adapter/contract.py
+  - tests/test_worker_adapter_contract.py
+  - examples/task_manifests/tool_system_worker_adapter_contract.yaml
+  - examples/change_plans/tool_system_worker_adapter_contract.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q tests/test_worker_adapter_contract.py tests/test_agent_worker_interface.py
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_worker_adapter_contract.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p9a-worker-adapter-contract
