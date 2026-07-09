@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-08 09:45 UTC+08:00
+updated_at: 2026-07-09 UTC+08:00
 
 ## 1. Mission
 
@@ -33,7 +33,7 @@ Human control is placed at blueprint, objective, policy boundary, and milestone 
 
 Routine implementation work inside an authorized milestone is handled by the system after gates pass. Agents do not ask for human review for each ordinary implementation PR once the milestone and manifest are valid.
 
-Human review is required for blueprint changes, objective changes, policy boundary changes, milestone acceptance, cleanup execution, and first real downstream target-repository mutation.
+Human review is required for blueprint changes, objective changes, policy boundary changes, milestone acceptance, cleanup execution, first real downstream target-repository mutation, and production deployment.
 
 ## 5. Write boundaries
 
@@ -57,8 +57,8 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 9. Current phase
 
-Current phase: P8_MULTI_AGENT_RUNTIME.
+Current phase: P9_WORKER_ADAPTER_ORCHESTRATION.
 
-Allowed now: build and validate a no-mutation multi-role runtime that consumes validated task graphs, assigns agent roles, executes dry-run role steps, records evidence, and prepares audit and rollback bundles after P7 gates pass.
+Allowed now: build and validate no-mutation worker adapter contracts, local or dry-run adapter orchestration, adapter execution records, evidence capture, policy checks, and rollback references after P8 acceptance.
 
 Not allowed now: direct target-repository main-branch mutation, direct downstream repository mutation without separate explicit approval, production deployment, business-domain implementation outside a valid approved workflow, cleanup execution without a separate execution gate, or autonomous patch execution outside approved tool-system branches.
