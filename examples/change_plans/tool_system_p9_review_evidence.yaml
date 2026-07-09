@@ -1,0 +1,15 @@
+plan_id: tool-system-p9-review-evidence
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p9_review_evidence.yaml
+changed_files:
+  - docs/reports/p9_milestone_review_evidence.md
+  - examples/task_manifests/tool_system_p9_review_evidence.yaml
+  - examples/change_plans/tool_system_p9_review_evidence.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_review_evidence.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p9d-milestone-review-evidence
