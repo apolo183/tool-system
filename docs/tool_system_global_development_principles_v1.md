@@ -13,7 +13,51 @@
 
 This file is the project-wide discipline contract for tool-system. Narrower task manifests, change plans, tests, runbooks, and PR descriptions may add constraints but must not silently override this file. A conflict stops work until a cross-document disposition is recorded.
 
-## 2. Documentation-first execution loop
+## 2. Evidence hierarchy
+
+Fact priority is: current user logs/files/commands/evidence packages > current repo files, branch, commits, PR diffs, CI state, and active docs > active project-wide contracts > active milestone or stage contracts > closed evidence and receipts > history or memory as retrieval hints only. Old drafts, stale branches, prior chat, and search summaries never override current repo evidence.
+
+## 3. Evidence gate
+
+No engineering fact, readiness claim, cleanup decision, implementation plan, or file disposition may be asserted without current repo, commit, diff, PR, command, CI, evidence, or active-contract support. Before modifying or judging a file, read the natural-owner file plus relevant caller, callee, upstream, downstream, and tests. Unread objects are `UNKNOWN`.
+
+## 4. Drift gate
+
+Every material step must verify that it follows the active contract and shortest correct tool-system path, does not switch to a legacy or fallback route, does not use stale output as authority, and does not expand write, deletion, runtime, target-repository, external, or production scope. Unresolved drift stops with a blocker, missing evidence, protected scope at risk, smallest readonly audit needed, and corrected next step.
+
+## 5. Authorization gate
+
+A document, PR, green test, audit, or dry-run authorizes only its explicit scope. Target-repository mutation, production deployment, destructive cleanup, remote writes outside tool-system, and downstream business-system changes require current user authorization plus active contract evidence. No planner or runner output grants execution authority by itself.
+
+## 6. Formal and process file discipline
+
+Formal files are active contracts, source, configs, tests, runbooks, docs, examples, and audit interfaces required to run, validate, operate, audit, or roll back tool-system. Process files are notes, temporary scripts, dry-run outputs, proposal drafts, patch plans, debug logs, and intermediate evidence. Process files must use the narrowest project-local task root such as `tmp/<task_id>/`, `reports/<task_id>/`, or `artifacts/<task_id>/`, unless an explicit exception names path, reason, retention, side effects, and cleanup responsibility.
+
+## 7. File disposition
+
+Allowed dispositions are `KEEP`, `MODIFY`, `REPLACE`, `DELETE`, `ADD`, and `UNKNOWN`. `KEEP` means correct, active, necessary, or valid evidence. `MODIFY` means necessary but stale or wrong. `REPLACE` means superseded by validated replacement and then removed. `DELETE` means obsolete, wrong, duplicate, garbage, superseded, or process-only. `ADD` means a required formal artifact is missing. `UNKNOWN` means unread or impact not verified. Do not preserve invalid objects by moving them to archive, deprecated, fallback, backup, or history directories.
+
+## 8. Simplification and cleanup
+
+Priority is the shortest correct controlled automation path: active contract, natural-owner implementation, focused tests, CI gate, audit record, and rollback reference. Keep one active contract path per responsibility and one natural-owner implementation path per runtime responsibility. Remove or supersede duplicate mainlines, obsolete process docs, transitional scripts, and outdated tests once their replacement and rollback are evidence-backed.
+
+## 9. Reuse and ownership
+
+Prefer `MODIFY` on the natural owner path. Do not create parallel lanes unless a contract proves why replacement is required and defines the deletion or migration point. Reusable tool-system components must parameterize repository, branch, manifest, change plan, graph, output root, and execution options rather than hard-coding downstream business logic.
+
+## 10. Claims boundary
+
+Do not claim Codex replacement, production readiness, autonomous target-repository execution readiness, downstream mutation approval, or milestone closure without current runtime evidence, CI evidence, active closeout criteria, and rollback evidence. Dry-runs, fixtures, planner output, and green unit tests are scoped evidence only.
+
+## 11. Rollback, tests, temp roots, and commands
+
+Non-trivial implementation uses a separate branch and PR. Failed branch state requires a failed branch/base/status/diff record, clean-base return, and redesign. Tests must protect active behavior; tests for obsolete routes are deleted or rewritten. Commands must state directory, environment, purpose, write scope, target-repository impact, deletion status, and rollback when they are material or dangerous.
+
+## 12. Cross-document compliance
+
+Later milestone, planner, runner, cleanup, and target-repository documents must either inherit this file or explicitly record a conflict requiring cross-document disposition. This file grants no implementation, target-repository mutation, destructive cleanup, production deployment, or external-system write authority by itself.
+
+## 13. Documentation-first execution loop
 
 Do not rely on long conversation context as execution authority. Each stage is controlled by active documents and must follow this loop:
 
@@ -27,23 +71,11 @@ Do not rely on long conversation context as execution authority. Each stage is c
 
 No document means no execution. No evidence means no acceptance. Detected drift stops feature work and requires documentation or process correction first.
 
-## 3. Short-stage rule
+## 14. Short-stage rule
 
 A stage should be short, single-objective, and auditable. The default stage unit is one natural objective, one branch, one task manifest, one change plan, one evidence record, one CI result, and one explicit stop condition. If more than one objective appears necessary, split the work into multiple stages unless an active document explains why bundling is safer.
 
-## 4. Evidence hierarchy
-
-Fact priority is: current user logs/files/commands/evidence packages > current repo files, branch, commits, PR diffs, CI state, and active docs > active project-wide contracts > active milestone or stage contracts > closed evidence and receipts > history or memory as retrieval hints only. Old drafts, stale branches, prior chat, and search summaries never override current repo evidence.
-
-## 5. Evidence gate
-
-No engineering fact, readiness claim, cleanup decision, implementation plan, or file disposition may be asserted without current repo, commit, diff, PR, command, CI, evidence, or active-contract support. Before modifying or judging a file, read the natural-owner file plus relevant caller, callee, upstream, downstream, and tests. Unread objects are `UNKNOWN`.
-
-## 6. Drift gate
-
-Every material step must verify that it follows the active contract and shortest correct tool-system path, does not switch to a legacy or fallback route, does not use stale output as authority, and does not expand write, deletion, runtime, target-repository, external, or production scope. Unresolved drift stops with a blocker, missing evidence, protected scope at risk, smallest readonly audit needed, and corrected next step.
-
-## 7. Side-effect tool preflight
+## 15. Side-effect tool preflight
 
 Before any tool call that creates, updates, deletes, merges, labels, comments on, or otherwise mutates GitHub or repository state, the agent must verify:
 
@@ -58,45 +90,13 @@ Before any tool call that creates, updates, deletes, merges, labels, comments on
 
 If the documented action is file creation or file update but the selected tool is branch creation, merge, deletion, cleanup, or any other mismatched mutation, the agent must stop before the tool call. If a duplicate branch, PR, file, or plan exists, reuse or stop; do not create numbered variants unless an active document explicitly authorizes replacement and records disposition.
 
-## 8. Branch single-flight rule
+## 16. Branch single-flight rule
 
 Each stage may create at most one working branch. The branch name must be defined or implied by the stage document. If branch creation succeeds, all later writes for that stage use that branch. If branch creation fails because the branch already exists, the agent must inspect and either reuse it or stop for disposition. Creating branch variants such as `name2`, `name3`, or `retry` is prohibited without an explicit incident or replacement document.
 
-## 9. Incident and residue rule
+## 17. Incident and residue rule
 
-Any accidental branch, PR, file, label, comment, or other side effect is residue. The next action is an incident/residue record or cleanup plan, not continued feature expansion. Residue cleanup must be handled through a separate cleanup gate/PR when it requires deletion, branch deletion, history-affecting action, or any destructive cleanup.
-
-## 10. Authorization gate
-
-A document, PR, green test, audit, or dry-run authorizes only its explicit scope. Target-repository mutation, production deployment, destructive cleanup, remote writes outside tool-system, and downstream business-system changes require current user authorization plus active contract evidence. No planner or runner output grants execution authority by itself.
-
-## 11. Formal and process file discipline
-
-Formal files are active contracts, source, configs, tests, runbooks, docs, examples, and audit interfaces required to run, validate, operate, audit, or roll back tool-system. Process files are notes, temporary scripts, dry-run outputs, proposal drafts, patch plans, debug logs, and intermediate evidence. Process files must use the narrowest project-local task root such as `tmp/<task_id>/`, `reports/<task_id>/`, or `artifacts/<task_id>/`, unless an explicit exception names path, reason, retention, side effects, and cleanup responsibility.
-
-## 12. File disposition
-
-Allowed dispositions are `KEEP`, `MODIFY`, `REPLACE`, `DELETE`, `ADD`, and `UNKNOWN`. `KEEP` means correct, active, necessary, or valid evidence. `MODIFY` means necessary but stale or wrong. `REPLACE` means superseded by validated replacement and then removed. `DELETE` means obsolete, wrong, duplicate, garbage, superseded, or process-only. `ADD` means a required formal artifact is missing. `UNKNOWN` means unread or impact not verified. Do not preserve invalid objects by moving them to archive, deprecated, fallback, backup, or history directories.
-
-## 13. Simplification and cleanup
-
-Priority is the shortest correct controlled automation path: active contract, natural-owner implementation, focused tests, CI gate, audit record, and rollback reference. Keep one active contract path per responsibility and one natural-owner implementation path per runtime responsibility. Remove or supersede duplicate mainlines, obsolete process docs, transitional scripts, and outdated tests once their replacement and rollback are evidence-backed.
-
-## 14. Reuse and ownership
-
-Prefer `MODIFY` on the natural owner path. Do not create parallel lanes unless a contract proves why replacement is required and defines the deletion or migration point. Reusable tool-system components must parameterize repository, branch, manifest, change plan, graph, output root, and execution options rather than hard-coding downstream business logic.
-
-## 15. Claims boundary
-
-Do not claim Codex replacement, production readiness, autonomous target-repository execution readiness, downstream mutation approval, or milestone closure without current runtime evidence, CI evidence, active closeout criteria, and rollback evidence. Dry-runs, fixtures, planner output, and green unit tests are scoped evidence only.
-
-## 16. Rollback, tests, temp roots, and commands
-
-Non-trivial implementation uses a separate branch and PR. Failed branch state requires a failed branch/base/status/diff record, clean-base return, and redesign. Tests must protect active behavior; tests for obsolete routes are deleted or rewritten. Commands must state directory, environment, purpose, write scope, target-repository impact, deletion status, and rollback when they are material or dangerous.
-
-## 17. Cross-document compliance
-
-Later milestone, planner, runner, cleanup, and target-repository documents must either inherit this file or explicitly record a conflict requiring cross-document disposition. This file grants no implementation, target-repository mutation, destructive cleanup, production deployment, or external-system write authority by itself.
+Any accidental branch, PR, file, label, comment, or other side effect is residue. The next action is an incident or cleanup plan, not continued feature expansion. Residue cleanup must be handled through a separate cleanup gate/PR when it requires deletion, branch deletion, history-affecting action, or any destructive cleanup.
 
 ## 18. Final state
 
