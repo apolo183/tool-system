@@ -1,0 +1,58 @@
+task_id: tool-system-p9-review-evidence
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p9d-milestone-review-evidence
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+scope:
+  summary: Add P9 milestone review evidence without closing P9 or approving P10.
+  in_scope:
+    - docs/reports/p9_milestone_review_evidence.md
+    - examples/task_manifests/tool_system_p9_review_evidence.yaml
+    - examples/change_plans/tool_system_p9_review_evidence.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - source behavior changes
+    - milestone closure
+    - next phase approval
+    - external worker calls
+    - downstream write execution
+    - production activity
+    - business-domain logic
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: P9 milestone outputs define review evidence scope.
+  - repo: apolo183/tool-system
+    path: src/tool_system/worker_adapter/policy_gate.py
+    why_relevant: Policy gate stops at P9_MILESTONE_REVIEW.
+  - repo: apolo183/tool-system
+    path: docs/reports/p9_phase_entry_record.md
+    why_relevant: Records P9 boundaries and prohibitions.
+allowed_files:
+  - docs/reports/p9_milestone_review_evidence.md
+  - examples/task_manifests/tool_system_p9_review_evidence.yaml
+  - examples/change_plans/tool_system_p9_review_evidence.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_review_evidence.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - P9 evidence change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9d-milestone-review-evidence
+approval:
+  required: true
+  approved_by: user_continue_by_document_constraints
