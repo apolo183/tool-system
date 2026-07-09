@@ -13,6 +13,7 @@ scope:
     - src/tool_system/worker_adapter/__init__.py
     - src/tool_system/worker_adapter/contract.py
     - tests/test_worker_adapter_contract.py
+    - docs/reports/p9a_worker_adapter_contract_record.md
     - examples/task_manifests/tool_system_worker_adapter_contract.yaml
     - examples/change_plans/tool_system_worker_adapter_contract.yaml
     - examples/active_gates.yaml
@@ -35,6 +36,7 @@ allowed_files:
   - src/tool_system/worker_adapter/__init__.py
   - src/tool_system/worker_adapter/contract.py
   - tests/test_worker_adapter_contract.py
+  - docs/reports/p9a_worker_adapter_contract_record.md
   - examples/task_manifests/tool_system_worker_adapter_contract.yaml
   - examples/change_plans/tool_system_worker_adapter_contract.yaml
   - examples/active_gates.yaml
