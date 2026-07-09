@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from tool_system.agent_worker.interface import run_role_steps_with_worker
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.planner.task_graph import validate_task_graph_active_gates
 from tool_system.repo_controller.artifact import write_jsonl_record
@@ -40,20 +41,32 @@ def _role_step(task: dict[str, Any], index: int) -> dict[str, object]:
     }
 
 
+def _worker_reasons(worker_results: list[dict[str, object]]) -> list[str]:
+    reasons: list[str] = []
+    for result in worker_results:
+        for reason in result.get("reasons") or []:
+            reasons.append(f"{result.get('step_id')}: {reason}")
+    return reasons
+
+
 def build_role_runtime_plan(
     graph: dict[str, Any],
     blueprint: dict[str, Any],
     active_gates_path: str | Path = "examples/active_gates.yaml",
 ) -> dict[str, object]:
     validation = validate_task_graph_active_gates(graph, blueprint, active_gates_path)
-    reasons = list(validation.get("reasons") or [])
+    validation_reasons = list(validation.get("reasons") or [])
     role_steps: list[dict[str, object]] = []
+    worker_results: list[dict[str, object]] = []
 
     if validation["status"] == "PASS":
         role_steps = [
             _role_step(task, index)
             for index, task in enumerate(validation.get("execution_plan", []))
         ]
+        worker_results = run_role_steps_with_worker(role_steps)
+
+    reasons = validation_reasons + _worker_reasons(worker_results)
 
     return {
         "status": "PASS" if not reasons else "BLOCK",
@@ -64,6 +77,8 @@ def build_role_runtime_plan(
         "validation": validation,
         "role_steps": role_steps,
         "role_step_count": len(role_steps),
+        "worker_results": worker_results,
+        "worker_result_count": len(worker_results),
         "execute": False,
         "writes_target_repo": False,
         "executes_target_repo_mutation": False,
