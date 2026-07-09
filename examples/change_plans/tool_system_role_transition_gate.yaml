@@ -1,0 +1,18 @@
+plan_id: tool-system-role-transition-gate
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_role_transition_gate.yaml
+changed_files:
+  - src/tool_system/runtime/transition_gate.py
+  - src/tool_system/runtime/audit_bundle.py
+  - tests/test_role_transition_gate.py
+  - examples/task_manifests/tool_system_role_transition_gate.yaml
+  - examples/change_plans/tool_system_role_transition_gate.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q tests/test_role_transition_gate.py tests/test_runtime_audit_bundle.py tests/test_role_runtime.py tests/test_agent_worker_interface.py
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_role_transition_gate.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p8e-role-transition-gate

@@ -114,6 +114,7 @@ def build_runtime_audit_bundle(
         "mode": "tool_system_runtime_audit_bundle",
         "graph_id": runtime_plan.get("graph_id"),
         "phase": runtime_plan.get("phase"),
+        "execute": False,
         "writes_target_repo": False,
         "executes_target_repo_mutation": False,
         "ready_for_role_transition_gate": status == "PASS",

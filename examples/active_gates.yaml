@@ -40,6 +40,7 @@ task_manifests:
   - examples/task_manifests/tool_system_role_runtime.yaml
   - examples/task_manifests/tool_system_agent_worker_interface.yaml
   - examples/task_manifests/tool_system_runtime_audit_bundle.yaml
+  - examples/task_manifests/tool_system_role_transition_gate.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -82,3 +83,4 @@ change_plans:
   - examples/change_plans/tool_system_role_runtime.yaml
   - examples/change_plans/tool_system_agent_worker_interface.yaml
   - examples/change_plans/tool_system_runtime_audit_bundle.yaml
+  - examples/change_plans/tool_system_role_transition_gate.yaml
