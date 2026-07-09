@@ -1,0 +1,59 @@
+task_id: tool-system-p9-cleanup-readonly-verification
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p9k-cleanup-readonly-verification
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+scope:
+  summary: Record read-only verification for accidental branch cleanup candidates without deleting branches.
+  in_scope:
+    - docs/reports/p9k_cleanup_readonly_verification.md
+    - examples/task_manifests/tool_system_p9_cleanup_readonly_verification.yaml
+    - examples/change_plans/tool_system_p9_cleanup_readonly_verification.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - branch deletion
+    - cleanup execution
+    - destructive cleanup
+    - source behavior changes
+    - P9 acceptance
+    - P9 closure
+    - P10 approval
+    - rollback execution
+    - external worker calls
+    - downstream write execution
+    - production activity
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p9j_residue_cleanup_plan.md
+    why_relevant: Defines cleanup candidates and read-only verification requirements.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    why_relevant: Defines incident, residue, and cleanup-gate discipline.
+allowed_files:
+  - docs/reports/p9k_cleanup_readonly_verification.md
+  - examples/task_manifests/tool_system_p9_cleanup_readonly_verification.yaml
+  - examples/change_plans/tool_system_p9_cleanup_readonly_verification.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_cleanup_readonly_verification.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - P9 cleanup read-only verification change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9k-cleanup-readonly-verification
+approval:
+  required: true
+  approved_by: user_auto_iterate_short_stage_until_major_milestone
