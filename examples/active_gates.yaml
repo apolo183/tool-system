@@ -48,6 +48,7 @@ task_manifests:
   - examples/task_manifests/tool_system_adapter_policy_gate.yaml
   - examples/task_manifests/tool_system_p9_review_evidence.yaml
   - examples/task_manifests/tool_system_p9_strict_review_requirements.yaml
+  - examples/task_manifests/tool_system_p9_dgx_local_evidence.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -98,3 +99,4 @@ change_plans:
   - examples/change_plans/tool_system_adapter_policy_gate.yaml
   - examples/change_plans/tool_system_p9_review_evidence.yaml
   - examples/change_plans/tool_system_p9_strict_review_requirements.yaml
+  - examples/change_plans/tool_system_p9_dgx_local_evidence.yaml
