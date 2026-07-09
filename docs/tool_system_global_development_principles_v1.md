@@ -4,10 +4,10 @@
 
 - repo_rel_path: `docs/tool_system_global_development_principles_v1.md`
 - role: active project-wide engineering discipline contract for tool-system
-- purpose: define mandatory evidence, documentation-first execution, scope, file disposition, cleanup, validation, rollback, side-effect tool use, and claims rules for tool-system work
+- purpose: define mandatory evidence, documentation-first execution, blueprint alignment, scope, file disposition, cleanup, validation, rollback, side-effect tool use, and claims rules for tool-system work
 - author: ChatGPT / apolo183
 - created_at: 2026-07-08 09:20 UTC+08:00
-- updated_at: 2026-07-09 UTC+08:00
+- updated_at: 2026-07-10 UTC+08:00
 
 ## 1. Authority
 
@@ -63,11 +63,11 @@ Do not rely on long conversation context as execution authority. Each stage is c
 
 1. read the active blueprint, global principles, milestone document, task manifest, and change plan;
 2. design or update the narrow current-stage document;
-3. verify the current-stage document against the blueprint, requirements, and this file;
+3. verify the current-stage document against the immediate parent document, the active blueprint, active requirements, and this file;
 4. execute only the documented scope;
 5. create evidence showing what actually happened;
 6. compare actual evidence against the stage document and change plan;
-7. compare the stage document against earlier blueprint or requirement documents before designing the next stage.
+7. compare the stage document against both its immediate parent and the active blueprint or requirement source before designing the next stage.
 
 No document means no execution. No evidence means no acceptance. Detected drift stops feature work and requires documentation or process correction first.
 
@@ -75,7 +75,33 @@ No document means no execution. No evidence means no acceptance. Detected drift 
 
 A stage should be short, single-objective, and auditable. The default stage unit is one natural objective, one branch, one task manifest, one change plan, one evidence record, one CI result, and one explicit stop condition. If more than one objective appears necessary, split the work into multiple stages unless an active document explains why bundling is safer.
 
-## 15. Side-effect tool preflight
+## 15. Blueprint alignment invariant
+
+Every milestone, sub-milestone, task manifest, change plan, evidence record, and acceptance record must prove two alignments:
+
+1. parent alignment: the document follows its immediate parent milestone, stage, manifest, or change plan;
+2. global alignment: the document still follows the active blueprint or requirement source.
+
+Parent alignment alone is insufficient. A long chain of small local deviations can accumulate into material blueprint drift. Each stage therefore must explicitly check both its parent and the active blueprint or requirement source, and must stop if either alignment is missing or ambiguous.
+
+For nested work, the expected proof shape is:
+
+```text
+blueprint or requirement source
+  -> major milestone
+    -> sub-milestone
+      -> task manifest
+        -> change plan
+          -> execution evidence
+```
+
+Each level must identify its parent, identify the active blueprint or requirement source, and record why the level does not expand or redirect scope beyond either one.
+
+## 16. Script and automation control by documents
+
+Scripts, CLIs, agents, and repository-control tools execute documents; they do not define scope by themselves. A script may only run when the active blueprint or requirement source, milestone document, task manifest, and change plan authorize its purpose, inputs, outputs, side effects, and stop condition. Script output is evidence only after it is compared with the controlling documents and the active blueprint.
+
+## 17. Side-effect tool preflight
 
 Before any tool call that creates, updates, deletes, merges, labels, comments on, or otherwise mutates GitHub or repository state, the agent must verify:
 
@@ -85,19 +111,21 @@ Before any tool call that creates, updates, deletes, merges, labels, comments on
 - expected side effect;
 - duplicate check;
 - active manifest/change-plan authorization;
+- parent alignment;
+- global blueprint or requirement alignment;
 - stop condition;
 - whether the selected tool matches the documented action.
 
 If the documented action is file creation or file update but the selected tool is branch creation, merge, deletion, cleanup, or any other mismatched mutation, the agent must stop before the tool call. If a duplicate branch, PR, file, or plan exists, reuse or stop; do not create numbered variants unless an active document explicitly authorizes replacement and records disposition.
 
-## 16. Branch single-flight rule
+## 18. Branch single-flight rule
 
 Each stage may create at most one working branch. The branch name must be defined or implied by the stage document. If branch creation succeeds, all later writes for that stage use that branch. If branch creation fails because the branch already exists, the agent must inspect and either reuse it or stop for disposition. Creating branch variants such as `name2`, `name3`, or `retry` is prohibited without an explicit incident or replacement document.
 
-## 17. Incident and residue rule
+## 19. Incident and residue rule
 
 Any accidental branch, PR, file, label, comment, or other side effect is residue. The next action is an incident or cleanup plan, not continued feature expansion. Residue cleanup must be handled through a separate cleanup gate/PR when it requires deletion, branch deletion, history-affecting action, or any destructive cleanup.
 
-## 18. Final state
+## 20. Final state
 
 Status: ACTIVE. Applies to tool-system docs, source, tests, examples, policies, cleanup planning, repository-control work, side-effect tool use, and target-repository adapters.

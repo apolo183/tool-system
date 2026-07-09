@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-09 UTC+08:00
+updated_at: 2026-07-10 UTC+08:00
 
 ## 1. Mission
 
@@ -25,23 +25,32 @@ Agents must not rely on long conversation context as execution authority. Every 
 
 1. read the active blueprint, global principles, milestone document, task manifest, and change plan;
 2. design or update the narrow current-stage document;
-3. verify the current-stage document against the blueprint and global principles;
+3. verify the current-stage document against its immediate parent, the active blueprint or requirement source, and global principles;
 4. execute only the documented stage scope;
 5. create or update evidence showing what actually happened;
 6. compare execution evidence against the stage document and change plan;
-7. compare the stage document against earlier blueprint or requirement documents before designing the next stage.
+7. compare the stage document against both its immediate parent and the active blueprint or requirement source before designing the next stage.
 
 A stage should be short, have one natural objective, one branch, one change plan, one evidence record, and a clear stop condition. If drift is found, the next action is documentation or process correction, not feature expansion.
 
-## 4. Evidence-first rule
+## 4. Blueprint alignment invariant
+
+Every major milestone, sub-milestone, task manifest, change plan, evidence record, and acceptance record must prove:
+
+- parent alignment: it follows its immediate parent document;
+- global alignment: it still follows the active blueprint or requirement source.
+
+Parent-only alignment is not enough. Small local deviations can accumulate into material blueprint drift. Scripts, CLIs, agents, and repository-control tools execute documents; they do not define scope by themselves.
+
+## 5. Evidence-first rule
 
 Before modifying an existing file, an agent reads the current file and cites the relevant path and content region in its plan.
 
 If evidence is missing, the agent runs read-only inspection or stops at the smallest missing artifact.
 
-Material engineering work follows the evidence hierarchy, documentation-first loop, drift gate, authorization gate, side-effect preflight, file disposition, cleanup, rollback, and claims rules in `docs/tool_system_global_development_principles_v1.md`.
+Material engineering work follows the evidence hierarchy, documentation-first loop, blueprint alignment invariant, drift gate, authorization gate, side-effect preflight, file disposition, cleanup, rollback, and claims rules in `docs/tool_system_global_development_principles_v1.md`.
 
-## 5. Side-effect tool discipline
+## 6. Side-effect tool discipline
 
 Before any tool call that creates, updates, deletes, merges, labels, or otherwise mutates GitHub state, the agent must internally verify:
 
@@ -50,12 +59,14 @@ Before any tool call that creates, updates, deletes, merges, labels, or otherwis
 - target branch or PR;
 - expected side effect;
 - duplicate check;
+- parent alignment;
+- global blueprint or requirement alignment;
 - stop condition;
 - whether the tool matches the documented action.
 
 If the intended action is file update but the selected tool is branch creation, merge, deletion, or cleanup, work stops before the tool call. A task may create at most one branch unless a later active document explicitly authorizes a replacement branch and records disposition of the prior branch.
 
-## 6. Autonomy model
+## 7. Autonomy model
 
 Human control is placed at blueprint, objective, policy boundary, and milestone review levels.
 
@@ -63,27 +74,27 @@ Routine implementation work inside an authorized milestone is handled by the sys
 
 Human review is required for blueprint changes, objective changes, policy boundary changes, milestone acceptance, cleanup execution, first real downstream target-repository mutation, and production deployment.
 
-## 7. Write boundaries
+## 8. Write boundaries
 
 Agents add or modify files only when the change is tied to an approved blueprint item and a valid task manifest.
 
 tool-system remains separate from business-domain repositories.
 
-## 8. Change record
+## 9. Change record
 
 Every non-trivial change records scope, files touched, reason, verification command, and rollback method.
 
-## 9. Testing policy
+## 10. Testing policy
 
 Implementation phases include verification before further automation.
 
 Minimum gates include unit tests, format or lint checks where available, type checks where applicable, spec checks, and dry-run patch application.
 
-## 10. Rollback policy
+## 11. Rollback policy
 
 Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
-## 11. Current phase
+## 12. Current phase
 
 Current phase: P9_WORKER_ADAPTER_ORCHESTRATION.
 
