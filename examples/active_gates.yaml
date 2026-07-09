@@ -38,6 +38,7 @@ task_manifests:
   - examples/task_manifests/tool_system_global_principles.yaml
   - examples/task_manifests/tool_system_p8a.yaml
   - examples/task_manifests/tool_system_role_runtime.yaml
+  - examples/task_manifests/tool_system_agent_worker_interface.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -78,3 +79,4 @@ change_plans:
   - examples/change_plans/tool_system_global_principles.yaml
   - examples/change_plans/tool_system_p8a.yaml
   - examples/change_plans/tool_system_role_runtime.yaml
+  - examples/change_plans/tool_system_agent_worker_interface.yaml
