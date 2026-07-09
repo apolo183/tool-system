@@ -1,0 +1,19 @@
+plan_id: tool-system-agent-worker-interface
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_agent_worker_interface.yaml
+changed_files:
+  - src/tool_system/agent_worker/__init__.py
+  - src/tool_system/agent_worker/interface.py
+  - src/tool_system/runtime/role_runtime.py
+  - tests/test_agent_worker_interface.py
+  - examples/task_manifests/tool_system_agent_worker_interface.yaml
+  - examples/change_plans/tool_system_agent_worker_interface.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q tests/test_agent_worker_interface.py tests/test_role_runtime.py
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_agent_worker_interface.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p8c-agent-worker-interface
