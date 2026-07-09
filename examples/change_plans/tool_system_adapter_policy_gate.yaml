@@ -1,0 +1,19 @@
+plan_id: tool-system-adapter-policy-gate
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_adapter_policy_gate.yaml
+changed_files:
+  - src/tool_system/worker_adapter/__init__.py
+  - src/tool_system/worker_adapter/policy_gate.py
+  - tests/test_worker_adapter_policy_gate.py
+  - docs/reports/p9c_adapter_policy_gate_record.md
+  - examples/task_manifests/tool_system_adapter_policy_gate.yaml
+  - examples/change_plans/tool_system_adapter_policy_gate.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q tests/test_worker_adapter_policy_gate.py tests/test_worker_adapter_orchestration.py tests/test_worker_adapter_contract.py
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_adapter_policy_gate.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p9c-adapter-policy-gate
