@@ -43,6 +43,7 @@ task_manifests:
   - examples/task_manifests/tool_system_role_transition_gate.yaml
   - examples/task_manifests/tool_system_p8_review_evidence.yaml
   - examples/task_manifests/tool_system_p9_phase_entry.yaml
+  - examples/task_manifests/tool_system_worker_adapter_contract.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -88,3 +89,4 @@ change_plans:
   - examples/change_plans/tool_system_role_transition_gate.yaml
   - examples/change_plans/tool_system_p8_review_evidence.yaml
   - examples/change_plans/tool_system_p9_phase_entry.yaml
+  - examples/change_plans/tool_system_worker_adapter_contract.yaml
