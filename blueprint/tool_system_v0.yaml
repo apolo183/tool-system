@@ -1,6 +1,6 @@
 schema_version: 0.2
 system: tool-system
-phase: P8_MULTI_AGENT_RUNTIME
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
 status: active
 
 identity:
@@ -13,6 +13,7 @@ boundaries:
     - task_planner
     - task_graph_planner
     - multi_agent_runtime
+    - worker_adapter_orchestration
     - harness_engine
     - agent_worker_interface
     - test_gate
@@ -147,6 +148,7 @@ role_control_rules:
   no_single_role_may_approve_and_execute_target_mutation: true
   target_mutation_requires_fresh_state: true
   target_mutation_requires_execution_approval: true
+  production_deployment_requires_execution_approval: true
   business_domain_roles_forbidden_in_tool_system: true
   dag_must_include_evidence_policy_verification_and_audit_nodes: true
 
@@ -235,6 +237,19 @@ milestones:
       - runtime audit bundle
       - role transition gate
       - rollback reference bundle
+  P9_WORKER_ADAPTER_ORCHESTRATION:
+    objective: define and validate no-mutation worker adapter contracts and orchestration records for local or dry-run worker runs while preserving target-repository and production boundaries
+    entry_requires:
+      - P8_MULTI_AGENT_RUNTIME accepted
+      - downstream target-repository mutation remains separately approved only
+      - production deployment remains separately approved only
+    outputs:
+      - worker adapter contract
+      - local dry-run adapter harness
+      - adapter policy gate
+      - adapter evidence record
+      - orchestration audit record
+      - rollback reference bundle
 
 default_policy:
   no_direct_main_write: true
@@ -244,3 +259,4 @@ default_policy:
   business_logic_is_external: true
   per_pr_human_review_required_for_routine_work: false
   target_repo_writes_require_separate_approval: true
+  production_deployment_requires_separate_approval: true
