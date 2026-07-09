@@ -1,0 +1,60 @@
+task_id: tool-system-p9-phase-entry
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p9-phase-entry
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+scope:
+  summary: Record P8 acceptance and enter P9 worker adapter orchestration with existing safety boundaries.
+  in_scope:
+    - AGENTS.md
+    - README.md
+    - blueprint/tool_system_v0.yaml
+    - docs/reports/p8_milestone_review_evidence.md
+    - docs/reports/p9_phase_entry_record.md
+    - examples/task_manifests/tool_system_p9_phase_entry.yaml
+    - examples/change_plans/tool_system_p9_phase_entry.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - source behavior changes
+    - downstream write execution
+    - production activity
+    - business-domain logic
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p8_milestone_review_evidence.md
+    why_relevant: Records P8 evidence and the user acceptance decision.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Owns active milestone and phase boundary.
+allowed_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/tool_system_v0.yaml
+  - docs/reports/p8_milestone_review_evidence.md
+  - docs/reports/p9_phase_entry_record.md
+  - examples/task_manifests/tool_system_p9_phase_entry.yaml
+  - examples/change_plans/tool_system_p9_phase_entry.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_phase_entry.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - P9 phase entry change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9-phase-entry
+approval:
+  required: true
+  approved_by: user_p8_accept_enter_p9_with_boundaries
