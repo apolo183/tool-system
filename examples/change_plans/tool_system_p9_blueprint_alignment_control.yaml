@@ -1,0 +1,17 @@
+plan_id: tool-system-p9-blueprint-alignment-control
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p9_blueprint_alignment_control.yaml
+changed_files:
+  - AGENTS.md
+  - docs/tool_system_global_development_principles_v1.md
+  - docs/reports/p9l_blueprint_alignment_control_record.md
+  - examples/task_manifests/tool_system_p9_blueprint_alignment_control.yaml
+  - examples/change_plans/tool_system_p9_blueprint_alignment_control.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_blueprint_alignment_control.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p9l-blueprint-alignment-control
