@@ -1,0 +1,15 @@
+plan_id: tool-system-p9-strict-review-requirements
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p9_strict_review_requirements.yaml
+changed_files:
+  - docs/reports/p9_strict_review_requirements.md
+  - examples/task_manifests/tool_system_p9_strict_review_requirements.yaml
+  - examples/change_plans/tool_system_p9_strict_review_requirements.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_strict_review_requirements.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p9e-strict-review-evidence
