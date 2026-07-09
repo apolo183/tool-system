@@ -4,9 +4,10 @@
 
 - repo_rel_path: `docs/tool_system_global_development_principles_v1.md`
 - role: active project-wide engineering discipline contract for tool-system
-- purpose: define mandatory evidence, scope, file disposition, cleanup, validation, rollback, and claims rules for tool-system work
+- purpose: define mandatory evidence, documentation-first execution, scope, file disposition, cleanup, validation, rollback, side-effect tool use, and claims rules for tool-system work
 - author: ChatGPT / apolo183
 - created_at: 2026-07-08 09:20 UTC+08:00
+- updated_at: 2026-07-09 UTC+08:00
 
 ## 1. Authority
 
@@ -56,6 +57,47 @@ Non-trivial implementation uses a separate branch and PR. Failed branch state re
 
 Later milestone, planner, runner, cleanup, and target-repository documents must either inherit this file or explicitly record a conflict requiring cross-document disposition. This file grants no implementation, target-repository mutation, destructive cleanup, production deployment, or external-system write authority by itself.
 
-## 13. Final state
+## 13. Documentation-first execution loop
 
-Status: ACTIVE. Applies to tool-system docs, source, tests, examples, policies, cleanup planning, repository-control work, and target-repository adapters.
+Do not rely on long conversation context as execution authority. Each stage is controlled by active documents and must follow this loop:
+
+1. read the active blueprint, global principles, milestone document, task manifest, and change plan;
+2. design or update the narrow current-stage document;
+3. verify the current-stage document against the blueprint, requirements, and this file;
+4. execute only the documented scope;
+5. create evidence showing what actually happened;
+6. compare actual evidence against the stage document and change plan;
+7. compare the stage document against earlier blueprint or requirement documents before designing the next stage.
+
+No document means no execution. No evidence means no acceptance. Detected drift stops feature work and requires documentation or process correction first.
+
+## 14. Short-stage rule
+
+A stage should be short, single-objective, and auditable. The default stage unit is one natural objective, one branch, one task manifest, one change plan, one evidence record, one CI result, and one explicit stop condition. If more than one objective appears necessary, split the work into multiple stages unless an active document explains why bundling is safer.
+
+## 15. Side-effect tool preflight
+
+Before any tool call that creates, updates, deletes, merges, labels, comments on, or otherwise mutates GitHub or repository state, the agent must verify:
+
+- intent;
+- target repository;
+- target branch or PR;
+- expected side effect;
+- duplicate check;
+- active manifest/change-plan authorization;
+- stop condition;
+- whether the selected tool matches the documented action.
+
+If the documented action is file creation or file update but the selected tool is branch creation, merge, deletion, cleanup, or any other mismatched mutation, the agent must stop before the tool call. If a duplicate branch, PR, file, or plan exists, reuse or stop; do not create numbered variants unless an active document explicitly authorizes replacement and records disposition.
+
+## 16. Branch single-flight rule
+
+Each stage may create at most one working branch. The branch name must be defined or implied by the stage document. If branch creation succeeds, all later writes for that stage use that branch. If branch creation fails because the branch already exists, the agent must inspect and either reuse it or stop for disposition. Creating branch variants such as `name2`, `name3`, or `retry` is prohibited without an explicit incident or replacement document.
+
+## 17. Incident and residue rule
+
+Any accidental branch, PR, file, label, comment, or other side effect is residue. The next action is an incident or cleanup plan, not continued feature expansion. Residue cleanup must be handled through a separate cleanup gate/PR when it requires deletion, branch deletion, history-affecting action, or any destructive cleanup.
+
+## 18. Final state
+
+Status: ACTIVE. Applies to tool-system docs, source, tests, examples, policies, cleanup planning, repository-control work, side-effect tool use, and target-repository adapters.

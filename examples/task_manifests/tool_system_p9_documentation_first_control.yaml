@@ -1,0 +1,65 @@
+task_id: tool-system-p9-documentation-first-control
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p9h-documentation-first-control
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+scope:
+  summary: Add documentation-first execution loop and side-effect tool safety controls to project governance.
+  in_scope:
+    - AGENTS.md
+    - docs/tool_system_global_development_principles_v1.md
+    - docs/reports/p9h_documentation_first_control_record.md
+    - examples/task_manifests/tool_system_p9_documentation_first_control.yaml
+    - examples/change_plans/tool_system_p9_documentation_first_control.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - source behavior changes
+    - P9 acceptance
+    - P9 closure
+    - P10 approval
+    - rollback execution
+    - branch deletion
+    - cleanup execution
+    - external worker calls
+    - downstream write execution
+    - production activity
+evidence:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    why_relevant: Agent operating contract delegates material work to the global principles.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    why_relevant: Project-wide governance contract to receive documentation-first and side-effect preflight rules.
+  - repo: apolo183/tool-system
+    path: docs/reports/p9_strict_review_requirements.md
+    why_relevant: Current P9 strict review still blocks P9 acceptance and P10.
+allowed_files:
+  - AGENTS.md
+  - docs/tool_system_global_development_principles_v1.md
+  - docs/reports/p9h_documentation_first_control_record.md
+  - examples/task_manifests/tool_system_p9_documentation_first_control.yaml
+  - examples/change_plans/tool_system_p9_documentation_first_control.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_documentation_first_control.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - P9H documentation-first control change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9h-documentation-first-control
+approval:
+  required: true
+  approved_by: user_documentation_first_control_approval
