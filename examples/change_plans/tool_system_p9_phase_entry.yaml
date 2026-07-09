@@ -7,6 +7,7 @@ changed_files:
   - blueprint/tool_system_v0.yaml
   - docs/reports/p8_milestone_review_evidence.md
   - docs/reports/p9_phase_entry_record.md
+  - tests/test_phase_alignment.py
   - examples/task_manifests/tool_system_p9_phase_entry.yaml
   - examples/change_plans/tool_system_p9_phase_entry.yaml
   - examples/active_gates.yaml
