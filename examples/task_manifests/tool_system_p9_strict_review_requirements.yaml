@@ -1,0 +1,59 @@
+task_id: tool-system-p9-strict-review-requirements
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p9e-strict-review-evidence
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+scope:
+  summary: Add strict P9 review requirements before P9 acceptance or P10 entry.
+  in_scope:
+    - docs/reports/p9_strict_review_requirements.md
+    - examples/task_manifests/tool_system_p9_strict_review_requirements.yaml
+    - examples/change_plans/tool_system_p9_strict_review_requirements.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - source behavior changes
+    - P9 acceptance
+    - P9 closure
+    - P10 approval
+    - external worker calls
+    - downstream write execution
+    - production activity
+    - business-domain logic
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p9_milestone_review_evidence.md
+    why_relevant: P9 remains in review and needs strict acceptance criteria.
+  - repo: apolo183/tool-system
+    path: docs/reports/p9_phase_entry_record.md
+    why_relevant: Records P9 boundaries and prohibitions.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    why_relevant: Claims boundary requires evidence before readiness or closure claims.
+allowed_files:
+  - docs/reports/p9_strict_review_requirements.md
+  - examples/task_manifests/tool_system_p9_strict_review_requirements.yaml
+  - examples/change_plans/tool_system_p9_strict_review_requirements.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_strict_review_requirements.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - P9 strict review requirements change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9e-strict-review-evidence
+approval:
+  required: true
+  approved_by: user_continue_highest_requirements
