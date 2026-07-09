@@ -1,0 +1,19 @@
+plan_id: tool-system-adapter-orchestration-audit
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_adapter_orchestration_audit.yaml
+changed_files:
+  - src/tool_system/worker_adapter/__init__.py
+  - src/tool_system/worker_adapter/orchestration.py
+  - tests/test_worker_adapter_orchestration.py
+  - docs/reports/p9b_adapter_orchestration_audit_record.md
+  - examples/task_manifests/tool_system_adapter_orchestration_audit.yaml
+  - examples/change_plans/tool_system_adapter_orchestration_audit.yaml
+  - examples/active_gates.yaml
+verification:
+  commands:
+    - python -m pytest -q tests/test_worker_adapter_orchestration.py tests/test_worker_adapter_contract.py
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_adapter_orchestration_audit.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p9b-adapter-orchestration-audit
