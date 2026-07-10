@@ -1,0 +1,25 @@
+plan_id: tool-system-p10b1-target-repo-identity-correction
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p10b1_target_repo_identity_correction.yaml
+changed_files:
+  - docs/reports/p10b1_target_repo_identity_correction.md
+  - examples/task_manifests/tool_system_p10b1_target_repo_identity_correction.yaml
+  - examples/change_plans/tool_system_p10b1_target_repo_identity_correction.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p10b1_target_repo_identity_correction.yaml
+    section_or_key: task_id
+    scope: Follow the P10B1 correction manifest only.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Follow the active P10 blueprint scope.
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10b1_target_repo_identity_correction.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p10b1-target-repo-identity-correction
