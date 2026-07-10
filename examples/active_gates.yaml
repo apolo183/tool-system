@@ -67,6 +67,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p9_p9m_residue_deletion_evidence.yaml
   - examples/task_manifests/tool_system_p9_review_cleanup_readiness.yaml
   - examples/task_manifests/tool_system_p9_p9_acceptance_p10_boundary.yaml
+  - examples/task_manifests/tool_system_p10a_phase_entry_target_repo_pr_pilot_gate_foundation.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -132,3 +133,4 @@ change_plans:
   - examples/change_plans/tool_system_p9_p9m_residue_deletion_evidence.yaml
   - examples/change_plans/tool_system_p9_review_cleanup_readiness.yaml
   - examples/change_plans/tool_system_p9_p9_acceptance_p10_boundary.yaml
+  - examples/change_plans/tool_system_p10a_phase_entry_target_repo_pr_pilot_gate_foundation.yaml
