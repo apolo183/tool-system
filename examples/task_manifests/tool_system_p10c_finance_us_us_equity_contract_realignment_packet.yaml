@@ -1,0 +1,91 @@
+task_id: tool-system-p10c-finance-us-us-equity-contract-realignment-packet
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10c-finance-us-blueprint-correction-packet
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10b2_finance_us_pilot_target_objective.md
+    section_or_key: P10C entry condition
+    scope: Prepare the named execution-approval packet for finance-us while keeping every target mutation behind a later explicit approval.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Stay within controlled target-repository PR pilot planning, approval-packet, no-production, and rollback-evidence boundaries.
+scope:
+  summary: Add the P10C named execution-approval packet for a contract-only finance-us US-equity realignment pilot.
+  in_scope:
+    - docs/reports/p10c_finance_us_us_equity_contract_realignment_execution_packet.md
+    - examples/task_manifests/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
+    - examples/change_plans/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - downstream target-repository branch creation
+    - downstream target-repository file write
+    - downstream target-repository PR creation
+    - downstream target-repository PR merge
+    - production deployment
+    - market-data download or ingestion
+    - ranking, scoring, model execution, selection, or backtest
+    - investment or performance claims
+    - real external worker calls
+    - rollback execution
+    - cleanup execution
+    - Codex replacement claims
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10b2_finance_us_pilot_target_objective.md
+    why_relevant: Parent record selecting finance-us as the controlled P10 pilot target.
+  - repo: apolo183/finance-os
+    path: README.md
+    why_relevant: Target repository overview showing the old finance-os identity and tool-system separation.
+  - repo: apolo183/finance-os
+    path: AGENTS.md
+    why_relevant: Target governance contract requiring approved workflows, tests, and review gates.
+  - repo: apolo183/finance-os
+    path: blueprint/finance_os_phase_1_v0.yaml
+    why_relevant: Active target blueprint containing the old identity and residual A-share fields.
+  - repo: apolo183/finance-os
+    path: contracts/data_input_contract.yaml
+    why_relevant: Target input contract containing residual A-share field and filter semantics.
+  - repo: apolo183/finance-os
+    path: contracts/cutoff_contract.yaml
+    why_relevant: Target cutoff contract using Asia/Shanghai instead of the US market timezone.
+  - repo: apolo183/finance-os
+    path: contracts/ranking_output_contract.yaml
+    why_relevant: Target ranking output contract requiring canonical identity alignment.
+  - repo: apolo183/finance-os
+    path: contracts/evaluation_contract.yaml
+    why_relevant: Target evaluation contract whose safety boundaries must be preserved while identity is corrected.
+allowed_files:
+  - docs/reports/p10c_finance_us_us_equity_contract_realignment_execution_packet.md
+  - examples/task_manifests/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
+  - examples/change_plans/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10C change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p10c-finance-us-blueprint-correction-packet
+approval:
+  required: true
+  approved_by: user_auto_iterate_short_stage_until_major_milestone
