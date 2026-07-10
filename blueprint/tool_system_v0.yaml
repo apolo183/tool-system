@@ -1,6 +1,6 @@
 schema_version: 0.2
 system: tool-system
-phase: P9_WORKER_ADAPTER_ORCHESTRATION
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
 status: active
 
 identity:
@@ -24,6 +24,7 @@ boundaries:
     - target_repo_pr_write_flow
     - agent_role_taxonomy
     - task_runner_productization
+    - controlled_target_repo_pr_pilot
   does_not_own:
     - finance_signals
     - ranking_models
@@ -125,7 +126,7 @@ agents:
       - write_tool_system_audit
   target_repo_executor:
     group: target
-    role: execute approved target repository branch, file, and PR mutations after separate approval
+    role: execute approved target repository branch, file, and PR mutations after separate execution approval
     permissions:
       - execute_target_branch_write_after_approval
       - execute_target_file_write_after_approval
@@ -250,6 +251,20 @@ milestones:
       - adapter evidence record
       - orchestration audit record
       - rollback reference bundle
+  P10_CONTROLLED_TARGET_REPO_PR_PILOT:
+    objective: operate a controlled target-repository pull-request pilot boundary after P9 acceptance while keeping every real downstream write behind separate execution approval
+    entry_requires:
+      - P9_WORKER_ADAPTER_ORCHESTRATION accepted
+      - target-repository mutation remains separately approved per named execution packet
+      - production deployment remains separately approved only
+      - business-domain logic remains outside tool-system
+    outputs:
+      - P10 phase-entry record
+      - target-repo selection gate
+      - target-repo execution approval packet
+      - controlled no-production PR pilot plan
+      - target-repo write audit and rollback reference
+      - post-pilot evidence bundle
 
 default_policy:
   no_direct_main_write: true
