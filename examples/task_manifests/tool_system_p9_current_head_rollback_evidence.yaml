@@ -1,0 +1,74 @@
+task_id: tool-system-p9-current-head-rollback-evidence
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p9n-current-head-rollback-evidence
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+alignment:
+  parent:
+    document: docs/reports/p9_strict_review_requirements.md
+    section_or_key: P9 acceptance rule
+    scope: Captures current-head rollback rehearsal evidence required before P9 acceptance.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+    scope: Stays within P9 worker-adapter orchestration evidence and review boundaries.
+scope:
+  summary: Record current-head DGX rollback rehearsal evidence for P9 strict review.
+  in_scope:
+    - docs/reports/p9n_current_head_rollback_rehearsal_evidence.md
+    - docs/reports/p9_strict_review_requirements.md
+    - examples/task_manifests/tool_system_p9_current_head_rollback_evidence.yaml
+    - examples/change_plans/tool_system_p9_current_head_rollback_evidence.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - source behavior changes
+    - P9 acceptance
+    - P9 closure
+    - P10 approval
+    - rollback execution
+    - branch deletion
+    - cleanup execution
+    - external worker calls
+    - downstream write execution
+    - production activity
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p9_strict_review_requirements.md
+    why_relevant: Defines the current-head rollback rehearsal and P9 acceptance requirements.
+  - repo: apolo183/tool-system
+    path: docs/reports/p9m_alignment_gate_enforcement_record.md
+    why_relevant: Confirms alignment gate enforcement is part of the current-head evidence scope.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Active blueprint defining P9 worker-adapter orchestration and no-mutation boundaries.
+allowed_files:
+  - docs/reports/p9n_current_head_rollback_rehearsal_evidence.md
+  - docs/reports/p9_strict_review_requirements.md
+  - examples/task_manifests/tool_system_p9_current_head_rollback_evidence.yaml
+  - examples/change_plans/tool_system_p9_current_head_rollback_evidence.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_current_head_rollback_evidence.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - P9N alignment gate validation returns PASS
+    - P9N change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9n-current-head-rollback-evidence
+approval:
+  required: true
+  approved_by: user_auto_iterate_short_stage_until_major_milestone
