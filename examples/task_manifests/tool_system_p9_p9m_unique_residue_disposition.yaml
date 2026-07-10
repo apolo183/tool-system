@@ -1,0 +1,74 @@
+task_id: tool-system-p9-p9m-unique-residue-disposition
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p9q-p9m-unique-residue-disposition
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+alignment:
+  parent:
+    document: docs/reports/p9p_cleanup_execution_evidence.md
+    section_or_key: Remaining cleanup residue
+    scope: Disposition the remaining unique-commit residue branch recorded by P9P.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+    scope: Stays within P9 governance cleanup review and no-mutation boundaries.
+scope:
+  summary: Disposition p9m-blueprint-alignment-gate as superseded duplicate residue without deleting it.
+  in_scope:
+    - docs/reports/p9q_p9m_unique_residue_disposition.md
+    - examples/task_manifests/tool_system_p9_p9m_unique_residue_disposition.yaml
+    - examples/change_plans/tool_system_p9_p9m_unique_residue_disposition.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - branch deletion
+    - cleanup execution
+    - destructive cleanup
+    - source behavior changes
+    - P9 acceptance
+    - P9 closure
+    - P10 approval
+    - rollback execution
+    - external worker calls
+    - downstream write execution
+    - production activity
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p9p_cleanup_execution_evidence.md
+    why_relevant: Parent cleanup evidence identifying p9m-blueprint-alignment-gate as remaining unique-commit residue.
+  - repo: apolo183/tool-system
+    path: docs/reports/p9m_alignment_gate_enforcement_record.md
+    why_relevant: Merged authoritative P9M implementation and enforcement evidence.
+  - repo: apolo183/tool-system
+    path: docs/reports/p9m_blueprint_alignment_gate_record.md
+    ref: p9m-blueprint-alignment-gate
+    why_relevant: Branch-only duplicate P9M record being dispositioned.
+allowed_files:
+  - docs/reports/p9q_p9m_unique_residue_disposition.md
+  - examples/task_manifests/tool_system_p9_p9m_unique_residue_disposition.yaml
+  - examples/change_plans/tool_system_p9_p9m_unique_residue_disposition.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_p9m_unique_residue_disposition.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P9Q change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9q-p9m-unique-residue-disposition
+approval:
+  required: true
+  approved_by: user_auto_iterate_short_stage_until_major_milestone
