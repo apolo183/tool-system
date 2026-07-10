@@ -1,0 +1,25 @@
+plan_id: tool-system-p9-p9m-residue-deletion-gate
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p9_p9m_residue_deletion_gate.yaml
+changed_files:
+  - docs/reports/p9r_p9m_residue_deletion_gate.md
+  - examples/task_manifests/tool_system_p9_p9m_residue_deletion_gate.yaml
+  - examples/change_plans/tool_system_p9_p9m_residue_deletion_gate.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p9_p9m_residue_deletion_gate.yaml
+    section_or_key: task_id
+    scope: Implements the P9R task manifest file scope without expanding execution authority.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+    scope: Stays within P9 governance, cleanup review, and no-mutation boundaries.
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_p9m_residue_deletion_gate.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p9r-p9m-residue-deletion-gate
