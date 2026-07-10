@@ -1,0 +1,69 @@
+task_id: tool-system-p9-cleanup-execution-evidence
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p9p-cleanup-execution-evidence
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+alignment:
+  parent:
+    document: docs/reports/p9o_cleanup_execution_packet.md
+    section_or_key: Local cleanup command
+    scope: Records execution evidence for the eligible branch deletion subset authorized by the cleanup execution packet.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+    scope: Stays within P9 governance, cleanup evidence, and no-mutation boundaries.
+scope:
+  summary: Record cleanup execution evidence for deleted p9f/p9g branch residue while preserving p9m unique-commit residue for separate disposition.
+  in_scope:
+    - docs/reports/p9p_cleanup_execution_evidence.md
+    - examples/task_manifests/tool_system_p9_cleanup_execution_evidence.yaml
+    - examples/change_plans/tool_system_p9_cleanup_execution_evidence.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - P9 acceptance
+    - P9 closure
+    - P10 approval
+    - branch deletion
+    - cleanup execution
+    - destructive cleanup
+    - rollback execution
+    - external worker calls
+    - downstream write execution
+    - production activity
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p9o_cleanup_execution_packet.md
+    why_relevant: Parent cleanup execution packet defining final checks and local cleanup command.
+  - repo: user-provided-log
+    path: conversation-cleanup-output
+    why_relevant: User-provided local deletion and post-cleanup verification output.
+allowed_files:
+  - docs/reports/p9p_cleanup_execution_evidence.md
+  - examples/task_manifests/tool_system_p9_cleanup_execution_evidence.yaml
+  - examples/change_plans/tool_system_p9_cleanup_execution_evidence.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_cleanup_execution_evidence.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate returns PASS
+    - P9P cleanup execution evidence change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9p-cleanup-execution-evidence
+approval:
+  required: true
+  approved_by: user_auto_iterate_short_stage_until_major_milestone
