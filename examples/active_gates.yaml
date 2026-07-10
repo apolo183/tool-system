@@ -61,6 +61,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p9_alignment_gate_enforcement.yaml
   - examples/task_manifests/tool_system_p9_current_head_rollback_evidence.yaml
   - examples/task_manifests/tool_system_p9_cleanup_execution_packet.yaml
+  - examples/task_manifests/tool_system_p9_cleanup_execution_evidence.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -120,3 +121,4 @@ change_plans:
   - examples/change_plans/tool_system_p9_alignment_gate_enforcement.yaml
   - examples/change_plans/tool_system_p9_current_head_rollback_evidence.yaml
   - examples/change_plans/tool_system_p9_cleanup_execution_packet.yaml
+  - examples/change_plans/tool_system_p9_cleanup_execution_evidence.yaml
