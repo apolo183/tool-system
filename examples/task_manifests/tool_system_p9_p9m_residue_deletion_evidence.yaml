@@ -1,49 +1,72 @@
-manifest_id: TOOL_SYSTEM_P9_P9M_RESIDUE_DELETION_EVIDENCE
+task_id: tool-system-p9-p9m-residue-deletion-evidence
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p9s-p9m-deletion-evidence
 phase: P9_WORKER_ADAPTER_ORCHESTRATION
-status: evidence_record
-summary: Record user-executed deletion and verification for the superseded p9m-blueprint-alignment-gate remote branch residue.
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
 alignment:
   parent:
     document: docs/reports/p9r_p9m_residue_deletion_gate.md
     section_or_key: Deletion eligibility
-    scope: Record execution outcome for the local deletion gate defined by P9R without expanding cleanup scope.
+    scope: Records execution outcome for the local deletion gate defined by P9R without expanding cleanup scope.
   global:
     document: blueprint/tool_system_v0.yaml
     section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
-    scope: Stay within P9 governance, cleanup evidence, and no-mutation boundaries.
-approved_blueprint_refs:
-  - document: blueprint/tool_system_v0.yaml
-    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+    scope: Stays within P9 governance, cleanup evidence, and no-mutation boundaries.
 scope:
-  in:
+  summary: Add evidence record for user-executed deletion of the superseded p9m branch residue.
+  in_scope:
     - docs/reports/p9s_p9m_residue_deletion_evidence.md
     - examples/task_manifests/tool_system_p9_p9m_residue_deletion_evidence.yaml
     - examples/change_plans/tool_system_p9_p9m_residue_deletion_evidence.yaml
     - examples/active_gates.yaml
-  out:
+  out_of_scope:
+    - branch deletion by this PR
+    - additional cleanup execution
+    - source behavior changes
     - P9 acceptance
     - P9 closure
     - P10 approval
-    - P10 entry
-    - downstream target-repository mutation
-    - production deployment
-    - real external worker calls
-    - business-domain implementation
-    - additional branch deletion
     - rollback execution
-validation:
-  required_commands:
+    - external worker calls
+    - downstream write execution
+    - production activity
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p9r_p9m_residue_deletion_gate.md
+    why_relevant: Parent deletion gate defining final local checks and deletion/post-verification commands.
+  - repo: apolo183/tool-system
+    path: docs/reports/p9q_p9m_unique_residue_disposition.md
+    why_relevant: Disposition classifying p9m-blueprint-alignment-gate as superseded duplicate residue.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Active blueprint defining P9 governance and no-mutation boundaries.
+allowed_files:
+  - docs/reports/p9s_p9m_residue_deletion_evidence.md
+  - examples/task_manifests/tool_system_p9_p9m_residue_deletion_evidence.yaml
+  - examples/change_plans/tool_system_p9_p9m_residue_deletion_evidence.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
     - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
     - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_p9m_residue_deletion_evidence.yaml
     - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
-evidence_inputs:
-  user_provided:
-    - local final read-only check for p9m-blueprint-alignment-gate
-    - user-executed git push origin --delete p9m-blueprint-alignment-gate
-    - local post-deletion ls-remote and status verification
-  github_readonly:
-    - branch search for p9m-blueprint-alignment-gate returned no result after deletion
-risk_controls:
-  - This stage records deletion evidence only.
-  - It must not delete any branch.
-  - It must not accept P9 or approve P10.
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P9S change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9s-p9m-deletion-evidence
+approval:
+  required: true
+  approved_by: user_auto_iterate_short_stage_until_major_milestone
