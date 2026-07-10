@@ -1,0 +1,73 @@
+task_id: tool-system-p9-cleanup-execution-packet
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p9o-cleanup-execution-packet
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+alignment:
+  parent:
+    document: docs/reports/p9k_cleanup_readonly_verification.md
+    section_or_key: Remaining pre-deletion checks
+    scope: Converts verified cleanup candidates into a local execution packet without deleting branches in this PR.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+    scope: Stays within P9 review, cleanup planning, and no-mutation governance boundaries.
+scope:
+  summary: Add cleanup execution packet for verified accidental branch residue without executing branch deletion.
+  in_scope:
+    - docs/reports/p9o_cleanup_execution_packet.md
+    - examples/task_manifests/tool_system_p9_cleanup_execution_packet.yaml
+    - examples/change_plans/tool_system_p9_cleanup_execution_packet.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - direct branch deletion by this PR
+    - cleanup execution inside this PR
+    - destructive cleanup inside this PR
+    - source behavior changes
+    - P9 acceptance
+    - P9 closure
+    - P10 approval
+    - rollback execution
+    - external worker calls
+    - downstream write execution
+    - production activity
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p9k_cleanup_readonly_verification.md
+    why_relevant: Parent read-only verification of cleanup candidates.
+  - repo: apolo183/tool-system
+    path: docs/reports/p9n_current_head_rollback_rehearsal_evidence.md
+    why_relevant: Confirms current-head strict review evidence before cleanup planning continues.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Active blueprint defining P9 no-mutation worker adapter orchestration and cleanup boundaries.
+allowed_files:
+  - docs/reports/p9o_cleanup_execution_packet.md
+  - examples/task_manifests/tool_system_p9_cleanup_execution_packet.yaml
+  - examples/change_plans/tool_system_p9_cleanup_execution_packet.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_cleanup_execution_packet.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validates P9O manifest and change plan
+    - P9O cleanup execution packet change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9o-cleanup-execution-packet
+approval:
+  required: true
+  approved_by: user_requested_continue_review_cleanup
