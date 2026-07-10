@@ -1,0 +1,82 @@
+task_id: tool-system-p9-alignment-gate-enforcement
+task_type: implementation
+target_repo: apolo183/tool-system
+target_branch: p9m-alignment-gate-enforcement
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+alignment:
+  parent:
+    document: docs/reports/p9l_blueprint_alignment_control_record.md
+    section_or_key: Required proof shape
+    scope: Implements the parent-plus-global blueprint alignment invariant as an executable gate.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+    scope: Stays within P9 governance and no-mutation worker-adapter orchestration boundaries.
+scope:
+  summary: Add executable active-gates enforcement for parent and global blueprint alignment.
+  in_scope:
+    - src/tool_system/gate/alignment_gate.py
+    - src/tool_system/cli/validate_alignment_gate.py
+    - src/tool_system/cli/validate_active_gates.py
+    - tests/test_alignment_gate.py
+    - pyproject.toml
+    - docs/reports/p9m_alignment_gate_enforcement_record.md
+    - examples/task_manifests/tool_system_p9_alignment_gate_enforcement.yaml
+    - examples/change_plans/tool_system_p9_alignment_gate_enforcement.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - P9 acceptance
+    - P9 closure
+    - P10 approval
+    - branch deletion
+    - cleanup execution
+    - destructive cleanup
+    - rollback execution
+    - external worker calls
+    - downstream write execution
+    - production activity
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p9l_blueprint_alignment_control_record.md
+    why_relevant: Parent record requiring parent-plus-global blueprint alignment at each level.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Active blueprint defining P9 worker adapter orchestration and boundaries.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    why_relevant: Project-wide governance contract requiring blueprint alignment invariant.
+allowed_files:
+  - src/tool_system/gate/alignment_gate.py
+  - src/tool_system/cli/validate_alignment_gate.py
+  - src/tool_system/cli/validate_active_gates.py
+  - tests/test_alignment_gate.py
+  - pyproject.toml
+  - docs/reports/p9m_alignment_gate_enforcement_record.md
+  - examples/task_manifests/tool_system_p9_alignment_gate_enforcement.yaml
+  - examples/change_plans/tool_system_p9_alignment_gate_enforcement.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q tests/test_alignment_gate.py
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate unit tests pass
+    - alignment gate CLI returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9m-alignment-gate-enforcement
+approval:
+  required: true
+  approved_by: user_auto_iterate_short_stage_until_major_milestone
