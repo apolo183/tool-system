@@ -1,0 +1,83 @@
+task_id: tool-system-p10b2-finance-us-pilot-target-objective
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10b2-finance-us-pilot-target
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10b1_target_repo_identity_correction.md
+    section_or_key: Corrected candidate-selection decision
+    scope: Replace the selected P10 pilot target with finance-us while preserving canonical and remote identity separation and no-write boundaries.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Stay within controlled target-repository PR pilot selection and packet-preparation boundaries.
+scope:
+  summary: Select finance-us as the controlled tool-system pilot test bed and identify the preferred P1B packet objective.
+  in_scope:
+    - docs/reports/p10b2_finance_us_pilot_target_objective.md
+    - examples/task_manifests/tool_system_p10b2_finance_us_pilot_target_objective.yaml
+    - examples/change_plans/tool_system_p10b2_finance_us_pilot_target_objective.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - downstream target-repository branch creation
+    - downstream target-repository file write
+    - downstream target-repository PR creation
+    - target code execution
+    - market-data download
+    - training
+    - evaluation execution
+    - backtest
+    - production deployment
+    - business-domain performance claims
+    - real external worker calls
+    - rollback execution
+    - cleanup execution
+    - Codex replacement claims
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10b1_target_repo_identity_correction.md
+    why_relevant: Parent identity correction record establishing canonical and remote repository mappings.
+  - repo: apolo183/finance-os
+    path: README.md
+    why_relevant: Target repository overview separating business-system responsibility from tool-system orchestration.
+  - repo: apolo183/finance-os
+    path: AGENTS.md
+    why_relevant: Target governance contract requiring approved workflows, tests, and review gates.
+  - repo: apolo183/finance-os
+    path: blueprint/finance_os_phase_1_v0.yaml
+    why_relevant: Target blueprint defining P1_SHADOW_TOP10 and P1B_MINIMAL_RANKING_CODE.
+  - repo: apolo183/finance-os
+    path: contracts/evaluation_contract.yaml
+    why_relevant: Target evaluation contract limiting allowed claims and requiring fail-closed evidence.
+allowed_files:
+  - docs/reports/p10b2_finance_us_pilot_target_objective.md
+  - examples/task_manifests/tool_system_p10b2_finance_us_pilot_target_objective.yaml
+  - examples/change_plans/tool_system_p10b2_finance_us_pilot_target_objective.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+  - src/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10b2_finance_us_pilot_target_objective.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10B2 change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p10b2-finance-us-pilot-target
+approval:
+  required: true
+  approved_by: user_changed_p10_pilot_target_to_finance_us
