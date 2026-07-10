@@ -1,0 +1,25 @@
+plan_id: tool-system-p10c-finance-us-us-equity-contract-realignment-packet
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
+changed_files:
+  - docs/reports/p10c_finance_us_us_equity_contract_realignment_execution_packet.md
+  - examples/task_manifests/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
+  - examples/change_plans/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
+    section_or_key: task_id
+    scope: Follow only the P10C approval-packet scope defined by the task manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Follow the active P10 controlled target-repository PR pilot scope without executing downstream mutation.
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p10c-finance-us-blueprint-correction-packet
