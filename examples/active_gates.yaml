@@ -1,3 +1,7 @@
+alignment_gate:
+  enabled: true
+  task_manifest_marker: examples/task_manifests/tool_system_p9_alignment_gate_enforcement.yaml
+  change_plan_marker: examples/change_plans/tool_system_p9_alignment_gate_enforcement.yaml
 task_manifests:
   - examples/task_manifests/tool_system_p2b_runner_foundation.yaml
   - examples/task_manifests/tool_system_p3_repo_controller.yaml
@@ -54,6 +58,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p9_residue_cleanup_plan.yaml
   - examples/task_manifests/tool_system_p9_cleanup_readonly_verification.yaml
   - examples/task_manifests/tool_system_p9_blueprint_alignment_control.yaml
+  - examples/task_manifests/tool_system_p9_alignment_gate_enforcement.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -110,3 +115,4 @@ change_plans:
   - examples/change_plans/tool_system_p9_residue_cleanup_plan.yaml
   - examples/change_plans/tool_system_p9_cleanup_readonly_verification.yaml
   - examples/change_plans/tool_system_p9_blueprint_alignment_control.yaml
+  - examples/change_plans/tool_system_p9_alignment_gate_enforcement.yaml

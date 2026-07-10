@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from tool_system.cli.validate_alignment_gate import validate as validate_alignment_gate
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
 from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
 from tool_system.manifest.task_manifest import load_yaml_file
@@ -41,6 +42,10 @@ def validate(index_path: Path) -> dict[str, object]:
         result = validate_change_plan(change_plan_path)
         results.append({"kind": "change_plan", **result})
         reasons.extend(str(reason) for reason in result.get("reasons", []))
+
+    alignment_result = validate_alignment_gate(index_path)
+    results.append({"kind": "alignment_gate", **alignment_result})
+    reasons.extend(str(reason) for reason in alignment_result.get("reasons", []))
 
     return {
         "status": "PASS" if not reasons else "BLOCK",
