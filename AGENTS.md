@@ -78,8 +78,6 @@ Human review is required for blueprint changes, objective changes, policy bounda
 
 Agents add or modify files only when the change is tied to an approved blueprint item and a valid task manifest.
 
-tool-system remains separate from business-domain repositories.
-
 ## 9. Change record
 
 Every non-trivial change records scope, files touched, reason, verification command, and rollback method.
@@ -96,8 +94,8 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 12. Current phase
 
-Current phase: P9_WORKER_ADAPTER_ORCHESTRATION.
+Current phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT.
 
-Allowed now: build and validate no-mutation worker adapter contracts, local or dry-run adapter orchestration, adapter execution records, evidence capture, policy checks, rollback references after P8 acceptance, and process hardening required by the P9 strict review.
+Allowed now: P10 phase-entry work, target-repo candidate selection gates, target-repo read-only inspection, execution approval packets, controlled PR pilot planning, dry-run or preview commands, and audit/rollback evidence for approved P10 pilot steps.
 
-Not allowed now: direct target-repository main-branch mutation, direct downstream repository mutation without separate explicit approval, production deployment, business-domain implementation outside a valid approved workflow, cleanup execution without a separate execution gate, branch deletion without a cleanup gate, or autonomous patch execution outside approved tool-system branches.
+Not allowed now: direct target-repository main-branch mutation, broad or unspecified downstream repository mutation, production deployment, business-domain implementation by tool-system, real external worker calls without an execution packet and approval, cleanup execution without a cleanup gate, branch deletion without a cleanup gate, rollback execution without a rollback gate, or Codex replacement claims.
