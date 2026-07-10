@@ -1,0 +1,25 @@
+plan_id: tool-system-p9-p9m-unique-residue-disposition
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p9_p9m_unique_residue_disposition.yaml
+changed_files:
+  - docs/reports/p9q_p9m_unique_residue_disposition.md
+  - examples/task_manifests/tool_system_p9_p9m_unique_residue_disposition.yaml
+  - examples/change_plans/tool_system_p9_p9m_unique_residue_disposition.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p9_p9m_unique_residue_disposition.yaml
+    section_or_key: task_id
+    scope: Implements the P9Q task manifest for p9m unique residue disposition.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+    scope: Stays within P9 governance cleanup review and no-mutation boundaries.
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_p9m_unique_residue_disposition.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: branch commits on p9q-p9m-unique-residue-disposition
