@@ -1,0 +1,80 @@
+task_id: tool-system-p9-p9-acceptance-p10-boundary
+task_type: phase_transition
+target_repo: apolo183/tool-system
+target_branch: p9u-p9-acceptance-p10-boundary
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p9t_p9_review_cleanup_readiness.md
+    section_or_key: Remaining decision
+    scope: Implements the explicit P9 acceptance and P10 boundary decision after P9 review and cleanup readiness closure.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Defines and enters the approved P10 controlled target-repo PR pilot boundary.
+scope:
+  summary: Accept P9, define the P10 boundary, and update public phase contracts to P10.
+  in_scope:
+    - docs/reports/p9u_p9_acceptance_p10_boundary.md
+    - blueprint/tool_system_v0.yaml
+    - AGENTS.md
+    - README.md
+    - tests/test_phase_alignment.py
+    - examples/task_manifests/tool_system_p9_p9_acceptance_p10_boundary.yaml
+    - examples/change_plans/tool_system_p9_p9_acceptance_p10_boundary.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - real downstream target-repository mutation
+    - production deployment
+    - business-domain implementation
+    - real external worker calls
+    - branch deletion
+    - cleanup execution
+    - rollback execution
+    - Codex replacement claims
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p9t_p9_review_cleanup_readiness.md
+    why_relevant: Parent readiness record stating the remaining blocker is P9 acceptance and P10 boundary approval.
+  - repo: apolo183/tool-system
+    path: docs/reports/p9u_p9_acceptance_p10_boundary.md
+    why_relevant: Records explicit P9 acceptance and approved P10 boundary.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Active blueprint receives the P10 boundary and current phase.
+allowed_files:
+  - docs/reports/p9u_p9_acceptance_p10_boundary.md
+  - blueprint/tool_system_v0.yaml
+  - AGENTS.md
+  - README.md
+  - tests/test_phase_alignment.py
+  - examples/task_manifests/tool_system_p9_p9_acceptance_p10_boundary.yaml
+  - examples/change_plans/tool_system_p9_p9_acceptance_p10_boundary.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q tests/test_phase_alignment.py tests/test_alignment_gate.py
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_p9_acceptance_p10_boundary.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - phase alignment tests pass
+    - alignment gate validation returns PASS
+    - P9U change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9u-p9-acceptance-p10-boundary
+approval:
+  required: true
+  approved_by: user_explicit_p9_acceptance_and_p10_boundary_approval

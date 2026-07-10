@@ -5,7 +5,7 @@ role: repository overview
 purpose: define the domain-agnostic tool system boundary and current controller contract  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-09 UTC+08:00
+updated_at: 2026-07-10 UTC+08:00
 
 ## Definition
 
@@ -31,6 +31,7 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 - Plan bounded task graphs with dependency ordering and agent role assignments.
 - Run role-assigned task graph steps through an auditable no-mutation runtime.
 - Build no-mutation worker adapter contracts and orchestration records.
+- Define and operate controlled target-repository PR pilot gates after explicit execution approval.
 
 ### Out of scope
 
@@ -44,13 +45,13 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 
 ## Current phase
 
-Current phase: `P9_WORKER_ADAPTER_ORCHESTRATION`.
+Current phase: `P10_CONTROLLED_TARGET_REPO_PR_PILOT`.
 
-The active objective is worker adapter orchestration: define and validate no-mutation adapter contracts, local or dry-run adapter runs, adapter evidence records, policy checks, and rollback references while preserving the existing target-repository and production boundaries.
+The active objective is a controlled target-repository pull-request pilot boundary: prepare target-repo selection gates, execution approval packets, no-production PR pilot controls, and rollback evidence while keeping every real downstream write behind a separate explicit execution approval.
 
 ## Repository contract
 
-This repository is a tool layer. Business systems are downstream targets. tool-system may propose and apply code changes to target repositories only through explicit workflow, test, policy, and review gates. In P9, target repositories still require separate explicit approval before any real target-repository mutation, and production deployment remains out of scope without separate explicit approval.
+This repository is a tool layer. Business systems are downstream targets. tool-system may propose and apply code changes to target repositories only through explicit workflow, test, policy, review, execution-approval, and rollback gates. In P10, target repositories still require a named execution approval before any real target-repository branch or PR mutation, and production deployment remains out of scope without separate explicit approval.
 
 ## Bootstrap files
 

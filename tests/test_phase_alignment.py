@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ROOT / "AGENTS.md"
 README = ROOT / "README.md"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
-CHANGE_PLAN = ROOT / "examples" / "change_plans" / "tool_system_p9_phase_entry.yaml"
-EXPECTED_PHASE = "P9_WORKER_ADAPTER_ORCHESTRATION"
+CHANGE_PLAN = ROOT / "examples" / "change_plans" / "tool_system_p9_p9_acceptance_p10_boundary.yaml"
+EXPECTED_PHASE = "P10_CONTROLLED_TARGET_REPO_PR_PILOT"
 
 
 def test_public_contracts_have_same_current_phase() -> None:
@@ -22,7 +22,7 @@ def test_public_contracts_have_same_current_phase() -> None:
     assert f"Current phase: {EXPECTED_PHASE}" in agents_text
     assert f"Current phase: `{EXPECTED_PHASE}`" in readme_text
     assert blueprint["phase"] == EXPECTED_PHASE
-    assert "P9_WORKER_ADAPTER_ORCHESTRATION" in blueprint["milestones"]
+    assert "P10_CONTROLLED_TARGET_REPO_PR_PILOT" in blueprint["milestones"]
 
 
 def test_phase_alignment_change_plan_validates() -> None:
