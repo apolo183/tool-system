@@ -1,0 +1,49 @@
+manifest_id: TOOL_SYSTEM_P9_P9M_RESIDUE_DELETION_EVIDENCE
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+status: evidence_record
+summary: Record user-executed deletion and verification for the superseded p9m-blueprint-alignment-gate remote branch residue.
+alignment:
+  parent:
+    document: docs/reports/p9r_p9m_residue_deletion_gate.md
+    section_or_key: Deletion eligibility
+    scope: Record execution outcome for the local deletion gate defined by P9R without expanding cleanup scope.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+    scope: Stay within P9 governance, cleanup evidence, and no-mutation boundaries.
+approved_blueprint_refs:
+  - document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+scope:
+  in:
+    - docs/reports/p9s_p9m_residue_deletion_evidence.md
+    - examples/task_manifests/tool_system_p9_p9m_residue_deletion_evidence.yaml
+    - examples/change_plans/tool_system_p9_p9m_residue_deletion_evidence.yaml
+    - examples/active_gates.yaml
+  out:
+    - P9 acceptance
+    - P9 closure
+    - P10 approval
+    - P10 entry
+    - downstream target-repository mutation
+    - production deployment
+    - real external worker calls
+    - business-domain implementation
+    - additional branch deletion
+    - rollback execution
+validation:
+  required_commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_p9m_residue_deletion_evidence.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+evidence_inputs:
+  user_provided:
+    - local final read-only check for p9m-blueprint-alignment-gate
+    - user-executed git push origin --delete p9m-blueprint-alignment-gate
+    - local post-deletion ls-remote and status verification
+  github_readonly:
+    - branch search for p9m-blueprint-alignment-gate returned no result after deletion
+risk_controls:
+  - This stage records deletion evidence only.
+  - It must not delete any branch.
+  - It must not accept P9 or approve P10.
