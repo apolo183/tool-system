@@ -1,0 +1,78 @@
+task_id: tool-system-p10d-finance-us-pr-execution-evidence
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10d-finance-us-pr-execution-evidence
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10c_finance_us_us_equity_contract_realignment_execution_packet.md
+    section_or_key: Approval boundary
+    scope: Record the approved finance-us branch, allowlist, and draft-PR outcome only.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Stay within controlled target-repository PR pilot evidence boundaries.
+scope:
+  summary: Add P10D finance-us draft PR execution evidence and validation handoff.
+  in_scope:
+    - docs/reports/p10d_finance_us_pr_execution_evidence.md
+    - examples/task_manifests/tool_system_p10d_finance_us_pr_execution_evidence.yaml
+    - examples/change_plans/tool_system_p10d_finance_us_pr_execution_evidence.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - target PR merge
+    - target PR ready transition
+    - finance-us file changes
+    - target local validation claims
+    - P1A acceptance
+    - P1B entry
+    - production deployment
+    - data or model operations
+    - rollback execution
+    - cleanup execution
+    - branch deletion
+    - real external worker calls
+    - Codex replacement claims
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10c_finance_us_us_equity_contract_realignment_execution_packet.md
+    why_relevant: Parent packet defining the approved downstream scope and stop conditions.
+  - repo: apolo183/finance-os
+    path: README.md
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Target draft PR branch canonical identity and US-equity boundary.
+  - repo: apolo183/finance-os
+    path: blueprint/finance_us_phase_1_v0.yaml
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Target draft PR branch canonical blueprint.
+allowed_files:
+  - docs/reports/p10d_finance_us_pr_execution_evidence.md
+  - examples/task_manifests/tool_system_p10d_finance_us_pr_execution_evidence.yaml
+  - examples/change_plans/tool_system_p10d_finance_us_pr_execution_evidence.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+  - src/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10d_finance_us_pr_execution_evidence.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10D change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p10d-finance-us-pr-execution-evidence
+approval:
+  required: true
+  approved_by: user_authorized_routine_short_stage_until_major_boundary
