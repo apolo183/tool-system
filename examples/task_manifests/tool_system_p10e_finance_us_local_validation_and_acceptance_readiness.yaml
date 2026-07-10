@@ -1,0 +1,86 @@
+task_id: tool-system-p10e-finance-us-local-validation-and-acceptance-readiness
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10e-finance-us-local-validation-evidence
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10d_finance_us_pr_execution_evidence.md
+    section_or_key: Validation state
+    scope: Close the target-local validation evidence gap and assess P1A acceptance readiness without target mutation.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Record post-pilot evidence, fresh target state, review blockers, rollback boundaries, and stop conditions.
+scope:
+  summary: Record finance-us target-local validation PASS and fail closed on identity/calendar contract drift before P1A acceptance.
+  in_scope:
+    - docs/reports/p10e_finance_us_local_validation_and_acceptance_readiness.md
+    - examples/task_manifests/tool_system_p10e_finance_us_local_validation_and_acceptance_readiness.yaml
+    - examples/change_plans/tool_system_p10e_finance_us_local_validation_and_acceptance_readiness.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-us branch or file mutation
+    - target PR ready transition
+    - target PR merge
+    - P1A acceptance
+    - P1B implementation
+    - source or test changes
+    - data, model, evaluation, ranking, backtest, or production execution
+    - rollback execution
+    - cleanup execution
+    - branch deletion
+    - real external worker calls
+    - Codex replacement claims
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10d_finance_us_pr_execution_evidence.md
+    why_relevant: Parent audit record with target-local validation previously pending.
+  - repo: apolo183/finance-us
+    path: README.md
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Active target identity still contains the former repository full name.
+  - repo: apolo183/finance-us
+    path: AGENTS.md
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Agent contract still contains the former repository full name.
+  - repo: apolo183/finance-us
+    path: blueprint/finance_us_phase_1_v0.yaml
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Blueprint identity and exchange/calendar policy require acceptance review.
+  - repo: apolo183/finance-us
+    path: contracts/cutoff_contract.yaml
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Calendar mapping rule does not explicitly resolve NYSE_ARCA.
+allowed_files:
+  - docs/reports/p10e_finance_us_local_validation_and_acceptance_readiness.md
+  - examples/task_manifests/tool_system_p10e_finance_us_local_validation_and_acceptance_readiness.yaml
+  - examples/change_plans/tool_system_p10e_finance_us_local_validation_and_acceptance_readiness.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10e_finance_us_local_validation_and_acceptance_readiness.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10E change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p10e-finance-us-local-validation-evidence
+approval:
+  required: true
+  approved_by: standing_authorization_for_routine_evidence_stages
