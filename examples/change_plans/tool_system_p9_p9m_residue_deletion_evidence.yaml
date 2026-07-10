@@ -1,0 +1,37 @@
+change_plan_id: TOOL_SYSTEM_P9_P9M_RESIDUE_DELETION_EVIDENCE_PLAN
+task_manifest: examples/task_manifests/tool_system_p9_p9m_residue_deletion_evidence.yaml
+status: evidence_record
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p9_p9m_residue_deletion_evidence.yaml
+    section_or_key: scope
+    scope: Implement only the evidence-recording scope defined by the P9S task manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+    scope: Stay within P9 governance, cleanup evidence, and no-mutation boundaries.
+changes:
+  - path: docs/reports/p9s_p9m_residue_deletion_evidence.md
+    action: add
+    reason: Record user-executed deletion and verification for p9m-blueprint-alignment-gate.
+  - path: examples/task_manifests/tool_system_p9_p9m_residue_deletion_evidence.yaml
+    action: add
+    reason: Register aligned task manifest for this evidence stage.
+  - path: examples/change_plans/tool_system_p9_p9m_residue_deletion_evidence.yaml
+    action: add
+    reason: Register aligned change plan for this evidence stage.
+  - path: examples/active_gates.yaml
+    action: modify
+    reason: Register the P9S task manifest and change plan so active-gates validates this stage.
+non_changes:
+  - no branch deletion
+  - no cleanup execution
+  - no P9 acceptance
+  - no P10 approval
+  - no downstream target-repository mutation
+  - no production deployment
+  - no source behavior changes
+verification:
+  - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+  - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_p9m_residue_deletion_evidence.yaml
+  - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
