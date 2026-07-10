@@ -1,0 +1,75 @@
+task_id: tool-system-p9-review-cleanup-readiness
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p9t-p9-review-cleanup-readiness
+phase: P9_WORKER_ADAPTER_ORCHESTRATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+alignment:
+  parent:
+    document: docs/reports/p9s_p9m_residue_deletion_evidence.md
+    section_or_key: Cleanup status
+    scope: Summarizes the final cleanup evidence state after P9S without changing milestone disposition.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P9_WORKER_ADAPTER_ORCHESTRATION
+    scope: Stays within P9 governance, review, cleanup evidence, and no-mutation boundaries.
+scope:
+  summary: Add final P9 review and cleanup readiness record before the P9 acceptance decision.
+  in_scope:
+    - docs/reports/p9t_p9_review_cleanup_readiness.md
+    - examples/task_manifests/tool_system_p9_review_cleanup_readiness.yaml
+    - examples/change_plans/tool_system_p9_review_cleanup_readiness.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - P9 acceptance
+    - P9 closure
+    - P10 approval
+    - P10 entry
+    - downstream target-repository mutation
+    - production deployment
+    - real external worker calls
+    - business-domain implementation
+    - branch deletion
+    - rollback execution
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p9s_p9m_residue_deletion_evidence.md
+    why_relevant: Parent cleanup evidence confirming documented accidental remote branch residue is deleted and verified.
+  - repo: apolo183/tool-system
+    path: docs/reports/p9n_current_head_rollback_rehearsal_evidence.md
+    why_relevant: Current-head rollback rehearsal evidence.
+  - repo: apolo183/tool-system
+    path: docs/reports/p9_strict_review_requirements.md
+    why_relevant: Strict P9 acceptance rule and remaining human-disposition blocker.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Active blueprint defining P9 scope and no-mutation boundaries.
+allowed_files:
+  - docs/reports/p9t_p9_review_cleanup_readiness.md
+  - examples/task_manifests/tool_system_p9_review_cleanup_readiness.yaml
+  - examples/change_plans/tool_system_p9_review_cleanup_readiness.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p9_review_cleanup_readiness.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P9T change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p9t-p9-review-cleanup-readiness
+approval:
+  required: true
+  approved_by: user_auto_iterate_short_stage_until_major_milestone
