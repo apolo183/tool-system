@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-10 UTC+08:00
+updated_at: 2026-07-11 UTC+08:00
 
 ## 1. Mission
 
@@ -72,7 +72,7 @@ Human control is placed at blueprint, objective, policy boundary, and milestone 
 
 Routine implementation work inside an authorized milestone is handled by the system after gates pass. Agents do not ask for human review for each ordinary implementation PR once the milestone and manifest are valid.
 
-Human review is required for blueprint changes, objective changes, policy boundary changes, milestone acceptance, cleanup execution, first real downstream target-repository mutation, and production deployment.
+Human review is required for blueprint changes, objective changes, policy boundary changes, milestone acceptance, cleanup execution, first real downstream target-repository mutation, target PR lifecycle transitions, and production deployment.
 
 ## 8. Write boundaries
 
@@ -92,10 +92,31 @@ Minimum gates include unit tests, format or lint checks where available, type ch
 
 Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
-## 12. Current phase
+## 12. Current phase state
 
 Current phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT.
 
-Allowed now: P10 phase-entry work, target-repo candidate selection gates, target-repo read-only inspection, execution approval packets, controlled PR pilot planning, dry-run or preview commands, and audit/rollback evidence for approved P10 pilot steps.
+Status: `accepted`.
 
-Not allowed now: direct target-repository main-branch mutation, broad or unspecified downstream repository mutation, production deployment, business-domain implementation by tool-system, real external worker calls without an execution packet and approval, cleanup execution without a cleanup gate, branch deletion without a cleanup gate, rollback execution without a rollback gate, or Codex replacement claims.
+P10 is accepted at the controlled, no-production, draft-PR pilot scope. No successor tool-system phase is authorized.
+
+Allowed now:
+
+- acceptance and post-pilot evidence records;
+- read-only verification of accepted target state;
+- preparation of an independent target PR merge packet;
+- tool-system documentation and gate synchronization tied to the accepted P10 closure.
+
+Not allowed now:
+
+- target PR metadata changes, ready transition, or merge without a named merge packet and separate approval;
+- target-repository main-branch mutation outside the approved merge flow;
+- P1B implementation before accepted P1A content is merged, post-merge validated, and explicitly opened by a closure record;
+- broad or unspecified downstream repository mutation;
+- production deployment;
+- business-domain implementation by tool-system;
+- real external worker calls without an execution packet and approval;
+- cleanup execution without a cleanup gate;
+- branch deletion without a cleanup gate;
+- rollback execution without a rollback gate;
+- Codex replacement claims.

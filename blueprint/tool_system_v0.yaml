@@ -1,7 +1,12 @@
 schema_version: 0.2
 system: tool-system
 phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
-status: active
+status: accepted
+acceptance:
+  record: docs/reports/p10i_p10_p1a_acceptance_closure.md
+  accepted_at: 2026-07-11 UTC+08:00
+  accepted_scope: controlled_no_production_draft_pr_pilot
+  successor_phase_authorized: false
 
 identity:
   description: Domain-agnostic agentic software factory for blueprint parsing, task planning, patch generation, test execution, and repository control.
