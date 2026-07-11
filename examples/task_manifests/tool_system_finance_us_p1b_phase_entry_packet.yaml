@@ -14,8 +14,8 @@ alignment:
     scope: Prepare the separately approved finance-us P1B phase-entry record and implementation packet without target mutation.
   global:
     document: blueprint/tool_system_v0.yaml
-    section_or_key: default_policy
-    scope: Preserve explicit downstream write, PR lifecycle, rollback, and phase-entry gates.
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Preserve accepted P10 downstream-write, PR-lifecycle, rollback, and phase-entry gates while preparing a bounded target packet.
 scope:
   summary: Record the finance-us P1B phase-entry decision and prepare a bounded implementation packet in tool-system only.
   in_scope:
