@@ -1,0 +1,29 @@
+plan_id: tool-system-p12c-side-effect-ledger-outbox
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p12c_side_effect_ledger_outbox.yaml
+changed_files:
+  - src/tool_system/orchestrator/durable.py
+  - tests/test_durable_orchestrator_state.py
+  - tests/test_durable_orchestrator_side_effects.py
+  - docs/reports/p12c_side_effect_ledger_outbox.md
+  - examples/task_manifests/tool_system_p12c_side_effect_ledger_outbox.yaml
+  - examples/change_plans/tool_system_p12c_side_effect_ledger_outbox.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p12c_side_effect_ledger_outbox.yaml
+    section_or_key: task_id
+    scope: Follow the exact local-fixture P12C manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P12_DURABLE_ORCHESTRATOR
+    scope: Add ledger/outbox controls without remote side effects or P13 entry.
+verification:
+  commands:
+    - python -m compileall src/tool_system tests
+    - python -m pytest -q tests/test_durable_orchestrator_state.py tests/test_durable_orchestrator_side_effects.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: p12c-side-effect-ledger-outbox

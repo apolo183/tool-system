@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 _RUN_STATUSES = {"ACTIVE", "COMPLETED", "FAILED"}
 _TASK_STATUSES = {"READY", "RUNNING", "COMPLETED", "FAILED"}
@@ -146,6 +146,44 @@ class DurableOrchestratorStore:
                 );
                 CREATE INDEX IF NOT EXISTS idx_tasks_resume
                     ON tasks(status, lease_expires_at, run_id, task_id);
+                CREATE TABLE IF NOT EXISTS side_effects (
+                    effect_id TEXT PRIMARY KEY,
+                    run_id TEXT NOT NULL,
+                    task_id TEXT NOT NULL,
+                    effect_kind TEXT NOT NULL,
+                    action TEXT NOT NULL,
+                    resource_scope TEXT NOT NULL CHECK (resource_scope = 'local_fixture'),
+                    idempotency_key TEXT NOT NULL UNIQUE,
+                    expected_precondition_sha TEXT NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    state TEXT NOT NULL CHECK (state IN ('PLANNED','IN_PROGRESS','COMPLETED','FAILED')),
+                    attempt INTEGER NOT NULL DEFAULT 0 CHECK (attempt >= 0),
+                    result_json TEXT,
+                    completed_at REAL,
+                    created_at REAL NOT NULL,
+                    updated_at REAL NOT NULL,
+                    FOREIGN KEY (run_id, task_id) REFERENCES tasks(run_id, task_id) ON DELETE CASCADE
+                );
+                CREATE INDEX IF NOT EXISTS idx_side_effect_state
+                    ON side_effects(state, run_id, task_id, effect_id);
+                CREATE TABLE IF NOT EXISTS outbox (
+                    event_id TEXT PRIMARY KEY,
+                    effect_id TEXT NOT NULL UNIQUE,
+                    event_kind TEXT NOT NULL,
+                    idempotency_key TEXT NOT NULL UNIQUE,
+                    payload_json TEXT NOT NULL,
+                    state TEXT NOT NULL CHECK (state IN ('PENDING','DELIVERING','PUBLISHED')),
+                    attempt INTEGER NOT NULL DEFAULT 0 CHECK (attempt >= 0),
+                    lease_owner TEXT,
+                    lease_expires_at REAL,
+                    receipt_json TEXT,
+                    published_at REAL,
+                    created_at REAL NOT NULL,
+                    updated_at REAL NOT NULL,
+                    FOREIGN KEY (effect_id) REFERENCES side_effects(effect_id) ON DELETE CASCADE
+                );
+                CREATE INDEX IF NOT EXISTS idx_outbox_delivery
+                    ON outbox(state, lease_expires_at, event_id);
                 """
             )
             row = connection.execute(
@@ -154,6 +192,11 @@ class DurableOrchestratorStore:
             if row is None:
                 connection.execute(
                     "INSERT INTO metadata(key, value) VALUES('schema_version', ?)",
+                    (str(SCHEMA_VERSION),),
+                )
+            elif int(row["value"]) == 1:
+                connection.execute(
+                    "UPDATE metadata SET value=? WHERE key='schema_version'",
                     (str(SCHEMA_VERSION),),
                 )
             elif int(row["value"]) != SCHEMA_VERSION:
@@ -482,10 +525,437 @@ class DurableOrchestratorStore:
                 ).fetchone()
             )
 
+    def plan_side_effect(
+        self,
+        run_id: str,
+        task_id: str,
+        *,
+        effect_id: str,
+        effect_kind: str,
+        action: str,
+        resource_scope: str,
+        idempotency_key: str,
+        expected_precondition_sha: str,
+        payload: Mapping[str, object],
+        lease_owner: str,
+        task_attempt: int,
+    ) -> dict[str, object]:
+        effect_id = _require_text(effect_id, "effect_id")
+        effect_kind = _require_text(effect_kind, "effect_kind")
+        action = _require_text(action, "action")
+        idempotency_key = _require_text(idempotency_key, "idempotency_key")
+        expected_precondition_sha = _require_sha(expected_precondition_sha)
+        if resource_scope != "local_fixture":
+            raise ValueError("resource_scope must be local_fixture")
+        payload_json = _canonical_json(payload)
+        now = float(self._clock())
+        with self._transaction() as connection:
+            task = self._require_active_lease(
+                connection, run_id, task_id, lease_owner, task_attempt, now
+            )
+            if task["expected_precondition_sha"] != expected_precondition_sha:
+                raise StateConflict("side effect precondition SHA does not match task")
+            existing = connection.execute(
+                "SELECT * FROM side_effects WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            expected = (
+                effect_id,
+                run_id,
+                task_id,
+                effect_kind,
+                action,
+                resource_scope,
+                expected_precondition_sha,
+                payload_json,
+            )
+            if existing is not None:
+                actual = tuple(
+                    existing[name]
+                    for name in (
+                        "effect_id",
+                        "run_id",
+                        "task_id",
+                        "effect_kind",
+                        "action",
+                        "resource_scope",
+                        "expected_precondition_sha",
+                        "payload_json",
+                    )
+                )
+                if actual != expected:
+                    raise StateConflict(
+                        "idempotency_key already exists with different side-effect content"
+                    )
+                return self._effect_record(existing)
+            if connection.execute(
+                "SELECT 1 FROM side_effects WHERE effect_id=?", (effect_id,)
+            ).fetchone():
+                raise StateConflict("effect_id already exists")
+            connection.execute(
+                """
+                INSERT INTO side_effects(
+                    effect_id, run_id, task_id, effect_kind, action, resource_scope,
+                    idempotency_key, expected_precondition_sha, payload_json,
+                    state, attempt, result_json, completed_at, created_at, updated_at
+                ) VALUES(?, ?, ?, ?, ?, 'local_fixture', ?, ?, ?, 'PLANNED', 0,
+                    NULL, NULL, ?, ?)
+                """,
+                (
+                    effect_id,
+                    run_id,
+                    task_id,
+                    effect_kind,
+                    action,
+                    idempotency_key,
+                    expected_precondition_sha,
+                    payload_json,
+                    now,
+                    now,
+                ),
+            )
+            return self._effect_record(self._effect_row(connection, effect_id))
+
+    def begin_side_effect(
+        self,
+        effect_id: str,
+        *,
+        lease_owner: str,
+        task_attempt: int,
+    ) -> dict[str, object]:
+        now = float(self._clock())
+        with self._transaction() as connection:
+            effect = self._effect_row(connection, effect_id)
+            self._require_active_lease(
+                connection,
+                effect["run_id"],
+                effect["task_id"],
+                lease_owner,
+                task_attempt,
+                now,
+            )
+            if effect["state"] == "COMPLETED":
+                record = self._effect_record(effect)
+                record["already_completed"] = True
+                return record
+            if effect["state"] == "IN_PROGRESS":
+                raise StateConflict(
+                    "side effect is already IN_PROGRESS; reconcile by idempotency key"
+                )
+            connection.execute(
+                """
+                UPDATE side_effects SET state='IN_PROGRESS', attempt=attempt+1,
+                    updated_at=? WHERE effect_id=?
+                """,
+                (now, effect_id),
+            )
+            record = self._effect_record(self._effect_row(connection, effect_id))
+            record["already_completed"] = False
+            return record
+
+    def complete_side_effect(
+        self,
+        effect_id: str,
+        *,
+        lease_owner: str,
+        task_attempt: int,
+        expected_precondition_sha: str,
+        result: Mapping[str, object],
+        event_kind: str,
+        event_payload: Mapping[str, object],
+    ) -> dict[str, object]:
+        expected_precondition_sha = _require_sha(expected_precondition_sha)
+        event_kind = _require_text(event_kind, "event_kind")
+        result_json = _canonical_json(result)
+        event_payload_json = _canonical_json(event_payload)
+        now = float(self._clock())
+        with self._transaction() as connection:
+            effect = self._effect_row(connection, effect_id)
+            if effect["expected_precondition_sha"] != expected_precondition_sha:
+                raise StateConflict("side effect completion precondition SHA mismatch")
+            self._require_active_lease(
+                connection,
+                effect["run_id"],
+                effect["task_id"],
+                lease_owner,
+                task_attempt,
+                now,
+            )
+            event_id = f"{effect_id}:completed"
+            event_key = f"{effect['idempotency_key']}:completed"
+            if effect["state"] == "COMPLETED":
+                outbox = self._outbox_row(connection, event_id)
+                if (
+                    effect["result_json"] != result_json
+                    or outbox["event_kind"] != event_kind
+                    or outbox["payload_json"] != event_payload_json
+                ):
+                    raise StateConflict(
+                        "completed side effect cannot be rewritten with different content"
+                    )
+                return {
+                    "effect": self._effect_record(effect),
+                    "outbox": self._outbox_record(outbox),
+                    "already_completed": True,
+                }
+            if effect["state"] != "IN_PROGRESS":
+                raise StateConflict("side effect must be IN_PROGRESS before completion")
+            connection.execute(
+                """
+                UPDATE side_effects SET state='COMPLETED', result_json=?,
+                    completed_at=?, updated_at=? WHERE effect_id=?
+                """,
+                (result_json, now, now, effect_id),
+            )
+            connection.execute(
+                """
+                INSERT INTO outbox(
+                    event_id, effect_id, event_kind, idempotency_key, payload_json,
+                    state, attempt, lease_owner, lease_expires_at, receipt_json,
+                    published_at, created_at, updated_at
+                ) VALUES(?, ?, ?, ?, ?, 'PENDING', 0, NULL, NULL, NULL, NULL, ?, ?)
+                """,
+                (
+                    event_id,
+                    effect_id,
+                    event_kind,
+                    event_key,
+                    event_payload_json,
+                    now,
+                    now,
+                ),
+            )
+            return {
+                "effect": self._effect_record(self._effect_row(connection, effect_id)),
+                "outbox": self._outbox_record(self._outbox_row(connection, event_id)),
+                "already_completed": False,
+            }
+
+    def fail_side_effect(
+        self,
+        effect_id: str,
+        *,
+        lease_owner: str,
+        task_attempt: int,
+        result: Mapping[str, object] | None = None,
+    ) -> dict[str, object]:
+        now = float(self._clock())
+        with self._transaction() as connection:
+            effect = self._effect_row(connection, effect_id)
+            self._require_active_lease(
+                connection,
+                effect["run_id"],
+                effect["task_id"],
+                lease_owner,
+                task_attempt,
+                now,
+            )
+            if effect["state"] != "IN_PROGRESS":
+                raise StateConflict("only an IN_PROGRESS side effect can fail")
+            connection.execute(
+                """
+                UPDATE side_effects SET state='FAILED', result_json=?, updated_at=?
+                WHERE effect_id=?
+                """,
+                (_canonical_json(result), now, effect_id),
+            )
+            return self._effect_record(self._effect_row(connection, effect_id))
+
+    def get_side_effect(self, effect_id: str) -> dict[str, object] | None:
+        connection = self._connect()
+        try:
+            row = connection.execute(
+                "SELECT * FROM side_effects WHERE effect_id=?", (effect_id,)
+            ).fetchone()
+            return self._effect_record(row) if row is not None else None
+        finally:
+            connection.close()
+
+    def get_outbox_event(self, event_id: str) -> dict[str, object] | None:
+        connection = self._connect()
+        try:
+            row = connection.execute(
+                "SELECT * FROM outbox WHERE event_id=?", (event_id,)
+            ).fetchone()
+            return self._outbox_record(row) if row is not None else None
+        finally:
+            connection.close()
+
+    def pending_outbox(self, *, limit: int = 100) -> list[dict[str, object]]:
+        if not isinstance(limit, int) or limit <= 0:
+            raise ValueError("limit must be a positive integer")
+        now = float(self._clock())
+        connection = self._connect()
+        try:
+            rows = connection.execute(
+                """
+                SELECT * FROM outbox
+                WHERE state='PENDING'
+                   OR (state='DELIVERING' AND lease_expires_at <= ?)
+                ORDER BY created_at, event_id LIMIT ?
+                """,
+                (now, limit),
+            ).fetchall()
+            return [self._outbox_record(row) for row in rows]
+        finally:
+            connection.close()
+
+    def claim_outbox_event(
+        self, event_id: str, *, lease_owner: str, lease_seconds: float
+    ) -> dict[str, object]:
+        lease_owner = _require_text(lease_owner, "lease_owner")
+        if not isinstance(lease_seconds, (int, float)) or isinstance(lease_seconds, bool) or lease_seconds <= 0:
+            raise ValueError("lease_seconds must be positive")
+        now = float(self._clock())
+        with self._transaction() as connection:
+            row = self._outbox_row(connection, event_id)
+            if row["state"] == "PUBLISHED":
+                record = self._outbox_record(row)
+                record["already_published"] = True
+                return record
+            if (
+                row["state"] == "DELIVERING"
+                and row["lease_expires_at"] is not None
+                and row["lease_expires_at"] > now
+            ):
+                raise LeaseConflict("outbox event has an unexpired lease")
+            connection.execute(
+                """
+                UPDATE outbox SET state='DELIVERING', attempt=attempt+1,
+                    lease_owner=?, lease_expires_at=?, updated_at=?
+                WHERE event_id=?
+                """,
+                (lease_owner, now + float(lease_seconds), now, event_id),
+            )
+            record = self._outbox_record(self._outbox_row(connection, event_id))
+            record["already_published"] = False
+            return record
+
+    def mark_outbox_published(
+        self,
+        event_id: str,
+        *,
+        lease_owner: str,
+        receipt: Mapping[str, object],
+    ) -> dict[str, object]:
+        now = float(self._clock())
+        receipt_json = _canonical_json(receipt)
+        with self._transaction() as connection:
+            row = self._outbox_row(connection, event_id)
+            if row["state"] == "PUBLISHED":
+                if row["receipt_json"] != receipt_json:
+                    raise StateConflict("published outbox receipt cannot change")
+                return self._outbox_record(row)
+            if row["state"] != "DELIVERING" or row["lease_owner"] != lease_owner:
+                raise LeaseConflict("outbox delivery lease owner does not match")
+            if row["lease_expires_at"] is None or row["lease_expires_at"] <= now:
+                raise LeaseConflict("outbox delivery lease is expired")
+            connection.execute(
+                """
+                UPDATE outbox SET state='PUBLISHED', receipt_json=?, published_at=?,
+                    lease_owner=NULL, lease_expires_at=NULL, updated_at=?
+                WHERE event_id=?
+                """,
+                (receipt_json, now, now, event_id),
+            )
+            return self._outbox_record(self._outbox_row(connection, event_id))
+
+    def release_outbox_event(self, event_id: str, *, lease_owner: str) -> dict[str, object]:
+        now = float(self._clock())
+        with self._transaction() as connection:
+            row = self._outbox_row(connection, event_id)
+            if row["state"] != "DELIVERING" or row["lease_owner"] != lease_owner:
+                raise LeaseConflict("outbox delivery lease owner does not match")
+            connection.execute(
+                """
+                UPDATE outbox SET state='PENDING', lease_owner=NULL,
+                    lease_expires_at=NULL, updated_at=? WHERE event_id=?
+                """,
+                (now, event_id),
+            )
+            return self._outbox_record(self._outbox_row(connection, event_id))
+
+    def recover_expired_outbox_leases(self) -> list[dict[str, object]]:
+        now = float(self._clock())
+        with self._transaction() as connection:
+            rows = connection.execute(
+                """
+                SELECT event_id FROM outbox
+                WHERE state='DELIVERING' AND lease_expires_at <= ?
+                ORDER BY event_id
+                """,
+                (now,),
+            ).fetchall()
+            recovered: list[dict[str, object]] = []
+            for row in rows:
+                connection.execute(
+                    """
+                    UPDATE outbox SET state='PENDING', lease_owner=NULL,
+                        lease_expires_at=NULL, updated_at=? WHERE event_id=?
+                    """,
+                    (now, row["event_id"]),
+                )
+                recovered.append(
+                    self._outbox_record(self._outbox_row(connection, row["event_id"]))
+                )
+            return recovered
+
+    def reconcile_outbox(
+        self,
+        deliver: Callable[[dict[str, object]], Mapping[str, object]],
+        *,
+        lease_owner: str,
+        lease_seconds: float = 30.0,
+        limit: int = 100,
+    ) -> list[dict[str, object]]:
+        results: list[dict[str, object]] = []
+        for pending in self.pending_outbox(limit=limit):
+            event_id = str(pending["event_id"])
+            claimed = self.claim_outbox_event(
+                event_id, lease_owner=lease_owner, lease_seconds=lease_seconds
+            )
+            if claimed.get("already_published") is True:
+                results.append(claimed)
+                continue
+            try:
+                receipt = deliver(claimed)
+            except Exception as exc:
+                self.release_outbox_event(event_id, lease_owner=lease_owner)
+                results.append(
+                    {
+                        "event_id": event_id,
+                        "status": "DELIVERY_FAILED",
+                        "error_type": type(exc).__name__,
+                    }
+                )
+            else:
+                published = self.mark_outbox_published(
+                    event_id, lease_owner=lease_owner, receipt=receipt
+                )
+                published["status"] = "PUBLISHED"
+                results.append(published)
+        return results
+
     @staticmethod
     def _task_record(row: sqlite3.Row) -> dict[str, object]:
         record = dict(row)
         record["checkpoint"] = json.loads(record.pop("checkpoint_json"))
+        return record
+
+    @staticmethod
+    def _effect_record(row: sqlite3.Row) -> dict[str, object]:
+        record = dict(row)
+        record["payload"] = json.loads(record.pop("payload_json"))
+        result_json = record.pop("result_json")
+        record["result"] = json.loads(result_json) if result_json is not None else None
+        return record
+
+    @staticmethod
+    def _outbox_record(row: sqlite3.Row) -> dict[str, object]:
+        record = dict(row)
+        record["payload"] = json.loads(record.pop("payload_json"))
+        receipt_json = record.pop("receipt_json")
+        record["receipt"] = json.loads(receipt_json) if receipt_json is not None else None
         return record
 
     @staticmethod
@@ -517,4 +987,22 @@ class DurableOrchestratorStore:
             raise LeaseConflict("attempt does not match active lease")
         if row["lease_expires_at"] is None or row["lease_expires_at"] <= now:
             raise LeaseConflict("lease is expired")
+        return row
+
+    @staticmethod
+    def _effect_row(connection: sqlite3.Connection, effect_id: str) -> sqlite3.Row:
+        row = connection.execute(
+            "SELECT * FROM side_effects WHERE effect_id=?", (effect_id,)
+        ).fetchone()
+        if row is None:
+            raise StateConflict("side effect does not exist")
+        return row
+
+    @staticmethod
+    def _outbox_row(connection: sqlite3.Connection, event_id: str) -> sqlite3.Row:
+        row = connection.execute(
+            "SELECT * FROM outbox WHERE event_id=?", (event_id,)
+        ).fetchone()
+        if row is None:
+            raise StateConflict("outbox event does not exist")
         return row
