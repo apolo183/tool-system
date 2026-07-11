@@ -1,0 +1,90 @@
+task_id: tool-system-p10i-p10-p1a-acceptance-closure
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p10i-p10-p1a-acceptance-closure
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10h_post_pilot_evidence_acceptance_packet.md
+    section_or_key: Separate decisions
+    scope: Record the user's explicit acceptance of tool-system P10 and finance-us P1A while preserving the target PR draft/no-merge decision.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Close the accepted P10 milestone without authorizing a successor phase or target PR lifecycle mutation.
+scope:
+  summary: Synchronize tool-system governance with accepted P10 and accepted finance-us P1A content, while keeping target merge and P1B separately gated.
+  in_scope:
+    - docs/reports/p10i_p10_p1a_acceptance_closure.md
+    - README.md
+    - AGENTS.md
+    - blueprint/tool_system_v0.yaml
+    - examples/task_manifests/tool_system_p10i_p10_p1a_acceptance_closure.yaml
+    - examples/change_plans/tool_system_p10i_p10_p1a_acceptance_closure.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-us branch or file mutation
+    - finance-us PR metadata update
+    - target PR ready transition
+    - target PR merge
+    - P1B entry or implementation
+    - successor tool-system phase entry
+    - production deployment
+    - data, model, ranking, evaluation, backtest, portfolio, or broker execution
+    - rollback execution
+    - cleanup execution
+    - branch deletion
+    - real external worker calls
+    - Codex replacement claims
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10h_post_pilot_evidence_acceptance_packet.md
+    why_relevant: Acceptance packet separating P10, P1A, and target PR lifecycle decisions.
+  - repo: apolo183/tool-system
+    path: docs/reports/p10g_finance_us_correction_execution_evidence.md
+    why_relevant: Validated finance-us P1A head and acceptance-readiness evidence.
+  - repo: apolo183/finance-us
+    path: README.md
+    ref: dbf43976d0b336c0df961a651f35e8b3ceca0255
+    why_relevant: Accepted target contract content at the exact validated PR head.
+  - repo: apolo183/finance-us
+    path: blueprint/finance_us_phase_1_v0.yaml
+    ref: dbf43976d0b336c0df961a651f35e8b3ceca0255
+    why_relevant: Accepted machine-readable P1A contract content at the exact validated PR head.
+allowed_files:
+  - docs/reports/p10i_p10_p1a_acceptance_closure.md
+  - README.md
+  - AGENTS.md
+  - blueprint/tool_system_v0.yaml
+  - examples/task_manifests/tool_system_p10i_p10_p1a_acceptance_closure.yaml
+  - examples/change_plans/tool_system_p10i_p10_p1a_acceptance_closure.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10i_p10_p1a_acceptance_closure.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10I change plan validation returns PASS
+    - active gate index validation returns PASS
+    - blueprint status is accepted
+    - successor phase remains unauthorized
+rollback:
+  method: git_revert
+  reference: branch commits on p10i-p10-p1a-acceptance-closure
+approval:
+  required: true
+  approved_by: user_explicit_p10_and_p1a_acceptance
