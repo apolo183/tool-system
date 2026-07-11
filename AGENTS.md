@@ -94,7 +94,7 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 12. Current phase state
 
-Current phase: `P10_CONTROLLED_TARGET_REPO_PR_PILOT`.
+Current phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT.
 
 Status: `accepted`.
 
