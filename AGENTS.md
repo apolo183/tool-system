@@ -104,14 +104,17 @@ Allowed now:
 
 - acceptance and post-pilot evidence records;
 - read-only verification of accepted target state;
-- preparation of an independent target PR merge packet;
-- tool-system documentation and gate synchronization tied to the accepted P10 closure.
+- P10R-B governance-state synchronization tied to the accepted P10 closure;
+- preparation of separately approvable downstream target lifecycle packets;
+- preparation of a separately approvable P11-P15 successor roadmap without successor implementation.
 
 Not allowed now:
 
 - target PR metadata changes, ready transition, or merge without a named merge packet and separate approval;
 - target-repository main-branch mutation outside the approved merge flow;
-- P1B implementation before accepted P1A content is merged, post-merge validated, and explicitly opened by a closure record;
+- finance-us P1B target implementation without a named, action-scoped target execution approval;
+- treating a P1B implementation approval as ready or merge approval;
+- P11 or later successor implementation before a named phase-entry authorization;
 - broad or unspecified downstream repository mutation;
 - production deployment;
 - business-domain implementation by tool-system;

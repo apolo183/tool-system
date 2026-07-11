@@ -1,0 +1,84 @@
+task_id: tool-system-p10r-b-governance-state-synchronization
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p10r-b-governance-state-synchronization
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10r_b_governance_state_synchronization.md
+    section_or_key: Exact stage files
+    scope: Synchronize only the active governance state descriptions and register this stage.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Preserve accepted P10 and its successor boundary while correcting stale active descriptions.
+scope:
+  summary: Synchronize README and AGENTS with completed P10R-A and the current finance-us and successor approval boundaries.
+  in_scope:
+    - README.md
+    - AGENTS.md
+    - docs/reports/p10r_b_governance_state_synchronization.md
+    - examples/task_manifests/tool_system_p10r_b_governance_state_synchronization.yaml
+    - examples/change_plans/tool_system_p10r_b_governance_state_synchronization.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - blueprint modification or successor phase entry
+    - policy or source modification
+    - finance-us mutation
+    - finance-us P1B target implementation, ready, or merge
+    - cleanup or branch deletion
+    - rollback execution
+    - real external worker execution
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10r_a_machine_policy_enforcement_implementation_packet.md
+    ref: e7583aff29e98aa9f3aefe95a43bb9824150e514
+    why_relevant: Defines the implemented P10R-A correction and preserved boundaries.
+  - repo: apolo183/tool-system
+    path: policy/repo_write_policy.yaml
+    ref: e7583aff29e98aa9f3aefe95a43bb9824150e514
+    why_relevant: Confirms canonical finance-us routing, retired finance-os fixture status, disabled bootstrap, and lifecycle approval modes.
+  - repo: apolo183/finance-us
+    path: README.md
+    ref: 7101847826e6701a4d8cc7f0a6208fb9aee2cc4e
+    why_relevant: Locks the unchanged downstream main used by the P1B packet.
+allowed_files:
+  - README.md
+  - AGENTS.md
+  - docs/reports/p10r_b_governance_state_synchronization.md
+  - examples/task_manifests/tool_system_p10r_b_governance_state_synchronization.yaml
+  - examples/change_plans/tool_system_p10r_b_governance_state_synchronization.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - blueprint/**
+  - policy/**
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10r_b_governance_state_synchronization.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - full tests return PASS
+    - alignment gate returns PASS
+    - P10R-B change plan returns PASS
+    - active gates return PASS
+    - exact six-file scope is preserved
+rollback:
+  method: git_revert
+  reference: p10r-b-governance-state-synchronization
+approval:
+  required: true
+  approved_by: user_continuous_automatic_progress_until_major_milestone
