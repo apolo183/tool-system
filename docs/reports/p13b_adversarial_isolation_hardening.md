@@ -68,7 +68,9 @@ target_repo_mutation: false
 production: false
 ```
 
-The first focused execution exposed that Python 3.12 `runpy` legitimately emits `sys._getframemodulename` before worker code. The initial policy blocked that module-name-only event, causing 15 fail-closed test results before any fixture action. P13B narrowed the block to frame-object access events such as `sys._getframe`, retained immediate termination for those events, and reran the complete focused suite successfully. No external state changed during the failed run.
+The first local focused execution exposed that Python 3.12 `runpy` legitimately emits `sys._getframemodulename` before worker code. P13B permitted that module-name-only event while retaining immediate termination for frame-object access such as `sys._getframe`; local tests then passed.
+
+GitHub CI #913 subsequently proved Python 3.11 `runpy.run_path` calls `sys._getframe` during its own bootstrap. All 15 CI failures exited 126 before fixture behavior, active gates were skipped, and no external state changed. P13B did not weaken the frame-object denial. Instead, the guard now reads and compiles the already no-follow/SHA-bound local worker snapshot before installing the audit hook, then directly executes that code after the hook is active. This removes the cross-version `runpy` bootstrap dependency while keeping worker-originated `sys._getframe` fail-closed. Final local and replacement CI results supersede the initial failed run.
 
 ## Stop condition
 

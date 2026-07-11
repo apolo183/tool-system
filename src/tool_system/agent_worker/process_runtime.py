@@ -471,7 +471,6 @@ def _guard_source(stdlib_roots: tuple[str, ...]) -> str:
     read_path_events = repr(_READ_PATH_EVENTS)
     workspace_path_events = repr(_WORKSPACE_PATH_EVENTS)
     return f'''import os
-import runpy
 import sys
 
 def _build_guard(workspace, stdlib_roots):
@@ -555,15 +554,27 @@ def _build_guard(workspace, stdlib_roots):
 
     return audit
 
-def _main(builder=_build_guard):
+def _load_worker_code(entrypoint):
+    with open(entrypoint, "rb") as handle:
+        source = handle.read()
+    return compile(source, entrypoint, "exec")
+
+def _main(builder=_build_guard, loader=_load_worker_code):
     workspace = os.path.realpath(sys.argv[1])
     entrypoint = os.path.realpath(sys.argv[2])
+    worker_code = loader(entrypoint)
     audit = builder(workspace, {roots_json})
     sys.addaudithook(audit)
     os.chdir(workspace)
-    runpy.run_path(entrypoint, run_name="__main__")
+    worker_globals = {{
+        "__name__": "__main__",
+        "__file__": entrypoint,
+        "__builtins__": __builtins__,
+    }}
+    exec(worker_code, worker_globals)
 
 del _build_guard
+del _load_worker_code
 _main()
 '''
 
