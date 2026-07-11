@@ -1,4 +1,4 @@
-schema_version: 0.2
+schema_version: 0.3
 policy: repo_write_policy
 status: active
 approved_by: milestone_authorization
@@ -27,48 +27,92 @@ allowed_target_repos:
   apolo183/tool-system:
     role: domain_agnostic_tooling_repo
     default_write_mode: pull_request
-    bootstrap_direct_main_allowed: true
-    allowed_bootstrap_paths:
-      - README.md
-      - AGENTS.md
-      - blueprint/**
-      - policy/**
-      - harness/**
-    phase_foundation_allowed_paths:
-      - src/tool_system/**
-      - tests/**
-      - examples/**
-      - docs/**
-      - pyproject.toml
-      - .gitignore
-      - policy/**
-      - blueprint/**
-      - harness/**
-      - README.md
-      - AGENTS.md
-      - .github/workflows/**
+    bootstrap_direct_main_allowed: false
+    allowed_paths_by_mode:
+      read_only:
+        - "**"
+      patch_only:
+        - "**"
+      pull_request:
+        - src/tool_system/**
+        - tests/**
+        - examples/**
+        - docs/**
+        - pyproject.toml
+        - .gitignore
+        - policy/**
+        - blueprint/**
+        - harness/**
+        - README.md
+        - AGENTS.md
+        - .github/workflows/**
+      direct_bootstrap:
+        - README.md
+        - AGENTS.md
+        - blueprint/**
+        - policy/**
+        - harness/**
+    lifecycle_approval:
+      pr_merge: manifest
     forbidden_paths:
       - finance/**
       - trading/**
       - market/**
       - portfolio/**
-  apolo183/finance-os:
+  apolo183/finance-us:
     role: quantitative_finance_business_repo
     default_write_mode: pull_request
-    bootstrap_direct_main_allowed: true
-    allowed_bootstrap_paths:
-      - README.md
-      - AGENTS.md
-      - blueprint/**
-      - contracts/**
-    phase_1_allowed_paths:
-      - src/finance_os/**
-      - tests/**
-      - contracts/**
-      - blueprint/**
-      - pyproject.toml
-      - README.md
-      - AGENTS.md
+    bootstrap_direct_main_allowed: false
+    allowed_paths_by_mode:
+      read_only:
+        - "**"
+      patch_only:
+        - "**"
+      pull_request:
+        - finance_us/**
+        - tests/**
+        - contracts/**
+        - blueprint/**
+        - pyproject.toml
+        - README.md
+        - AGENTS.md
+      direct_bootstrap:
+        - README.md
+        - AGENTS.md
+        - blueprint/**
+        - contracts/**
+    lifecycle_approval:
+      pr_merge: named_action
+    forbidden_paths:
+      - harness/**
+      - agents/**
+      - repo_controller/**
+      - broker/**
+      - live_runtime/**
+  apolo183/finance-os:
+    status: retired
+    role: retired_quantitative_finance_fixture
+    default_write_mode: patch_only
+    bootstrap_direct_main_allowed: false
+    historical_fixture:
+      allowed_task_ids:
+        - finance-os-p1b-minimal-ranking
+      allowed_modes:
+        - patch_only
+    allowed_paths_by_mode:
+      read_only:
+        - "**"
+      patch_only:
+        - src/finance_os/**
+        - tests/**
+        - contracts/**
+        - blueprint/**
+        - pyproject.toml
+        - README.md
+        - AGENTS.md
+      pull_request: []
+      direct_bootstrap: []
+    lifecycle_approval: {}
     forbidden_paths:
       - harness/**
       - agents/**
@@ -104,6 +148,8 @@ hard_blocks:
   - business_repo_contains_harness_logic
   - required_verification_failed
   - inactive_policy
+  - direct_bootstrap_disabled
+  - missing_or_mismatched_lifecycle_approval
 
 merge_policy:
   default_method: squash

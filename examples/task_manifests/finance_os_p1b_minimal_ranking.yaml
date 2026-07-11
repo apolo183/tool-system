@@ -10,6 +10,10 @@ task_type: code_add
 target_repo: apolo183/finance-os
 target_branch: p1b-minimal-ranking-code
 phase: P1B_MINIMAL_RANKING_CODE
+historical_fixture:
+  closed: true
+  new_work_authorized: false
+  purpose: retained no-write compatibility coverage only
 approved_blueprint_refs:
   - repo: apolo183/finance-os
     path: blueprint/finance_os_phase_1_v0.yaml
@@ -51,7 +55,7 @@ forbidden_files:
   - live_trading/**
   - harness/**
   - agents/**
-write_mode: pull_request
+write_mode: patch_only
 verification:
   commands:
     - python3 -m pytest -q

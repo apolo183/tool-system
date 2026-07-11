@@ -37,6 +37,8 @@ Documentation-state synchronization belongs to a later P10R-B stage and is exclu
 Only the following paths may change after a separate implementation approval and a fresh-state reread of every natural owner and test:
 
 ```text
+docs/reports/p10r_a_machine_policy_enforcement_implementation_packet.md
+examples/task_manifests/finance_os_p1b_minimal_ranking.yaml
 policy/repo_write_policy.yaml
 policy/autonomy_policy.yaml
 src/tool_system/manifest/task_manifest.py
@@ -53,6 +55,7 @@ src/tool_system/cli/validate_task_manifest.py
 tests/test_repo_controller.py
 tests/test_controller_run.py
 tests/test_live_github_collector.py
+tests/test_task_manifest_policy.py
 tests/test_p10r_a_machine_policy_enforcement.py
 ```
 
