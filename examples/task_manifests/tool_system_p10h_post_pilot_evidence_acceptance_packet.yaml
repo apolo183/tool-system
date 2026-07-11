@@ -1,0 +1,89 @@
+task_id: tool-system-p10h-post-pilot-evidence-acceptance-packet
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10h-post-pilot-evidence-acceptance-packet
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10g_finance_us_correction_execution_evidence.md
+    section_or_key: Next boundary
+    scope: Prepare the P10 post-pilot evidence bundle and human acceptance decision packet without accepting or mutating the target.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Complete the required post-pilot evidence output and preserve all separate approval boundaries.
+scope:
+  summary: Bundle P10 evidence, assess acceptance readiness, and define separate tool-system, finance-us P1A, and target PR lifecycle decisions.
+  in_scope:
+    - docs/reports/p10h_post_pilot_evidence_acceptance_packet.md
+    - examples/task_manifests/tool_system_p10h_post_pilot_evidence_acceptance_packet.yaml
+    - examples/change_plans/tool_system_p10h_post_pilot_evidence_acceptance_packet.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - P10 acceptance
+    - finance-us P1A acceptance
+    - finance-us branch or file mutation
+    - target PR ready transition
+    - target PR merge
+    - P1B entry or implementation
+    - production deployment
+    - data, model, ranking, evaluation, backtest, portfolio, or broker execution
+    - rollback execution
+    - cleanup execution
+    - branch deletion
+    - real external worker calls
+    - Codex replacement claims
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10a_phase_entry_target_repo_pr_pilot_gate_foundation.md
+    why_relevant: P10 phase-entry and gate foundation record.
+  - repo: apolo183/tool-system
+    path: docs/reports/p10b2_finance_us_pilot_target_objective.md
+    why_relevant: Finance-us pilot target and engineering-control objective selection.
+  - repo: apolo183/tool-system
+    path: docs/reports/p10c_finance_us_us_equity_contract_realignment_execution_packet.md
+    why_relevant: Named execution packet for the controlled target mutation.
+  - repo: apolo183/tool-system
+    path: docs/reports/p10d_finance_us_pr_execution_evidence.md
+    why_relevant: Target branch, allowlist, draft PR, unchanged main, and rollback evidence.
+  - repo: apolo183/tool-system
+    path: docs/reports/p10e_finance_us_local_validation_and_acceptance_readiness.md
+    why_relevant: Local validation evidence and fail-closed blocker detection.
+  - repo: apolo183/tool-system
+    path: docs/reports/p10f_finance_us_identity_calendar_correction_packet.md
+    why_relevant: Separately approved blocker-correction packet.
+  - repo: apolo183/tool-system
+    path: docs/reports/p10g_finance_us_correction_execution_evidence.md
+    why_relevant: Correction execution, validation PASS, resolved blockers, and P1A acceptance readiness.
+allowed_files:
+  - docs/reports/p10h_post_pilot_evidence_acceptance_packet.md
+  - examples/task_manifests/tool_system_p10h_post_pilot_evidence_acceptance_packet.yaml
+  - examples/change_plans/tool_system_p10h_post_pilot_evidence_acceptance_packet.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10h_post_pilot_evidence_acceptance_packet.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10H change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p10h-post-pilot-evidence-acceptance-packet
+approval:
+  required: true
+  approved_by: standing_authorization_for_routine_packet_preparation
