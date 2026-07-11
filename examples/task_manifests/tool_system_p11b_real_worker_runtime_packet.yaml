@@ -1,0 +1,75 @@
+task_id: tool-system-p11b-real-worker-runtime-packet
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p11b-real-worker-runtime-packet
+phase: P11_REAL_WORKER_RUNTIME
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+alignment:
+  parent:
+    document: docs/reports/p11a_successor_roadmap_phase_entry.md
+    section_or_key: P11 staged path
+    scope: Prepare the P11B implementation and safety packet before source mutation.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+    scope: Specify the fixture-only local process runtime and its complete minimum baseline.
+scope:
+  summary: Prepare the P11 Real Worker Runtime implementation packet.
+  in_scope:
+    - docs/reports/p11b_real_worker_runtime_implementation_packet.md
+    - examples/task_manifests/tool_system_p11b_real_worker_runtime_packet.yaml
+    - examples/change_plans/tool_system_p11b_real_worker_runtime_packet.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - source, policy, or test mutation
+    - real worker execution
+    - remote target-repository mutation
+    - production deployment
+    - P12-P15 implementation
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p11a_successor_roadmap_phase_entry.md
+    ref: 4fa2738bce9316d46348bb20a9d5856930a88950
+    why_relevant: Active P11 phase-entry contract and safety baseline.
+  - repo: apolo183/tool-system
+    path: src/tool_system/agent_worker/interface.py
+    ref: 4fa2738bce9316d46348bb20a9d5856930a88950
+    why_relevant: Existing natural owner for worker protocols and no-mutation default.
+  - repo: apolo183/tool-system
+    path: src/tool_system/gate/command_runner.py
+    ref: 4fa2738bce9316d46348bb20a9d5856930a88950
+    why_relevant: Current subprocess evidence showing inherited environment and unbounded output are not suitable for P11.
+allowed_files:
+  - docs/reports/p11b_real_worker_runtime_implementation_packet.md
+  - examples/task_manifests/tool_system_p11b_real_worker_runtime_packet.yaml
+  - examples/change_plans/tool_system_p11b_real_worker_runtime_packet.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p11b_real_worker_runtime_packet.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - full tests return PASS
+    - P11B change plan returns PASS
+    - active gates return PASS
+    - no real worker process starts
+rollback:
+  method: git_revert
+  reference: p11b-real-worker-runtime-packet
+approval:
+  required: true
+  approved_by: user_authorized_p11_full_progress_until_p12_boundary
