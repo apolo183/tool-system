@@ -37,15 +37,21 @@ def _request(tmp_path: Path, **overrides: object) -> ProcessWorkerRequest:
 
 
 def test_safe_fixture_preflight_passes_without_starting_process(tmp_path: Path) -> None:
-    result = preflight_process_worker(_request(tmp_path))
+    request = _request(tmp_path)
+    result = preflight_process_worker(request)
 
     assert result.status == "PASS"
     assert result.reasons == ()
     assert result.starts_process is False
     assert result.workspace_cleanup_required is True
-    assert result.guard_mode == "python_audit_guard_v1"
+    assert result.guard_mode == "python_audit_guard_v2"
     assert result.argv_template[0] == str(Path(sys.executable).resolve())
     assert result.argv_template[1:4] == ("-I", "-S", "-B")
+    assert result.entrypoint_sha256 is not None
+    assert result.entrypoint_size == request.entrypoint.stat().st_size
+    assert result.entrypoint_inode == request.entrypoint.stat().st_ino
+    assert result.readable_library_roots
+    assert not any("site-packages" in path for path in result.readable_library_roots)
     assert "PATH" not in result.environment_names
     assert not any(
         marker in name
@@ -99,6 +105,17 @@ def test_entrypoint_symlink_blocks(tmp_path: Path) -> None:
     assert "entrypoint must not be a symlink" in result.reasons
 
 
+def test_entrypoint_with_multiple_hard_links_blocks(tmp_path: Path) -> None:
+    request = _request(tmp_path)
+    second_name = request.allowed_fixture_root / "second-name.py"
+    os.link(request.entrypoint, second_name)
+
+    result = preflight_process_worker(request)
+
+    assert result.status == "BLOCK"
+    assert "entrypoint must have exactly one hard link" in result.reasons
+
+
 def test_oversized_entrypoint_blocks(tmp_path: Path) -> None:
     request = _request(tmp_path)
     request.entrypoint.write_bytes(b"x" * 20)
@@ -128,6 +145,42 @@ def test_workspace_inside_forbidden_root_blocks(tmp_path: Path) -> None:
     assert "workspace_root must be outside every forbidden_root" in result.reasons
 
 
+def test_fixture_and_workspace_roots_must_be_disjoint(tmp_path: Path) -> None:
+    request = _request(tmp_path)
+
+    result = preflight_process_worker(
+        ProcessWorkerRequest(
+            **{**request.__dict__, "workspace_root": request.allowed_fixture_root}
+        )
+    )
+
+    assert result.status == "BLOCK"
+    assert "fixture_root and workspace_root must be disjoint" in result.reasons
+
+
+def test_alternate_executable_and_fractional_integer_limit_block(
+    tmp_path: Path,
+) -> None:
+    request = _request(tmp_path)
+    alternate = Path("/bin/sh")
+    if alternate.exists():
+        result = preflight_process_worker(request, python_executable=alternate)
+        assert result.status == "BLOCK"
+        assert "python_executable must match the approved interpreter" in result.reasons
+
+    invalid_limits = ProcessWorkerLimits(max_open_files=3.5)  # type: ignore[arg-type]
+    result = preflight_process_worker(
+        ProcessWorkerRequest(**{**request.__dict__, "limits": invalid_limits})
+    )
+    assert "limits.max_open_files must be an integer" in result.reasons
+
+    non_finite = ProcessWorkerLimits(timeout_seconds=float("nan"))
+    result = preflight_process_worker(
+        ProcessWorkerRequest(**{**request.__dict__, "limits": non_finite})
+    )
+    assert "limits.timeout_seconds must be positive" in result.reasons
+
+
 def test_resource_and_termination_contract_is_complete(tmp_path: Path) -> None:
     result = preflight_process_worker(_request(tmp_path))
 
@@ -154,6 +207,9 @@ def test_audit_policy_blocks_network_process_and_outside_paths(tmp_path: Path) -
     assert audit_event_denial_reason("socket.connect", workspace=workspace)
     assert audit_event_denial_reason("subprocess.Popen", workspace=workspace)
     assert audit_event_denial_reason("os.system", workspace=workspace)
+    assert audit_event_denial_reason("os.link", workspace=workspace)
+    assert audit_event_denial_reason("os.kill", workspace=workspace)
+    assert audit_event_denial_reason("sys._getframe", workspace=workspace)
     assert audit_event_denial_reason(
         "import", workspace=workspace, import_name="ctypes.util"
     )

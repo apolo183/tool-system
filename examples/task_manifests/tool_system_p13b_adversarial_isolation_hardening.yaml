@@ -1,0 +1,81 @@
+task_id: tool-system-p13b-adversarial-isolation-hardening
+task_type: code_change
+target_repo: apolo183/tool-system
+target_branch: p13b-adversarial-isolation-hardening
+phase: P13_SECURITY_RELIABILITY_HARDENING
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+alignment:
+  parent:
+    document: docs/reports/p13a_security_reliability_phase_entry.md
+    section_or_key: P13B exact owner boundary
+    scope: Harden only the local process-worker natural owner and its adversarial tests.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+    scope: Implement sandbox and secret-control hardening plus path, executable, environment, and network tests.
+scope:
+  summary: Harden the application-guarded local Python fixture worker.
+  in_scope:
+    - src/tool_system/agent_worker/process_runtime.py
+    - tests/test_process_worker_runtime_preflight.py
+    - tests/test_process_worker_runtime_execution.py
+    - tests/test_process_worker_runtime_adversarial.py
+    - tests/fixtures/p11_worker_fixture.py
+    - docs/reports/p13b_adversarial_isolation_hardening.md
+    - examples/task_manifests/tool_system_p13b_adversarial_isolation_hardening.yaml
+    - examples/change_plans/tool_system_p13b_adversarial_isolation_hardening.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - durable orchestrator changes
+    - arbitrary executable or non-Python worker support
+    - OS sandbox, privileged helper, container, namespace, or VM
+    - remote provider, target-repository, finance-us, or production mutation
+    - P14-P15 implementation
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p13a_security_reliability_phase_entry.md
+    ref: aa5722a55ab2d8fb94d8f85c7666573531cdc92d
+    why_relevant: Merged threat model and exact P13B boundary.
+  - repo: apolo183/tool-system
+    path: src/tool_system/agent_worker/process_runtime.py
+    ref: aa5722a55ab2d8fb94d8f85c7666573531cdc92d
+    why_relevant: Accepted P11 natural owner and P13 baseline.
+allowed_files:
+  - src/tool_system/agent_worker/process_runtime.py
+  - tests/test_process_worker_runtime_preflight.py
+  - tests/test_process_worker_runtime_execution.py
+  - tests/test_process_worker_runtime_adversarial.py
+  - tests/fixtures/p11_worker_fixture.py
+  - docs/reports/p13b_adversarial_isolation_hardening.md
+  - examples/task_manifests/tool_system_p13b_adversarial_isolation_hardening.yaml
+  - examples/change_plans/tool_system_p13b_adversarial_isolation_hardening.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - src/tool_system/orchestrator/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m compileall src/tool_system/agent_worker tests/test_process_worker_runtime_*.py
+    - python -m pytest -q tests/test_process_worker_runtime_preflight.py tests/test_process_worker_runtime_execution.py tests/test_process_worker_runtime_adversarial.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - safe local fixture still passes
+    - every named adversarial probe fails closed
+    - output, resource, cancellation, and cleanup regressions pass
+    - full tests and active gates pass
+    - no remote or production side effect occurs
+rollback:
+  method: git_revert
+  reference: p13b-adversarial-isolation-hardening
+approval:
+  required: true
+  approved_by: user_explicit_p13_full_lifecycle_authorization

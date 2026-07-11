@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import resource
 import selectors
-import shutil
 import signal
 import stat
 import subprocess
@@ -39,16 +39,84 @@ _RESOURCE_NAMES = (
     "RLIMIT_FSIZE",
     "RLIMIT_CORE",
 )
-_BLOCKED_AUDIT_PREFIXES = ("socket.", "subprocess.")
+_GUARD_MODE = "python_audit_guard_v2"
+_BLOCKED_AUDIT_PREFIXES = (
+    "socket.",
+    "subprocess.",
+    "syslog.",
+    "resource.",
+    "http.client.",
+    "ftplib.",
+    "imaplib.",
+    "poplib.",
+    "smtplib.",
+)
 _BLOCKED_AUDIT_EVENTS = {
+    "cpython.remote_debugger_script",
+    "gc.get_objects",
+    "gc.get_referents",
+    "gc.get_referrers",
     "os.system",
     "os.fork",
     "os.forkpty",
+    "os.kill",
+    "os.killpg",
     "os.posix_spawn",
     "os.spawn",
     "os.exec",
+    "pty.spawn",
+    "signal.pthread_kill",
+    "sqlite3.enable_load_extension",
+    "sqlite3.load_extension",
+    "sys._current_exceptions",
+    "sys._current_frames",
+    "sys._getframe",
+    "sys.addaudithook",
+    "sys.monitoring.register_callback",
+    "sys.remote_exec",
+    "sys.setprofile",
+    "sys.settrace",
+    "urllib.Request",
+    "webbrowser.open",
 }
 _BLOCKED_IMPORT_ROOTS = {"ctypes", "multiprocessing", "socket", "subprocess"}
+_LINK_AUDIT_EVENTS = {"os.link", "os.symlink"}
+_READ_PATH_EVENTS = {
+    "glob.glob": (0,),
+    "glob.glob/2": (0, 2),
+    "os.fwalk": (0,),
+    "os.getxattr": (0,),
+    "os.listdir": (0,),
+    "os.listxattr": (0,),
+    "os.scandir": (0,),
+    "os.walk": (0,),
+    "pathlib.Path.glob": (0,),
+    "pathlib.Path.rglob": (0,),
+}
+_WORKSPACE_PATH_EVENTS = {
+    "os.chdir": (0,),
+    "os.chflags": (0,),
+    "os.chmod": (0,),
+    "os.chown": (0,),
+    "os.mkdir": (0,),
+    "os.remove": (0,),
+    "os.removexattr": (0,),
+    "os.rename": (0, 1),
+    "os.rmdir": (0,),
+    "os.setxattr": (0,),
+    "os.truncate": (0,),
+    "os.utime": (0,),
+    "shutil.chown": (0,),
+    "shutil.copyfile": (0, 1),
+    "shutil.copymode": (0, 1),
+    "shutil.copystat": (0, 1),
+    "shutil.copytree": (0, 1),
+    "shutil.move": (0, 1),
+    "shutil.rmtree": (0,),
+    "sqlite3.connect": (0,),
+    "tempfile.mkdtemp": (0,),
+    "tempfile.mkstemp": (0,),
+}
 
 
 @dataclass(frozen=True)
@@ -87,6 +155,12 @@ class ProcessWorkerPreflight:
     fixture_root: str | None
     workspace_root: str | None
     python_executable: str | None
+    entrypoint_device: int | None
+    entrypoint_inode: int | None
+    entrypoint_size: int | None
+    entrypoint_mtime_ns: int | None
+    entrypoint_sha256: str | None
+    readable_library_roots: tuple[str, ...]
     argv_template: tuple[str, ...]
     environment_names: tuple[str, ...]
     resource_limits: dict[str, int | float]
@@ -140,11 +214,70 @@ def _resolve_existing(path: Path, label: str, reasons: list[str]) -> Path | None
         return None
 
 
+def approved_stdlib_roots() -> tuple[str, ...]:
+    roots: set[str] = set()
+    paths = sysconfig.get_paths()
+    for name in ("stdlib", "platstdlib"):
+        value = paths.get(name)
+        if value:
+            path = Path(value).resolve(strict=True)
+            if path.is_dir():
+                roots.add(str(path))
+    if not roots:
+        raise RuntimeError("approved standard-library roots are unavailable")
+    return tuple(sorted(roots))
+
+
+def _snapshot_entrypoint(
+    path: Path, *, max_bytes: int
+) -> tuple[bytes, os.stat_result]:
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(path, flags)
+    try:
+        before = os.fstat(descriptor)
+        if not stat.S_ISREG(before.st_mode):
+            raise ValueError("entrypoint must be a regular file")
+        if before.st_nlink != 1:
+            raise ValueError("entrypoint must have exactly one hard link")
+        if before.st_size > max_bytes:
+            raise ValueError("entrypoint exceeds limits.max_fixture_bytes")
+        chunks: list[bytes] = []
+        total = 0
+        while True:
+            chunk = os.read(descriptor, min(64 * 1024, max_bytes + 1 - total))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            total += len(chunk)
+            if total > max_bytes:
+                raise ValueError("entrypoint exceeds limits.max_fixture_bytes")
+        after = os.fstat(descriptor)
+        stable_fields = (
+            "st_dev",
+            "st_ino",
+            "st_size",
+            "st_mtime_ns",
+            "st_nlink",
+        )
+        if any(getattr(before, name) != getattr(after, name) for name in stable_fields):
+            raise ValueError("entrypoint changed while being snapshotted")
+        return b"".join(chunks), after
+    finally:
+        os.close(descriptor)
+
+
 def _limits_reasons(limits: ProcessWorkerLimits) -> list[str]:
     reasons: list[str] = []
     for name, value in asdict(limits).items():
-        if not isinstance(value, (int, float)) or isinstance(value, bool) or value <= 0:
+        if (
+            not isinstance(value, (int, float))
+            or isinstance(value, bool)
+            or not math.isfinite(value)
+            or value <= 0
+        ):
             reasons.append(f"limits.{name} must be positive")
+        elif name != "timeout_seconds" and not isinstance(value, int):
+            reasons.append(f"limits.{name} must be an integer")
     return reasons
 
 
@@ -170,6 +303,7 @@ def _minimal_environment(workspace: Path) -> dict[str, str]:
         "PYTHONHASHSEED": "0",
         "PYTHONDONTWRITEBYTECODE": "1",
         "TOOL_SYSTEM_NETWORK": "disabled",
+        "TOOL_SYSTEM_GUARD_MODE": _GUARD_MODE,
         "TOOL_SYSTEM_WORKSPACE": str(workspace),
     }
     if any(marker in name.upper() for name in environment for marker in _SECRET_MARKERS):
@@ -183,7 +317,7 @@ def preflight_process_worker(
     python_executable: str | Path = sys.executable,
 ) -> ProcessWorkerPreflight:
     reasons: list[str] = []
-    if not request.request_id.strip():
+    if not isinstance(request.request_id, str) or not request.request_id.strip():
         reasons.append("request_id is required")
     if request.network_mode != "disabled":
         reasons.append("network_mode must be disabled")
@@ -203,6 +337,8 @@ def preflight_process_worker(
     entrypoint = _resolve_existing(Path(request.entrypoint), "entrypoint", reasons)
     workspace_root = _resolve_existing(Path(request.workspace_root), "workspace_root", reasons)
     executable = _resolve_existing(Path(python_executable), "python_executable", reasons)
+    entrypoint_bytes: bytes | None = None
+    entrypoint_stat: os.stat_result | None = None
 
     if Path(request.allowed_fixture_root).is_symlink():
         reasons.append("allowed_fixture_root must not be a symlink")
@@ -215,23 +351,28 @@ def preflight_process_worker(
         reasons.append("allowed_fixture_root must be a directory")
     if workspace_root is not None and not workspace_root.is_dir():
         reasons.append("workspace_root must be a directory")
-    if entrypoint is not None:
+    if entrypoint is not None and isinstance(request.limits.max_fixture_bytes, int):
         try:
-            mode = entrypoint.stat().st_mode
-            size = entrypoint.stat().st_size
-        except OSError:
-            reasons.append("entrypoint metadata must be readable")
-        else:
-            if not stat.S_ISREG(mode):
-                reasons.append("entrypoint must be a regular file")
-            if size > request.limits.max_fixture_bytes:
-                reasons.append("entrypoint exceeds limits.max_fixture_bytes")
+            entrypoint_bytes, entrypoint_stat = _snapshot_entrypoint(
+                entrypoint, max_bytes=request.limits.max_fixture_bytes
+            )
+        except (OSError, ValueError) as exc:
+            reasons.append(str(exc) or "entrypoint metadata must be read safely")
         if fixture_root is not None and not _is_relative_to(entrypoint, fixture_root):
             reasons.append("entrypoint must resolve under allowed_fixture_root")
 
     if executable is not None:
         if not executable.is_file() or not os.access(executable, os.X_OK):
             reasons.append("python_executable must be an executable regular file")
+        approved_executable = Path(sys.executable).resolve(strict=True)
+        if executable != approved_executable:
+            reasons.append("python_executable must match the approved interpreter")
+
+    if fixture_root is not None and workspace_root is not None:
+        if _is_relative_to(fixture_root, workspace_root) or _is_relative_to(
+            workspace_root, fixture_root
+        ):
+            reasons.append("fixture_root and workspace_root must be disjoint")
 
     if workspace_root is not None:
         for raw_root in request.forbidden_roots:
@@ -239,6 +380,11 @@ def preflight_process_worker(
             if forbidden is not None and _is_relative_to(workspace_root, forbidden):
                 reasons.append("workspace_root must be outside every forbidden_root")
 
+    try:
+        library_roots = approved_stdlib_roots()
+    except (OSError, RuntimeError):
+        library_roots = ()
+        reasons.append("approved standard-library roots must resolve safely")
     environment_names = tuple(sorted(_minimal_environment(Path("<workspace>"))))
     executable_text = str(executable) if executable is not None else None
     argv_template = (
@@ -257,10 +403,20 @@ def preflight_process_worker(
         fixture_root=str(fixture_root) if fixture_root is not None else None,
         workspace_root=str(workspace_root) if workspace_root is not None else None,
         python_executable=executable_text,
+        entrypoint_device=entrypoint_stat.st_dev if entrypoint_stat else None,
+        entrypoint_inode=entrypoint_stat.st_ino if entrypoint_stat else None,
+        entrypoint_size=entrypoint_stat.st_size if entrypoint_stat else None,
+        entrypoint_mtime_ns=entrypoint_stat.st_mtime_ns if entrypoint_stat else None,
+        entrypoint_sha256=(
+            hashlib.sha256(entrypoint_bytes).hexdigest()
+            if entrypoint_bytes is not None
+            else None
+        ),
+        readable_library_roots=library_roots,
         argv_template=argv_template,
         environment_names=environment_names,
         resource_limits=_resource_limit_record(request.limits),
-        guard_mode="python_audit_guard_v1",
+        guard_mode=_GUARD_MODE,
         termination_triggers=("timeout", "cancellation", "stdout_limit", "stderr_limit"),
         workspace_cleanup_required=True,
     )
@@ -275,7 +431,11 @@ def audit_event_denial_reason(
     write: bool = False,
     import_name: str | None = None,
 ) -> str | None:
-    if event.startswith(_BLOCKED_AUDIT_PREFIXES) or event in _BLOCKED_AUDIT_EVENTS:
+    if (
+        event.startswith(_BLOCKED_AUDIT_PREFIXES)
+        or event in _BLOCKED_AUDIT_EVENTS
+        or event in _LINK_AUDIT_EVENTS
+    ):
         return f"audit event denied: {event}"
     if event == "import" and import_name:
         if import_name.split(".", 1)[0] in _BLOCKED_IMPORT_ROOTS:
@@ -307,43 +467,115 @@ def _guard_source(stdlib_roots: tuple[str, ...]) -> str:
     blocked_prefixes = repr(_BLOCKED_AUDIT_PREFIXES)
     blocked_events = repr(_BLOCKED_AUDIT_EVENTS)
     blocked_imports = repr(_BLOCKED_IMPORT_ROOTS)
+    link_events = repr(_LINK_AUDIT_EVENTS)
+    read_path_events = repr(_READ_PATH_EVENTS)
+    workspace_path_events = repr(_WORKSPACE_PATH_EVENTS)
     return f'''import os
-import runpy
 import sys
 
-WORKSPACE = os.path.realpath(sys.argv[1])
-ENTRYPOINT = os.path.realpath(sys.argv[2])
-STDLIB_ROOTS = tuple(os.path.realpath(p) for p in {roots_json})
-BLOCKED_PREFIXES = {blocked_prefixes}
-BLOCKED_EVENTS = {blocked_events}
-BLOCKED_IMPORTS = {blocked_imports}
+def _build_guard(workspace, stdlib_roots):
+    realpath = os.path.realpath
+    commonpath = os.path.commonpath
+    fspath = os.fspath
+    write_stderr = os.write
+    exit_now = os._exit
+    workspace = realpath(workspace)
+    stdlib_roots = tuple(realpath(path) for path in stdlib_roots)
+    blocked_prefixes = {blocked_prefixes}
+    blocked_events = frozenset({blocked_events})
+    blocked_imports = frozenset({blocked_imports})
+    link_events = frozenset({link_events})
+    read_path_events = {read_path_events}
+    workspace_path_events = {workspace_path_events}
+    write_mask = (
+        os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_TRUNC | os.O_EXCL
+    )
 
-def inside(path, root):
-    try:
-        return os.path.commonpath((os.path.realpath(path), root)) == root
-    except (OSError, ValueError, TypeError):
-        return False
+    def inside(path, root):
+        try:
+            return commonpath((realpath(fspath(path)), root)) == root
+        except (OSError, ValueError, TypeError):
+            return False
 
-def audit(event, args):
-    if event.startswith(BLOCKED_PREFIXES) or event in BLOCKED_EVENTS:
-        raise PermissionError("worker audit event denied: " + event)
-    if event == "import" and args:
-        name = str(args[0]).split(".", 1)[0]
-        if name in BLOCKED_IMPORTS:
-            raise PermissionError("worker import denied: " + name)
-    if event == "open" and args and not isinstance(args[0], int):
-        path = os.fspath(args[0])
-        mode = str(args[1]) if len(args) > 1 else "r"
-        writing = any(flag in mode for flag in ("w", "a", "+", "x"))
-        allowed = inside(path, WORKSPACE) or (
-            not writing and any(inside(path, root) for root in STDLIB_ROOTS)
+    def deny(event):
+        message = ("tool-system guard denied: " + event + "\\n").encode(
+            "utf-8", errors="replace"
+        )[:512]
+        try:
+            write_stderr(2, message)
+        finally:
+            exit_now(126)
+
+    def selected_paths(args, positions):
+        return tuple(
+            args[position]
+            for position in positions
+            if position < len(args) and args[position] is not None
         )
-        if not allowed:
-            raise PermissionError("worker path denied outside workspace")
 
-sys.addaudithook(audit)
-os.chdir(WORKSPACE)
-runpy.run_path(ENTRYPOINT, run_name="__main__")
+    def audit(event, args):
+        if (
+            event.startswith(blocked_prefixes)
+            or event in blocked_events
+            or event in link_events
+        ):
+            deny(event)
+        if event == "import" and args:
+            name = str(args[0]).split(".", 1)[0]
+            if name in blocked_imports:
+                deny("import:" + name)
+        if event == "open" and args and not isinstance(args[0], int):
+            mode = str(args[1]) if len(args) > 1 and args[1] is not None else ""
+            flags = args[2] if len(args) > 2 and isinstance(args[2], int) else 0
+            writing = any(marker in mode for marker in ("w", "a", "+", "x")) or bool(
+                flags & write_mask
+            )
+            allowed = inside(args[0], workspace) or (
+                not writing and any(inside(args[0], root) for root in stdlib_roots)
+            )
+            if not allowed:
+                deny(event)
+        positions = read_path_events.get(event)
+        if positions is not None:
+            for path in selected_paths(args, positions):
+                if isinstance(path, int):
+                    continue
+                if not inside(path, workspace) and not any(
+                    inside(path, root) for root in stdlib_roots
+                ):
+                    deny(event)
+        positions = workspace_path_events.get(event)
+        if positions is not None:
+            for path in selected_paths(args, positions):
+                if isinstance(path, int):
+                    continue
+                if not inside(path, workspace):
+                    deny(event)
+
+    return audit
+
+def _load_worker_code(entrypoint):
+    with open(entrypoint, "rb") as handle:
+        source = handle.read()
+    return compile(source, entrypoint, "exec")
+
+def _main(builder=_build_guard, loader=_load_worker_code):
+    workspace = os.path.realpath(sys.argv[1])
+    entrypoint = os.path.realpath(sys.argv[2])
+    worker_code = loader(entrypoint)
+    audit = builder(workspace, {roots_json})
+    sys.addaudithook(audit)
+    os.chdir(workspace)
+    worker_globals = {{
+        "__name__": "__main__",
+        "__file__": entrypoint,
+        "__builtins__": __builtins__,
+    }}
+    exec(worker_code, worker_globals)
+
+del _build_guard
+del _load_worker_code
+_main()
 '''
 
 
@@ -441,6 +673,9 @@ def run_process_worker(
             guard_mode=preflight.guard_mode,
             network_mode=request.network_mode,
             workspace_deleted=True,
+            writes_target_repo=request.writes_target_repo,
+            executes_target_repo_mutation=request.executes_target_repo_mutation,
+            production=request.production,
         )
 
     started = time.monotonic()
@@ -452,23 +687,35 @@ def run_process_worker(
     exit_code: int | None = None
     reasons: list[str] = []
     try:
+        entrypoint_bytes, entrypoint_stat = _snapshot_entrypoint(
+            Path(preflight.entrypoint or ""),
+            max_bytes=request.limits.max_fixture_bytes,
+        )
+        current_identity = (
+            entrypoint_stat.st_dev,
+            entrypoint_stat.st_ino,
+            entrypoint_stat.st_size,
+            entrypoint_stat.st_mtime_ns,
+            hashlib.sha256(entrypoint_bytes).hexdigest(),
+        )
+        preflight_identity = (
+            preflight.entrypoint_device,
+            preflight.entrypoint_inode,
+            preflight.entrypoint_size,
+            preflight.entrypoint_mtime_ns,
+            preflight.entrypoint_sha256,
+        )
+        if current_identity != preflight_identity:
+            raise RuntimeError("entrypoint identity changed after preflight")
         with tempfile.TemporaryDirectory(
-            prefix="tool-system-p11-worker-", dir=preflight.workspace_root
+            prefix="tool-system-p13-worker-", dir=preflight.workspace_root
         ) as temporary:
             workspace_path = Path(temporary)
             worker_path = workspace_path / "worker.py"
             guard_path = workspace_path / "guard.py"
-            shutil.copyfile(preflight.entrypoint or "", worker_path, follow_symlinks=False)
+            worker_path.write_bytes(entrypoint_bytes)
             worker_path.chmod(0o400)
-            stdlib_paths = tuple(
-                sorted(
-                    {
-                        str(Path(value).resolve())
-                        for value in sysconfig.get_paths().values()
-                        if value and Path(value).exists()
-                    }
-                )
-            )
+            stdlib_paths = preflight.readable_library_roots
             guard_path.write_text(_guard_source(stdlib_paths), encoding="utf-8")
             guard_path.chmod(0o400)
             argv = [
@@ -497,6 +744,10 @@ def run_process_worker(
     except Exception as exc:  # fail closed and return a bounded diagnostic
         if process is not None:
             _kill_process_group(process)
+            try:
+                process.wait(timeout=1)
+            except (OSError, subprocess.TimeoutExpired):
+                pass
         reasons.append(f"worker runtime failed closed: {type(exc).__name__}: {exc}")
     workspace_deleted = workspace_path is None or not workspace_path.exists()
     status = "BLOCK" if reasons else terminal_status_for_trigger(trigger, exit_code)
@@ -523,6 +774,9 @@ def run_process_worker(
         guard_mode=preflight.guard_mode,
         network_mode=request.network_mode,
         workspace_deleted=workspace_deleted,
+        writes_target_repo=request.writes_target_repo,
+        executes_target_repo_mutation=request.executes_target_repo_mutation,
+        production=request.production,
     )
 
 
