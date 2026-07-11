@@ -80,6 +80,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p10i_p10_p1a_acceptance_closure.yaml
   - examples/task_manifests/tool_system_p10j_finance_us_pr_merge_packet.yaml
   - examples/task_manifests/tool_system_p10k_finance_us_pr_merge_execution_evidence.yaml
+  - examples/task_manifests/tool_system_p10k1_finance_us_pr_body_sha_literal_correction.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -158,3 +159,4 @@ change_plans:
   - examples/change_plans/tool_system_p10i_p10_p1a_acceptance_closure.yaml
   - examples/change_plans/tool_system_p10j_finance_us_pr_merge_packet.yaml
   - examples/change_plans/tool_system_p10k_finance_us_pr_merge_execution_evidence.yaml
+  - examples/change_plans/tool_system_p10k1_finance_us_pr_body_sha_literal_correction.yaml

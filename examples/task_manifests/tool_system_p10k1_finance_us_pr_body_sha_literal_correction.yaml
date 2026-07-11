@@ -1,0 +1,68 @@
+task_id: tool-system-p10k1-finance-us-pr-body-sha-literal-correction
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10k1-finance-us-pr-body-sha-correction
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10k_finance_us_pr_merge_execution_evidence.md
+    section_or_key: Executed target lifecycle actions
+    scope: Correct the recorded characterization of the merged PR body without changing target state.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Preserve exact audit evidence and separate target metadata approval boundaries.
+scope:
+  summary: Record the incorrect PR-body SHA literal and confirm the expected-head merge lock and target main were correct.
+  in_scope:
+    - docs/reports/p10k1_finance_us_pr_body_sha_literal_correction.md
+    - examples/task_manifests/tool_system_p10k1_finance_us_pr_body_sha_literal_correction.yaml
+    - examples/change_plans/tool_system_p10k1_finance_us_pr_body_sha_literal_correction.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-us metadata mutation
+    - finance-us file mutation
+    - P1B entry or implementation
+    - rollback or cleanup execution
+    - branch deletion
+    - production, data, model, backtest, broker, or trading operations
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10k_finance_us_pr_merge_execution_evidence.md
+    why_relevant: Parent merge execution evidence requiring precise correction.
+  - repo: apolo183/finance-us
+    path: pull/1
+    ref: bfad12148e80c5f712b150851e9374db3a15a80b
+    why_relevant: Merged PR metadata and resulting squash commit.
+allowed_files:
+  - docs/reports/p10k1_finance_us_pr_body_sha_literal_correction.md
+  - examples/task_manifests/tool_system_p10k1_finance_us_pr_body_sha_literal_correction.yaml
+  - examples/change_plans/tool_system_p10k1_finance_us_pr_body_sha_literal_correction.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10k1_finance_us_pr_body_sha_literal_correction.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10K1 change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: p10k1-finance-us-pr-body-sha-correction
+approval:
+  required: true
+  approved_by: standing_authorization_for_routine_evidence_correction
