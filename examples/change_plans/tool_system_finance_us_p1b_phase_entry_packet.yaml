@@ -14,8 +14,8 @@ alignment:
     scope: Follow the P1B phase-entry manifest only.
   global:
     document: blueprint/tool_system_v0.yaml
-    section_or_key: default_policy
-    scope: Prepare downstream phase-entry governance while preserving explicit target mutation and PR lifecycle approvals.
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Preserve accepted P10 controls while preparing downstream P1B governance without target mutation.
 verification:
   commands:
     - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
