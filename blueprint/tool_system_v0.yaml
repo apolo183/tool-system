@@ -1,12 +1,23 @@
 schema_version: 0.2
 system: tool-system
-phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
-status: accepted
+phase: P11_REAL_WORKER_RUNTIME
+status: active
 acceptance:
   record: docs/reports/p10i_p10_p1a_acceptance_closure.md
   accepted_at: 2026-07-11 UTC+08:00
   accepted_scope: controlled_no_production_draft_pr_pilot
-  successor_phase_authorized: false
+  successor_phase_authorized: true
+successor_authorization:
+  record: docs/reports/p11a_successor_roadmap_phase_entry.md
+  authorized_at: 2026-07-11 UTC+08:00
+  authorized_roadmap:
+    - P11_REAL_WORKER_RUNTIME
+    - P12_DURABLE_ORCHESTRATOR
+    - P13_SECURITY_RELIABILITY_HARDENING
+    - P14_MULTI_REPO_BENCHMARK
+    - P15_PRODUCTION_OPERATIONS_ACCEPTANCE
+  active_phase: P11_REAL_WORKER_RUNTIME
+  later_phase_entry_authorized: false
 
 identity:
   description: Domain-agnostic agentic software factory for blueprint parsing, task planning, patch generation, test execution, and repository control.
@@ -30,6 +41,11 @@ boundaries:
     - agent_role_taxonomy
     - task_runner_productization
     - controlled_target_repo_pr_pilot
+    - real_worker_runtime
+    - durable_orchestrator
+    - security_reliability_hardening
+    - multi_repo_benchmark
+    - production_operations_acceptance
   does_not_own:
     - finance_signals
     - ranking_models
@@ -270,6 +286,76 @@ milestones:
       - controlled no-production PR pilot plan
       - target-repo write audit and rollback reference
       - post-pilot evidence bundle
+  P11_REAL_WORKER_RUNTIME:
+    objective: execute a real local process-backed worker in an isolated fixture workspace with a fail-closed minimum safety baseline and no downstream target-repository or production mutation
+    entry_requires:
+      - P10_CONTROLLED_TARGET_REPO_PR_PILOT accepted and P10R corrective lifecycle closed
+      - explicit P11 phase-entry authorization
+      - minimum safety controls pass before the first real worker execution
+      - finance-us and every other remote target repository remain no-mutation
+      - production deployment remains separately approved only
+    outputs:
+      - real worker request and result contract
+      - ephemeral isolated fixture workspace
+      - executable and input allowlists
+      - scrubbed environment and secret controls
+      - cwd, path traversal, and symlink controls
+      - network-disabled worker policy with fail-closed enforcement
+      - CPU, memory, process, file, runtime, and output limits
+      - cancellation and process-group termination
+      - fixture-only real worker execution evidence
+      - P11 acceptance and rollback evidence
+  P12_DURABLE_ORCHESTRATOR:
+    objective: persist orchestration state and resume safely without duplicating external side effects
+    entry_requires:
+      - P11_REAL_WORKER_RUNTIME accepted
+      - explicit P12 phase-entry authorization
+    outputs:
+      - durable run and task state
+      - leases, checkpoints, retry, and crash resume
+      - idempotency keys and attempt numbers
+      - external side-effect ledger and completed-side-effect markers
+      - transactional outbox and reconciliation loop
+      - expected precondition SHA enforcement
+  P13_SECURITY_RELIABILITY_HARDENING:
+    objective: harden the P11-P12 runtime and orchestrator through adversarial tests, fault injection, and stronger isolation controls
+    entry_requires:
+      - P12_DURABLE_ORCHESTRATOR accepted
+      - explicit P13 phase-entry authorization
+    outputs:
+      - threat model and abuse cases
+      - sandbox and secret-control hardening
+      - adversarial path, executable, environment, and network tests
+      - fault injection and recovery evidence
+      - resource exhaustion and cancellation stress evidence
+      - security and reliability acceptance record
+  P14_MULTI_REPO_BENCHMARK:
+    objective: benchmark the controlled system across multiple non-production repositories and produce release-candidate acceptance evidence
+    entry_requires:
+      - P13_SECURITY_RELIABILITY_HARDENING accepted
+      - explicit P14 phase-entry authorization
+      - each repository mutation separately authorized
+    outputs:
+      - representative multi-repository benchmark suite
+      - quality, latency, cost, recovery, and policy metrics
+      - cross-repository isolation evidence
+      - failed-case and rollback corpus
+      - release-candidate acceptance review
+  P15_PRODUCTION_OPERATIONS_ACCEPTANCE:
+    objective: establish sustainable production operations and decide production acceptance without silently granting deployment authority
+    entry_requires:
+      - P14_MULTI_REPO_BENCHMARK accepted
+      - explicit P15 phase-entry authorization
+      - production deployment remains separately approved only
+    outputs:
+      - release and version policy
+      - schema and state migration strategy
+      - upgrade, downgrade, backup, restore, and disaster recovery evidence
+      - observability SLOs, alerting, and incident response
+      - audit and run retention policy
+      - cost, quota, and provider-outage controls
+      - operator runbook and deprecation policy
+      - production acceptance decision record
 
 default_policy:
   no_direct_main_write: true

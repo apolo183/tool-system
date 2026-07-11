@@ -32,6 +32,7 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 - Run role-assigned task graph steps through an auditable no-mutation runtime.
 - Build no-mutation worker adapter contracts and orchestration records.
 - Define and operate controlled target-repository PR pilot gates after explicit execution approval.
+- Execute a real local process-backed worker inside a controlled fixture-only runtime after minimum safety gates pass.
 
 ### Out of scope
 
@@ -45,13 +46,15 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 
 ## Current phase state
 
-Current phase: `P10_CONTROLLED_TARGET_REPO_PR_PILOT`.
+Current phase: `P11_REAL_WORKER_RUNTIME`.
 
-Status: `accepted`.
+Status: `active`.
 
 P10 was accepted as a successful controlled, no-production, draft-pull-request pilot. The acceptance demonstrates bounded target-repository planning, named execution approvals, fresh-state checks, exact file allowlists, draft PR creation, local validation handoff, fail-closed correction handling, audit evidence, and rollback references.
 
-No successor tool-system phase is authorized. P10R-A machine-policy enforcement correction is implemented on `main`; P10R-B governance-state synchronization is the current bounded corrective stage. Preparation of a separately approvable P11-P15 successor roadmap is allowed, but no successor implementation is authorized by the accepted P10 state.
+P10R is closed. The P11-P15 successor roadmap is authorized and P11 Real Worker Runtime is the only entered successor phase. P12 Durable Orchestrator, P13 Security and Reliability Hardening, P14 Multi-repo Benchmark, and P15 Production Operations and Acceptance remain roadmap-only until separately authorized.
+
+P11 may implement and execute a real local process-backed worker only after its minimum safety baseline passes. Execution is limited to isolated fixture workspaces. Finance-us and every other remote target repository remain no-mutation, and production deployment remains prohibited.
 
 ## Repository contract
 

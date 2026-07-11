@@ -1,0 +1,82 @@
+task_id: tool-system-p11a-successor-roadmap-phase-entry
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p11a-successor-roadmap-phase-entry
+phase: P11_REAL_WORKER_RUNTIME
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+alignment:
+  parent:
+    document: docs/reports/p10r_c_post_merge_closure.md
+    section_or_key: Closure disposition
+    scope: Resolve the recorded successor decision by registering the approved roadmap and entering P11 only.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+    scope: Keep P11 fixture-only and no-target-mutation while P12-P15 remain roadmap-only.
+scope:
+  summary: Register the P11-P15 successor roadmap and enter P11 Real Worker Runtime.
+  in_scope:
+    - blueprint/tool_system_v0.yaml
+    - AGENTS.md
+    - README.md
+    - docs/reports/p11a_successor_roadmap_phase_entry.md
+    - examples/task_manifests/tool_system_p11a_successor_roadmap_phase_entry.yaml
+    - examples/change_plans/tool_system_p11a_successor_roadmap_phase_entry.yaml
+    - examples/active_gates.yaml
+    - tests/test_phase_alignment.py
+  out_of_scope:
+    - worker runtime implementation or execution
+    - finance-us or other remote target-repository mutation
+    - P12-P15 phase entry or implementation
+    - production deployment
+    - cleanup or branch deletion
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10r_c_post_merge_closure.md
+    ref: 8f3908dfc201aa909125fa1229621bd002518d7f
+    why_relevant: Current closure record identifies the successor roadmap and P11 phase entry as the next explicit decision.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    ref: 8f3908dfc201aa909125fa1229621bd002518d7f
+    why_relevant: Pre-change active blueprint proves P10 acceptance and that successor entry previously remained unauthorized.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    ref: 8f3908dfc201aa909125fa1229621bd002518d7f
+    why_relevant: Governs documentation-first execution, short stages, dual alignment, side effects, rollback, and claims.
+allowed_files:
+  - blueprint/tool_system_v0.yaml
+  - AGENTS.md
+  - README.md
+  - docs/reports/p11a_successor_roadmap_phase_entry.md
+  - examples/task_manifests/tool_system_p11a_successor_roadmap_phase_entry.yaml
+  - examples/change_plans/tool_system_p11a_successor_roadmap_phase_entry.yaml
+  - examples/active_gates.yaml
+  - tests/test_phase_alignment.py
+forbidden_files:
+  - policy/**
+  - src/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p11a_successor_roadmap_phase_entry.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - full tests return PASS
+    - phase alignment names P11 and all five roadmap milestones
+    - active gates return PASS
+    - no worker execution occurs
+rollback:
+  method: git_revert
+  reference: p11a-successor-roadmap-phase-entry
+approval:
+  required: true
+  approved_by: user_authorized_p11_full_progress_until_p12_boundary
