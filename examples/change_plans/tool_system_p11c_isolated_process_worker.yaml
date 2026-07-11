@@ -1,0 +1,29 @@
+plan_id: tool-system-p11c-isolated-process-worker
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p11c_isolated_process_worker.yaml
+changed_files:
+  - src/tool_system/agent_worker/process_runtime.py
+  - src/tool_system/agent_worker/__init__.py
+  - tests/test_process_worker_runtime_preflight.py
+  - docs/reports/p11c_isolated_process_worker_implementation.md
+  - examples/task_manifests/tool_system_p11c_isolated_process_worker.yaml
+  - examples/change_plans/tool_system_p11c_isolated_process_worker.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p11c_isolated_process_worker.yaml
+    section_or_key: task_id
+    scope: Follow the exact P11C implementation manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+    scope: Implement minimum controls without executing a worker or entering P12.
+verification:
+  commands:
+    - python -m compileall src/tool_system tests
+    - python -m pytest -q tests/test_process_worker_runtime_preflight.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: p11c-isolated-process-worker
