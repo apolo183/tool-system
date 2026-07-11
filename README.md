@@ -51,7 +51,7 @@ Status: `accepted`.
 
 P10 was accepted as a successful controlled, no-production, draft-pull-request pilot. The acceptance demonstrates bounded target-repository planning, named execution approvals, fresh-state checks, exact file allowlists, draft PR creation, local validation handoff, fail-closed correction handling, audit evidence, and rollback references.
 
-No successor tool-system phase is authorized. Allowed post-acceptance work is limited to bounded acceptance records, read-only verification, and preparation of separately approved target PR lifecycle packets.
+No successor tool-system phase is authorized. P10R-A machine-policy enforcement correction is implemented on `main`; P10R-B governance-state synchronization is the current bounded corrective stage. Preparation of a separately approvable P11-P15 successor roadmap is allowed, but no successor implementation is authorized by the accepted P10 state.
 
 ## Repository contract
 
@@ -59,7 +59,9 @@ This repository is a tool layer. Business systems are downstream targets. tool-s
 
 P10 acceptance does not authorize unrestricted downstream mutation, target PR ready transition, target PR merge, production deployment, real external worker execution, or Codex replacement claims. Each such action remains separately gated.
 
-The accepted finance-us P1A content is currently bound to draft PR #1 head `dbf43976d0b336c0df961a651f35e8b3ceca0255`. It has not been merged to target `main`; P1B remains blocked until an independently approved merge packet, target merge, post-merge validation, and closure record are complete.
+Finance-us P1A is accepted, merged, strictly validated, and closed on target `main` at `7101847826e6701a4d8cc7f0a6208fb9aee2cc4e`. The finance-us P1B phase-entry record and implementation packet are prepared and merged in tool-system. P1B target implementation remains blocked pending a named, action-scoped target execution approval; P1B ready and merge remain separately gated.
+
+The canonical active downstream identity is `apolo183/finance-us`. The legacy `apolo183/finance-os` route is retired and retained only as a closed, no-write compatibility fixture. Direct bootstrap on tool-system and finance-us is disabled, and downstream merge approval is bound to repository, action, base branch, and expected head SHA.
 
 ## Bootstrap files
 
