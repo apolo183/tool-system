@@ -101,6 +101,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p12b_durable_state_foundation.yaml
   - examples/task_manifests/tool_system_p12c_side_effect_ledger_outbox.yaml
   - examples/task_manifests/tool_system_p12d_crash_replay_fixture_evidence.yaml
+  - examples/task_manifests/tool_system_p12e_durable_orchestrator_acceptance_closure.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -200,3 +201,4 @@ change_plans:
   - examples/change_plans/tool_system_p12b_durable_state_foundation.yaml
   - examples/change_plans/tool_system_p12c_side_effect_ledger_outbox.yaml
   - examples/change_plans/tool_system_p12d_crash_replay_fixture_evidence.yaml
+  - examples/change_plans/tool_system_p12e_durable_orchestrator_acceptance_closure.yaml
