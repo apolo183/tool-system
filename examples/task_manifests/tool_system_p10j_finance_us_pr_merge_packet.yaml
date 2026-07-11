@@ -1,0 +1,83 @@
+task_id: tool-system-p10j-finance-us-pr-merge-packet
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10j-finance-us-pr-merge-packet
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: acceptance
+alignment:
+  parent:
+    document: docs/reports/p10i_p10_p1a_acceptance_closure.md
+    section_or_key: Target PR lifecycle boundary
+    scope: Prepare an independent target PR merge packet while leaving finance-us PR #1 draft and unmerged.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: acceptance
+    scope: Operate only as post-acceptance closure work with no successor phase entry and all target lifecycle actions separately approved.
+scope:
+  summary: Lock the finance-us PR #1 merge preflight, permitted metadata update, squash merge sequence, post-merge validation, rollback, and stop conditions.
+  in_scope:
+    - docs/reports/p10j_finance_us_pr_merge_packet.md
+    - examples/task_manifests/tool_system_p10j_finance_us_pr_merge_packet.yaml
+    - examples/change_plans/tool_system_p10j_finance_us_pr_merge_packet.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-us PR metadata mutation
+    - target PR ready transition
+    - target PR merge
+    - finance-us branch or file mutation
+    - P1B entry or implementation
+    - successor tool-system phase entry
+    - production deployment
+    - data, model, ranking, evaluation, backtest, portfolio, or broker execution
+    - rollback execution
+    - cleanup execution
+    - branch deletion
+    - real external worker calls
+    - Codex replacement claims
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10i_p10_p1a_acceptance_closure.md
+    why_relevant: Accepted P10 and P1A record requiring an independent merge packet.
+  - repo: apolo183/tool-system
+    path: docs/reports/p10g_finance_us_correction_execution_evidence.md
+    why_relevant: Exact validated target head, accepted content, and local validation evidence.
+  - repo: apolo183/finance-us
+    path: README.md
+    ref: dbf43976d0b336c0df961a651f35e8b3ceca0255
+    why_relevant: Accepted target content at the locked merge head.
+  - repo: apolo183/finance-us
+    path: blueprint/finance_us_phase_1_v0.yaml
+    ref: dbf43976d0b336c0df961a651f35e8b3ceca0255
+    why_relevant: Accepted machine-readable target contract at the locked merge head.
+allowed_files:
+  - docs/reports/p10j_finance_us_pr_merge_packet.md
+  - examples/task_manifests/tool_system_p10j_finance_us_pr_merge_packet.yaml
+  - examples/change_plans/tool_system_p10j_finance_us_pr_merge_packet.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10j_finance_us_pr_merge_packet.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10J change plan validation returns PASS
+    - active gate index validation returns PASS
+    - packet grants no target lifecycle authority
+rollback:
+  method: git_revert
+  reference: branch commits on p10j-finance-us-pr-merge-packet
+approval:
+  required: true
+  approved_by: user_explicit_merge_packet_preparation_only
