@@ -1,0 +1,78 @@
+task_id: tool-system-p10f-finance-us-identity-calendar-correction-packet
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10f-finance-us-identity-calendar-correction-packet
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10e_finance_us_local_validation_and_acceptance_readiness.md
+    section_or_key: Required next packet
+    scope: Prepare the minimum correction packet for repository identity and exchange/calendar ambiguity.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Keep every real target write behind a named execution approval packet.
+scope:
+  summary: Define a six-file correction packet for the existing finance-us draft PR branch.
+  in_scope:
+    - docs/reports/p10f_finance_us_identity_calendar_correction_packet.md
+    - examples/task_manifests/tool_system_p10f_finance_us_identity_calendar_correction_packet.yaml
+    - examples/change_plans/tool_system_p10f_finance_us_identity_calendar_correction_packet.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-us mutation
+    - target PR ready transition
+    - target PR merge
+    - P1A acceptance
+    - P1B implementation
+    - source or test changes
+    - data or model execution
+    - rollback or cleanup execution
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10e_finance_us_local_validation_and_acceptance_readiness.md
+    why_relevant: Parent record identifying stale repository identity and unresolved NYSE_ARCA calendar mapping as P1A acceptance blockers.
+  - repo: apolo183/finance-us
+    path: README.md
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Active target identity still declares the former repository full name.
+  - repo: apolo183/finance-us
+    path: blueprint/finance_us_phase_1_v0.yaml
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Active blueprint still allows NYSE_ARCA without an explicit approved calendar mapping.
+  - repo: apolo183/finance-us
+    path: contracts/cutoff_contract.yaml
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Active cutoff contract requires fail-closed exchange-to-calendar mapping.
+allowed_files:
+  - docs/reports/p10f_finance_us_identity_calendar_correction_packet.md
+  - examples/task_manifests/tool_system_p10f_finance_us_identity_calendar_correction_packet.yaml
+  - examples/change_plans/tool_system_p10f_finance_us_identity_calendar_correction_packet.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10f_finance_us_identity_calendar_correction_packet.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10F change plan validation returns PASS
+    - active gate index validation returns PASS
+rollback:
+  method: git_revert
+  reference: branch commits on p10f-finance-us-identity-calendar-correction-packet
+approval:
+  required: true
+  basis: separate explicit approval is required before any finance-us target-branch file mutation

@@ -74,6 +74,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
   - examples/task_manifests/tool_system_p10d_finance_us_pr_execution_evidence.yaml
   - examples/task_manifests/tool_system_p10e_finance_us_local_validation_and_acceptance_readiness.yaml
+  - examples/task_manifests/tool_system_p10f_finance_us_identity_calendar_correction_packet.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -146,3 +147,4 @@ change_plans:
   - examples/change_plans/tool_system_p10c_finance_us_us_equity_contract_realignment_packet.yaml
   - examples/change_plans/tool_system_p10d_finance_us_pr_execution_evidence.yaml
   - examples/change_plans/tool_system_p10e_finance_us_local_validation_and_acceptance_readiness.yaml
+  - examples/change_plans/tool_system_p10f_finance_us_identity_calendar_correction_packet.yaml
