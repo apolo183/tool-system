@@ -1,0 +1,28 @@
+plan_id: tool-system-p11d2-termination-path-evidence
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p11d2_termination_path_evidence.yaml
+changed_files:
+  - src/tool_system/agent_worker/process_runtime.py
+  - tests/test_process_worker_runtime_execution.py
+  - docs/reports/p11d2_termination_path_execution_evidence.md
+  - examples/task_manifests/tool_system_p11d2_termination_path_evidence.yaml
+  - examples/change_plans/tool_system_p11d2_termination_path_evidence.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p11d2_termination_path_evidence.yaml
+    section_or_key: task_id
+    scope: Follow the exact P11D2 corrective evidence manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+    scope: Prove termination controls without target mutation or P12 entry.
+verification:
+  commands:
+    - python -m pytest -q tests/test_process_worker_runtime_preflight.py
+    - python -m pytest -q tests/test_process_worker_runtime_execution.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: p11d2-termination-path-evidence

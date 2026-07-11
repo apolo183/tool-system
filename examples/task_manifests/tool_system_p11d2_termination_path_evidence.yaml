@@ -1,0 +1,73 @@
+task_id: tool-system-p11d2-termination-path-evidence
+task_type: code_change
+target_repo: apolo183/tool-system
+target_branch: p11d2-termination-path-evidence
+phase: P11_REAL_WORKER_RUNTIME
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+alignment:
+  parent:
+    document: docs/reports/p11d_fixture_worker_execution_evidence.md
+    section_or_key: Post-execution validation
+    scope: Extend real evidence to timeout, cancellation, and bounded-output termination before acceptance.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+    scope: Prove the required resource, cancellation, termination, and output controls.
+scope:
+  summary: Execute and verify P11 abnormal termination paths with temporary fixtures.
+  in_scope:
+    - src/tool_system/agent_worker/process_runtime.py
+    - tests/test_process_worker_runtime_execution.py
+    - docs/reports/p11d2_termination_path_execution_evidence.md
+    - examples/task_manifests/tool_system_p11d2_termination_path_evidence.yaml
+    - examples/change_plans/tool_system_p11d2_termination_path_evidence.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - additional formal worker fixture
+    - target-repository mutation
+    - remote worker or provider
+    - production deployment
+    - P12-P15 implementation
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p11d_fixture_worker_execution_evidence.md
+    ref: 50f7d4efce0e673fcca3c3825598ae77d2fd778c
+    why_relevant: Successful-path execution evidence and parent acceptance gap.
+  - repo: apolo183/tool-system
+    path: src/tool_system/agent_worker/process_runtime.py
+    ref: 50f7d4efce0e673fcca3c3825598ae77d2fd778c
+    why_relevant: Natural owner for independent wall-time and CPU limits plus termination behavior.
+allowed_files:
+  - src/tool_system/agent_worker/process_runtime.py
+  - tests/test_process_worker_runtime_execution.py
+  - docs/reports/p11d2_termination_path_execution_evidence.md
+  - examples/task_manifests/tool_system_p11d2_termination_path_evidence.yaml
+  - examples/change_plans/tool_system_p11d2_termination_path_evidence.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q tests/test_process_worker_runtime_preflight.py
+    - python -m pytest -q tests/test_process_worker_runtime_execution.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - abnormal termination tests return TIMEOUT, CANCELLED, and OUTPUT_LIMIT
+    - output evidence is capped
+    - every workspace is deleted
+    - full tests and active gates pass
+rollback:
+  method: git_revert
+  reference: p11d2-termination-path-evidence
+approval:
+  required: true
+  approved_by: user_authorized_p11_full_progress_until_p12_boundary
