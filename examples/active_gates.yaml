@@ -90,6 +90,7 @@ task_manifests:
   - examples/task_manifests/tool_system_finance_us_p1b_phase_entry_packet.yaml
   - examples/task_manifests/tool_system_p10r_a_machine_policy_enforcement_packet.yaml
   - examples/task_manifests/tool_system_p10r_b_governance_state_synchronization.yaml
+  - examples/task_manifests/tool_system_p10r_c_post_merge_closure.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -178,3 +179,4 @@ change_plans:
   - examples/change_plans/tool_system_finance_us_p1b_phase_entry_packet.yaml
   - examples/change_plans/tool_system_p10r_a_machine_policy_enforcement_packet.yaml
   - examples/change_plans/tool_system_p10r_b_governance_state_synchronization.yaml
+  - examples/change_plans/tool_system_p10r_c_post_merge_closure.yaml
