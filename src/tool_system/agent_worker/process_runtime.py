@@ -145,8 +145,6 @@ def _limits_reasons(limits: ProcessWorkerLimits) -> list[str]:
     for name, value in asdict(limits).items():
         if not isinstance(value, (int, float)) or isinstance(value, bool) or value <= 0:
             reasons.append(f"limits.{name} must be positive")
-    if limits.cpu_seconds > limits.timeout_seconds:
-        reasons.append("limits.cpu_seconds must not exceed limits.timeout_seconds")
     return reasons
 
 
