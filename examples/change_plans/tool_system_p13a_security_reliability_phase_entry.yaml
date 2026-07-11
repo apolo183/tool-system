@@ -1,0 +1,30 @@
+plan_id: tool-system-p13a-security-reliability-phase-entry
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p13a_security_reliability_phase_entry.yaml
+changed_files:
+  - blueprint/tool_system_v0.yaml
+  - AGENTS.md
+  - README.md
+  - tests/test_phase_alignment.py
+  - docs/reports/p13a_security_reliability_phase_entry.md
+  - examples/task_manifests/tool_system_p13a_security_reliability_phase_entry.yaml
+  - examples/change_plans/tool_system_p13a_security_reliability_phase_entry.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p13a_security_reliability_phase_entry.yaml
+    section_or_key: task_id
+    scope: Follow the exact P13A governance-only manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+    scope: Enter P13 without implementation, external mutation, or P14 entry.
+verification:
+  commands:
+    - python -m pytest -q tests/test_phase_alignment.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p13a_security_reliability_phase_entry.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: p13a-security-reliability-phase-entry

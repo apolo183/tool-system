@@ -94,14 +94,17 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 12. Current phase state
 
-Current phase: P12_DURABLE_ORCHESTRATOR.
+Current phase: P13_SECURITY_RELIABILITY_HARDENING.
 
-Status: `accepted_and_closed`.
+Status: `active`.
 
-P10, P11, and P12 are accepted at their recorded scopes. P12 Durable Orchestrator is closed at the single-host local-fixture SQLite scope. P13-P15 remain roadmap-only; P13 phase entry is not authorized.
+P10, P11, and P12 are accepted at their recorded scopes. P13 Security and Reliability Hardening is authorized and active. P14-P15 remain roadmap-only; P14 phase entry is not authorized.
 
 Allowed now:
 
+- P13 phase-entry records, threat model, implementation packets, source hardening, adversarial and fault tests, local fixture evidence, review, merge, and closure;
+- application-level process-worker guard hardening without hostile-code sandbox claims;
+- single-host local-fixture SQLite reliability hardening;
 - read-only verification of accepted P12 durable-orchestrator state and evidence;
 - read-only verification of the accepted P11 runtime;
 - read-only verification of accepted target state;
@@ -113,9 +116,10 @@ Not allowed now:
 - target-repository main-branch mutation outside the approved merge flow;
 - finance-us P1B target implementation without a named, action-scoped target execution approval;
 - treating a P1B implementation approval as ready or merge approval;
-- P13 or later phase entry or implementation before a named authorization;
+- P14 or later phase entry or implementation before a named authorization;
 - further P12 runtime expansion under the closed milestone;
 - P12 fixtures that call a real external side effect, remote provider, or target repository;
+- P13 fixtures that call a real external side effect, remote provider, or target repository;
 - any P11 worker execution before minimum safety controls pass;
 - worker execution against finance-us or any other remote target repository;
 - broad or unspecified downstream repository mutation;

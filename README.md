@@ -47,17 +47,19 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 
 ## Current phase state
 
-Current phase: `P12_DURABLE_ORCHESTRATOR`.
+Current phase: `P13_SECURITY_RELIABILITY_HARDENING`.
 
-Status: `accepted_and_closed`.
+Status: `active`.
 
 P10 was accepted as a successful controlled, no-production, draft-pull-request pilot. The acceptance demonstrates bounded target-repository planning, named execution approvals, fresh-state checks, exact file allowlists, draft PR creation, local validation handoff, fail-closed correction handling, audit evidence, and rollback references.
 
-P10R is closed, P11 Real Worker Runtime is accepted at the local fixture-only application-guarded scope, and P12 Durable Orchestrator is accepted and closed at the single-host local-fixture SQLite scope. P13 Security and Reliability Hardening, P14 Multi-repo Benchmark, and P15 Production Operations and Acceptance remain roadmap-only until separately authorized.
+P10R is closed, P11 Real Worker Runtime is accepted at the local fixture-only application-guarded scope, and P12 Durable Orchestrator is accepted and closed at the single-host local-fixture SQLite scope. P13 Security and Reliability Hardening is authorized and active. P14 Multi-repo Benchmark and P15 Production Operations and Acceptance remain roadmap-only until separately authorized.
 
 P11 evidence proves an allowlisted Python fixture process with ephemeral workspace isolation, scrubbed environment, application-level network/process/file guards, resource limits, bounded output, timeout, cancellation, process-group termination, and cleanup. It does not prove hostile-code sandboxing, durable orchestration, remote target execution, or production readiness. Finance-us and every other remote target repository remain no-mutation, and production deployment remains prohibited.
 
 P12 evidence proves persisted run/task state, lease recovery, checkpoints, retries, idempotency and attempt numbers, expected precondition SHA enforcement, a side-effect ledger, atomic completed markers and outbox insertion, and local fixture reconciliation across close/reopen and a simulated publisher crash. It grants no arbitrary external exactly-once guarantee, distributed or production claim, remote side effect, or target-repository authority.
+
+P13 hardens the accepted P11-P12 owners through a documented threat model, executable and entrypoint pinning, path/link/environment/network adversarial controls, durable-state resource bounds, transaction and concurrency fault injection, resource-exhaustion and cancellation stress, and local evidence. It does not claim kernel-enforced hostile-code containment, remote target safety, multi-repository benchmark acceptance, or production readiness.
 
 ## Repository contract
 
