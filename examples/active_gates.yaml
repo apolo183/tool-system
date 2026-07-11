@@ -94,6 +94,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p11a_successor_roadmap_phase_entry.yaml
   - examples/task_manifests/tool_system_p11b_real_worker_runtime_packet.yaml
   - examples/task_manifests/tool_system_p11c_isolated_process_worker.yaml
+  - examples/task_manifests/tool_system_p11d_fixture_worker_execution.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -186,3 +187,4 @@ change_plans:
   - examples/change_plans/tool_system_p11a_successor_roadmap_phase_entry.yaml
   - examples/change_plans/tool_system_p11b_real_worker_runtime_packet.yaml
   - examples/change_plans/tool_system_p11c_isolated_process_worker.yaml
+  - examples/change_plans/tool_system_p11d_fixture_worker_execution.yaml
