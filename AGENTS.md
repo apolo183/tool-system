@@ -96,15 +96,13 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 Current phase: P12_DURABLE_ORCHESTRATOR.
 
-Status: `active`.
+Status: `accepted_and_closed`.
 
-P10 and P11 are accepted at their recorded scopes. P12 Durable Orchestrator is authorized and active. P13-P15 remain roadmap-only; P13 phase entry is not authorized.
+P10, P11, and P12 are accepted at their recorded scopes. P12 Durable Orchestrator is closed at the single-host local-fixture SQLite scope. P13-P15 remain roadmap-only; P13 phase entry is not authorized.
 
 Allowed now:
 
-- P12 phase-entry, implementation packets, durable-state source, tests, local fixture evidence, review, merge, and closure;
-- SQLite-backed local orchestration state under temporary fixture roots;
-- lease, checkpoint, retry, crash-resume, idempotency, side-effect-ledger, transactional-outbox, precondition-SHA, and reconciliation work;
+- read-only verification of accepted P12 durable-orchestrator state and evidence;
 - read-only verification of the accepted P11 runtime;
 - read-only verification of accepted target state;
 - preparation of separately approvable downstream target lifecycle packets.
@@ -116,6 +114,7 @@ Not allowed now:
 - finance-us P1B target implementation without a named, action-scoped target execution approval;
 - treating a P1B implementation approval as ready or merge approval;
 - P13 or later phase entry or implementation before a named authorization;
+- further P12 runtime expansion under the closed milestone;
 - P12 fixtures that call a real external side effect, remote provider, or target repository;
 - any P11 worker execution before minimum safety controls pass;
 - worker execution against finance-us or any other remote target repository;

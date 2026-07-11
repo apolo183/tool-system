@@ -33,6 +33,7 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 - Build no-mutation worker adapter contracts and orchestration records.
 - Define and operate controlled target-repository PR pilot gates after explicit execution approval.
 - Execute a real local process-backed worker inside a controlled fixture-only runtime after minimum safety gates pass.
+- Persist and reconcile single-host orchestration state inside the accepted local-fixture SQLite boundary.
 
 ### Out of scope
 
@@ -48,15 +49,15 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 
 Current phase: `P12_DURABLE_ORCHESTRATOR`.
 
-Status: `active`.
+Status: `accepted_and_closed`.
 
 P10 was accepted as a successful controlled, no-production, draft-pull-request pilot. The acceptance demonstrates bounded target-repository planning, named execution approvals, fresh-state checks, exact file allowlists, draft PR creation, local validation handoff, fail-closed correction handling, audit evidence, and rollback references.
 
-P10R is closed and P11 Real Worker Runtime is accepted at the local, fixture-only, application-guarded scope. P12 Durable Orchestrator is active. P13 Security and Reliability Hardening, P14 Multi-repo Benchmark, and P15 Production Operations and Acceptance remain roadmap-only until separately authorized.
+P10R is closed, P11 Real Worker Runtime is accepted at the local fixture-only application-guarded scope, and P12 Durable Orchestrator is accepted and closed at the single-host local-fixture SQLite scope. P13 Security and Reliability Hardening, P14 Multi-repo Benchmark, and P15 Production Operations and Acceptance remain roadmap-only until separately authorized.
 
 P11 evidence proves an allowlisted Python fixture process with ephemeral workspace isolation, scrubbed environment, application-level network/process/file guards, resource limits, bounded output, timeout, cancellation, process-group termination, and cleanup. It does not prove hostile-code sandboxing, durable orchestration, remote target execution, or production readiness. Finance-us and every other remote target repository remain no-mutation, and production deployment remains prohibited.
 
-P12 is limited to local SQLite fixture state and local in-process side-effect sinks. It must persist run/task state, resume expired leases safely, enforce idempotency and expected precondition SHAs, record side effects, commit outbox events transactionally, and reconcile replay without duplicate completion. It grants no remote side-effect or target-repository authority.
+P12 evidence proves persisted run/task state, lease recovery, checkpoints, retries, idempotency and attempt numbers, expected precondition SHA enforcement, a side-effect ledger, atomic completed markers and outbox insertion, and local fixture reconciliation across close/reopen and a simulated publisher crash. It grants no arbitrary external exactly-once guarantee, distributed or production claim, remote side effect, or target-repository authority.
 
 ## Repository contract
 
@@ -72,4 +73,4 @@ The canonical active downstream identity is `apolo183/finance-us`. The legacy `a
 
 - `AGENTS.md`: operating contract for agents working in this repository.
 - `docs/tool_system_global_development_principles_v1.md`: project-wide engineering discipline contract for evidence, scope, cleanup planning, validation, rollback, and claims.
-- `blueprint/tool_system_v0.yaml`: machine-readable blueprint and accepted P10 state.
+- `blueprint/tool_system_v0.yaml`: machine-readable blueprint and current accepted lifecycle state.

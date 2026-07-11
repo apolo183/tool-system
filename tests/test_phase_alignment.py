@@ -10,7 +10,12 @@ ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ROOT / "AGENTS.md"
 README = ROOT / "README.md"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
-CHANGE_PLAN = ROOT / "examples" / "change_plans" / "tool_system_p11a_successor_roadmap_phase_entry.yaml"
+CHANGE_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p12e_durable_orchestrator_acceptance_closure.yaml"
+)
 EXPECTED_PHASE = "P12_DURABLE_ORCHESTRATOR"
 
 
@@ -21,12 +26,20 @@ def test_public_contracts_have_same_current_phase() -> None:
 
     assert f"Current phase: {EXPECTED_PHASE}" in agents_text
     assert f"Current phase: `{EXPECTED_PHASE}`" in readme_text
+    assert "Status: `accepted_and_closed`." in agents_text
+    assert "Status: `accepted_and_closed`." in readme_text
     assert blueprint["phase"] == EXPECTED_PHASE
     assert EXPECTED_PHASE in blueprint["milestones"]
-    assert blueprint["acceptance"]["successor_phase_authorized"] is True
-    assert blueprint["status"] == "active"
+    assert blueprint["acceptance"]["successor_phase_authorized"] is False
+    assert blueprint["status"] == "accepted"
     assert blueprint["acceptance"]["record"] == (
-        "docs/reports/p11e_real_worker_runtime_acceptance_closure.md"
+        "docs/reports/p12e_durable_orchestrator_acceptance_closure.md"
+    )
+    assert blueprint["acceptance"]["accepted_scope"] == (
+        "single_host_local_fixture_sqlite_durable_orchestrator"
+    )
+    assert blueprint["acceptance"]["prior_acceptance"]["phase"] == (
+        "P11_REAL_WORKER_RUNTIME"
     )
     assert blueprint["successor_authorization"]["later_phase_entry_authorized"] is False
     assert blueprint["successor_authorization"]["active_phase"] == EXPECTED_PHASE

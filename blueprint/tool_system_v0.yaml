@@ -1,16 +1,16 @@
 schema_version: 0.2
 system: tool-system
 phase: P12_DURABLE_ORCHESTRATOR
-status: active
+status: accepted
 acceptance:
-  record: docs/reports/p11e_real_worker_runtime_acceptance_closure.md
+  record: docs/reports/p12e_durable_orchestrator_acceptance_closure.md
   accepted_at: 2026-07-11 UTC+08:00
-  accepted_scope: local_fixture_only_application_guarded_process_worker
-  successor_phase_authorized: true
+  accepted_scope: single_host_local_fixture_sqlite_durable_orchestrator
+  successor_phase_authorized: false
   prior_acceptance:
-    phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
-    record: docs/reports/p10i_p10_p1a_acceptance_closure.md
-    accepted_scope: controlled_no_production_draft_pr_pilot
+    phase: P11_REAL_WORKER_RUNTIME
+    record: docs/reports/p11e_real_worker_runtime_acceptance_closure.md
+    accepted_scope: local_fixture_only_application_guarded_process_worker
 successor_authorization:
   record: docs/reports/p11a_successor_roadmap_phase_entry.md
   authorized_at: 2026-07-11 UTC+08:00

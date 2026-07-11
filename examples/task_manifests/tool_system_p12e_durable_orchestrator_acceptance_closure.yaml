@@ -1,0 +1,82 @@
+task_id: tool-system-p12e-durable-orchestrator-acceptance-closure
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p12e-durable-orchestrator-acceptance-closure
+phase: P12_DURABLE_ORCHESTRATOR
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P12_DURABLE_ORCHESTRATOR
+alignment:
+  parent:
+    document: docs/reports/p12d_crash_replay_fixture_evidence.md
+    section_or_key: Execution evidence
+    scope: Accept P12 only after every local crash and replay evidence scenario passes.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P12_DURABLE_ORCHESTRATOR
+    scope: Close the durable orchestrator milestone and preserve the explicit P13 boundary.
+scope:
+  summary: Accept and close P12 Durable Orchestrator at its proven single-host local-fixture scope.
+  in_scope:
+    - blueprint/tool_system_v0.yaml
+    - AGENTS.md
+    - README.md
+    - tests/test_phase_alignment.py
+    - docs/reports/p12e_durable_orchestrator_acceptance_closure.md
+    - examples/task_manifests/tool_system_p12e_durable_orchestrator_acceptance_closure.yaml
+    - examples/change_plans/tool_system_p12e_durable_orchestrator_acceptance_closure.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - orchestrator or worker runtime source changes
+    - P13 phase entry or implementation
+    - target-repository mutation
+    - production deployment
+    - cleanup or branch deletion
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p12d_crash_replay_fixture_evidence.md
+    ref: 3a4afb7ac7f3e922e782a12454e71012b880bf59
+    why_relevant: Merged crash, reopen, retry, idempotency, and publisher-replay evidence.
+  - repo: apolo183/tool-system
+    path: src/tool_system/orchestrator/durable.py
+    ref: 3a4afb7ac7f3e922e782a12454e71012b880bf59
+    why_relevant: Final accepted natural-owner implementation.
+  - repo: apolo183/tool-system
+    path: tests/test_durable_orchestrator_recovery.py
+    ref: 3a4afb7ac7f3e922e782a12454e71012b880bf59
+    why_relevant: Final executable recovery and replay evidence.
+allowed_files:
+  - blueprint/tool_system_v0.yaml
+  - AGENTS.md
+  - README.md
+  - tests/test_phase_alignment.py
+  - docs/reports/p12e_durable_orchestrator_acceptance_closure.md
+  - examples/task_manifests/tool_system_p12e_durable_orchestrator_acceptance_closure.yaml
+  - examples/change_plans/tool_system_p12e_durable_orchestrator_acceptance_closure.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - src/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p12e_durable_orchestrator_acceptance_closure.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - full tests return PASS_219
+    - public contracts agree P12 is accepted and closed
+    - P13 phase entry remains false
+    - active gates return PASS
+rollback:
+  method: git_revert
+  reference: p12e-durable-orchestrator-acceptance-closure
+approval:
+  required: true
+  approved_by: user_continue_until_next_major_milestone
