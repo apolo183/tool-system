@@ -1,0 +1,72 @@
+task_id: tool-system-p10q-finance-us-final-post-merge-closure
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10q-finance-us-final-post-merge-closure
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10p_finance_us_whitespace_correction_merge_execution_evidence.md
+    section_or_key: Local post-merge validation
+    scope: Close the pending local validation evidence without authorizing P1B.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Complete the accepted controlled target-repository pilot evidence lifecycle.
+scope:
+  summary: Record final finance-us post-merge validation closure and preserve the P1B phase-entry gate.
+  in_scope:
+    - docs/reports/p10q_finance_us_final_post_merge_closure.md
+    - examples/task_manifests/tool_system_p10q_finance_us_final_post_merge_closure.yaml
+    - examples/change_plans/tool_system_p10q_finance_us_final_post_merge_closure.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-us mutation
+    - P1B phase entry or implementation
+    - rollback or cleanup
+    - branch deletion
+    - production, data, model, ranking, backtest, broker, or trading operations
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10p_finance_us_whitespace_correction_merge_execution_evidence.md
+    why_relevant: Records remote merge validation and the pending local closure requirement.
+  - repo: apolo183/finance-us
+    path: AGENTS.md
+    ref: 7101847826e6701a4d8cc7f0a6208fb9aee2cc4e
+    why_relevant: Final main file verified without trailing whitespace.
+  - repo: apolo183/finance-us
+    path: README.md
+    ref: 7101847826e6701a4d8cc7f0a6208fb9aee2cc4e
+    why_relevant: Final main file verified without trailing whitespace.
+allowed_files:
+  - docs/reports/p10q_finance_us_final_post_merge_closure.md
+  - examples/task_manifests/tool_system_p10q_finance_us_final_post_merge_closure.yaml
+  - examples/change_plans/tool_system_p10q_finance_us_final_post_merge_closure.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10q_finance_us_final_post_merge_closure.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10Q change plan validation returns PASS
+    - active gate index validation returns PASS
+    - closure record keeps P1B unauthorized
+rollback:
+  method: git_revert
+  reference: p10q-finance-us-final-post-merge-closure
+approval:
+  required: true
+  approved_by: standing_authorization_for_routine_closure_record
