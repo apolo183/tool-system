@@ -1,0 +1,71 @@
+task_id: tool-system-p10p-finance-us-whitespace-correction-merge-execution-evidence
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10p-finance-us-whitespace-correction-merge-execution
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10o_finance_us_whitespace_correction_local_validation_merge_readiness.md
+    section_or_key: Authorized sequence if separately approved
+    scope: Record the approved PR #2 lifecycle and remote post-merge evidence without opening P1B.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Preserve explicit lifecycle, validation, rollback, cleanup, and phase-entry gates.
+scope:
+  summary: Record finance-us PR #2 expected-head squash merge and remote validation while local closure remains pending.
+  in_scope:
+    - docs/reports/p10p_finance_us_whitespace_correction_merge_execution_evidence.md
+    - examples/task_manifests/tool_system_p10p_finance_us_whitespace_correction_merge_execution_evidence.yaml
+    - examples/change_plans/tool_system_p10p_finance_us_whitespace_correction_merge_execution_evidence.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-us file or metadata mutation
+    - P1B entry or implementation
+    - rollback or cleanup execution
+    - branch deletion
+    - production, data, model, ranking, backtest, broker, or trading operations
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10o_finance_us_whitespace_correction_local_validation_merge_readiness.md
+    why_relevant: Approved lifecycle packet and validation readiness record.
+  - repo: apolo183/finance-us
+    path: AGENTS.md
+    ref: 7101847826e6701a4d8cc7f0a6208fb9aee2cc4e
+    why_relevant: Corrected file on target main.
+  - repo: apolo183/finance-us
+    path: README.md
+    ref: 7101847826e6701a4d8cc7f0a6208fb9aee2cc4e
+    why_relevant: Corrected file on target main.
+allowed_files:
+  - docs/reports/p10p_finance_us_whitespace_correction_merge_execution_evidence.md
+  - examples/task_manifests/tool_system_p10p_finance_us_whitespace_correction_merge_execution_evidence.yaml
+  - examples/change_plans/tool_system_p10p_finance_us_whitespace_correction_merge_execution_evidence.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10p_finance_us_whitespace_correction_merge_execution_evidence.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - validators return PASS
+    - local post-merge validation remains pending
+    - P1B entry remains unauthorized
+rollback:
+  method: git_revert
+  reference: p10p-finance-us-whitespace-correction-merge-execution
+approval:
+  required: true
+  approved_by: standing_authorization_for_routine_evidence_recording
