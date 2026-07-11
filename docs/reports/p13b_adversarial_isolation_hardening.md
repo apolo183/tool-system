@@ -70,7 +70,9 @@ production: false
 
 The first local focused execution exposed that Python 3.12 `runpy` legitimately emits `sys._getframemodulename` before worker code. P13B permitted that module-name-only event while retaining immediate termination for frame-object access such as `sys._getframe`; local tests then passed.
 
-GitHub CI #913 subsequently proved Python 3.11 `runpy.run_path` calls `sys._getframe` during its own bootstrap. All 15 CI failures exited 126 before fixture behavior, active gates were skipped, and no external state changed. P13B did not weaken the frame-object denial. Instead, the guard now reads and compiles the already no-follow/SHA-bound local worker snapshot before installing the audit hook, then directly executes that code after the hook is active. This removes the cross-version `runpy` bootstrap dependency while keeping worker-originated `sys._getframe` fail-closed. Final local and replacement CI results supersede the initial failed run.
+GitHub CI #913 subsequently proved Python 3.11 `runpy.run_path` calls `sys._getframe` during its own bootstrap. All 15 CI failures exited 126 before fixture behavior, active gates were skipped, and no external state changed. P13B did not weaken the frame-object denial. Instead, the guard now reads and compiles the already no-follow/SHA-bound local worker snapshot before installing the audit hook, then directly executes that code after the hook is active.
+
+Replacement CI #915 then passed 235 of 236 tests and proved that Python 3.11's `json` import also uses `sys._getframe`. All dedicated adversarial tests passed. Allowing stdlib-originated frame access would let worker code call a stdlib helper to obtain a frame, so P13B again retained the denial. The success fixture now verifies its permitted environment with builtins and the already-preloaded `os` module, then emits fixed JSON without importing `json`; import and denial behaviors remain isolated in one-probe-per-process tests. Final local and replacement CI results supersede both failed runs.
 
 ## Stop condition
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 
 
@@ -9,19 +8,26 @@ with open("fixture-output.txt", "w", encoding="utf-8") as handle:
 
 secret_markers = ("TOKEN", "KEY", "SECRET", "PASSWORD", "CREDENTIAL", "AUTH", "COOKIE")
 environment_names = sorted(os.environ)
-record = {
-    "mode": "p13_hardened_fixture_only",
-    "cwd_matches_workspace": os.getcwd() == os.environ.get("TOOL_SYSTEM_WORKSPACE"),
-    "guard_mode": os.environ.get("TOOL_SYSTEM_GUARD_MODE"),
-    "network_mode": os.environ.get("TOOL_SYSTEM_NETWORK"),
-    "denied_probes_run_in_dedicated_processes": True,
-    "workspace_write_succeeded": os.path.isfile("fixture-output.txt"),
-    "secret_like_environment_names": [
-        name
-        for name in environment_names
-        if any(marker in name.upper() for marker in secret_markers)
-    ],
-    "home_inherited": "HOME" in os.environ,
-    "path_inherited": "PATH" in os.environ,
-}
-print(json.dumps(record, sort_keys=True))
+secret_like_names = [
+    name
+    for name in environment_names
+    if any(marker in name.upper() for marker in secret_markers)
+]
+assert os.getcwd() == os.environ.get("TOOL_SYSTEM_WORKSPACE")
+assert os.environ.get("TOOL_SYSTEM_GUARD_MODE") == "python_audit_guard_v2"
+assert os.environ.get("TOOL_SYSTEM_NETWORK") == "disabled"
+assert os.path.isfile("fixture-output.txt")
+assert secret_like_names == []
+assert "HOME" not in os.environ
+assert "PATH" not in os.environ
+print(
+    '{"cwd_matches_workspace":true,'
+    '"denied_probes_run_in_dedicated_processes":true,'
+    '"guard_mode":"python_audit_guard_v2",'
+    '"home_inherited":false,'
+    '"mode":"p13_hardened_fixture_only",'
+    '"network_mode":"disabled",'
+    '"path_inherited":false,'
+    '"secret_like_environment_names":[],'
+    '"workspace_write_succeeded":true}'
+)
