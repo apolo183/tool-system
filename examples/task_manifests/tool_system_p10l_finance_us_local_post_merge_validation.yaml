@@ -1,0 +1,80 @@
+task_id: tool-system-p10l-finance-us-local-post-merge-validation
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10l-finance-us-local-post-merge-validation
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10k_finance_us_pr_merge_execution_evidence.md
+    section_or_key: Target-local validation status
+    scope: Record user-supplied local post-merge evidence without changing target state or opening P1B.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Complete audit closure activities under the accepted P10 boundary while preserving separate target correction approval.
+scope:
+  summary: Record local SHA, path, contract, worktree, and diff-check results and identify the two-file whitespace correction requirement.
+  in_scope:
+    - docs/reports/p10l_finance_us_local_post_merge_validation.md
+    - examples/task_manifests/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+    - examples/change_plans/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-us branch or file mutation
+    - target PR creation or merge
+    - P1B entry or implementation
+    - rollback execution
+    - cleanup execution
+    - branch deletion
+    - production deployment
+    - data, model, ranking, backtest, portfolio, broker, or trading execution
+    - real external worker calls
+    - Codex replacement claims
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10k_finance_us_pr_merge_execution_evidence.md
+    why_relevant: Records the merge result and the pending local validation requirements.
+  - repo: apolo183/tool-system
+    path: docs/reports/p10k1_finance_us_pr_body_sha_literal_correction.md
+    why_relevant: Preserves the separate PR body literal audit correction.
+  - repo: apolo183/finance-us
+    path: README.md
+    ref: bfad12148e80c5f712b150851e9374db3a15a80b
+    why_relevant: One of the two files reported with trailing whitespace in the base-to-main diff.
+  - repo: apolo183/finance-us
+    path: AGENTS.md
+    ref: bfad12148e80c5f712b150851e9374db3a15a80b
+    why_relevant: One of the two files reported with trailing whitespace in the base-to-main diff.
+allowed_files:
+  - docs/reports/p10l_finance_us_local_post_merge_validation.md
+  - examples/task_manifests/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+  - examples/change_plans/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10L change plan validation returns PASS
+    - active gate index validation returns PASS
+    - P1B remains unauthorized
+rollback:
+  method: git_revert
+  reference: branch commits on p10l-finance-us-local-post-merge-validation
+approval:
+  required: true
+  approved_by: standing_authorization_for_routine_evidence_recording
