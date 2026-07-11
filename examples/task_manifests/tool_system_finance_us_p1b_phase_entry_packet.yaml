@@ -1,0 +1,84 @@
+task_id: tool-system-finance-us-p1b-phase-entry-packet
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p1b-finance-us-phase-entry-packet
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10q_finance_us_final_post_merge_closure.md
+    section_or_key: Closure disposition
+    scope: Prepare the separately approved finance-us P1B phase-entry record and implementation packet without target mutation.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: default_policy
+    scope: Preserve explicit downstream write, PR lifecycle, rollback, and phase-entry gates.
+scope:
+  summary: Record the finance-us P1B phase-entry decision and prepare a bounded implementation packet in tool-system only.
+  in_scope:
+    - docs/reports/finance_us_p1b_phase_entry_record.md
+    - docs/reports/finance_us_p1b_minimal_ranking_implementation_packet.md
+    - examples/task_manifests/tool_system_finance_us_p1b_phase_entry_packet.yaml
+    - examples/change_plans/tool_system_finance_us_p1b_phase_entry_packet.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-us file or branch mutation
+    - finance-us pull request creation or metadata changes
+    - P1B code implementation
+    - target PR ready transition or merge
+    - P1C entry
+    - rollback or cleanup execution
+    - branch deletion
+    - production deployment
+    - data ingestion, model training, backtesting, portfolio, broker, order, or trading execution
+    - real external worker calls
+    - Codex replacement claims
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10q_finance_us_final_post_merge_closure.md
+    why_relevant: Confirms P1A closure and that P1B is ready for a new explicit decision.
+  - repo: apolo183/finance-us
+    path: blueprint/finance_us_phase_1_v0.yaml
+    ref: 7101847826e6701a4d8cc7f0a6208fb9aee2cc4e
+    why_relevant: Defines P1B as deterministic in-memory ranking plus a smoke test.
+  - repo: apolo183/finance-us
+    path: contracts/data_input_contract.yaml
+    ref: 7101847826e6701a4d8cc7f0a6208fb9aee2cc4e
+    why_relevant: Defines validated US-equity input and fail-closed identity boundaries.
+  - repo: apolo183/finance-us
+    path: contracts/ranking_output_contract.yaml
+    ref: 7101847826e6701a4d8cc7f0a6208fb9aee2cc4e
+    why_relevant: Defines score ordering, tie-breakers, top-10, duplicate, and output constraints.
+allowed_files:
+  - docs/reports/finance_us_p1b_phase_entry_record.md
+  - docs/reports/finance_us_p1b_minimal_ranking_implementation_packet.md
+  - examples/task_manifests/tool_system_finance_us_p1b_phase_entry_packet.yaml
+  - examples/change_plans/tool_system_finance_us_p1b_phase_entry_packet.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_finance_us_p1b_phase_entry_packet.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P1B phase-entry change plan validation returns PASS
+    - active gate index validation returns PASS
+    - implementation packet requires separate target execution approval
+rollback:
+  method: git_revert
+  reference: branch commits on p1b-finance-us-phase-entry-packet
+approval:
+  required: true
+  approved_by: user_explicit_finance_us_p1b_phase_entry_packet_preparation
