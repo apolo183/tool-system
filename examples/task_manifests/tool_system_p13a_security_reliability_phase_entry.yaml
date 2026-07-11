@@ -1,0 +1,83 @@
+task_id: tool-system-p13a-security-reliability-phase-entry
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p13a-security-reliability-phase-entry
+phase: P13_SECURITY_RELIABILITY_HARDENING
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+alignment:
+  parent:
+    document: docs/reports/p12e_durable_orchestrator_acceptance_closure.md
+    section_or_key: P13 boundary
+    scope: Enter P13 only after explicit authorization and preserve P12 acceptance limits.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+    scope: Lock threat, abuse, isolation, fault, stress, and acceptance requirements.
+scope:
+  summary: Enter P13 and register its threat model and implementation packet.
+  in_scope:
+    - blueprint/tool_system_v0.yaml
+    - AGENTS.md
+    - README.md
+    - tests/test_phase_alignment.py
+    - docs/reports/p13a_security_reliability_phase_entry.md
+    - examples/task_manifests/tool_system_p13a_security_reliability_phase_entry.yaml
+    - examples/change_plans/tool_system_p13a_security_reliability_phase_entry.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - runtime or orchestrator source changes
+    - worker or fault fixture execution
+    - target-repository or finance-us mutation
+    - production deployment
+    - cleanup or branch deletion
+    - P14-P15 implementation
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p12e_durable_orchestrator_acceptance_closure.md
+    ref: f629428ccd01088a6d5265e0f8adf053565c0de6
+    why_relevant: Accepted P12 parent and explicit P13 boundary.
+  - repo: apolo183/tool-system
+    path: src/tool_system/agent_worker/process_runtime.py
+    ref: f629428ccd01088a6d5265e0f8adf053565c0de6
+    why_relevant: Accepted P11 natural owner and read-only P13 threat baseline.
+  - repo: apolo183/tool-system
+    path: src/tool_system/orchestrator/durable.py
+    ref: f629428ccd01088a6d5265e0f8adf053565c0de6
+    why_relevant: Accepted P12 natural owner and read-only P13 reliability baseline.
+allowed_files:
+  - blueprint/tool_system_v0.yaml
+  - AGENTS.md
+  - README.md
+  - tests/test_phase_alignment.py
+  - docs/reports/p13a_security_reliability_phase_entry.md
+  - examples/task_manifests/tool_system_p13a_security_reliability_phase_entry.yaml
+  - examples/change_plans/tool_system_p13a_security_reliability_phase_entry.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - src/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q tests/test_phase_alignment.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p13a_security_reliability_phase_entry.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - public contracts agree P13 is active
+    - threat model covers every blueprint P13 output
+    - P14 phase entry remains false
+    - full tests and active gates pass
+rollback:
+  method: git_revert
+  reference: p13a-security-reliability-phase-entry
+approval:
+  required: true
+  approved_by: user_explicit_p13_full_lifecycle_authorization
