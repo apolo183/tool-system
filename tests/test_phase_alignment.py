@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ROOT / "AGENTS.md"
 README = ROOT / "README.md"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
-CHANGE_PLAN = ROOT / "examples" / "change_plans" / "tool_system_p9_p9_acceptance_p10_boundary.yaml"
-EXPECTED_PHASE = "P10_CONTROLLED_TARGET_REPO_PR_PILOT"
+CHANGE_PLAN = ROOT / "examples" / "change_plans" / "tool_system_p11a_successor_roadmap_phase_entry.yaml"
+EXPECTED_PHASE = "P11_REAL_WORKER_RUNTIME"
 
 
 def test_public_contracts_have_same_current_phase() -> None:
@@ -22,7 +22,16 @@ def test_public_contracts_have_same_current_phase() -> None:
     assert f"Current phase: {EXPECTED_PHASE}" in agents_text
     assert f"Current phase: `{EXPECTED_PHASE}`" in readme_text
     assert blueprint["phase"] == EXPECTED_PHASE
-    assert "P10_CONTROLLED_TARGET_REPO_PR_PILOT" in blueprint["milestones"]
+    assert EXPECTED_PHASE in blueprint["milestones"]
+    assert blueprint["acceptance"]["successor_phase_authorized"] is True
+    assert blueprint["successor_authorization"]["later_phase_entry_authorized"] is False
+    assert set(blueprint["successor_authorization"]["authorized_roadmap"]) == {
+        "P11_REAL_WORKER_RUNTIME",
+        "P12_DURABLE_ORCHESTRATOR",
+        "P13_SECURITY_RELIABILITY_HARDENING",
+        "P14_MULTI_REPO_BENCHMARK",
+        "P15_PRODUCTION_OPERATIONS_ACCEPTANCE",
+    }
 
 
 def test_phase_alignment_change_plan_validates() -> None:

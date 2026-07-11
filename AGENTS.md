@@ -94,19 +94,19 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 12. Current phase state
 
-Current phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT.
+Current phase: P11_REAL_WORKER_RUNTIME.
 
-Status: `accepted`.
+Status: `active`.
 
-P10 is accepted at the controlled, no-production, draft-PR pilot scope. No successor tool-system phase is authorized.
+P10 is accepted at the controlled, no-production, draft-PR pilot scope, and P10R is closed. The P11-P15 successor roadmap is authorized. Only P11 is entered; P12-P15 remain roadmap-only until separately authorized.
 
 Allowed now:
 
-- acceptance and post-pilot evidence records;
+- P11 phase-entry, implementation packets, source, tests, fixture-only execution evidence, review, merge, and closure;
+- a real local process-backed worker only after the documented minimum safety baseline passes;
+- isolated ephemeral fixture workspaces with no remote target-repository mutation;
 - read-only verification of accepted target state;
-- P10R-B governance-state synchronization tied to the accepted P10 closure;
-- preparation of separately approvable downstream target lifecycle packets;
-- preparation of a separately approvable P11-P15 successor roadmap without successor implementation.
+- preparation of separately approvable downstream target lifecycle packets.
 
 Not allowed now:
 
@@ -114,7 +114,9 @@ Not allowed now:
 - target-repository main-branch mutation outside the approved merge flow;
 - finance-us P1B target implementation without a named, action-scoped target execution approval;
 - treating a P1B implementation approval as ready or merge approval;
-- P11 or later successor implementation before a named phase-entry authorization;
+- P12 or later implementation before a named phase-entry authorization;
+- any P11 worker execution before minimum safety controls pass;
+- worker execution against finance-us or any other remote target repository;
 - broad or unspecified downstream repository mutation;
 - production deployment;
 - business-domain implementation by tool-system;
