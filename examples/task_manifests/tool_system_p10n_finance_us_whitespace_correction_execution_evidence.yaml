@@ -1,0 +1,77 @@
+task_id: tool-system-p10n-finance-us-whitespace-correction-execution-evidence
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10n-finance-us-whitespace-correction-execution-evidence
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10m_finance_us_whitespace_correction_packet.md
+    section_or_key: Authorized sequence if separately approved
+    scope: Record the separately approved two-file target correction and preserve the draft/no-merge boundary.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Maintain evidence, approval, and target lifecycle gates during accepted P10 closure.
+scope:
+  summary: Record finance-us whitespace-correction execution evidence without changing target state.
+  in_scope:
+    - docs/reports/p10n_finance_us_whitespace_correction_execution_evidence.md
+    - examples/task_manifests/tool_system_p10n_finance_us_whitespace_correction_execution_evidence.yaml
+    - examples/change_plans/tool_system_p10n_finance_us_whitespace_correction_execution_evidence.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - finance-us branch or file mutation
+    - target PR ready transition or merge
+    - P1B entry or implementation
+    - rollback execution
+    - cleanup execution
+    - branch deletion
+    - production deployment
+    - data, model, ranking, backtest, portfolio, broker, or trading execution
+    - real external worker calls
+    - Codex replacement claims
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10m_finance_us_whitespace_correction_packet.md
+    why_relevant: Approved packet defining the two-file correction boundary.
+  - repo: apolo183/finance-us
+    path: AGENTS.md
+    ref: 6927c51ad38c8d7f464640f83bf91d421ca45dac
+    why_relevant: Corrected target file at the draft PR head.
+  - repo: apolo183/finance-us
+    path: README.md
+    ref: 6927c51ad38c8d7f464640f83bf91d421ca45dac
+    why_relevant: Corrected target file at the draft PR head.
+allowed_files:
+  - docs/reports/p10n_finance_us_whitespace_correction_execution_evidence.md
+  - examples/task_manifests/tool_system_p10n_finance_us_whitespace_correction_execution_evidence.yaml
+  - examples/change_plans/tool_system_p10n_finance_us_whitespace_correction_execution_evidence.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10n_finance_us_whitespace_correction_execution_evidence.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10N change plan validation returns PASS
+    - active gate index validation returns PASS
+    - target PR remains draft and unmerged
+rollback:
+  method: git_revert
+  reference: branch commits on p10n-finance-us-whitespace-correction-execution-evidence
+approval:
+  required: true
+  approved_by: standing_authorization_for_routine_evidence_recording
