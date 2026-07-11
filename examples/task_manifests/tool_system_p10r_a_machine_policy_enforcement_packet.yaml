@@ -1,0 +1,94 @@
+task_id: tool-system-p10r-a-machine-policy-enforcement-packet
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10r-a-machine-policy-enforcement-packet
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10r_a_machine_policy_enforcement_phase_entry_record.md
+    section_or_key: Current authorized artifacts
+    scope: Prepare only the five approved P10R-A packet artifacts.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Correct the accepted P10 machine-policy boundary without entering a successor phase or mutating a downstream repository.
+scope:
+  summary: Record the approved P10R-A packet-preparation entry and prepare a separately approvable machine-policy enforcement implementation packet.
+  in_scope:
+    - docs/reports/p10r_a_machine_policy_enforcement_phase_entry_record.md
+    - docs/reports/p10r_a_machine_policy_enforcement_implementation_packet.md
+    - examples/task_manifests/tool_system_p10r_a_machine_policy_enforcement_packet.yaml
+    - examples/change_plans/tool_system_p10r_a_machine_policy_enforcement_packet.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - modification of existing policy files
+    - modification of existing source or test files
+    - finance-us file, branch, pull request, or metadata mutation
+    - finance-us P1B target implementation
+    - tool-system successor phase entry
+    - pull-request ready transition or merge
+    - cleanup or branch deletion
+    - rollback execution
+    - real external worker execution
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: policy/repo_write_policy.yaml
+    ref: 8a7c28e92b83dbd1a8fac9e701f311c4b73094fe
+    why_relevant: Contains the legacy finance-os identity, legacy package path, and declarative bootstrap exceptions.
+  - repo: apolo183/tool-system
+    path: src/tool_system/policy/repo_write_policy.py
+    ref: 8a7c28e92b83dbd1a8fac9e701f311c4b73094fe
+    why_relevant: Natural owner for target identity, write-mode, and path-policy validation.
+  - repo: apolo183/tool-system
+    path: src/tool_system/policy/autonomy_policy.py
+    ref: 8a7c28e92b83dbd1a8fac9e701f311c4b73094fe
+    why_relevant: Requires cleanup and PR lifecycle actions to be system-handled without action scope.
+  - repo: apolo183/tool-system
+    path: src/tool_system/repo_controller/controller.py
+    ref: 8a7c28e92b83dbd1a8fac9e701f311c4b73094fe
+    why_relevant: Natural owner for final merge decision and current policy consumption.
+  - repo: apolo183/tool-system
+    path: src/tool_system/repo_controller/actions.py
+    ref: 8a7c28e92b83dbd1a8fac9e701f311c4b73094fe
+    why_relevant: Shows squash merge implementation and no ready-transition implementation.
+  - repo: apolo183/tool-system
+    path: docs/reports/finance_us_p1b_minimal_ranking_implementation_packet.md
+    ref: 8a7c28e92b83dbd1a8fac9e701f311c4b73094fe
+    why_relevant: Locks the future canonical finance-us target and exact P1B file scope while withholding execution authority.
+allowed_files:
+  - docs/reports/p10r_a_machine_policy_enforcement_phase_entry_record.md
+  - docs/reports/p10r_a_machine_policy_enforcement_implementation_packet.md
+  - examples/task_manifests/tool_system_p10r_a_machine_policy_enforcement_packet.yaml
+  - examples/change_plans/tool_system_p10r_a_machine_policy_enforcement_packet.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10r_a_machine_policy_enforcement_packet.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - alignment gate validation returns PASS
+    - P10R-A packet change plan validation returns PASS
+    - active gate index validation returns PASS
+    - implementation packet requires separate approval
+    - no existing policy, source, test, or finance-us file changes
+rollback:
+  method: close_unmerged_pr
+  reference: branch commits on p10r-a-machine-policy-enforcement-packet
+approval:
+  required: true
+  approved_by: user_explicit_p10r_a_packet_preparation_only
