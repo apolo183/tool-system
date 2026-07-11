@@ -1,4 +1,4 @@
-schema_version: 0.1
+schema_version: 0.2
 policy: autonomy_policy
 status: active
 approved_by: milestone_authorization
@@ -11,25 +11,31 @@ authorization_model:
   per_task_human_review_required: false
   per_pr_human_review_required: false
   milestone_result_human_review_required: true
+  downstream_lifecycle_requires_named_approval: true
 
 human_review_required_for:
   - blueprint_change
   - objective_change
   - milestone_acceptance
   - policy_boundary_change
+  - downstream_target_mutation
+  - downstream_pr_ready
+  - downstream_pr_merge
+  - cleanup_execution
+  - rollback_execution
+  - external_worker_execution
+  - production_deployment
 
 system_handled_when_manifest_allows:
   - code_add
   - code_modify
-  - file_cleanup
   - file_swap
   - test_add
   - test_modify
   - docs_update
   - local_verification
-  - pr_create
-  - pr_ready
-  - pr_merge
+  - internal_pr_create
+  - internal_pr_merge
 
 gates_before_system_merge:
   - task_manifest_valid

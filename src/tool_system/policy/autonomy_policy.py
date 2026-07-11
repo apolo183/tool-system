@@ -14,24 +14,31 @@ REQUIRED_TOP_LEVEL_KEYS = {
 
 REQUIRED_HUMAN_REVIEW_ITEMS = {
     "blueprint_change",
+    "cleanup_execution",
+    "downstream_pr_merge",
+    "downstream_pr_ready",
+    "downstream_target_mutation",
+    "external_worker_execution",
     "objective_change",
     "milestone_acceptance",
     "policy_boundary_change",
+    "production_deployment",
+    "rollback_execution",
 }
 
 REQUIRED_SYSTEM_ITEMS = {
     "code_add",
     "code_modify",
-    "file_cleanup",
     "file_swap",
+    "internal_pr_create",
+    "internal_pr_merge",
     "test_add",
     "test_modify",
     "docs_update",
     "local_verification",
-    "pr_create",
-    "pr_ready",
-    "pr_merge",
 }
+
+FORBIDDEN_UNSCOPED_SYSTEM_ITEMS = {"file_cleanup", "pr_create", "pr_ready", "pr_merge"}
 
 REQUIRED_GATES = {
     "task_manifest_valid",
@@ -72,6 +79,8 @@ def validate_autonomy_policy(policy: dict[str, Any]) -> tuple[bool, list[str]]:
             reasons.append("per_pr_human_review_required must be false")
         if authorization.get("milestone_result_human_review_required") is not True:
             reasons.append("milestone_result_human_review_required must be true")
+        if authorization.get("downstream_lifecycle_requires_named_approval") is not True:
+            reasons.append("downstream_lifecycle_requires_named_approval must be true")
 
     missing_human_items = _missing_items(policy.get("human_review_required_for"), REQUIRED_HUMAN_REVIEW_ITEMS)
     if missing_human_items:
@@ -80,6 +89,11 @@ def validate_autonomy_policy(policy: dict[str, Any]) -> tuple[bool, list[str]]:
     missing_system_items = _missing_items(policy.get("system_handled_when_manifest_allows"), REQUIRED_SYSTEM_ITEMS)
     if missing_system_items:
         reasons.append("missing system handled items: " + ", ".join(missing_system_items))
+    system_items = policy.get("system_handled_when_manifest_allows")
+    if isinstance(system_items, list):
+        unscoped_items = sorted(FORBIDDEN_UNSCOPED_SYSTEM_ITEMS & set(system_items))
+        if unscoped_items:
+            reasons.append("unscoped system handled items are forbidden: " + ", ".join(unscoped_items))
 
     missing_gates = _missing_items(policy.get("gates_before_system_merge"), REQUIRED_GATES)
     if missing_gates:

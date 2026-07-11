@@ -7,7 +7,10 @@ from tool_system.gate.change_plan import (
     validate_change_plan_structure,
 )
 from tool_system.manifest.task_manifest import validate_manifest_structure
-from tool_system.policy.repo_write_policy import validate_repo_write_policy
+from tool_system.policy.repo_write_policy import (
+    validate_lifecycle_approval,
+    validate_repo_write_policy,
+)
 
 PASSING_CONCLUSIONS = {"success", "neutral", "skipped"}
 
@@ -104,6 +107,16 @@ def evaluate_repo_write(
         reasons.append(f"merge method must be {merge_policy.get('default_method', 'squash')}")
 
     reasons.extend(_validate_controller_context(task_manifest, change_plan, repo_policy))
+    if task_manifest is not None:
+        _, lifecycle_reasons = validate_lifecycle_approval(
+            task_manifest,
+            repo_policy,
+            action="pr_merge",
+            repository_full_name=pull_request.get("repository"),
+            base_branch=pull_request.get("base"),
+            expected_head_sha=pull_request.get("head_sha"),
+        )
+        reasons.extend(lifecycle_reasons)
 
     return {
         "status": "PASS" if not reasons else "BLOCK",
