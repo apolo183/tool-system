@@ -32,6 +32,22 @@ scope:
     - source or test changes
     - data or model execution
     - rollback or cleanup execution
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10e_finance_us_local_validation_and_acceptance_readiness.md
+    why_relevant: Parent record identifying stale repository identity and unresolved NYSE_ARCA calendar mapping as P1A acceptance blockers.
+  - repo: apolo183/finance-us
+    path: README.md
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Active target identity still declares the former repository full name.
+  - repo: apolo183/finance-us
+    path: blueprint/finance_us_phase_1_v0.yaml
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Active blueprint still allows NYSE_ARCA without an explicit approved calendar mapping.
+  - repo: apolo183/finance-us
+    path: contracts/cutoff_contract.yaml
+    ref: p1a-us-equity-contract-realignment
+    why_relevant: Active cutoff contract requires fail-closed exchange-to-calendar mapping.
 allowed_files:
   - docs/reports/p10f_finance_us_identity_calendar_correction_packet.md
   - examples/task_manifests/tool_system_p10f_finance_us_identity_calendar_correction_packet.yaml
@@ -58,5 +74,5 @@ rollback:
   method: git_revert
   reference: branch commits on p10f-finance-us-identity-calendar-correction-packet
 approval:
-  required: false
-  basis: standing authorization for routine packet-preparation stages
+  required: true
+  basis: separate explicit approval is required before any finance-us target-branch file mutation
