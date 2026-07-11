@@ -1,0 +1,25 @@
+plan_id: tool-system-p10l-finance-us-local-post-merge-validation
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+changed_files:
+  - docs/reports/p10l_finance_us_local_post_merge_validation.md
+  - examples/task_manifests/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+  - examples/change_plans/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+    section_or_key: task_id
+    scope: Follow the P10L manifest only.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Record local post-merge validation truthfully and preserve target correction and P1B boundaries.
+verification:
+  commands:
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: p10l-finance-us-local-post-merge-validation
