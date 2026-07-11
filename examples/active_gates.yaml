@@ -78,6 +78,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p10g_finance_us_correction_execution_evidence.yaml
   - examples/task_manifests/tool_system_p10h_post_pilot_evidence_acceptance_packet.yaml
   - examples/task_manifests/tool_system_p10i_p10_p1a_acceptance_closure.yaml
+  - examples/task_manifests/tool_system_p10j_finance_us_pr_merge_packet.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -154,3 +155,4 @@ change_plans:
   - examples/change_plans/tool_system_p10g_finance_us_correction_execution_evidence.yaml
   - examples/change_plans/tool_system_p10h_post_pilot_evidence_acceptance_packet.yaml
   - examples/change_plans/tool_system_p10i_p10_p1a_acceptance_closure.yaml
+  - examples/change_plans/tool_system_p10j_finance_us_pr_merge_packet.yaml
