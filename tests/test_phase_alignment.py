@@ -24,7 +24,15 @@ def test_public_contracts_have_same_current_phase() -> None:
     assert blueprint["phase"] == EXPECTED_PHASE
     assert EXPECTED_PHASE in blueprint["milestones"]
     assert blueprint["acceptance"]["successor_phase_authorized"] is True
+    assert blueprint["status"] == "accepted"
+    assert blueprint["acceptance"]["record"] == (
+        "docs/reports/p11e_real_worker_runtime_acceptance_closure.md"
+    )
     assert blueprint["successor_authorization"]["later_phase_entry_authorized"] is False
+    assert blueprint["successor_authorization"]["next_phase"] == (
+        "P12_DURABLE_ORCHESTRATOR"
+    )
+    assert blueprint["successor_authorization"]["next_phase_entry_authorized"] is False
     assert set(blueprint["successor_authorization"]["authorized_roadmap"]) == {
         "P11_REAL_WORKER_RUNTIME",
         "P12_DURABLE_ORCHESTRATOR",

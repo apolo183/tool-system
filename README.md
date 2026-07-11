@@ -48,13 +48,13 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 
 Current phase: `P11_REAL_WORKER_RUNTIME`.
 
-Status: `active`.
+Status: `accepted`.
 
 P10 was accepted as a successful controlled, no-production, draft-pull-request pilot. The acceptance demonstrates bounded target-repository planning, named execution approvals, fresh-state checks, exact file allowlists, draft PR creation, local validation handoff, fail-closed correction handling, audit evidence, and rollback references.
 
-P10R is closed. The P11-P15 successor roadmap is authorized and P11 Real Worker Runtime is the only entered successor phase. P12 Durable Orchestrator, P13 Security and Reliability Hardening, P14 Multi-repo Benchmark, and P15 Production Operations and Acceptance remain roadmap-only until separately authorized.
+P10R is closed. P11 Real Worker Runtime is accepted at the local, fixture-only, application-guarded scope. P12 Durable Orchestrator, P13 Security and Reliability Hardening, P14 Multi-repo Benchmark, and P15 Production Operations and Acceptance remain roadmap-only until separately authorized. P12 phase entry is not authorized.
 
-P11 may implement and execute a real local process-backed worker only after its minimum safety baseline passes. Execution is limited to isolated fixture workspaces. Finance-us and every other remote target repository remain no-mutation, and production deployment remains prohibited.
+P11 evidence proves an allowlisted Python fixture process with ephemeral workspace isolation, scrubbed environment, application-level network/process/file guards, resource limits, bounded output, timeout, cancellation, process-group termination, and cleanup. It does not prove hostile-code sandboxing, durable orchestration, remote target execution, or production readiness. Finance-us and every other remote target repository remain no-mutation, and production deployment remains prohibited.
 
 ## Repository contract
 

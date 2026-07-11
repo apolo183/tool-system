@@ -1,12 +1,16 @@
 schema_version: 0.2
 system: tool-system
 phase: P11_REAL_WORKER_RUNTIME
-status: active
+status: accepted
 acceptance:
-  record: docs/reports/p10i_p10_p1a_acceptance_closure.md
+  record: docs/reports/p11e_real_worker_runtime_acceptance_closure.md
   accepted_at: 2026-07-11 UTC+08:00
-  accepted_scope: controlled_no_production_draft_pr_pilot
+  accepted_scope: local_fixture_only_application_guarded_process_worker
   successor_phase_authorized: true
+  prior_acceptance:
+    phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    record: docs/reports/p10i_p10_p1a_acceptance_closure.md
+    accepted_scope: controlled_no_production_draft_pr_pilot
 successor_authorization:
   record: docs/reports/p11a_successor_roadmap_phase_entry.md
   authorized_at: 2026-07-11 UTC+08:00
@@ -18,6 +22,8 @@ successor_authorization:
     - P15_PRODUCTION_OPERATIONS_ACCEPTANCE
   active_phase: P11_REAL_WORKER_RUNTIME
   later_phase_entry_authorized: false
+  next_phase: P12_DURABLE_ORCHESTRATOR
+  next_phase_entry_authorized: false
 
 identity:
   description: Domain-agnostic agentic software factory for blueprint parsing, task planning, patch generation, test execution, and repository control.
