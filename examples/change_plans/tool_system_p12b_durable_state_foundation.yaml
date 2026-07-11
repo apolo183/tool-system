@@ -1,0 +1,29 @@
+plan_id: tool-system-p12b-durable-state-foundation
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p12b_durable_state_foundation.yaml
+changed_files:
+  - src/tool_system/orchestrator/__init__.py
+  - src/tool_system/orchestrator/durable.py
+  - tests/test_durable_orchestrator_state.py
+  - docs/reports/p12b_durable_state_foundation.md
+  - examples/task_manifests/tool_system_p12b_durable_state_foundation.yaml
+  - examples/change_plans/tool_system_p12b_durable_state_foundation.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p12b_durable_state_foundation.yaml
+    section_or_key: task_id
+    scope: Follow the exact P12B state-only manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P12_DURABLE_ORCHESTRATOR
+    scope: Implement durable state without side effects or P13 entry.
+verification:
+  commands:
+    - python -m compileall src/tool_system tests
+    - python -m pytest -q tests/test_durable_orchestrator_state.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: p12b-durable-state-foundation
