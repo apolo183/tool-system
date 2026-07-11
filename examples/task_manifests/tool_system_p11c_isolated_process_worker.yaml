@@ -1,0 +1,74 @@
+task_id: tool-system-p11c-isolated-process-worker
+task_type: code_change
+target_repo: apolo183/tool-system
+target_branch: p11c-isolated-process-worker
+phase: P11_REAL_WORKER_RUNTIME
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+alignment:
+  parent:
+    document: docs/reports/p11b_real_worker_runtime_implementation_packet.md
+    section_or_key: P11C exact implementation allowlist
+    scope: Implement the exact process-worker baseline without real execution.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+    scope: Provide all minimum controls before the first fixture execution.
+scope:
+  summary: Implement and preflight-test the isolated process worker safety baseline.
+  in_scope:
+    - src/tool_system/agent_worker/process_runtime.py
+    - src/tool_system/agent_worker/__init__.py
+    - tests/test_process_worker_runtime_preflight.py
+    - docs/reports/p11c_isolated_process_worker_implementation.md
+    - examples/task_manifests/tool_system_p11c_isolated_process_worker.yaml
+    - examples/change_plans/tool_system_p11c_isolated_process_worker.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - real worker process execution
+    - target-repository mutation
+    - production deployment
+    - P12-P15 implementation
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p11b_real_worker_runtime_implementation_packet.md
+    ref: 6d9c915350aed0b656a15d5f7efae59f51a5ec39
+    why_relevant: Merged design and exact P11C allowlist.
+  - repo: apolo183/tool-system
+    path: src/tool_system/agent_worker/interface.py
+    ref: 6d9c915350aed0b656a15d5f7efae59f51a5ec39
+    why_relevant: Existing worker protocol and no-mutation default that must remain compatible.
+allowed_files:
+  - src/tool_system/agent_worker/process_runtime.py
+  - src/tool_system/agent_worker/__init__.py
+  - tests/test_process_worker_runtime_preflight.py
+  - docs/reports/p11c_isolated_process_worker_implementation.md
+  - examples/task_manifests/tool_system_p11c_isolated_process_worker.yaml
+  - examples/change_plans/tool_system_p11c_isolated_process_worker.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m compileall src/tool_system tests
+    - python -m pytest -q tests/test_process_worker_runtime_preflight.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - preflight tests pass without process execution
+    - full tests return PASS
+    - active gates return PASS
+    - P11D remains the first real execution stage
+rollback:
+  method: git_revert
+  reference: p11c-isolated-process-worker
+approval:
+  required: true
+  approved_by: user_authorized_p11_full_progress_until_p12_boundary
