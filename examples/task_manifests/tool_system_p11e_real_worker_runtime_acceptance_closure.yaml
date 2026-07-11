@@ -1,0 +1,82 @@
+task_id: tool-system-p11e-real-worker-runtime-acceptance-closure
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p11e-acceptance-closure
+phase: P11_REAL_WORKER_RUNTIME
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+alignment:
+  parent:
+    document: docs/reports/p11d2_termination_path_execution_evidence.md
+    section_or_key: Actual execution evidence
+    scope: Accept P11 only after successful and abnormal-path runtime evidence passes.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P11_REAL_WORKER_RUNTIME
+    scope: Close the fixture-only real worker milestone and preserve the explicit P12 boundary.
+scope:
+  summary: Accept and close P11 Real Worker Runtime at its proven fixture-only scope.
+  in_scope:
+    - blueprint/tool_system_v0.yaml
+    - AGENTS.md
+    - README.md
+    - tests/test_phase_alignment.py
+    - docs/reports/p11e_real_worker_runtime_acceptance_closure.md
+    - examples/task_manifests/tool_system_p11e_real_worker_runtime_acceptance_closure.yaml
+    - examples/change_plans/tool_system_p11e_real_worker_runtime_acceptance_closure.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - runtime source or fixture changes
+    - P12 phase entry or implementation
+    - target-repository mutation
+    - production deployment
+    - cleanup or branch deletion
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p11d_fixture_worker_execution_evidence.md
+    ref: a9dc1a93d0b40e47efb82037b65bd5425bdd19f8
+    why_relevant: Successful guarded fixture execution evidence on final pre-closure main.
+  - repo: apolo183/tool-system
+    path: docs/reports/p11d2_termination_path_execution_evidence.md
+    ref: a9dc1a93d0b40e47efb82037b65bd5425bdd19f8
+    why_relevant: Timeout, cancellation, output-bound, termination, and cleanup evidence.
+  - repo: apolo183/tool-system
+    path: src/tool_system/agent_worker/process_runtime.py
+    ref: a9dc1a93d0b40e47efb82037b65bd5425bdd19f8
+    why_relevant: Accepted natural-owner implementation.
+allowed_files:
+  - blueprint/tool_system_v0.yaml
+  - AGENTS.md
+  - README.md
+  - tests/test_phase_alignment.py
+  - docs/reports/p11e_real_worker_runtime_acceptance_closure.md
+  - examples/task_manifests/tool_system_p11e_real_worker_runtime_acceptance_closure.yaml
+  - examples/change_plans/tool_system_p11e_real_worker_runtime_acceptance_closure.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - src/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p11e_real_worker_runtime_acceptance_closure.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - full tests return PASS_193
+    - public contracts agree P11 is accepted
+    - P12 phase entry remains false
+    - active gates return PASS
+rollback:
+  method: git_revert
+  reference: p11e-acceptance-closure
+approval:
+  required: true
+  approved_by: user_authorized_p11_full_progress_until_p12_boundary
