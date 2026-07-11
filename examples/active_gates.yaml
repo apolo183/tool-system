@@ -97,6 +97,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p11d_fixture_worker_execution.yaml
   - examples/task_manifests/tool_system_p11d2_termination_path_evidence.yaml
   - examples/task_manifests/tool_system_p11e_real_worker_runtime_acceptance_closure.yaml
+  - examples/task_manifests/tool_system_p12a_durable_orchestrator_phase_entry.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -192,3 +193,4 @@ change_plans:
   - examples/change_plans/tool_system_p11d_fixture_worker_execution.yaml
   - examples/change_plans/tool_system_p11d2_termination_path_evidence.yaml
   - examples/change_plans/tool_system_p11e_real_worker_runtime_acceptance_closure.yaml
+  - examples/change_plans/tool_system_p12a_durable_orchestrator_phase_entry.yaml
