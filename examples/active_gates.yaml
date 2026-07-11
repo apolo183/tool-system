@@ -82,6 +82,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p10k_finance_us_pr_merge_execution_evidence.yaml
   - examples/task_manifests/tool_system_p10k1_finance_us_pr_body_sha_literal_correction.yaml
   - examples/task_manifests/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+  - examples/task_manifests/tool_system_p10m_finance_us_whitespace_correction_packet.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -162,3 +163,4 @@ change_plans:
   - examples/change_plans/tool_system_p10k_finance_us_pr_merge_execution_evidence.yaml
   - examples/change_plans/tool_system_p10k1_finance_us_pr_body_sha_literal_correction.yaml
   - examples/change_plans/tool_system_p10l_finance_us_local_post_merge_validation.yaml
+  - examples/change_plans/tool_system_p10m_finance_us_whitespace_correction_packet.yaml
