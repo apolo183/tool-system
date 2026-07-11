@@ -1,0 +1,77 @@
+task_id: tool-system-p12a-durable-orchestrator-phase-entry
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p12a-durable-orchestrator-phase-entry
+phase: P12_DURABLE_ORCHESTRATOR
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P12_DURABLE_ORCHESTRATOR
+alignment:
+  parent:
+    document: docs/reports/p11e_real_worker_runtime_acceptance_closure.md
+    section_or_key: P12 boundary
+    scope: Resolve the recorded P12 decision through explicit user authorization.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P12_DURABLE_ORCHESTRATOR
+    scope: Enter P12 only and lock all blueprint-required durable and side-effect controls.
+scope:
+  summary: Enter P12 and define its SQLite durable orchestrator implementation packet.
+  in_scope:
+    - blueprint/tool_system_v0.yaml
+    - AGENTS.md
+    - README.md
+    - tests/test_phase_alignment.py
+    - docs/reports/p12a_durable_orchestrator_phase_entry.md
+    - examples/task_manifests/tool_system_p12a_durable_orchestrator_phase_entry.yaml
+    - examples/change_plans/tool_system_p12a_durable_orchestrator_phase_entry.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - orchestrator source, database, or execution
+    - target-repository mutation
+    - production deployment
+    - P13-P15 implementation
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p11e_real_worker_runtime_acceptance_closure.md
+    ref: 8eafa045a884b402ad1ee8b83977843837d779bb
+    why_relevant: Accepted P11 closure and explicit former P12 authorization boundary.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    ref: 8eafa045a884b402ad1ee8b83977843837d779bb
+    why_relevant: Defines the approved P12 objective and required outputs.
+allowed_files:
+  - blueprint/tool_system_v0.yaml
+  - AGENTS.md
+  - README.md
+  - tests/test_phase_alignment.py
+  - docs/reports/p12a_durable_orchestrator_phase_entry.md
+  - examples/task_manifests/tool_system_p12a_durable_orchestrator_phase_entry.yaml
+  - examples/change_plans/tool_system_p12a_durable_orchestrator_phase_entry.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - src/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p12a_durable_orchestrator_phase_entry.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - full tests pass
+    - public contracts agree P12 is active
+    - P13 entry remains unauthorized
+    - no database or orchestrator execution occurs
+rollback:
+  method: git_revert
+  reference: p12a-durable-orchestrator-phase-entry
+approval:
+  required: true
+  approved_by: user_continue_until_next_major_milestone

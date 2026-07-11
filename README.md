@@ -46,15 +46,17 @@ It coordinates agents, harness workflows, CI checks, patch generation, review ga
 
 ## Current phase state
 
-Current phase: `P11_REAL_WORKER_RUNTIME`.
+Current phase: `P12_DURABLE_ORCHESTRATOR`.
 
-Status: `accepted`.
+Status: `active`.
 
 P10 was accepted as a successful controlled, no-production, draft-pull-request pilot. The acceptance demonstrates bounded target-repository planning, named execution approvals, fresh-state checks, exact file allowlists, draft PR creation, local validation handoff, fail-closed correction handling, audit evidence, and rollback references.
 
-P10R is closed. P11 Real Worker Runtime is accepted at the local, fixture-only, application-guarded scope. P12 Durable Orchestrator, P13 Security and Reliability Hardening, P14 Multi-repo Benchmark, and P15 Production Operations and Acceptance remain roadmap-only until separately authorized. P12 phase entry is not authorized.
+P10R is closed and P11 Real Worker Runtime is accepted at the local, fixture-only, application-guarded scope. P12 Durable Orchestrator is active. P13 Security and Reliability Hardening, P14 Multi-repo Benchmark, and P15 Production Operations and Acceptance remain roadmap-only until separately authorized.
 
 P11 evidence proves an allowlisted Python fixture process with ephemeral workspace isolation, scrubbed environment, application-level network/process/file guards, resource limits, bounded output, timeout, cancellation, process-group termination, and cleanup. It does not prove hostile-code sandboxing, durable orchestration, remote target execution, or production readiness. Finance-us and every other remote target repository remain no-mutation, and production deployment remains prohibited.
+
+P12 is limited to local SQLite fixture state and local in-process side-effect sinks. It must persist run/task state, resume expired leases safely, enforce idempotency and expected precondition SHAs, record side effects, commit outbox events transactionally, and reconcile replay without duplicate completion. It grants no remote side-effect or target-repository authority.
 
 ## Repository contract
 

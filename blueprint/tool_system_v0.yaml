@@ -1,7 +1,7 @@
 schema_version: 0.2
 system: tool-system
-phase: P11_REAL_WORKER_RUNTIME
-status: accepted
+phase: P12_DURABLE_ORCHESTRATOR
+status: active
 acceptance:
   record: docs/reports/p11e_real_worker_runtime_acceptance_closure.md
   accepted_at: 2026-07-11 UTC+08:00
@@ -20,9 +20,9 @@ successor_authorization:
     - P13_SECURITY_RELIABILITY_HARDENING
     - P14_MULTI_REPO_BENCHMARK
     - P15_PRODUCTION_OPERATIONS_ACCEPTANCE
-  active_phase: P11_REAL_WORKER_RUNTIME
+  active_phase: P12_DURABLE_ORCHESTRATOR
   later_phase_entry_authorized: false
-  next_phase: P12_DURABLE_ORCHESTRATOR
+  next_phase: P13_SECURITY_RELIABILITY_HARDENING
   next_phase_entry_authorized: false
 
 identity:

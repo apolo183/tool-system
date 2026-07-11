@@ -94,16 +94,18 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 12. Current phase state
 
-Current phase: P11_REAL_WORKER_RUNTIME.
+Current phase: P12_DURABLE_ORCHESTRATOR.
 
-Status: `accepted`.
+Status: `active`.
 
-P10 is accepted at the controlled, no-production, draft-PR pilot scope, and P10R is closed. P11 is accepted only as a local, fixture-only, application-guarded process worker. P12-P15 remain roadmap-only; P12 phase entry is not authorized.
+P10 and P11 are accepted at their recorded scopes. P12 Durable Orchestrator is authorized and active. P13-P15 remain roadmap-only; P13 phase entry is not authorized.
 
 Allowed now:
 
-- P11 acceptance and post-merge evidence records;
-- read-only verification of the accepted fixture-only runtime;
+- P12 phase-entry, implementation packets, durable-state source, tests, local fixture evidence, review, merge, and closure;
+- SQLite-backed local orchestration state under temporary fixture roots;
+- lease, checkpoint, retry, crash-resume, idempotency, side-effect-ledger, transactional-outbox, precondition-SHA, and reconciliation work;
+- read-only verification of the accepted P11 runtime;
 - read-only verification of accepted target state;
 - preparation of separately approvable downstream target lifecycle packets.
 
@@ -113,7 +115,8 @@ Not allowed now:
 - target-repository main-branch mutation outside the approved merge flow;
 - finance-us P1B target implementation without a named, action-scoped target execution approval;
 - treating a P1B implementation approval as ready or merge approval;
-- P12 or later phase entry or implementation before a named authorization;
+- P13 or later phase entry or implementation before a named authorization;
+- P12 fixtures that call a real external side effect, remote provider, or target repository;
 - any P11 worker execution before minimum safety controls pass;
 - worker execution against finance-us or any other remote target repository;
 - broad or unspecified downstream repository mutation;

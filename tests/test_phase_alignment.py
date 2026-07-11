@@ -11,7 +11,7 @@ AGENTS = ROOT / "AGENTS.md"
 README = ROOT / "README.md"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
 CHANGE_PLAN = ROOT / "examples" / "change_plans" / "tool_system_p11a_successor_roadmap_phase_entry.yaml"
-EXPECTED_PHASE = "P11_REAL_WORKER_RUNTIME"
+EXPECTED_PHASE = "P12_DURABLE_ORCHESTRATOR"
 
 
 def test_public_contracts_have_same_current_phase() -> None:
@@ -24,13 +24,14 @@ def test_public_contracts_have_same_current_phase() -> None:
     assert blueprint["phase"] == EXPECTED_PHASE
     assert EXPECTED_PHASE in blueprint["milestones"]
     assert blueprint["acceptance"]["successor_phase_authorized"] is True
-    assert blueprint["status"] == "accepted"
+    assert blueprint["status"] == "active"
     assert blueprint["acceptance"]["record"] == (
         "docs/reports/p11e_real_worker_runtime_acceptance_closure.md"
     )
     assert blueprint["successor_authorization"]["later_phase_entry_authorized"] is False
+    assert blueprint["successor_authorization"]["active_phase"] == EXPECTED_PHASE
     assert blueprint["successor_authorization"]["next_phase"] == (
-        "P12_DURABLE_ORCHESTRATOR"
+        "P13_SECURITY_RELIABILITY_HARDENING"
     )
     assert blueprint["successor_authorization"]["next_phase_entry_authorized"] is False
     assert set(blueprint["successor_authorization"]["authorized_roadmap"]) == {
