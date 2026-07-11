@@ -1,5 +1,5 @@
 task_id: tool-system-p10i-p10-p1a-acceptance-closure
-task_type: docs_update
+task_type: phase_transition
 target_repo: apolo183/tool-system
 target_branch: p10i-p10-p1a-acceptance-closure
 phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
