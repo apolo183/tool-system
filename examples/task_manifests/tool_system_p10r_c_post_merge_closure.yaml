@@ -1,0 +1,78 @@
+task_id: tool-system-p10r-c-post-merge-closure
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: p10r-c-post-merge-closure
+phase: P10_CONTROLLED_TARGET_REPO_PR_PILOT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+alignment:
+  parent:
+    document: docs/reports/p10r_b_governance_state_synchronization.md
+    section_or_key: Stop condition
+    scope: Record post-merge evidence and close P10R without successor entry.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P10_CONTROLLED_TARGET_REPO_PR_PILOT
+    scope: Close the accepted-P10 corrective work while preserving the explicit successor boundary.
+scope:
+  summary: Record P10R post-merge validation and close the corrective lifecycle.
+  in_scope:
+    - docs/reports/p10r_c_post_merge_closure.md
+    - examples/task_manifests/tool_system_p10r_c_post_merge_closure.yaml
+    - examples/change_plans/tool_system_p10r_c_post_merge_closure.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - blueprint change or successor authorization
+    - policy, source, test, README, or AGENTS modification
+    - finance-us mutation
+    - finance-us P1B target implementation, ready, or merge
+    - cleanup or branch deletion
+    - rollback execution
+    - real external worker execution
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p10r_b_governance_state_synchronization.md
+    ref: 5a7907fbe3d0e44967755b8257feadbd1413f315
+    why_relevant: Defines the synchronized governance state merged by P10R-B.
+  - repo: apolo183/tool-system
+    path: policy/repo_write_policy.yaml
+    ref: 5a7907fbe3d0e44967755b8257feadbd1413f315
+    why_relevant: Confirms the machine-policy correction remains on final main.
+allowed_files:
+  - docs/reports/p10r_c_post_merge_closure.md
+  - examples/task_manifests/tool_system_p10r_c_post_merge_closure.yaml
+  - examples/change_plans/tool_system_p10r_c_post_merge_closure.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - README.md
+  - AGENTS.md
+  - blueprint/**
+  - policy/**
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p10r_c_post_merge_closure.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - full tests return PASS
+    - alignment gate returns PASS
+    - P10R-C change plan returns PASS
+    - active gates return PASS
+    - successor and downstream execution remain unauthorized
+rollback:
+  method: git_revert
+  reference: p10r-c-post-merge-closure
+approval:
+  required: true
+  approved_by: user_continuous_automatic_progress_until_major_milestone
