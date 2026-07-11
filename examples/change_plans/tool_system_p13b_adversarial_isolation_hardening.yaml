@@ -1,0 +1,31 @@
+plan_id: tool-system-p13b-adversarial-isolation-hardening
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p13b_adversarial_isolation_hardening.yaml
+changed_files:
+  - src/tool_system/agent_worker/process_runtime.py
+  - tests/test_process_worker_runtime_preflight.py
+  - tests/test_process_worker_runtime_execution.py
+  - tests/test_process_worker_runtime_adversarial.py
+  - tests/fixtures/p11_worker_fixture.py
+  - docs/reports/p13b_adversarial_isolation_hardening.md
+  - examples/task_manifests/tool_system_p13b_adversarial_isolation_hardening.yaml
+  - examples/change_plans/tool_system_p13b_adversarial_isolation_hardening.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p13b_adversarial_isolation_hardening.yaml
+    section_or_key: task_id
+    scope: Follow the exact P13B process-worker hardening manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+    scope: Harden P11 isolation without external mutation, production, or P14 entry.
+verification:
+  commands:
+    - python -m compileall src/tool_system/agent_worker tests/test_process_worker_runtime_*.py
+    - python -m pytest -q tests/test_process_worker_runtime_preflight.py tests/test_process_worker_runtime_execution.py tests/test_process_worker_runtime_adversarial.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: p13b-adversarial-isolation-hardening

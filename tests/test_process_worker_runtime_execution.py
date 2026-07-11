@@ -62,20 +62,19 @@ def test_fixture_worker_runs_with_minimum_baseline(tmp_path: Path) -> None:
     assert result.stderr == ""
     assert result.workspace_deleted is True
     assert result.network_mode == "disabled"
-    assert result.guard_mode == "python_audit_guard_v1"
+    assert result.guard_mode == "python_audit_guard_v2"
     assert result.writes_target_repo is False
     assert result.executes_target_repo_mutation is False
     assert result.production is False
     assert payload == {
         "cwd_matches_workspace": True,
+        "denied_probes_run_in_dedicated_processes": True,
+        "guard_mode": "python_audit_guard_v2",
         "home_inherited": False,
-        "mode": "p11_fixture_only",
+        "mode": "p13_hardened_fixture_only",
         "network_mode": "disabled",
-        "outside_read_blocked": True,
         "path_inherited": False,
         "secret_like_environment_names": [],
-        "socket_import_blocked": True,
-        "subprocess_import_blocked": True,
         "workspace_write_succeeded": True,
     }
     assert list(workspace_root.iterdir()) == []
