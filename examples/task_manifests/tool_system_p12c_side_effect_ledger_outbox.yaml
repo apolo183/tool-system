@@ -1,0 +1,74 @@
+task_id: tool-system-p12c-side-effect-ledger-outbox
+task_type: code_change
+target_repo: apolo183/tool-system
+target_branch: p12c-side-effect-ledger-outbox
+phase: P12_DURABLE_ORCHESTRATOR
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P12_DURABLE_ORCHESTRATOR
+alignment:
+  parent:
+    document: docs/reports/p12b_durable_state_foundation.md
+    section_or_key: Stop condition
+    scope: Extend accepted durable state with ledger and outbox only.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P12_DURABLE_ORCHESTRATOR
+    scope: Implement idempotency, side-effect markers, transactional outbox, SHA checks, and reconciliation.
+scope:
+  summary: Add the local-fixture side-effect ledger and transactional outbox.
+  in_scope:
+    - src/tool_system/orchestrator/durable.py
+    - tests/test_durable_orchestrator_state.py
+    - tests/test_durable_orchestrator_side_effects.py
+    - docs/reports/p12c_side_effect_ledger_outbox.md
+    - examples/task_manifests/tool_system_p12c_side_effect_ledger_outbox.yaml
+    - examples/change_plans/tool_system_p12c_side_effect_ledger_outbox.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - remote side effects or target-repository mutation
+    - network database or queue
+    - production deployment
+    - P13-P15 implementation
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/orchestrator/durable.py
+    ref: 4a86ce4861f1d19ed553b90c1d2c36f9764a20e3
+    why_relevant: Merged P12B natural owner and schema v1 baseline.
+  - repo: apolo183/tool-system
+    path: docs/reports/p12a_durable_orchestrator_phase_entry.md
+    ref: 4a86ce4861f1d19ed553b90c1d2c36f9764a20e3
+    why_relevant: Defines required side-effect, outbox, precondition, and reconciliation semantics.
+allowed_files:
+  - src/tool_system/orchestrator/durable.py
+  - tests/test_durable_orchestrator_state.py
+  - tests/test_durable_orchestrator_side_effects.py
+  - docs/reports/p12c_side_effect_ledger_outbox.md
+  - examples/task_manifests/tool_system_p12c_side_effect_ledger_outbox.yaml
+  - examples/change_plans/tool_system_p12c_side_effect_ledger_outbox.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m compileall src/tool_system tests
+    - python -m pytest -q tests/test_durable_orchestrator_state.py tests/test_durable_orchestrator_side_effects.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - focused ledger and outbox tests pass
+    - schema migration test passes
+    - full tests and active gates pass
+    - no remote side effect occurs
+rollback:
+  method: git_revert
+  reference: p12c-side-effect-ledger-outbox
+approval:
+  required: true
+  approved_by: user_continue_until_next_major_milestone

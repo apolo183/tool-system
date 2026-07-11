@@ -99,6 +99,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p11e_real_worker_runtime_acceptance_closure.yaml
   - examples/task_manifests/tool_system_p12a_durable_orchestrator_phase_entry.yaml
   - examples/task_manifests/tool_system_p12b_durable_state_foundation.yaml
+  - examples/task_manifests/tool_system_p12c_side_effect_ledger_outbox.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -196,3 +197,4 @@ change_plans:
   - examples/change_plans/tool_system_p11e_real_worker_runtime_acceptance_closure.yaml
   - examples/change_plans/tool_system_p12a_durable_orchestrator_phase_entry.yaml
   - examples/change_plans/tool_system_p12b_durable_state_foundation.yaml
+  - examples/change_plans/tool_system_p12c_side_effect_ledger_outbox.yaml

@@ -53,7 +53,7 @@ def test_store_enables_required_sqlite_controls(tmp_path: Path) -> None:
     assert str(pragmas["journal_mode"]).lower() == "wal"
     assert pragmas["synchronous"] == 2
     assert pragmas["busy_timeout"] == 5_000
-    assert pragmas["schema_version"] == 1
+    assert pragmas["schema_version"] == 2
 
 
 def test_run_and_task_survive_store_reopen(tmp_path: Path) -> None:
