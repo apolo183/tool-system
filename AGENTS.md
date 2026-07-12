@@ -21,7 +21,7 @@ Before material tool-system engineering work, read:
 docs/tool_system_global_development_principles_v1.md
 ```
 
-These repository-local principles govern only tool-system. If a later authorized cutover creates a registered immutable finance-governance reference, the governance commit pinned by that reference is upstream and local rules may add constraints but may not override it. This contract does not create that reference or complete cutover.
+These repository-local principles currently govern only tool-system. `config/governance_reference_v1.yaml` pins candidate finance-governance commit `f039a5355e1e5ea3fa865b827947b0c1153a2745` as a five-field immutable pointer. The reference does not activate group governance, report cutover state, or replace current tool-system-local authority before the required central `repo-check` and cutover confirmation. After activation, local rules may add constraints but may not override the pinned group governance. No copied finance-governance constitution is local authority.
 
 Before provider/model selection, qualification, billing, credential-reference, or development-economics work, also read:
 

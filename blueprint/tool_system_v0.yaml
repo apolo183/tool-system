@@ -164,8 +164,8 @@ milestone_module_invariant:
     governs_other_repositories: false
     may_offer_tools_and_recommendations: true
     may_change_downstream_owner_authority_status_or_write_authorization: false
-    immutable_group_reference_effect: conditional_on_later_registered_reference
-    group_reference_created_by_this_change: false
+    immutable_group_reference_effect: pinned_candidate_reference_pending_central_repo_check
+    group_reference_created_by_this_change: true
     group_cutover_completed_by_this_change: false
   applies_to:
     - tool_system_durable_modules
