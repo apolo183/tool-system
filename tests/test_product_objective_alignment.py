@@ -38,7 +38,12 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
         "generate_task_manifests",
         "generate_change_plans",
         "identify_natural_owners",
+        "profile_task_complexity_risk_and_critical_path",
+        "resolve_authorized_provider_model_portfolio",
+        "select_route_by_expected_total_economic_cost",
         "invoke_bounded_real_ai_worker",
+        "execute_bounded_provider_availability_failover",
+        "execute_bounded_model_quality_escalation",
         "implement_code_changes",
         "validate_file_scope",
         "run_tests",
@@ -51,11 +56,14 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
         "create_local_git_commits",
         "produce_draft_pull_request_plan",
         "prepare_separately_authorized_repository_publish_action",
+        "record_provider_model_outcomes_and_economics",
         "produce_acceptance_evidence",
         "close_completed_milestones",
     }
     assert "approved_project_blueprint" in contract["inputs"]
     assert "authorization_envelope" in contract["inputs"]
+    assert "authorized_provider_model_portfolio_snapshot" in contract["inputs"]
+    assert "private_project_economics_references" in contract["inputs"]
     assert "durable_module_contract_and_milestone_change_binding" in (
         contract["inputs"]
     )
@@ -70,6 +78,11 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
     )
     assert "separately_authorized_draft_pull_request" in contract["outputs"]
     assert "acceptance_and_closure_record" in contract["outputs"]
+    assert "task_complexity_and_risk_profile" in contract["outputs"]
+    assert "provider_model_routing_failover_and_escalation_plan" in (
+        contract["outputs"]
+    )
+    assert "provider_model_outcome_and_economic_evidence" in contract["outputs"]
     assert alignment == {
         "required_for_every_milestone": True,
         "required_for_every_task_manifest": True,
@@ -95,6 +108,11 @@ def test_completion_and_non_goals_prevent_false_product_claims() -> None:
         "failed_or_drifted_modules_pause_dependents_until_revalidation",
         "hidden_cross_module_dependencies_are_rejected",
         "failed_runs_stop_or_rollback_without_silent_scope_expansion",
+        "task_profile_and_routing_decisions_are_auditable_and_reproducible",
+        "provider_unavailability_and_quality_failure_have_distinct_bounded_controls",
+        "model_selection_uses_task_class_evidence_and_expected_total_economic_cost",
+        "safety_quality_data_and_authorization_floors_override_economics",
+        "credentials_and_private_economic_values_remain_outside_public_repository",
     }
     assert set(objective["non_goals"]) >= {
         "unrestricted_remote_repository_mutation",
@@ -134,9 +152,34 @@ def test_successor_chain_builds_product_before_benchmark_and_operations() -> Non
     assert "each real repository mutation separately authorized" in (
         p15["entry_requires"]
     )
+    assert (
+        "each live provider benchmark has a named "
+        "provider-model-network-credential-reference-limit execution packet"
+    ) in p15["entry_requires"]
+    assert "deterministic policy-owned routing decisions and hard capability floors" in (
+        p15["outputs"]
+    )
+    assert (
+        "quality, time-to-acceptance, expected total economic cost, recovery, "
+        "and policy metrics"
+    ) in p15["outputs"]
+    assert [stage["stage"] for stage in p15["stage_plan"]] == [
+        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION",
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES",
+        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK",
+        "P15D_FAILURE_ROLLBACK_ISOLATION_AND_ECONOMICS_CORPUS",
+        "P15E_OPTIONAL_CONTROLLED_TARGET_MUTATION_PILOT",
+        "P15F_BENCHMARK_ACCEPTANCE_CLOSURE",
+    ]
     assert "P15_MULTI_PROJECT_BENCHMARK accepted" in p16["entry_requires"]
     assert "production deployment remains separately approved only" in (
         p16["entry_requires"]
+    )
+    assert "daily lightweight availability, critical-path, and economic recomputation" in (
+        p16["outputs"]
+    )
+    assert "changed-model incremental benchmark at a default 72-hour cadence" in (
+        p16["outputs"]
     )
 
 

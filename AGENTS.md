@@ -5,13 +5,13 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-12 UTC+09:00
+updated_at: 2026-07-13 UTC+09:00
 
 ## 1. Mission
 
 tool-system builds and controls automated software-development workflows. It is domain-agnostic infrastructure.
 
-The permanent product objective is bounded blueprint-driven autonomous software development. An approved blueprint must ultimately be convertible into durable, versioned, replaceable single-responsibility modules, milestone-to-module change bindings, an executable task DAG, controlled AI-assisted code changes, test/repair/review evidence, bounded local Git commits, and an acceptance record without silent scope or authority expansion.
+The permanent product objective is bounded blueprint-driven autonomous software development. An approved blueprint must ultimately be convertible into durable, versioned, replaceable single-responsibility modules, milestone-to-module change bindings, advisory task-complexity/risk/critical-path profiles, deterministic authorized provider-model route decisions, an executable task DAG, controlled AI-assisted code changes, test/repair/review evidence, bounded local Git commits, provider/model economic evidence, and an acceptance record without silent scope or authority expansion.
 
 ## 2. Mandatory first step
 
@@ -22,6 +22,12 @@ docs/tool_system_global_development_principles_v1.md
 ```
 
 These repository-local principles govern only tool-system. If a later authorized cutover creates a registered immutable finance-governance reference, the governance commit pinned by that reference is upstream and local rules may add constraints but may not override it. This contract does not create that reference or complete cutover.
+
+Before provider/model selection, qualification, billing, credential-reference, or development-economics work, also read:
+
+```text
+docs/model_provider_portfolio_and_economics_contract_v1.md
+```
 
 ## 3. Documentation-first execution loop
 
@@ -60,7 +66,21 @@ This rule does not define new machine lifecycle or status values. Isolation, pau
 
 tool-system may offer tools and recommendations to a downstream repository under that repository's own authority. A tool-system local rule cannot change another repository's owner, authority, status, responsibility, or write authorization.
 
-## 6. Evidence-first rule
+## 6. Provider portfolio and economics rule
+
+Provider integrations are independently replaceable adapters behind the versioned `AIWorkerProvider` interface. Candidate adapters are not enabled providers. Every live provider call requires an authorized exact provider/model, supported authorization surface, credential reference, network route, data policy, token/time/cost envelope, retry/cancellation controls, and redacted audit contract. ChatGPT/Codex subscription access must not be treated as API credit, automated through browser-session scraping, or used to extract authentication material.
+
+The task-complexity assessor is advisory. A deterministic policy engine owns the final route decision from the exact task profile, authorization envelope, and provider/model catalog snapshot. Complexity, risk, data sensitivity, capability floors, verification burden, and critical-path impact remain separate. Safety, quality, data, authorization, and precondition controls cannot be weakened for cost or speed.
+
+Availability failures may use bounded failover only among already eligible authorized routes. Quality failures may use bounded same-route repair and evidence-backed escalation. Policy, data, hard-budget, authorization, or stale-precondition failures block and must not be bypassed by switching providers. All attempts, failovers, escalations, and stop decisions require redacted reproducible evidence.
+
+Model qualification is per task class and uses exact version IDs plus dated price, policy, availability, reliability, and benchmark evidence. Discovery does not activate a model. A new version does not replace an accepted route until qualification and atomic publication pass. Repeated task-class failures cause scoped demotion; unrelated eligible classes need not be discarded.
+
+Optimize expected total economic cost per accepted module, with critical-path time as the largest configurable soft cost driver. Include provider usage, avoidable future renewals, critical-path personnel/rent/operating burn, local compute/electricity, verification, retry, rework, recovery, rollback, and opportunity cost without double counting. Never commit private salaries, rent, rates, billing details, renewal dates, revenue assumptions, credentials, or secret values to the public repository.
+
+This rule is a product and roadmap contract. It grants no live-provider execution, credential, P15/P16 phase entry, target-repository mutation, cleanup, or production authority.
+
+## 7. Evidence-first rule
 
 Before modifying an existing file, an agent reads the current file and cites the relevant path and content region in its plan.
 
@@ -68,7 +88,7 @@ If evidence is missing, the agent runs read-only inspection or stops at the smal
 
 Material engineering work follows the evidence hierarchy, documentation-first loop, blueprint alignment invariant, drift gate, authorization gate, side-effect preflight, file disposition, cleanup, rollback, and claims rules in `docs/tool_system_global_development_principles_v1.md`.
 
-## 7. Side-effect tool discipline
+## 8. Side-effect tool discipline
 
 Before any tool call that creates, updates, deletes, merges, labels, or otherwise mutates GitHub state, the agent must internally verify:
 
@@ -84,7 +104,7 @@ Before any tool call that creates, updates, deletes, merges, labels, or otherwis
 
 If the intended action is file update but the selected tool is branch creation, merge, deletion, or cleanup, work stops before the tool call. A task may create at most one branch unless a later active document explicitly authorizes a replacement branch and records disposition of the prior branch.
 
-## 8. Autonomy model
+## 9. Autonomy model
 
 Human control is placed at blueprint, objective, policy boundary, and milestone review levels.
 
@@ -92,25 +112,25 @@ Routine implementation work inside an authorized milestone is handled by the sys
 
 Human review is required for blueprint changes, objective changes, policy boundary changes, milestone acceptance, cleanup execution, first real downstream target-repository mutation, target PR lifecycle transitions, and production deployment.
 
-## 9. Write boundaries
+## 10. Write boundaries
 
 Agents add or modify files only when the change is tied to an approved blueprint item and a valid task manifest.
 
-## 10. Change record
+## 11. Change record
 
 Every non-trivial change records scope, files touched, reason, verification command, and rollback method.
 
-## 11. Testing policy
+## 12. Testing policy
 
 Implementation phases include verification before further automation.
 
 Minimum gates include unit tests, format or lint checks where available, type checks where applicable, spec checks, and dry-run patch application.
 
-## 12. Rollback policy
+## 13. Rollback policy
 
 Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
-## 13. Current phase state
+## 14. Current phase state
 
 Current phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.
 
