@@ -13,7 +13,7 @@
 
 This file is the repository-local discipline contract for tool-system and governs only tool-system work. It does not govern another repository. A tool-system local rule cannot change another repository's owner, authority, status, responsibility, or write authorization. Narrower tool-system task manifests, change plans, tests, runbooks, and PR descriptions may add constraints but must not silently override this file. A conflict stops work until a cross-document disposition is recorded.
 
-If a later authorized cutover creates a registered immutable finance-governance reference, the governance commit pinned by that reference is upstream. These local rules may add constraints but may not override the pinned group governance. This reconciliation creates no governance reference, performs no cutover, and makes no governance-activation claim.
+The authorized immutable reference at `config/governance_reference_v1.yaml` pins candidate finance-governance commit `f039a5355e1e5ea3fa865b827947b0c1153a2745`. The reference is an immutable pointer and does not activate group governance, report central cutover state, or replace current tool-system-local authority by itself. Until the required finance-governance `repo-check` passes and central cutover is confirmed, these local principles remain the active tool-system authority. After activation, local rules may add constraints but may not override the pinned group governance.
 
 ## 2. Evidence hierarchy
 

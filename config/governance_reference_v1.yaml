@@ -1,0 +1,5 @@
+reference_contract_version: governance_reference_v1
+downstream_canonical_repo_id: tool-system
+governance_canonical_repo_id: finance-governance
+governance_canonical_remote: git@github.com:apolo183/finance-governance.git
+governance_commit_sha: f039a5355e1e5ea3fa865b827947b0c1153a2745

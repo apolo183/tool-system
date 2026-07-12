@@ -172,9 +172,9 @@ def test_local_authority_does_not_govern_other_repositories() -> None:
         "may_offer_tools_and_recommendations": True,
         "may_change_downstream_owner_authority_status_or_write_authorization": False,
         "immutable_group_reference_effect": (
-            "conditional_on_later_registered_reference"
+            "pinned_candidate_reference_pending_central_repo_check"
         ),
-        "group_reference_created_by_this_change": False,
+        "group_reference_created_by_this_change": True,
         "group_cutover_completed_by_this_change": False,
     }
     assert execution["authority_effect"] == "tool_system_local_only"
