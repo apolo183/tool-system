@@ -1,0 +1,74 @@
+task_id: tool-system-p13c-durable-orchestrator-fault-resource-hardening
+task_type: code_change
+target_repo: apolo183/tool-system
+target_branch: p13c-fault-resource-hardening
+phase: P13_SECURITY_RELIABILITY_HARDENING
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+alignment:
+  parent:
+    document: docs/reports/p13a_security_reliability_phase_entry.md
+    section_or_key: P13C exact owner boundary
+    scope: Harden only the durable orchestrator natural owner and its local reliability tests.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+    scope: Add fault injection, recovery, resource bounds, and reliability evidence.
+scope:
+  summary: Harden single-host local SQLite state against path, resource, transaction, concurrency, and integrity failures.
+  in_scope:
+    - src/tool_system/orchestrator/durable.py
+    - tests/test_durable_orchestrator_reliability.py
+    - docs/reports/p13c_durable_orchestrator_fault_resource_hardening.md
+    - examples/task_manifests/tool_system_p13c_durable_orchestrator_fault_resource_hardening.yaml
+    - examples/change_plans/tool_system_p13c_durable_orchestrator_fault_resource_hardening.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - process-worker changes
+    - schema version change or network database
+    - multi-host or distributed orchestration
+    - remote provider, target-repository, finance-us, or production mutation
+    - P14-P15 implementation
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p13a_security_reliability_phase_entry.md
+    ref: 6e518c240ff1a23ccbe1ccce9e555328d54a55ba
+    why_relevant: Merged threat model and exact P13C boundary.
+  - repo: apolo183/tool-system
+    path: src/tool_system/orchestrator/durable.py
+    ref: 6e518c240ff1a23ccbe1ccce9e555328d54a55ba
+    why_relevant: Accepted P12 natural owner and P13 reliability baseline.
+allowed_files:
+  - src/tool_system/orchestrator/durable.py
+  - tests/test_durable_orchestrator_reliability.py
+  - docs/reports/p13c_durable_orchestrator_fault_resource_hardening.md
+  - examples/task_manifests/tool_system_p13c_durable_orchestrator_fault_resource_hardening.yaml
+  - examples/change_plans/tool_system_p13c_durable_orchestrator_fault_resource_hardening.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - src/tool_system/agent_worker/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m compileall src/tool_system/orchestrator tests/test_durable_orchestrator_*.py
+    - python -m pytest -q tests/test_durable_orchestrator_state.py tests/test_durable_orchestrator_side_effects.py tests/test_durable_orchestrator_recovery.py tests/test_durable_orchestrator_reliability.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - every named path, bound, transaction, concurrency, and integrity scenario passes
+    - existing P12 durable-state regressions pass
+    - full tests and active gates pass
+    - no remote or production side effect occurs
+rollback:
+  method: git_revert
+  reference: p13c-fault-resource-hardening
+approval:
+  required: true
+  approved_by: user_explicit_p13_full_lifecycle_authorization

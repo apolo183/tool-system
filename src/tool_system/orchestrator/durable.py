@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import json
+import math
+import os
 import re
 import sqlite3
+import stat
 import time
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
@@ -35,19 +38,43 @@ def _is_relative_to(path: Path, root: Path) -> bool:
     return True
 
 
-def _canonical_json(value: Mapping[str, object] | None) -> str:
-    return json.dumps(dict(value or {}), sort_keys=True, separators=(",", ":"))
+def _canonical_json(
+    value: Mapping[str, object] | None,
+    label: str,
+    *,
+    max_bytes: int,
+) -> str:
+    if value is not None and not isinstance(value, Mapping):
+        raise ValueError(f"{label} must be a JSON mapping")
+    try:
+        result = json.dumps(
+            dict(value or {}),
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        )
+    except (TypeError, ValueError, RecursionError) as exc:
+        raise ValueError(f"{label} must be a finite JSON mapping") from exc
+    if len(result.encode("utf-8")) > max_bytes:
+        raise ValueError(f"{label} exceeds max_record_bytes")
+    return result
 
 
-def _require_text(value: str, label: str) -> str:
-    result = str(value).strip()
+def _require_text(value: str, label: str, *, max_bytes: int) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f"{label} must be a string")
+    result = value.strip()
     if not result:
         raise ValueError(f"{label} is required")
+    if len(result.encode("utf-8")) > max_bytes:
+        raise ValueError(f"{label} exceeds max_text_bytes")
     return result
 
 
 def _require_sha(value: str) -> str:
-    result = _require_text(value, "expected_precondition_sha")
+    if not isinstance(value, str):
+        raise ValueError("expected_precondition_sha must be a string")
+    result = value.strip()
     if not _SHA_RE.fullmatch(result):
         raise ValueError("expected_precondition_sha must be a lowercase 40-character SHA")
     return result
@@ -63,6 +90,8 @@ class DurableOrchestratorStore:
         forbidden_roots: tuple[str | Path, ...],
         clock: Callable[[], float] = time.time,
         busy_timeout_ms: int = 5_000,
+        max_text_bytes: int = 4_096,
+        max_record_bytes: int = 1024 * 1024,
     ) -> None:
         if not forbidden_roots:
             raise ValueError("forbidden_roots must be non-empty")
@@ -72,32 +101,161 @@ class DurableOrchestratorStore:
         parent = raw_path.parent.resolve(strict=True)
         if raw_path.parent.is_symlink():
             raise ValueError("database parent must not be a symlink")
+        parent_stat = parent.lstat()
+        if not stat.S_ISDIR(parent_stat.st_mode):
+            raise ValueError("database parent must be a directory")
+        if parent_stat.st_mode & (stat.S_IWGRP | stat.S_IWOTH):
+            raise ValueError("database parent must not be group/world-writable")
         resolved = parent / raw_path.name
+        resolved_forbidden_roots: list[Path] = []
         for raw_root in forbidden_roots:
             root = Path(raw_root).resolve(strict=True)
+            resolved_forbidden_roots.append(root)
             if _is_relative_to(resolved, root):
                 raise ValueError("database_path must be outside every forbidden_root")
         if resolved.suffix not in {".sqlite", ".sqlite3", ".db"}:
             raise ValueError("database_path must use .sqlite, .sqlite3, or .db")
-        if not isinstance(busy_timeout_ms, int) or busy_timeout_ms <= 0:
+        if (
+            not isinstance(busy_timeout_ms, int)
+            or isinstance(busy_timeout_ms, bool)
+            or busy_timeout_ms <= 0
+        ):
             raise ValueError("busy_timeout_ms must be a positive integer")
+        if (
+            not isinstance(max_text_bytes, int)
+            or isinstance(max_text_bytes, bool)
+            or max_text_bytes <= 0
+        ):
+            raise ValueError("max_text_bytes must be a positive integer")
+        if (
+            not isinstance(max_record_bytes, int)
+            or isinstance(max_record_bytes, bool)
+            or max_record_bytes <= 0
+        ):
+            raise ValueError("max_record_bytes must be a positive integer")
         self.database_path = resolved
         self._clock = clock
         self._busy_timeout_ms = busy_timeout_ms
+        self._max_text_bytes = max_text_bytes
+        self._max_record_bytes = max_record_bytes
+        self._database_parent = parent
+        self._database_parent_identity = (parent_stat.st_dev, parent_stat.st_ino)
+        self._forbidden_roots = tuple(resolved_forbidden_roots)
+        self._database_identity: tuple[int, int] | None = None
+        self._validate_database_path()
         self._initialize()
 
+    def _text(self, value: str, label: str) -> str:
+        return _require_text(value, label, max_bytes=self._max_text_bytes)
+
+    def _json(self, value: Mapping[str, object] | None, label: str) -> str:
+        return _canonical_json(value, label, max_bytes=self._max_record_bytes)
+
+    def _now(self) -> float:
+        value = self._clock()
+        if (
+            not isinstance(value, (int, float))
+            or isinstance(value, bool)
+            or not math.isfinite(value)
+        ):
+            raise StateConflict("clock must return a finite number")
+        return float(value)
+
+    @staticmethod
+    def _positive_integer(value: int, label: str) -> int:
+        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+            raise ValueError(f"{label} must be a positive integer")
+        return value
+
+    @staticmethod
+    def _positive_seconds(value: float, label: str) -> float:
+        if (
+            not isinstance(value, (int, float))
+            or isinstance(value, bool)
+            or not math.isfinite(value)
+            or value <= 0
+        ):
+            raise ValueError(f"{label} must be a finite positive number")
+        return float(value)
+
+    @staticmethod
+    def _require_regular_single_link(path: Path, label: str) -> os.stat_result:
+        metadata = path.lstat()
+        if stat.S_ISLNK(metadata.st_mode):
+            raise StateConflict(f"{label} must not be a symlink")
+        if not stat.S_ISREG(metadata.st_mode):
+            raise StateConflict(f"{label} must be a regular file")
+        if metadata.st_nlink != 1:
+            raise StateConflict(f"{label} must have exactly one hard link")
+        return metadata
+
+    def _validate_database_path(self) -> None:
+        try:
+            parent_metadata = self._database_parent.lstat()
+            resolved_parent = self._database_parent.resolve(strict=True)
+        except OSError as exc:
+            raise StateConflict("database parent identity is unavailable") from exc
+        if stat.S_ISLNK(parent_metadata.st_mode) or not stat.S_ISDIR(
+            parent_metadata.st_mode
+        ):
+            raise StateConflict("database parent must remain a non-symlink directory")
+        if (parent_metadata.st_dev, parent_metadata.st_ino) != (
+            self._database_parent_identity
+        ):
+            raise StateConflict("database parent identity changed")
+        if resolved_parent != self._database_parent:
+            raise StateConflict("database parent resolved path changed")
+        if parent_metadata.st_mode & (stat.S_IWGRP | stat.S_IWOTH):
+            raise StateConflict("database parent became group/world-writable")
+        for root in self._forbidden_roots:
+            if _is_relative_to(self.database_path, root):
+                raise StateConflict("database_path entered a forbidden_root")
+
+        if self.database_path.exists() or self.database_path.is_symlink():
+            metadata = self._require_regular_single_link(
+                self.database_path, "database file"
+            )
+            identity = (metadata.st_dev, metadata.st_ino)
+            if (
+                self._database_identity is not None
+                and identity != self._database_identity
+            ):
+                raise StateConflict("database file identity changed")
+
+        for suffix in ("-wal", "-shm", "-journal"):
+            sidecar = Path(f"{self.database_path}{suffix}")
+            if sidecar.exists() or sidecar.is_symlink():
+                self._require_regular_single_link(
+                    sidecar, f"database sidecar {suffix}"
+                )
+
     def _connect(self) -> sqlite3.Connection:
+        self._validate_database_path()
         connection = sqlite3.connect(
             self.database_path,
             timeout=self._busy_timeout_ms / 1_000,
             isolation_level=None,
         )
-        connection.row_factory = sqlite3.Row
-        connection.execute("PRAGMA foreign_keys = ON")
-        connection.execute(f"PRAGMA busy_timeout = {self._busy_timeout_ms}")
-        connection.execute("PRAGMA journal_mode = WAL")
-        connection.execute("PRAGMA synchronous = FULL")
-        return connection
+        try:
+            self._validate_database_path()
+            metadata = self._require_regular_single_link(
+                self.database_path, "database file"
+            )
+            identity = (metadata.st_dev, metadata.st_ino)
+            if self._database_identity is None:
+                self._database_identity = identity
+            elif identity != self._database_identity:
+                raise StateConflict("database file identity changed")
+            connection.row_factory = sqlite3.Row
+            connection.execute("PRAGMA foreign_keys = ON")
+            connection.execute(f"PRAGMA busy_timeout = {self._busy_timeout_ms}")
+            connection.execute("PRAGMA journal_mode = WAL")
+            connection.execute("PRAGMA synchronous = FULL")
+            self._validate_database_path()
+            return connection
+        except Exception:
+            connection.close()
+            raise
 
     @contextmanager
     def _transaction(self) -> Iterator[sqlite3.Connection]:
@@ -113,9 +271,11 @@ class DurableOrchestratorStore:
             connection.close()
 
     def _initialize(self) -> None:
-        with self._transaction() as connection:
+        connection = self._connect()
+        try:
             connection.executescript(
                 """
+                BEGIN IMMEDIATE;
                 CREATE TABLE IF NOT EXISTS metadata (
                     key TEXT PRIMARY KEY,
                     value TEXT NOT NULL
@@ -203,6 +363,12 @@ class DurableOrchestratorStore:
                 raise StateConflict(
                     f"unsupported schema version {row['value']}; expected {SCHEMA_VERSION}"
                 )
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
 
     def pragmas(self) -> dict[str, object]:
         connection = self._connect()
@@ -221,13 +387,32 @@ class DurableOrchestratorStore:
         finally:
             connection.close()
 
+    def integrity_check(self) -> dict[str, object]:
+        connection = self._connect()
+        try:
+            results = tuple(
+                str(row[0])
+                for row in connection.execute("PRAGMA integrity_check").fetchall()
+            )
+            foreign_key_violations = connection.execute(
+                "PRAGMA foreign_key_check"
+            ).fetchall()
+            if results != ("ok",) or foreign_key_violations:
+                raise StateConflict("database integrity check failed")
+            return {
+                "integrity_check": results,
+                "foreign_key_violations": 0,
+            }
+        finally:
+            connection.close()
+
     def create_run(
         self, run_id: str, *, blueprint_ref: str, manifest_ref: str
     ) -> dict[str, object]:
-        run_id = _require_text(run_id, "run_id")
-        blueprint_ref = _require_text(blueprint_ref, "blueprint_ref")
-        manifest_ref = _require_text(manifest_ref, "manifest_ref")
-        now = float(self._clock())
+        run_id = self._text(run_id, "run_id")
+        blueprint_ref = self._text(blueprint_ref, "blueprint_ref")
+        manifest_ref = self._text(manifest_ref, "manifest_ref")
+        now = self._now()
         with self._transaction() as connection:
             existing = connection.execute(
                 "SELECT * FROM runs WHERE run_id = ?", (run_id,)
@@ -263,14 +448,13 @@ class DurableOrchestratorStore:
         max_attempts: int = 3,
         checkpoint: Mapping[str, object] | None = None,
     ) -> dict[str, object]:
-        run_id = _require_text(run_id, "run_id")
-        task_id = _require_text(task_id, "task_id")
-        idempotency_key = _require_text(idempotency_key, "idempotency_key")
+        run_id = self._text(run_id, "run_id")
+        task_id = self._text(task_id, "task_id")
+        idempotency_key = self._text(idempotency_key, "idempotency_key")
         expected_precondition_sha = _require_sha(expected_precondition_sha)
-        if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts <= 0:
-            raise ValueError("max_attempts must be a positive integer")
-        checkpoint_json = _canonical_json(checkpoint)
-        now = float(self._clock())
+        max_attempts = self._positive_integer(max_attempts, "max_attempts")
+        checkpoint_json = self._json(checkpoint, "checkpoint")
+        now = self._now()
         with self._transaction() as connection:
             run = connection.execute(
                 "SELECT status FROM runs WHERE run_id = ?", (run_id,)
@@ -329,6 +513,7 @@ class DurableOrchestratorStore:
             )
 
     def get_run(self, run_id: str) -> dict[str, object] | None:
+        run_id = self._text(run_id, "run_id")
         connection = self._connect()
         try:
             row = connection.execute(
@@ -339,6 +524,8 @@ class DurableOrchestratorStore:
             connection.close()
 
     def get_task(self, run_id: str, task_id: str) -> dict[str, object] | None:
+        run_id = self._text(run_id, "run_id")
+        task_id = self._text(task_id, "task_id")
         connection = self._connect()
         try:
             row = connection.execute(
@@ -357,10 +544,11 @@ class DurableOrchestratorStore:
         lease_owner: str,
         lease_seconds: float,
     ) -> dict[str, object]:
-        lease_owner = _require_text(lease_owner, "lease_owner")
-        if not isinstance(lease_seconds, (int, float)) or isinstance(lease_seconds, bool) or lease_seconds <= 0:
-            raise ValueError("lease_seconds must be positive")
-        now = float(self._clock())
+        run_id = self._text(run_id, "run_id")
+        task_id = self._text(task_id, "task_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        lease_seconds = self._positive_seconds(lease_seconds, "lease_seconds")
+        now = self._now()
         with self._transaction() as connection:
             row = self._task_row(connection, run_id, task_id)
             if row["status"] in {"COMPLETED", "FAILED"}:
@@ -387,7 +575,7 @@ class DurableOrchestratorStore:
                     lease_owner=?, lease_expires_at=?, updated_at=?
                 WHERE run_id=? AND task_id=?
                 """,
-                (lease_owner, now + float(lease_seconds), now, run_id, task_id),
+                (lease_owner, now + lease_seconds, now, run_id, task_id),
             )
             return self._task_record(self._task_row(connection, run_id, task_id))
 
@@ -400,7 +588,12 @@ class DurableOrchestratorStore:
         attempt: int,
         checkpoint: Mapping[str, object],
     ) -> dict[str, object]:
-        now = float(self._clock())
+        run_id = self._text(run_id, "run_id")
+        task_id = self._text(task_id, "task_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        attempt = self._positive_integer(attempt, "attempt")
+        checkpoint_json = self._json(checkpoint, "checkpoint")
+        now = self._now()
         with self._transaction() as connection:
             row = self._require_active_lease(
                 connection, run_id, task_id, lease_owner, attempt, now
@@ -410,14 +603,18 @@ class DurableOrchestratorStore:
                 UPDATE tasks SET checkpoint_json=?, updated_at=?
                 WHERE run_id=? AND task_id=?
                 """,
-                (_canonical_json(checkpoint), now, run_id, task_id),
+                (checkpoint_json, now, run_id, task_id),
             )
             return self._task_record(self._task_row(connection, run_id, task_id))
 
     def complete_task(
         self, run_id: str, task_id: str, *, lease_owner: str, attempt: int
     ) -> dict[str, object]:
-        now = float(self._clock())
+        run_id = self._text(run_id, "run_id")
+        task_id = self._text(task_id, "task_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        attempt = self._positive_integer(attempt, "attempt")
+        now = self._now()
         with self._transaction() as connection:
             self._require_active_lease(
                 connection, run_id, task_id, lease_owner, attempt, now
@@ -442,7 +639,16 @@ class DurableOrchestratorStore:
         retryable: bool,
         checkpoint: Mapping[str, object] | None = None,
     ) -> dict[str, object]:
-        now = float(self._clock())
+        run_id = self._text(run_id, "run_id")
+        task_id = self._text(task_id, "task_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        attempt = self._positive_integer(attempt, "attempt")
+        if not isinstance(retryable, bool):
+            raise ValueError("retryable must be a boolean")
+        checkpoint_json = (
+            self._json(checkpoint, "checkpoint") if checkpoint is not None else None
+        )
+        now = self._now()
         with self._transaction() as connection:
             row = self._require_active_lease(
                 connection, run_id, task_id, lease_owner, attempt, now
@@ -450,11 +656,7 @@ class DurableOrchestratorStore:
             next_status = (
                 "READY" if retryable and row["attempt"] < row["max_attempts"] else "FAILED"
             )
-            checkpoint_json = (
-                _canonical_json(checkpoint)
-                if checkpoint is not None
-                else row["checkpoint_json"]
-            )
+            checkpoint_json = checkpoint_json or row["checkpoint_json"]
             connection.execute(
                 """
                 UPDATE tasks SET status=?, checkpoint_json=?, lease_owner=NULL,
@@ -466,7 +668,7 @@ class DurableOrchestratorStore:
             return self._task_record(self._task_row(connection, run_id, task_id))
 
     def recover_expired_leases(self) -> list[dict[str, object]]:
-        now = float(self._clock())
+        now = self._now()
         recovered: list[dict[str, object]] = []
         with self._transaction() as connection:
             rows = connection.execute(
@@ -498,7 +700,8 @@ class DurableOrchestratorStore:
         return recovered
 
     def complete_run(self, run_id: str) -> dict[str, object]:
-        now = float(self._clock())
+        run_id = self._text(run_id, "run_id")
+        now = self._now()
         with self._transaction() as connection:
             run = connection.execute(
                 "SELECT * FROM runs WHERE run_id=?", (run_id,)
@@ -540,15 +743,19 @@ class DurableOrchestratorStore:
         lease_owner: str,
         task_attempt: int,
     ) -> dict[str, object]:
-        effect_id = _require_text(effect_id, "effect_id")
-        effect_kind = _require_text(effect_kind, "effect_kind")
-        action = _require_text(action, "action")
-        idempotency_key = _require_text(idempotency_key, "idempotency_key")
+        run_id = self._text(run_id, "run_id")
+        task_id = self._text(task_id, "task_id")
+        effect_id = self._text(effect_id, "effect_id")
+        effect_kind = self._text(effect_kind, "effect_kind")
+        action = self._text(action, "action")
+        idempotency_key = self._text(idempotency_key, "idempotency_key")
         expected_precondition_sha = _require_sha(expected_precondition_sha)
+        lease_owner = self._text(lease_owner, "lease_owner")
+        task_attempt = self._positive_integer(task_attempt, "task_attempt")
         if resource_scope != "local_fixture":
             raise ValueError("resource_scope must be local_fixture")
-        payload_json = _canonical_json(payload)
-        now = float(self._clock())
+        payload_json = self._json(payload, "payload")
+        now = self._now()
         with self._transaction() as connection:
             task = self._require_active_lease(
                 connection, run_id, task_id, lease_owner, task_attempt, now
@@ -623,7 +830,10 @@ class DurableOrchestratorStore:
         lease_owner: str,
         task_attempt: int,
     ) -> dict[str, object]:
-        now = float(self._clock())
+        effect_id = self._text(effect_id, "effect_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        task_attempt = self._positive_integer(task_attempt, "task_attempt")
+        now = self._now()
         with self._transaction() as connection:
             effect = self._effect_row(connection, effect_id)
             self._require_active_lease(
@@ -664,11 +874,14 @@ class DurableOrchestratorStore:
         event_kind: str,
         event_payload: Mapping[str, object],
     ) -> dict[str, object]:
+        effect_id = self._text(effect_id, "effect_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        task_attempt = self._positive_integer(task_attempt, "task_attempt")
         expected_precondition_sha = _require_sha(expected_precondition_sha)
-        event_kind = _require_text(event_kind, "event_kind")
-        result_json = _canonical_json(result)
-        event_payload_json = _canonical_json(event_payload)
-        now = float(self._clock())
+        event_kind = self._text(event_kind, "event_kind")
+        result_json = self._json(result, "result")
+        event_payload_json = self._json(event_payload, "event_payload")
+        now = self._now()
         with self._transaction() as connection:
             effect = self._effect_row(connection, effect_id)
             if effect["expected_precondition_sha"] != expected_precondition_sha:
@@ -681,8 +894,10 @@ class DurableOrchestratorStore:
                 task_attempt,
                 now,
             )
-            event_id = f"{effect_id}:completed"
-            event_key = f"{effect['idempotency_key']}:completed"
+            event_id = self._text(f"{effect_id}:completed", "event_id")
+            event_key = self._text(
+                f"{effect['idempotency_key']}:completed", "event idempotency_key"
+            )
             if effect["state"] == "COMPLETED":
                 outbox = self._outbox_row(connection, event_id)
                 if (
@@ -739,7 +954,11 @@ class DurableOrchestratorStore:
         task_attempt: int,
         result: Mapping[str, object] | None = None,
     ) -> dict[str, object]:
-        now = float(self._clock())
+        effect_id = self._text(effect_id, "effect_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        task_attempt = self._positive_integer(task_attempt, "task_attempt")
+        result_json = self._json(result, "result")
+        now = self._now()
         with self._transaction() as connection:
             effect = self._effect_row(connection, effect_id)
             self._require_active_lease(
@@ -757,11 +976,12 @@ class DurableOrchestratorStore:
                 UPDATE side_effects SET state='FAILED', result_json=?, updated_at=?
                 WHERE effect_id=?
                 """,
-                (_canonical_json(result), now, effect_id),
+                (result_json, now, effect_id),
             )
             return self._effect_record(self._effect_row(connection, effect_id))
 
     def get_side_effect(self, effect_id: str) -> dict[str, object] | None:
+        effect_id = self._text(effect_id, "effect_id")
         connection = self._connect()
         try:
             row = connection.execute(
@@ -772,6 +992,7 @@ class DurableOrchestratorStore:
             connection.close()
 
     def get_outbox_event(self, event_id: str) -> dict[str, object] | None:
+        event_id = self._text(event_id, "event_id")
         connection = self._connect()
         try:
             row = connection.execute(
@@ -782,9 +1003,8 @@ class DurableOrchestratorStore:
             connection.close()
 
     def pending_outbox(self, *, limit: int = 100) -> list[dict[str, object]]:
-        if not isinstance(limit, int) or limit <= 0:
-            raise ValueError("limit must be a positive integer")
-        now = float(self._clock())
+        limit = self._positive_integer(limit, "limit")
+        now = self._now()
         connection = self._connect()
         try:
             rows = connection.execute(
@@ -803,10 +1023,10 @@ class DurableOrchestratorStore:
     def claim_outbox_event(
         self, event_id: str, *, lease_owner: str, lease_seconds: float
     ) -> dict[str, object]:
-        lease_owner = _require_text(lease_owner, "lease_owner")
-        if not isinstance(lease_seconds, (int, float)) or isinstance(lease_seconds, bool) or lease_seconds <= 0:
-            raise ValueError("lease_seconds must be positive")
-        now = float(self._clock())
+        event_id = self._text(event_id, "event_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        lease_seconds = self._positive_seconds(lease_seconds, "lease_seconds")
+        now = self._now()
         with self._transaction() as connection:
             row = self._outbox_row(connection, event_id)
             if row["state"] == "PUBLISHED":
@@ -825,7 +1045,7 @@ class DurableOrchestratorStore:
                     lease_owner=?, lease_expires_at=?, updated_at=?
                 WHERE event_id=?
                 """,
-                (lease_owner, now + float(lease_seconds), now, event_id),
+                (lease_owner, now + lease_seconds, now, event_id),
             )
             record = self._outbox_record(self._outbox_row(connection, event_id))
             record["already_published"] = False
@@ -838,8 +1058,10 @@ class DurableOrchestratorStore:
         lease_owner: str,
         receipt: Mapping[str, object],
     ) -> dict[str, object]:
-        now = float(self._clock())
-        receipt_json = _canonical_json(receipt)
+        event_id = self._text(event_id, "event_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        receipt_json = self._json(receipt, "receipt")
+        now = self._now()
         with self._transaction() as connection:
             row = self._outbox_row(connection, event_id)
             if row["state"] == "PUBLISHED":
@@ -861,7 +1083,9 @@ class DurableOrchestratorStore:
             return self._outbox_record(self._outbox_row(connection, event_id))
 
     def release_outbox_event(self, event_id: str, *, lease_owner: str) -> dict[str, object]:
-        now = float(self._clock())
+        event_id = self._text(event_id, "event_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        now = self._now()
         with self._transaction() as connection:
             row = self._outbox_row(connection, event_id)
             if row["state"] != "DELIVERING" or row["lease_owner"] != lease_owner:
@@ -876,7 +1100,7 @@ class DurableOrchestratorStore:
             return self._outbox_record(self._outbox_row(connection, event_id))
 
     def recover_expired_outbox_leases(self) -> list[dict[str, object]]:
-        now = float(self._clock())
+        now = self._now()
         with self._transaction() as connection:
             rows = connection.execute(
                 """
@@ -908,6 +1132,9 @@ class DurableOrchestratorStore:
         lease_seconds: float = 30.0,
         limit: int = 100,
     ) -> list[dict[str, object]]:
+        lease_owner = self._text(lease_owner, "lease_owner")
+        self._positive_seconds(lease_seconds, "lease_seconds")
+        self._positive_integer(limit, "limit")
         results: list[dict[str, object]] = []
         for pending in self.pending_outbox(limit=limit):
             event_id = str(pending["event_id"])
