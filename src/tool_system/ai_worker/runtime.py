@@ -4,7 +4,7 @@ import hashlib
 import json
 import threading
 from dataclasses import dataclass, replace
-from typing import Mapping
+from typing import Mapping, Protocol
 
 from tool_system.ai_worker.contract import (
     AIWorkerError,
@@ -15,11 +15,32 @@ from tool_system.ai_worker.contract import (
     AIWorkerUsage,
     CancellationSignal,
     ProviderResponse,
+    RequestValidation,
     canonical_json_bytes,
     validate_ai_worker_request,
     validate_structured_output,
     validate_usage,
 )
+
+
+class AIWorkerExecutionGuard(Protocol):
+    boundary_name: str
+    invocation_evidence: str
+
+    def validate_request(self, request: AIWorkerRequest) -> RequestValidation: ...
+
+    def provider_boundary_reasons(self, provider: object) -> tuple[str, ...]: ...
+
+
+class FixtureExecutionGuard:
+    boundary_name = "P14B fixture"
+    invocation_evidence = "ai_worker.fixture_provider.invoked"
+
+    def validate_request(self, request: AIWorkerRequest) -> RequestValidation:
+        return validate_ai_worker_request(request)
+
+    def provider_boundary_reasons(self, provider: object) -> tuple[str, ...]:
+        return _fixture_provider_boundary_reasons(provider)
 
 
 class CancellationToken:
@@ -64,8 +85,10 @@ class AIWorkerRuntime:
         provider: AIWorkerProvider,
         *,
         replay_store: InMemoryReplayStore | None = None,
+        execution_guard: AIWorkerExecutionGuard | None = None,
     ) -> None:
         self.provider = provider
+        self.execution_guard = execution_guard or FixtureExecutionGuard()
         self.replay_store = (
             replay_store if replay_store is not None else InMemoryReplayStore()
         )
@@ -77,7 +100,7 @@ class AIWorkerRuntime:
         *,
         cancellation: CancellationSignal | None = None,
     ) -> AIWorkerResult:
-        validation = validate_ai_worker_request(request)
+        validation = self.execution_guard.validate_request(request)
         request_sha256 = _request_sha256_or_fallback(request)
         if not validation.ok:
             return _terminal_error(
@@ -100,7 +123,9 @@ class AIWorkerRuntime:
                         status="BLOCK",
                         code=AIWorkerErrorCode.REPLAY_CONFLICT,
                         message="idempotency key is bound to another request",
-                        reasons=("same idempotency_key has a different request_sha256",),
+                        reasons=(
+                            "same idempotency_key has a different request_sha256",
+                        ),
                         evidence=("ai_worker.replay.conflict",),
                     )
                 return replace(
@@ -128,16 +153,19 @@ class AIWorkerRuntime:
         request_sha256: str,
         cancellation: CancellationSignal | None,
     ) -> AIWorkerResult:
-        boundary_reasons = _fixture_provider_boundary_reasons(self.provider)
+        boundary_reasons = self.execution_guard.provider_boundary_reasons(self.provider)
         if boundary_reasons:
             return _terminal_error(
                 request,
                 request_sha256=request_sha256,
                 status="BLOCK",
                 code=AIWorkerErrorCode.PROVIDER_MISMATCH,
-                message="runtime provider is outside the P14B fixture boundary",
+                message=(
+                    "runtime provider is outside the "
+                    f"{self.execution_guard.boundary_name} boundary"
+                ),
                 reasons=boundary_reasons,
-                evidence=("ai_worker.fixture_provider_boundary.block",),
+                evidence=("ai_worker.provider_boundary.block",),
             )
         provider_id = getattr(self.provider, "provider_id", None)
         model_id = getattr(self.provider, "model_id", None)
@@ -149,7 +177,9 @@ class AIWorkerRuntime:
                 status="BLOCK",
                 code=AIWorkerErrorCode.PROVIDER_MISMATCH,
                 message="runtime provider identity is invalid",
-                reasons=("provider identity must contain string provider_id and model_id",),
+                reasons=(
+                    "provider identity must contain string provider_id and model_id",
+                ),
                 evidence=("ai_worker.provider_contract.block",),
             )
         if not isinstance(provider_capabilities, tuple) or not all(
@@ -289,7 +319,9 @@ class AIWorkerRuntime:
                 usage=response.usage,
                 evidence=("ai_worker.response_contract.block",),
             )
-        if response.error is not None and not isinstance(response.error.retryable, bool):
+        if response.error is not None and not isinstance(
+            response.error.retryable, bool
+        ):
             return _terminal_error(
                 request,
                 request_sha256=request_sha256,
@@ -391,7 +423,7 @@ class AIWorkerRuntime:
             output_sha256=hashlib.sha256(canonical_json_bytes(output)).hexdigest(),
             evidence=(
                 "ai_worker.request.validated",
-                "ai_worker.fixture_provider.invoked",
+                self.execution_guard.invocation_evidence,
                 "ai_worker.response.validated",
             ),
         )

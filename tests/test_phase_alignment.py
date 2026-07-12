@@ -14,7 +14,7 @@ CHANGE_PLAN = (
     ROOT
     / "examples"
     / "change_plans"
-    / "tool_system_p14mr_milestone_module_invariant.yaml"
+    / "tool_system_p14c_bounded_real_model_provider_execution.yaml"
 )
 EXPECTED_PHASE = "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
 
@@ -59,19 +59,26 @@ def test_public_contracts_have_same_current_phase() -> None:
         "P16_PRODUCTION_OPERATIONS_ACCEPTANCE",
     }
     execution = blueprint["active_phase_execution"]
-    assert execution["current_stage"] == (
-        "P14MR_MILESTONE_MODULE_INVARIANT"
-    )
+    assert execution["current_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
     assert execution["phase_entry_authorized"] is True
     assert execution["authorized_scope"] == (
-        "global_milestone_module_governance_only"
+        "bounded_openai_gpt56_luna_synthetic_fixture_only"
     )
-    assert execution["phase_source_implementation_authorized"] is False
-    assert execution["next_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
+    assert execution["phase_source_implementation_authorized"] is True
+    assert execution["next_stage"] == "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER"
     assert execution["next_stage_authorized"] is False
-    assert execution["live_model_provider_execution_authorized"] is False
+    assert execution["live_model_provider_execution_authorized"] is True
     assert execution["remote_target_mutation_authorized"] is False
     assert execution["production_deployment_authorized"] is False
+    packet = execution["execution_packet"]
+    assert packet["packet_id"] == "p14c-openai-gpt56-luna-v1"
+    assert packet["provider_id"] == "openai"
+    assert packet["model_id"] == "gpt-5.6-luna"
+    assert packet["api_host"] == "api.openai.com"
+    assert packet["credential_reference"] == "env:OPENAI_API_KEY"
+    assert packet["max_attempts"] == 2
+    assert packet["max_cumulative_cost_microusd"] == 20_000
+    assert packet["provider_or_model_fallback_allowed"] is False
 
 
 def test_phase_alignment_change_plan_validates() -> None:

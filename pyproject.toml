@@ -37,6 +37,7 @@ tool-system-cleanup-plan = "tool_system.cli.cleanup_plan:main"
 tool-system-plan-requirement = "tool_system.cli.plan_requirement:main"
 tool-system-run-stage = "tool_system.cli.run_stage:main"
 tool-system-run-roles = "tool_system.cli.run_role_graph:main"
+tool-system-p14c-live-evidence = "tool_system.cli.run_p14c_live_evidence:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

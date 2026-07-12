@@ -110,11 +110,12 @@ Current phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.
 
 Status: `active`.
 
-P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract is accepted and closed. P14 is active at the P14MR global milestone-module governance scope only. Live model/provider execution, project benchmarks, and target mutations are not authorized. P15-P16 remain roadmap-only.
+P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract and P14MR Milestone Module Invariant are accepted and closed. P14 is active at the exact P14C bounded real-provider module. Only the named synthetic OpenAI execution packet is authorized; repository benchmarks and target mutations are not authorized. P15-P16 remain roadmap-only.
 
 Allowed now:
 
-- P14MR governance documents, machine-alignment tests, internal pull-request lifecycle, merge, and bounded closure under `docs/reports/p14mr_milestone_module_invariant.md`;
+- P14C documents, source, injected-transport tests, one exact synthetic live execution, internal pull-request lifecycle, merge, and bounded closure under `docs/reports/p14c_bounded_real_model_provider_execution.md`;
+- provider `openai`, model `gpt-5.6-luna`, endpoint `api.openai.com:443/v1/responses`, credential reference `env:OPENAI_API_KEY`, and the exact token/time/cost/retry/cancellation/redaction envelope recorded by `p14c-openai-gpt56-luna-v1`;
 - read-only verification of the accepted P14A and P14B contracts and evidence;
 - read-only verification of the accepted P13 security and reliability evidence;
 - read-only verification of accepted P12 durable-orchestrator state and evidence;
@@ -128,9 +129,10 @@ Not allowed now:
 - target-repository main-branch mutation outside the approved merge flow;
 - finance-us P1B target implementation without a named, action-scoped target execution approval;
 - treating a P1B implementation approval as ready or merge approval;
-- further P14B source expansion under the accepted and closed module;
-- P14C or later P14 source implementation before a named authorization;
-- any live model/provider call before a named provider, model, credential, network, cost, and execution packet is authorized;
+- changing the accepted P14B public contract or fixture-only default beyond the interface-compatible execution-guard extension recorded by P14C;
+- any provider, model, endpoint, credential reference, input, budget, price, retry, or fallback outside `p14c-openai-gpt56-luna-v1`;
+- any repository content, target state, business data, personal data, or secret in a P14C provider request;
+- P14D or later P14 source implementation before a named authorization;
 - P15 or later phase entry or implementation before a named authorization;
 - further P13 runtime, orchestrator, or evidence expansion under the closed milestone;
 - further P12 runtime expansion under the closed milestone;

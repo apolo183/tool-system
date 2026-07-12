@@ -1,0 +1,43 @@
+plan_id: tool-system-p14c-bounded-real-model-provider-execution
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p14c_bounded_real_model_provider_execution.yaml
+changed_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/tool_system_v0.yaml
+  - docs/reports/p14c_bounded_real_model_provider_execution.md
+  - examples/task_manifests/tool_system_p14c_bounded_real_model_provider_execution.yaml
+  - examples/change_plans/tool_system_p14c_bounded_real_model_provider_execution.yaml
+  - examples/active_gates.yaml
+  - pyproject.toml
+  - src/tool_system/ai_worker/__init__.py
+  - src/tool_system/ai_worker/contract.py
+  - src/tool_system/ai_worker/runtime.py
+  - src/tool_system/ai_worker/live_provider.py
+  - src/tool_system/cli/run_p14c_live_evidence.py
+  - tests/test_ai_worker_live_provider.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_phase_alignment.py
+  - tests/test_p14_phase_entry_contract.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p14c_bounded_real_model_provider_execution.yaml
+    section_or_key: task_id
+    scope: Follow only the exact P14C packet, source, tests, evidence, and internal PR lifecycle authorized by the manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Add the bounded real provider link without entering repository context, compilation, patching, target mutation, or production.
+verification:
+  commands:
+    - git diff --check
+    - python -m pytest -q tests/test_ai_worker_contract.py tests/test_ai_worker_fixture_provider.py tests/test_ai_worker_live_provider.py tests/test_p14c_execution_contract.py tests/test_phase_alignment.py tests/test_p14_phase_entry_contract.py tests/test_product_objective_alignment.py tests/test_milestone_module_invariant.py
+    - python -m pytest -q
+    - python -m compileall -q src tests
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_bounded_real_model_provider_execution.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - python -m tool_system.cli.run_p14c_live_evidence --preflight-only
+    - python -m tool_system.cli.run_p14c_live_evidence
+rollback:
+  method: git_revert
+  reference: p14c-bounded-real-provider

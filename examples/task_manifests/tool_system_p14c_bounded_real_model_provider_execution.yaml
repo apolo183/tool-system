@@ -1,0 +1,105 @@
+task_id: tool-system-p14c-bounded-real-model-provider-execution
+task_type: code_add
+target_repo: apolo183/tool-system
+target_branch: p14c-bounded-real-provider
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stage_plan.P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+alignment:
+  parent:
+    document: docs/reports/p14mr_milestone_module_invariant.md
+    section_or_key: Rollback and stop condition
+    scope: Enter only the separately authorized P14C module after P14MR acceptance while preserving the P14B fixture interface.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Close only the bounded real AI-worker provider link required by the blueprint-to-code flow.
+scope:
+  summary: Implement and accept the exact OpenAI gpt-5.6-luna synthetic-fixture execution packet with no repository mutation.
+  in_scope:
+    - exact packet, module contract, phase state, manifest, change plan, gates, and public status
+    - interface-compatible execution-guard extension preserving the P14B fixture default
+    - bounded OpenAI Responses API adapter and formal synthetic live-evidence CLI
+    - credential, network, timeout, cancellation, retry, cost, strict-output, replay, and redaction tests
+    - one synthetic public live request with at most two HTTP attempts and cumulative cost at most 20000 micro-USD
+    - internal tool-system draft PR, CI, ready, squash merge, closure, and fresh-main verification
+  out_of_scope:
+    - repository content in the provider request
+    - finance-us or any target-repository read, branch, PR, write, ready, merge, or mutation
+    - provider, model, endpoint, credential reference, payload, budget, or price fallback
+    - P14D or later P14 implementation
+    - policy boundary modification
+    - cleanup execution, branch deletion, rollback execution, or production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p14b_provider_neutral_ai_worker_contract.md
+    ref: 212af8228b8879dc5332fc1d3fab2c401ba6a280
+    why_relevant: Accepted public request/result, replay, error, usage, response-validation, and audit interface that P14C must preserve.
+  - repo: apolo183/tool-system
+    path: docs/reports/p14mr_milestone_module_invariant.md
+    ref: c30df8c6955260d07fbf271f62d54a921ea26e86
+    why_relevant: Accepted direct parent requiring a versioned replaceable module and bounded dependency impact.
+  - repo: apolo183/tool-system
+    path: docs/reports/p14c_bounded_real_model_provider_execution.md
+    ref: working-tree
+    why_relevant: Exact user-approved provider/model/network/credential/token/time/cost/retry/cancellation/redaction execution packet.
+allowed_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/tool_system_v0.yaml
+  - docs/reports/p14c_bounded_real_model_provider_execution.md
+  - examples/task_manifests/tool_system_p14c_bounded_real_model_provider_execution.yaml
+  - examples/change_plans/tool_system_p14c_bounded_real_model_provider_execution.yaml
+  - examples/active_gates.yaml
+  - pyproject.toml
+  - src/tool_system/ai_worker/__init__.py
+  - src/tool_system/ai_worker/contract.py
+  - src/tool_system/ai_worker/runtime.py
+  - src/tool_system/ai_worker/live_provider.py
+  - src/tool_system/cli/run_p14c_live_evidence.py
+  - tests/test_ai_worker_live_provider.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_phase_alignment.py
+  - tests/test_p14_phase_entry_contract.py
+forbidden_files:
+  - policy/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+  - src/tool_system/agent_worker/**
+  - src/tool_system/orchestrator/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - python -m pytest -q tests/test_ai_worker_contract.py tests/test_ai_worker_fixture_provider.py tests/test_ai_worker_live_provider.py tests/test_p14c_execution_contract.py tests/test_phase_alignment.py tests/test_p14_phase_entry_contract.py tests/test_product_objective_alignment.py tests/test_milestone_module_invariant.py
+    - python -m pytest -q
+    - python -m compileall -q src tests
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_bounded_real_model_provider_execution.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - python -m tool_system.cli.run_p14c_live_evidence --preflight-only
+    - python -m tool_system.cli.run_p14c_live_evidence
+  pass_conditions:
+    - exact named packet and synthetic payload are content-bound and every drift case fails before credential or network access
+    - P14B fixture default and public request/result interface remain compatible
+    - retry, timeout, cancellation, cost, response, replay, and redaction tests pass without real network
+    - formal live command returns one redacted PASS record within the approved calls, token, time, and cost envelope
+    - full tests, active gates, candidate CI, closure CI, squash merge, and fresh-main verification pass
+    - no repository content, target repository action, cleanup, rollback, or production action occurs
+rollback:
+  method: git_revert
+  reference: p14c-bounded-real-provider
+approval:
+  required: true
+  approved_by: user_approved_p14c_named_execution_packet_and_full_lifecycle
+  execution_packet: p14c-openai-gpt56-luna-v1
+  external_worker_execution: true
+  internal_pr_lifecycle: true
+  remote_target_mutation: false
+  production_deployment: false

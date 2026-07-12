@@ -27,16 +27,39 @@ successor_authorization:
   next_phase_entry_authorized: false
 
 active_phase_execution:
-  record: docs/reports/p14mr_milestone_module_invariant.md
-  current_stage: P14MR_MILESTONE_MODULE_INVARIANT
+  record: docs/reports/p14c_bounded_real_model_provider_execution.md
+  current_stage: P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
   phase_entry_authorized: true
-  authorized_scope: global_milestone_module_governance_only
-  phase_source_implementation_authorized: false
-  next_stage: P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+  authorized_scope: bounded_openai_gpt56_luna_synthetic_fixture_only
+  phase_source_implementation_authorized: true
+  next_stage: P14D_REPOSITORY_CONTEXT_NATURAL_OWNER
   next_stage_authorized: false
-  live_model_provider_execution_authorized: false
+  live_model_provider_execution_authorized: true
   remote_target_mutation_authorized: false
   production_deployment_authorized: false
+  execution_packet:
+    packet_id: p14c-openai-gpt56-luna-v1
+    provider_id: openai
+    model_id: gpt-5.6-luna
+    api_method: POST
+    api_host: api.openai.com
+    api_port: 443
+    api_path: /v1/responses
+    credential_reference: env:OPENAI_API_KEY
+    reasoning_effort: none
+    store: false
+    tools_allowed: false
+    input_scope: exact_public_synthetic_fixture_P14C-001_only
+    max_input_tokens_per_attempt: 4096
+    max_output_tokens_per_attempt: 512
+    max_total_tokens_per_attempt: 4608
+    max_attempts: 2
+    max_cumulative_tokens: 9216
+    request_timeout_ms: 20000
+    live_evidence_wall_clock_ms: 45000
+    max_cumulative_cost_microusd: 20000
+    redirects_allowed: false
+    provider_or_model_fallback_allowed: false
 
 identity:
   description: Domain-agnostic agentic software factory for blueprint parsing, task planning, patch generation, test execution, and repository control.

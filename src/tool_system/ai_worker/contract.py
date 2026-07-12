@@ -316,7 +316,9 @@ class AIWorkerResult:
             "prompt_version": self.prompt_version,
             "usage": self.usage.to_record(),
             "output_sha256": self.output_sha256,
-            "error": self.error.to_record(audit=True) if self.error is not None else None,
+            "error": self.error.to_record(audit=True)
+            if self.error is not None
+            else None,
             "replayed": self.replayed,
             "evidence": list(self.evidence),
         }
@@ -333,8 +335,7 @@ class RequestValidation:
 
 
 class CancellationSignal(Protocol):
-    def is_cancelled(self) -> bool:
-        ...
+    def is_cancelled(self) -> bool: ...
 
 
 class AIWorkerProvider(Protocol):
@@ -351,11 +352,28 @@ class AIWorkerProvider(Protocol):
         self,
         request: AIWorkerRequest,
         cancellation: CancellationSignal | None = None,
-    ) -> ProviderResponse:
-        ...
+    ) -> ProviderResponse: ...
 
 
 def validate_ai_worker_request(request: AIWorkerRequest) -> RequestValidation:
+    return validate_ai_worker_request_for_mode(
+        request,
+        expected_execution_mode="fixture",
+        stage_label="P14B",
+    )
+
+
+def validate_ai_worker_request_for_mode(
+    request: AIWorkerRequest,
+    *,
+    expected_execution_mode: str,
+    stage_label: str,
+) -> RequestValidation:
+    if expected_execution_mode not in {"fixture", "live"}:
+        raise ValueError("expected_execution_mode must be fixture or live")
+    if stage_label not in {"P14B", "P14C"}:
+        raise ValueError("stage_label must be P14B or P14C")
+
     invalid: list[str] = []
     integrity: list[str] = []
     capability: list[str] = []
@@ -392,17 +410,21 @@ def validate_ai_worker_request(request: AIWorkerRequest) -> RequestValidation:
     if not isinstance(request.idempotency_key, str) or not (
         1 <= len(request.idempotency_key) <= 256
     ):
-        invalid.append("idempotency_key must be a non-empty string of at most 256 characters")
+        invalid.append(
+            "idempotency_key must be a non-empty string of at most 256 characters"
+        )
     if not _positive_int(request.attempt_number):
         invalid.append("attempt_number must be a positive integer")
-    if request.execution_mode != "fixture":
-        invalid.append("execution_mode must be fixture in P14B")
+    if request.execution_mode != expected_execution_mode:
+        invalid.append(
+            f"execution_mode must be {expected_execution_mode} in {stage_label}"
+        )
     if request.writes_target_repo is not False:
-        invalid.append("writes_target_repo must be false in P14B")
+        invalid.append(f"writes_target_repo must be false in {stage_label}")
     if request.executes_target_repo_mutation is not False:
-        invalid.append("executes_target_repo_mutation must be false in P14B")
+        invalid.append(f"executes_target_repo_mutation must be false in {stage_label}")
     if request.production_deployment is not False:
-        invalid.append("production_deployment must be false in P14B")
+        invalid.append(f"production_deployment must be false in {stage_label}")
 
     if not isinstance(request.inputs, tuple) or not (
         1 <= len(request.inputs) <= MAX_INPUT_COUNT
@@ -431,11 +453,15 @@ def validate_ai_worker_request(request: AIWorkerRequest) -> RequestValidation:
         if not isinstance(item.payload_sha256, str) or not _SHA256_PATTERN.fullmatch(
             item.payload_sha256
         ):
-            integrity.append(f"input {item.input_id} payload_sha256 must be lowercase SHA-256")
+            integrity.append(
+                f"input {item.input_id} payload_sha256 must be lowercase SHA-256"
+            )
         try:
             payload_bytes = canonical_json_bytes(item.payload)
         except ValueError:
-            invalid.append(f"input {item.input_id} payload must be finite canonical JSON")
+            invalid.append(
+                f"input {item.input_id} payload must be finite canonical JSON"
+            )
             continue
         total_input_bytes += len(payload_bytes)
         if len(payload_bytes) > MAX_INPUT_BYTES:
