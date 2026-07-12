@@ -23,6 +23,7 @@ def test_p14_stage_sequence_closes_each_missing_product_link() -> None:
     assert [stage["stage"] for stage in p14["stage_plan"]] == [
         "P14A_PHASE_ENTRY_END_TO_END_SPECIFICATION",
         "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT",
+        "P14MR_MILESTONE_MODULE_INVARIANT",
         "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION",
         "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER",
         "P14E_BLUEPRINT_COMPILER",
@@ -41,6 +42,7 @@ def test_p14_stage_sequence_closes_each_missing_product_link() -> None:
     assert boundaries["P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT"] == (
         "no_live_provider"
     )
+    assert boundaries["P14MR_MILESTONE_MODULE_INVARIANT"] == "governance_only"
     assert boundaries["P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"] == (
         "separately_authorized_live_provider_no_repository_mutation"
     )
@@ -58,7 +60,12 @@ def test_p14_stage_sequence_closes_each_missing_product_link() -> None:
         "entry_requires"
     ] == [
         "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT accepted",
+        "P14MR_MILESTONE_MODULE_INVARIANT accepted",
         "named provider-model-network-credential-cost execution packet authorized",
+    ]
+    assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["entry_requires"] == [
+        "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT accepted",
+        "explicit global milestone-module governance authorization",
     ]
     assert stages["P14I_ACCEPTANCE_CLOSURE"]["entry_requires"] == [
         "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE accepted"
@@ -91,7 +98,7 @@ def test_p14a_manifest_authorized_specification_but_not_implementation() -> None
     manifest = load_yaml_file(MANIFEST)
 
     assert blueprint["active_phase_execution"]["current_stage"] == (
-        "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT"
+        "P14MR_MILESTONE_MODULE_INVARIANT"
     )
     assert manifest["task_type"] == "docs_update"
     assert manifest["alignment"]["global"]["section_or_key"] == (

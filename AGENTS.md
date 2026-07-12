@@ -11,7 +11,7 @@ updated_at: 2026-07-12 UTC+09:00
 
 tool-system builds and controls automated software-development workflows. It is domain-agnostic infrastructure.
 
-The permanent product objective is bounded blueprint-driven autonomous software development. An approved blueprint must ultimately be convertible into milestones, an executable task DAG, controlled AI-assisted code changes, test/repair/review evidence, bounded local Git commits, and an acceptance record without silent scope or authority expansion.
+The permanent product objective is bounded blueprint-driven autonomous software development. An approved blueprint must ultimately be convertible into versioned replaceable milestone modules, an executable task DAG, controlled AI-assisted code changes, test/repair/review evidence, bounded local Git commits, and an acceptance record without silent scope or authority expansion.
 
 ## 2. Mandatory first step
 
@@ -46,7 +46,15 @@ Parent-only alignment is not enough. Small local deviations can accumulate into 
 
 For P14 and later work, global alignment means explicit alignment to `blueprint/tool_system_v0.yaml:product_objective`, not merely to the current milestone entry. Missing direct-parent or product-objective alignment blocks execution.
 
-## 5. Evidence-first rule
+## 5. Milestone module invariant
+
+Every project controlled, generated, or adopted by tool-system is a DAG of versioned replaceable capability modules. Every major milestone and sub-milestone is one module with a public input/output interface, explicit dependency versions, natural owners, content hashes, acceptance evidence, invalidation conditions, rollback, cleanup, and replacement disposition.
+
+Interface-compatible replacement must leave unaffected modules unchanged; direct dependents are revalidated rather than reimplemented by default. Contract or blueprint drift invalidates and isolates the module, blocks its dependents, preserves unrelated modules, and requires an accepted replacement before atomic reactivation. Hidden dependencies, cross-module internal-state access, parallel active mainlines, and undocumented whole-project rewrites are prohibited.
+
+Every controlled project must inherit `blueprint/tool_system_v0.yaml:milestone_module_invariant` or embed an equivalent machine-readable contract before its next phase entry or controlled write.
+
+## 6. Evidence-first rule
 
 Before modifying an existing file, an agent reads the current file and cites the relevant path and content region in its plan.
 
@@ -54,7 +62,7 @@ If evidence is missing, the agent runs read-only inspection or stops at the smal
 
 Material engineering work follows the evidence hierarchy, documentation-first loop, blueprint alignment invariant, drift gate, authorization gate, side-effect preflight, file disposition, cleanup, rollback, and claims rules in `docs/tool_system_global_development_principles_v1.md`.
 
-## 6. Side-effect tool discipline
+## 7. Side-effect tool discipline
 
 Before any tool call that creates, updates, deletes, merges, labels, or otherwise mutates GitHub state, the agent must internally verify:
 
@@ -70,7 +78,7 @@ Before any tool call that creates, updates, deletes, merges, labels, or otherwis
 
 If the intended action is file update but the selected tool is branch creation, merge, deletion, or cleanup, work stops before the tool call. A task may create at most one branch unless a later active document explicitly authorizes a replacement branch and records disposition of the prior branch.
 
-## 7. Autonomy model
+## 8. Autonomy model
 
 Human control is placed at blueprint, objective, policy boundary, and milestone review levels.
 
@@ -78,37 +86,36 @@ Routine implementation work inside an authorized milestone is handled by the sys
 
 Human review is required for blueprint changes, objective changes, policy boundary changes, milestone acceptance, cleanup execution, first real downstream target-repository mutation, target PR lifecycle transitions, and production deployment.
 
-## 8. Write boundaries
+## 9. Write boundaries
 
 Agents add or modify files only when the change is tied to an approved blueprint item and a valid task manifest.
 
-## 9. Change record
+## 10. Change record
 
 Every non-trivial change records scope, files touched, reason, verification command, and rollback method.
 
-## 10. Testing policy
+## 11. Testing policy
 
 Implementation phases include verification before further automation.
 
 Minimum gates include unit tests, format or lint checks where available, type checks where applicable, spec checks, and dry-run patch application.
 
-## 11. Rollback policy
+## 12. Rollback policy
 
 Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
-## 12. Current phase state
+## 13. Current phase state
 
 Current phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.
 
 Status: `active`.
 
-P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14 Blueprint-to-Code Autonomous Development is active at the P14B provider-neutral AI-worker-contract and deterministic-fixture scope. Live model/provider execution, project benchmarks, and target mutations are not authorized. P15-P16 remain roadmap-only.
+P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract is accepted and closed. P14 is active at the P14MR global milestone-module governance scope only. Live model/provider execution, project benchmarks, and target mutations are not authorized. P15-P16 remain roadmap-only.
 
 Allowed now:
 
-- P14B implementation, tests, internal pull-request lifecycle, merge, and bounded closure under `docs/reports/p14b_provider_neutral_ai_worker_contract.md`;
-- deterministic in-memory fixture-provider execution with no network, credentials, repository write, or production side effect;
-- read-only verification of the accepted P14A contract and P14B authorization state;
+- P14MR governance documents, machine-alignment tests, internal pull-request lifecycle, merge, and bounded closure under `docs/reports/p14mr_milestone_module_invariant.md`;
+- read-only verification of the accepted P14A and P14B contracts and evidence;
 - read-only verification of the accepted P13 security and reliability evidence;
 - read-only verification of accepted P12 durable-orchestrator state and evidence;
 - read-only verification of the accepted P11 runtime;
@@ -121,6 +128,7 @@ Not allowed now:
 - target-repository main-branch mutation outside the approved merge flow;
 - finance-us P1B target implementation without a named, action-scoped target execution approval;
 - treating a P1B implementation approval as ready or merge approval;
+- further P14B source expansion under the accepted and closed module;
 - P14C or later P14 source implementation before a named authorization;
 - any live model/provider call before a named provider, model, credential, network, cost, and execution packet is authorized;
 - P15 or later phase entry or implementation before a named authorization;

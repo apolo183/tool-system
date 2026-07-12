@@ -14,7 +14,7 @@ CHANGE_PLAN = (
     ROOT
     / "examples"
     / "change_plans"
-    / "tool_system_p14b_provider_neutral_ai_worker_contract.yaml"
+    / "tool_system_p14mr_milestone_module_invariant.yaml"
 )
 EXPECTED_PHASE = "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
 
@@ -60,13 +60,13 @@ def test_public_contracts_have_same_current_phase() -> None:
     }
     execution = blueprint["active_phase_execution"]
     assert execution["current_stage"] == (
-        "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT"
+        "P14MR_MILESTONE_MODULE_INVARIANT"
     )
     assert execution["phase_entry_authorized"] is True
     assert execution["authorized_scope"] == (
-        "provider_neutral_contract_and_deterministic_fixture_only"
+        "global_milestone_module_governance_only"
     )
-    assert execution["phase_source_implementation_authorized"] is True
+    assert execution["phase_source_implementation_authorized"] is False
     assert execution["next_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
     assert execution["next_stage_authorized"] is False
     assert execution["live_model_provider_execution_authorized"] is False

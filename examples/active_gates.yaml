@@ -110,6 +110,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p14r_blueprint_product_objective_roadmap_reconciliation.yaml
   - examples/task_manifests/tool_system_p14a_blueprint_to_code_phase_entry.yaml
   - examples/task_manifests/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+  - examples/task_manifests/tool_system_p14mr_milestone_module_invariant.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -218,3 +219,4 @@ change_plans:
   - examples/change_plans/tool_system_p14r_blueprint_product_objective_roadmap_reconciliation.yaml
   - examples/change_plans/tool_system_p14a_blueprint_to_code_phase_entry.yaml
   - examples/change_plans/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+  - examples/change_plans/tool_system_p14mr_milestone_module_invariant.yaml

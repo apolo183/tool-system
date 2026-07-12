@@ -23,13 +23,15 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
     contract = blueprint["product_contract"]
     alignment = blueprint["global_alignment"]
 
-    assert blueprint["schema_version"] == 0.4
+    assert blueprint["schema_version"] == 0.5
     assert objective["id"] == "blueprint_driven_autonomous_software_development"
     assert set(objective["required_end_to_end_flow"]) == {
         "ingest_approved_blueprint",
         "inspect_repository_state",
         "build_repository_context",
         "decompose_milestones",
+        "assemble_versioned_milestone_module_dag",
+        "validate_module_interfaces_and_dependencies",
         "generate_task_dag",
         "generate_phase_documents",
         "generate_task_manifests",
@@ -43,6 +45,8 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
         "repair_with_bounded_retry",
         "review_parent_alignment",
         "review_global_product_objective_alignment",
+        "isolate_and_replace_invalid_modules",
+        "revalidate_affected_module_dependents",
         "create_local_git_commits",
         "produce_draft_pull_request_plan",
         "prepare_separately_authorized_repository_publish_action",
@@ -51,7 +55,15 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
     }
     assert "approved_project_blueprint" in contract["inputs"]
     assert "authorization_envelope" in contract["inputs"]
+    assert "milestone_module_invariant_and_project_adoption_record" in (
+        contract["inputs"]
+    )
     assert "bounded_code_patches" in contract["outputs"]
+    assert "versioned_milestone_module_dag" in contract["outputs"]
+    assert "module_interface_and_dependency_contracts" in contract["outputs"]
+    assert "module_invalidation_replacement_and_revalidation_evidence" in (
+        contract["outputs"]
+    )
     assert "separately_authorized_draft_pull_request" in contract["outputs"]
     assert "acceptance_and_closure_record" in contract["outputs"]
     assert alignment == {
@@ -74,6 +86,10 @@ def test_completion_and_non_goals_prevent_false_product_claims() -> None:
         "bounded_projects_complete_end_to_end_in_isolated_repositories",
         "real_ai_worker_performs_controlled_implementation_and_repair",
         "every_milestone_proves_parent_and_global_objective_alignment",
+        "every_project_and_milestone_has_a_versioned_module_contract",
+        "interface_compatible_replacement_preserves_unaffected_modules",
+        "invalidated_modules_block_dependents_until_revalidation",
+        "hidden_cross_module_dependencies_are_rejected",
         "failed_runs_stop_or_rollback_without_silent_scope_expansion",
     }
     assert set(objective["non_goals"]) >= {
@@ -100,6 +116,9 @@ def test_successor_chain_builds_product_before_benchmark_and_operations() -> Non
     )
     assert "autonomous patch-test-diagnose-repair-review loop" in p14["outputs"]
     assert "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT accepted" in (
+        p15["entry_requires"]
+    )
+    assert "every benchmark project passes the milestone-module adoption gate" in (
         p15["entry_requires"]
     )
     assert "each real repository mutation separately authorized" in (
