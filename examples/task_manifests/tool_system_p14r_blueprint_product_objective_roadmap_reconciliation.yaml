@@ -1,0 +1,82 @@
+task_id: tool-system-p14r-blueprint-product-objective-roadmap-reconciliation
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p14r-blueprint-roadmap-reconciliation
+phase: P14R_SUCCESSOR_ROADMAP_RECONCILIATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/p13e_security_reliability_acceptance_closure.md
+    section_or_key: P14 boundary
+    scope: Preserve P13 closure and replace only the unauthorized successor roadmap.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Make bounded blueprint-to-code autonomous development the permanent global objective controlling P14-P16.
+scope:
+  summary: Add the permanent product objective and correct the successor roadmap before P14 phase entry.
+  in_scope:
+    - blueprint/tool_system_v0.yaml
+    - README.md
+    - AGENTS.md
+    - tests/test_phase_alignment.py
+    - tests/test_product_objective_alignment.py
+    - docs/reports/p14r_blueprint_product_objective_roadmap_reconciliation.md
+    - examples/task_manifests/tool_system_p14r_blueprint_product_objective_roadmap_reconciliation.yaml
+    - examples/change_plans/tool_system_p14r_blueprint_product_objective_roadmap_reconciliation.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - policy or runtime source changes
+    - P14 phase entry or implementation
+    - model or provider execution
+    - finance-us or any target-repository mutation
+    - branch cleanup or deletion
+    - production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p13e_security_reliability_acceptance_closure.md
+    ref: d9b43e1ec0cadcdbd4e25789b5c74a2a50c3cc33
+    why_relevant: Accepted P13 closure and prior P14 authorization boundary.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    ref: d9b43e1ec0cadcdbd4e25789b5c74a2a50c3cc33
+    why_relevant: Current roadmap advances to benchmark before the missing autonomous-development core.
+allowed_files:
+  - blueprint/tool_system_v0.yaml
+  - README.md
+  - AGENTS.md
+  - tests/test_phase_alignment.py
+  - tests/test_product_objective_alignment.py
+  - docs/reports/p14r_blueprint_product_objective_roadmap_reconciliation.md
+  - examples/task_manifests/tool_system_p14r_blueprint_product_objective_roadmap_reconciliation.yaml
+  - examples/change_plans/tool_system_p14r_blueprint_product_objective_roadmap_reconciliation.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - src/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q tests/test_phase_alignment.py tests/test_product_objective_alignment.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14r_blueprint_product_objective_roadmap_reconciliation.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - permanent product objective and end-to-end contract are machine-readable
+    - P14-P16 dependency chain matches the corrected roadmap
+    - public contracts and tests agree P14A is not authorized
+    - full tests and active gates pass
+    - no source, provider, target-repository, cleanup, or production action occurs
+rollback:
+  method: git_revert
+  reference: p14r-blueprint-roadmap-reconciliation
+approval:
+  required: true
+  approved_by: user_agreed_product_objective_blueprint_control

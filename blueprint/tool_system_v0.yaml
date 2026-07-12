@@ -1,4 +1,4 @@
-schema_version: 0.2
+schema_version: 0.3
 system: tool-system
 phase: P13_SECURITY_RELIABILITY_HARDENING
 status: accepted_and_closed
@@ -12,22 +12,105 @@ acceptance:
     record: docs/reports/p12e_durable_orchestrator_acceptance_closure.md
     accepted_scope: single_host_local_fixture_sqlite_durable_orchestrator
 successor_authorization:
-  record: docs/reports/p13e_security_reliability_acceptance_closure.md
+  record: docs/reports/p14r_blueprint_product_objective_roadmap_reconciliation.md
   authorized_at: null
-  authorized_roadmap:
+  defined_roadmap:
     - P11_REAL_WORKER_RUNTIME
     - P12_DURABLE_ORCHESTRATOR
     - P13_SECURITY_RELIABILITY_HARDENING
-    - P14_MULTI_REPO_BENCHMARK
-    - P15_PRODUCTION_OPERATIONS_ACCEPTANCE
+    - P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+    - P15_MULTI_PROJECT_BENCHMARK
+    - P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   active_phase: null
   later_phase_entry_authorized: false
-  next_phase: P14_MULTI_REPO_BENCHMARK
+  next_phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
   next_phase_entry_authorized: false
 
 identity:
   description: Domain-agnostic agentic software factory for blueprint parsing, task planning, patch generation, test execution, and repository control.
   domain_specific: false
+
+product_objective:
+  id: blueprint_driven_autonomous_software_development
+  statement: >-
+    Given an approved project blueprint, repository snapshot, authorization
+    envelope, and acceptance requirements, tool-system autonomously decomposes
+    milestones and tasks, prepares controlled implementation plans, modifies
+    code in an isolated workspace, runs tests, diagnoses and repairs failures,
+    reviews blueprint alignment, produces auditable evidence, and completes a
+    bounded local Git development workflow; an external draft pull request is
+    published only under separate action-scoped repository authorization.
+  required_end_to_end_flow:
+    - ingest_approved_blueprint
+    - inspect_repository_state
+    - build_repository_context
+    - decompose_milestones
+    - generate_task_dag
+    - generate_phase_documents
+    - generate_task_manifests
+    - generate_change_plans
+    - identify_natural_owners
+    - invoke_bounded_real_ai_worker
+    - implement_code_changes
+    - validate_file_scope
+    - run_tests
+    - diagnose_failures
+    - repair_with_bounded_retry
+    - review_parent_alignment
+    - review_global_product_objective_alignment
+    - create_local_git_commits
+    - produce_draft_pull_request_plan
+    - prepare_separately_authorized_repository_publish_action
+    - produce_acceptance_evidence
+    - close_completed_milestones
+  completion_definition:
+    - approved_blueprint_converts_to_executable_task_graph
+    - bounded_projects_complete_end_to_end_in_isolated_repositories
+    - real_ai_worker_performs_controlled_implementation_and_repair
+    - every_change_traces_to_blueprint_task_and_authorization
+    - every_milestone_proves_parent_and_global_objective_alignment
+    - interrupted_runs_resume_without_duplicate_side_effects
+    - failed_runs_stop_or_rollback_without_silent_scope_expansion
+    - isolated_multi_project_fixtures_pass_acceptance
+    - remote_side_effects_remain_action_scoped_and_separately_authorized
+  non_goals:
+    - unrestricted_remote_repository_mutation
+    - autonomous_production_deployment
+    - arbitrary_untrusted_code_containment
+    - bypassing_human_authorization_boundaries
+    - silent_business_requirement_invention
+    - claiming_codex_replacement_without_independent_evidence
+
+product_contract:
+  inputs:
+    - approved_project_blueprint
+    - repository_snapshot
+    - repository_governance_documents
+    - authorization_envelope
+    - validation_and_acceptance_requirements
+  outputs:
+    - milestone_hierarchy
+    - executable_task_dag
+    - phase_entry_records
+    - task_manifests
+    - change_plans
+    - bounded_code_patches
+    - test_and_repair_evidence
+    - review_and_alignment_evidence
+    - local_git_commits
+    - draft_pull_request_plan
+    - separately_authorized_draft_pull_request
+    - acceptance_and_closure_record
+
+global_alignment:
+  required_for_every_milestone: true
+  required_for_every_task_manifest: true
+  required_for_every_change_plan: true
+  required_for_every_acceptance_record: true
+  require_direct_parent_alignment: true
+  require_global_product_objective_alignment: true
+  product_objective_ref: product_objective
+  fail_closed_on_missing_alignment: true
 
 boundaries:
   owns:
@@ -50,7 +133,8 @@ boundaries:
     - real_worker_runtime
     - durable_orchestrator
     - security_reliability_hardening
-    - multi_repo_benchmark
+    - blueprint_to_code_autonomous_development
+    - multi_project_benchmark
     - production_operations_acceptance
   does_not_own:
     - finance_signals
@@ -335,23 +419,41 @@ milestones:
       - fault injection and recovery evidence
       - resource exhaustion and cancellation stress evidence
       - security and reliability acceptance record
-  P14_MULTI_REPO_BENCHMARK:
-    objective: benchmark the controlled system across multiple non-production repositories and produce release-candidate acceptance evidence
+  P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT:
+    objective: complete the bounded blueprint-to-code autonomous development loop before benchmarking the product across projects
     entry_requires:
       - P13_SECURITY_RELIABILITY_HARDENING accepted
       - explicit P14 phase-entry authorization
-      - each repository mutation separately authorized
+      - implementation begins in isolated local fixture repositories only
     outputs:
-      - representative multi-repository benchmark suite
+      - end-to-end product and acceptance contract
+      - bounded real AI model-provider worker runtime
+      - repository context builder and natural-owner discovery
+      - blueprint-to-milestone and executable task-DAG compiler
+      - autonomous patch-test-diagnose-repair-review loop
+      - bounded retries, no-progress detection, checkpoint, resume, and rollback
+      - isolated local Git branch, commit, conflict, and draft-PR-plan workflow
+      - multi-stack end-to-end fixture-project acceptance evidence
+      - blueprint-to-code autonomous development acceptance record
+  P15_MULTI_PROJECT_BENCHMARK:
+    objective: benchmark the accepted blueprint-to-code product across multiple isolated projects and read-only real repositories before any optional target pilot
+    entry_requires:
+      - P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT accepted
+      - explicit P15 phase-entry authorization
+      - each real repository mutation separately authorized
+    outputs:
+      - representative multi-project benchmark suite
       - quality, latency, cost, recovery, and policy metrics
-      - cross-repository isolation evidence
+      - cross-project isolation and generalization evidence
+      - real-repository read-only benchmark evidence
       - failed-case and rollback corpus
+      - optional separately authorized controlled target pilot
       - release-candidate acceptance review
-  P15_PRODUCTION_OPERATIONS_ACCEPTANCE:
+  P16_PRODUCTION_OPERATIONS_ACCEPTANCE:
     objective: establish sustainable production operations and decide production acceptance without silently granting deployment authority
     entry_requires:
-      - P14_MULTI_REPO_BENCHMARK accepted
-      - explicit P15 phase-entry authorization
+      - P15_MULTI_PROJECT_BENCHMARK accepted
+      - explicit P16 phase-entry authorization
       - production deployment remains separately approved only
     outputs:
       - release and version policy

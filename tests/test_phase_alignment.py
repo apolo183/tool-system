@@ -14,7 +14,7 @@ CHANGE_PLAN = (
     ROOT
     / "examples"
     / "change_plans"
-    / "tool_system_p13e_security_reliability_acceptance_closure.yaml"
+    / "tool_system_p14r_blueprint_product_objective_roadmap_reconciliation.yaml"
 )
 EXPECTED_PHASE = "P13_SECURITY_RELIABILITY_HARDENING"
 
@@ -44,18 +44,19 @@ def test_public_contracts_have_same_current_phase() -> None:
     assert blueprint["successor_authorization"]["later_phase_entry_authorized"] is False
     assert blueprint["successor_authorization"]["active_phase"] is None
     assert blueprint["successor_authorization"]["record"] == (
-        "docs/reports/p13e_security_reliability_acceptance_closure.md"
+        "docs/reports/p14r_blueprint_product_objective_roadmap_reconciliation.md"
     )
     assert blueprint["successor_authorization"]["next_phase"] == (
-        "P14_MULTI_REPO_BENCHMARK"
+        "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
     )
     assert blueprint["successor_authorization"]["next_phase_entry_authorized"] is False
-    assert set(blueprint["successor_authorization"]["authorized_roadmap"]) == {
+    assert set(blueprint["successor_authorization"]["defined_roadmap"]) == {
         "P11_REAL_WORKER_RUNTIME",
         "P12_DURABLE_ORCHESTRATOR",
         "P13_SECURITY_RELIABILITY_HARDENING",
-        "P14_MULTI_REPO_BENCHMARK",
-        "P15_PRODUCTION_OPERATIONS_ACCEPTANCE",
+        "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT",
+        "P15_MULTI_PROJECT_BENCHMARK",
+        "P16_PRODUCTION_OPERATIONS_ACCEPTANCE",
     }
 
 
