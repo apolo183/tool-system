@@ -1,0 +1,30 @@
+plan_id: tool-system-p13e-security-reliability-acceptance-closure
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p13e_security_reliability_acceptance_closure.yaml
+changed_files:
+  - blueprint/tool_system_v0.yaml
+  - AGENTS.md
+  - README.md
+  - tests/test_phase_alignment.py
+  - docs/reports/p13e_security_reliability_acceptance_closure.md
+  - examples/task_manifests/tool_system_p13e_security_reliability_acceptance_closure.yaml
+  - examples/change_plans/tool_system_p13e_security_reliability_acceptance_closure.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p13e_security_reliability_acceptance_closure.yaml
+    section_or_key: task_id
+    scope: Follow the exact P13 acceptance and closure manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+    scope: Close P13 without entering or implementing P14.
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p13e_security_reliability_acceptance_closure.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: p13e-security-reliability-acceptance-closure

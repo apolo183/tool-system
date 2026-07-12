@@ -1,0 +1,83 @@
+task_id: tool-system-p13e-security-reliability-acceptance-closure
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: p13e-security-reliability-acceptance-closure
+phase: P13_SECURITY_RELIABILITY_HARDENING
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+alignment:
+  parent:
+    document: docs/reports/p13d_integrated_local_attack_stress_recovery_evidence.md
+    section_or_key: Execution evidence
+    scope: Accept P13 only after every merged owner and integrated local evidence gate passes.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+    scope: Close P13 at its proven scope and preserve the explicit P14 authorization boundary.
+scope:
+  summary: Accept and close P13 Security and Reliability Hardening at its proven local application-guarded and single-host scope.
+  in_scope:
+    - blueprint/tool_system_v0.yaml
+    - AGENTS.md
+    - README.md
+    - tests/test_phase_alignment.py
+    - docs/reports/p13e_security_reliability_acceptance_closure.md
+    - examples/task_manifests/tool_system_p13e_security_reliability_acceptance_closure.yaml
+    - examples/change_plans/tool_system_p13e_security_reliability_acceptance_closure.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - policy or runtime source changes
+    - P14 phase entry or benchmark execution
+    - target-repository mutation
+    - production deployment
+    - branch cleanup or deletion
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p13d_integrated_local_attack_stress_recovery_evidence.md
+    ref: 76ae268bb703aec32be15a6214a0edc83c23e390
+    why_relevant: Merged integrated local attack, pressure, cancellation, fault, concurrency, and recovery evidence.
+  - repo: apolo183/tool-system
+    path: src/tool_system/agent_worker/process_runtime.py
+    ref: 76ae268bb703aec32be15a6214a0edc83c23e390
+    why_relevant: Final P13 accepted process-worker natural owner.
+  - repo: apolo183/tool-system
+    path: src/tool_system/orchestrator/durable.py
+    ref: 76ae268bb703aec32be15a6214a0edc83c23e390
+    why_relevant: Final P13 accepted durable-orchestrator natural owner.
+allowed_files:
+  - blueprint/tool_system_v0.yaml
+  - AGENTS.md
+  - README.md
+  - tests/test_phase_alignment.py
+  - docs/reports/p13e_security_reliability_acceptance_closure.md
+  - examples/task_manifests/tool_system_p13e_security_reliability_acceptance_closure.yaml
+  - examples/change_plans/tool_system_p13e_security_reliability_acceptance_closure.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - policy/**
+  - src/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_alignment_gate examples/active_gates.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p13e_security_reliability_acceptance_closure.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - full tests return PASS_264
+    - public contracts agree P13 is accepted and closed
+    - P14 phase entry remains false
+    - active gates return PASS
+    - named local P13 temporary resources are removed by their creator
+rollback:
+  method: git_revert
+  reference: p13e-security-reliability-acceptance-closure
+approval:
+  required: true
+  approved_by: user_explicit_p13_full_lifecycle_authorization

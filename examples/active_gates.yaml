@@ -106,6 +106,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p13b_adversarial_isolation_hardening.yaml
   - examples/task_manifests/tool_system_p13c_durable_orchestrator_fault_resource_hardening.yaml
   - examples/task_manifests/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
+  - examples/task_manifests/tool_system_p13e_security_reliability_acceptance_closure.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -210,3 +211,4 @@ change_plans:
   - examples/change_plans/tool_system_p13b_adversarial_isolation_hardening.yaml
   - examples/change_plans/tool_system_p13c_durable_orchestrator_fault_resource_hardening.yaml
   - examples/change_plans/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
+  - examples/change_plans/tool_system_p13e_security_reliability_acceptance_closure.yaml
