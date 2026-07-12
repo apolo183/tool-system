@@ -1,6 +1,6 @@
 # P14B Provider-Neutral AI Worker Contract
 
-status: IMPLEMENTED_ACCEPTANCE_CANDIDATE
+status: ACCEPTED_CLOSED
 phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
 stage: P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT
 parent: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
@@ -181,7 +181,22 @@ target_repo_mutation: false
 production_deployment: false
 ```
 
-This local evidence makes the branch an acceptance candidate only. Acceptance and closure become effective only after the exact branch diff passes GitHub CI, squash-merges to `main`, and fresh-state verification confirms the merged state. No P14C authority follows from a P14B green build.
+## CI acceptance and closure evidence
+
+```text
+candidate_remote_head: 8eb2689387dd1b3691987aeb31789f44ca87a5e9
+candidate_base: 9acac526c4579f69f792bd0770d962f6540ab5b1
+candidate_compare: ahead_1_behind_0
+candidate_diff: 15_files_2180_additions_28_deletions
+github_actions_workflow: tool-system-ci
+github_actions_run: 29182069373
+github_actions_run_number: 935
+github_actions_conclusion: success
+closure_record_scope_delta: this_report_only
+final_closure_gate: closure_head_CI_success_and_squash_merge_required
+```
+
+P14B acceptance and closure are effective only when the closure-record head itself passes GitHub CI, the same PR squash-merges to `main`, and fresh-state verification confirms the merged state. The accepted module is limited to the provider-neutral contract and deterministic fixture boundary described here. No P14C authority follows from this closure.
 
 ## Rollback and stop condition
 
