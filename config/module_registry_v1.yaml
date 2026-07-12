@@ -2,7 +2,7 @@ registry_version: module_registry_v1
 blueprint_objective_ref: product_objective
 modules:
   - module_id: architecture_registry
-    module_version: &module_version 1.0.0
+    module_version: 1.1.0
     owner: tool-system
     lifecycle: &active ACTIVE
     status: &registered REGISTERED
@@ -12,31 +12,33 @@ modules:
       - src/tool_system/__init__.py
       - src/tool_system/architecture/*.py
       - src/tool_system/cli/validate_module_registry.py
+      - src/tool_system/cli/validate_repo_manifest.py
       - config/module_registry_schema_v1.json
       - config/module_registry_v1.yaml
+      - REPO_MANIFEST.md
     public_interface_version: &interface_version "1"
-    input_contract: [module_registry_v1]
-    output_contract: [module_registry_validation_result_v1]
+    input_contract: [module_registry_v1, repository_formal_file_set_manifest_v1]
+    output_contract: [module_registry_validation_result_v1, repository_manifest_validation_result_v1]
     error_semantics: [fail_closed_with_structured_reasons]
     externally_visible_side_effects: [none]
-    code_boundary: [module_registry_loader_and_validator]
-    data_boundary: [versioned_registry_and_schema]
-    test_boundary: [tests/test_module_registry.py]
+    code_boundary: [module_and_repository_registry_loaders_and_validators]
+    data_boundary: [versioned_module_registry_schema_and_repository_manifest]
+    test_boundary: [tests/test_module_registry.py, tests/test_repo_manifest.py]
     runtime_artifact_boundary: [validation_result_only]
     cleanup_boundary: [no_destructive_cleanup]
     upstream_dependency_module_ids_and_versions:
       - module_id: manifest_validation
-        module_version: *module_version
+        module_version: 1.0.0
         public_interface_version: *interface_version
     downstream_dependency_module_ids_and_versions: []
     content_hashes_and_expected_preconditions: &common_preconditions [git_tracked_content_and_expected_HEAD_precondition]
     authorization_envelope: &local_authority [tool_system_local_only, no_target_repo_mutation, no_production_deployment]
-    acceptance_evidence: [docs/reports/durable_module_interface_registry_v1.md, module_registry_focused_and_full_test_pass]
+    acceptance_evidence: [module_and_repository_registry_focused_and_full_test_pass]
     rollback_evidence: &rollback_evidence [named_revert_PR_preserving_git_and_audit_history]
     replacement_evidence: &replacement_evidence [interface_compatible_replacement_and_dependency_closure_revalidation]
 
   - module_id: manifest_validation
-    module_version: *module_version
+    module_version: &module_version 1.0.0
     owner: tool-system
     lifecycle: *active
     status: *registered
@@ -62,7 +64,7 @@ modules:
     upstream_dependency_module_ids_and_versions: []
     downstream_dependency_module_ids_and_versions:
       - module_id: architecture_registry
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
       - module_id: repository_controller
         module_version: *module_version

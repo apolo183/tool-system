@@ -96,6 +96,8 @@ The caller and reference audit is complete. `config/process_authority_v1.yaml` n
 
 Existing reports, task manifests, change plans, and `examples/active_gates.yaml` remain present for the separately gated disposition step. Their presence is not a claim of finance-governance process-file compliance, and this migration does not delete or reclassify them.
 
+`REPO_MANIFEST.md` now registers the current formal authority/config/source/test/CI/fixture sets and separately classifies every retained legacy path as non-authority. Its validator expands only tracked regular files, rejects overlap, gaps, symlinks, empty formal files, invalid table fields, and cycles, and proves every tracked path is classified exactly once. The retained legacy sets still block a finance-governance process-file-compliance claim; this manifest authorizes neither their cleanup nor their continued use as current authority.
+
 ## Repository contract
 
 This repository is a tool layer. Business systems are downstream targets. tool-system may propose or apply changes to target repositories only through their explicit authority, workflow, test, policy, review, execution-approval, and rollback gates. A local tool-system contract cannot grant or alter downstream write authority.
