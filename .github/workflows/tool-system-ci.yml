@@ -40,3 +40,6 @@ jobs:
 
       - name: Validate module registry
         run: python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml
+
+      - name: Validate repository manifest
+        run: python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md

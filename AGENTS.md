@@ -19,6 +19,7 @@ Before material tool-system engineering work, read:
 
 ```text
 docs/tool_system_global_development_principles_v1.md
+REPO_MANIFEST.md
 ```
 
 These repository-local principles currently govern only tool-system. `config/governance_reference_v1.yaml` pins candidate finance-governance commit `f039a5355e1e5ea3fa865b827947b0c1153a2745` as a five-field immutable pointer. The reference does not activate group governance, report cutover state, or replace current tool-system-local authority before the required central `repo-check` and cutover confirmation. After activation, local rules may add constraints but may not override the pinned group governance. No copied finance-governance constitution is local authority.
@@ -143,6 +144,7 @@ Allowed now:
 - local durable-module authority semantics owned by the blueprint and local principles; `docs/reports/p14mr_milestone_module_invariant.md` is existing acceptance evidence only;
 - local validation of `config/module_registry_v1.yaml` within its registered structural and no-target-mutation authority envelope;
 - explicit current-task pair validation through `config/process_authority_v1.yaml`; legacy active-gate input is replay-only and cannot authorize commands;
+- local `REPO_MANIFEST.md` validation proving every tracked path is classified exactly once as formal or retained non-authority, without claiming process-file compliance or cleanup authority;
 - read-only verification of the accepted P14A and P14B contracts and evidence;
 - read-only verification of the accepted P13 security and reliability evidence;
 - read-only verification of accepted P12 durable-orchestrator state and evidence;

@@ -37,6 +37,8 @@ Formal files are active contracts, source, configs, tests, runbooks, docs, examp
 
 The caller and reference audit is complete. `config/process_authority_v1.yaml` is the local current-task authority contract and requires one explicitly supplied manifest/change-plan pair with exact binding. No repository-wide task index is implicit execution authority. `config/replay_snapshot_v1.yaml` content-addresses the retained legacy pair set, and `examples/active_gates.yaml` may be selected only for non-executing replay. Existing `docs/reports/**`, `examples/task_manifests/**`, `examples/change_plans/**`, and the legacy index remain present pending a separately authorized disposition and cleanup step. Their presence is not a claim of finance-governance process-file compliance.
 
+`REPO_MANIFEST.md` is the local tracked-path registry. It must classify every tracked path exactly once as a formal file-set member or a retained non-authority member, maintain one acyclic formal upstream graph with one root, and fail closed on gaps or overlap. Registering a retained set does not make it formal, authorize cleanup, or establish finance-governance process-file compliance.
+
 ## 7. File disposition
 
 Allowed dispositions are `KEEP`, `MODIFY`, `REPLACE`, `DELETE`, `ADD`, and `UNKNOWN`. `KEEP` means correct, active, necessary, or valid evidence. `MODIFY` means necessary but stale or wrong. `REPLACE` means superseded by validated replacement and then removed. `DELETE` means obsolete, wrong, duplicate, garbage, superseded, or process-only. `ADD` means a required formal artifact is missing. `UNKNOWN` means unread or impact not verified. Do not preserve invalid objects by moving them to archive, deprecated, fallback, backup, or history directories.
