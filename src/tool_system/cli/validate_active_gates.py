@@ -9,6 +9,7 @@ from tool_system.cli.validate_alignment_gate import validate as validate_alignme
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
 from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
 from tool_system.manifest.task_manifest import load_yaml_file
+from tool_system.runner.active_gate_resolver import build_active_gate_pairings
 
 
 def _validate_paths(value: Any, key: str) -> tuple[list[Path], list[str]]:
@@ -18,8 +19,8 @@ def _validate_paths(value: Any, key: str) -> tuple[list[Path], list[str]]:
         return [], [f"{key} must be a non-empty list"]
     paths: list[Path] = []
     for raw_path in raw_paths:
-        if not isinstance(raw_path, str):
-            reasons.append(f"{key} entries must be strings")
+        if not isinstance(raw_path, str) or not raw_path.strip():
+            reasons.append(f"{key} entries must be non-empty strings")
             continue
         paths.append(Path(raw_path))
     return paths, reasons
@@ -32,6 +33,11 @@ def validate(index_path: Path) -> dict[str, object]:
 
     results: list[dict[str, object]] = []
     reasons = manifest_reasons + plan_reasons
+    if not reasons:
+        try:
+            build_active_gate_pairings(index)
+        except ValueError as exc:
+            reasons.append(str(exc))
 
     for manifest_path in manifest_paths:
         result = validate_task_manifest(manifest_path, Path("policy/repo_write_policy.yaml"), Path("policy/autonomy_policy.yaml"))
