@@ -68,16 +68,16 @@ modules:
         module_version: *module_version
         public_interface_version: *interface_version
       - module_id: process_authority
-        module_version: *module_version
-        public_interface_version: *interface_version
+        module_version: 2.0.0
+        public_interface_version: "2"
       - module_id: task_planner
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
       - module_id: task_runner
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
       - module_id: role_runtime
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
       - module_id: target_repo_adapter
         module_version: *module_version
@@ -86,7 +86,7 @@ modules:
         module_version: *module_version
         public_interface_version: *interface_version
       - module_id: cli_frontend
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
     content_hashes_and_expected_preconditions: *common_preconditions
     authorization_envelope: *local_authority
@@ -115,7 +115,7 @@ modules:
     upstream_dependency_module_ids_and_versions: []
     downstream_dependency_module_ids_and_versions:
       - module_id: role_runtime
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
       - module_id: worker_adapter
         module_version: *module_version
@@ -202,10 +202,10 @@ modules:
         public_interface_version: *interface_version
     downstream_dependency_module_ids_and_versions:
       - module_id: task_runner
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
       - module_id: role_runtime
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
       - module_id: worker_adapter
         module_version: *module_version
@@ -217,7 +217,7 @@ modules:
         module_version: *module_version
         public_interface_version: *interface_version
       - module_id: cli_frontend
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
     content_hashes_and_expected_preconditions: *common_preconditions
     authorization_envelope: [action_scoped_authorization_required, expected_SHA_required_for_mutation, no_implicit_target_authority]
@@ -226,23 +226,29 @@ modules:
     replacement_evidence: *replacement_evidence
 
   - module_id: process_authority
-    module_version: *module_version
+    module_version: &process_module_version 2.0.0
     owner: tool-system
     lifecycle: *active
     status: *registered
-    single_responsibility: resolve and validate the currently registered manifest and change-plan authority pair
+    single_responsibility: require one explicit current task pair and validate non-authoritative content-addressed legacy replay
     blueprint_objective_ref: *product_objective
     natural_owner_paths:
+      - src/tool_system/process_authority/*.py
       - src/tool_system/runner/active_gate_resolver.py
       - src/tool_system/cli/validate_active_gates.py
-    public_interface_version: *interface_version
-    input_contract: [legacy_active_gates_pair_registry_pending_separate_migration]
-    output_contract: [validated_manifest_change_plan_pairing]
-    error_semantics: [missing_blank_duplicate_or_mismatched_pair_blocks]
+      - src/tool_system/cli/validate_process_authority.py
+      - config/process_authority_schema_v1.json
+      - config/process_authority_v1.yaml
+      - config/replay_snapshot_v1.yaml
+      - docs/process_authority_contract_v1.md
+    public_interface_version: &process_interface_version "2"
+    input_contract: [explicit_manifest_change_plan_pair, explicit_non_authoritative_legacy_replay_request]
+    output_contract: [validated_explicit_pair_or_content_addressed_replay_result]
+    error_semantics: [missing_mismatched_implicit_or_drifted_input_blocks]
     externally_visible_side_effects: [none]
-    code_boundary: [active_gate_resolver_and_validator]
-    data_boundary: [legacy_process_authority_input_pending_migration]
-    test_boundary: [tests/test_active_gates.py, tests/test_active_gate_resolver.py]
+    code_boundary: [process_authority_contract_and_legacy_replay_adapter]
+    data_boundary: [formal_process_authority_contract_and_canonical_replay_snapshot]
+    test_boundary: [tests/test_process_authority.py, tests/test_active_gates.py, tests/test_active_gate_resolver.py]
     runtime_artifact_boundary: [validation_result_only]
     cleanup_boundary: [legacy_input_retained_pending_cleanup_authorization]
     upstream_dependency_module_ids_and_versions:
@@ -251,19 +257,19 @@ modules:
         public_interface_version: *interface_version
     downstream_dependency_module_ids_and_versions:
       - module_id: task_planner
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
       - module_id: task_runner
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
     content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [validation_only, migration_requires_separate_module_change, deletion_or_cleanup_not_authorized]
-    acceptance_evidence: [pair_binding_and_active_gate_test_suites]
+    authorization_envelope: [explicit_current_pair_only, legacy_replay_never_authorizes_execution, deletion_or_cleanup_not_authorized]
+    acceptance_evidence: [process_authority_replay_pair_binding_and_full_test_suites]
     rollback_evidence: *rollback_evidence
     replacement_evidence: *replacement_evidence
 
   - module_id: task_planner
-    module_version: *module_version
+    module_version: &task_planner_module_version 1.1.0
     owner: tool-system
     lifecycle: *active
     status: *registered
@@ -285,17 +291,17 @@ modules:
         module_version: *module_version
         public_interface_version: *interface_version
       - module_id: process_authority
-        module_version: *module_version
-        public_interface_version: *interface_version
+        module_version: *process_module_version
+        public_interface_version: *process_interface_version
     downstream_dependency_module_ids_and_versions:
       - module_id: task_runner
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
       - module_id: role_runtime
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
       - module_id: cli_frontend
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
     content_hashes_and_expected_preconditions: *common_preconditions
     authorization_envelope: [local_planning_only, execution_authority_not_implied]
@@ -304,7 +310,7 @@ modules:
     replacement_evidence: *replacement_evidence
 
   - module_id: task_runner
-    module_version: *module_version
+    module_version: &task_runner_module_version 1.1.0
     owner: tool-system
     lifecycle: *active
     status: *registered
@@ -329,17 +335,17 @@ modules:
         module_version: *module_version
         public_interface_version: *interface_version
       - module_id: process_authority
-        module_version: *module_version
-        public_interface_version: *interface_version
+        module_version: *process_module_version
+        public_interface_version: *process_interface_version
       - module_id: task_planner
-        module_version: *module_version
+        module_version: *task_planner_module_version
         public_interface_version: *interface_version
       - module_id: repository_controller
         module_version: *module_version
         public_interface_version: *interface_version
     downstream_dependency_module_ids_and_versions:
       - module_id: cli_frontend
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
     content_hashes_and_expected_preconditions: *common_preconditions
     authorization_envelope: [validated_local_execution_only, configured_commands_do_not_expand_authority]
@@ -348,7 +354,7 @@ modules:
     replacement_evidence: *replacement_evidence
 
   - module_id: role_runtime
-    module_version: *module_version
+    module_version: &role_runtime_module_version 1.1.0
     owner: tool-system
     lifecycle: *active
     status: *registered
@@ -373,14 +379,14 @@ modules:
         module_version: *module_version
         public_interface_version: *interface_version
       - module_id: task_planner
-        module_version: *module_version
+        module_version: *task_planner_module_version
         public_interface_version: *interface_version
       - module_id: repository_controller
         module_version: *module_version
         public_interface_version: *interface_version
     downstream_dependency_module_ids_and_versions:
       - module_id: cli_frontend
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
     content_hashes_and_expected_preconditions: *common_preconditions
     authorization_envelope: [fixture_or_local_plan_scope, no_remote_target_mutation]
@@ -447,7 +453,7 @@ modules:
         public_interface_version: *interface_version
     downstream_dependency_module_ids_and_versions:
       - module_id: cli_frontend
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
     content_hashes_and_expected_preconditions: *common_preconditions
     authorization_envelope: [packet_preparation_does_not_authorize_mutation, action_scoped_target_approval_required]
@@ -482,7 +488,7 @@ modules:
         public_interface_version: *interface_version
     downstream_dependency_module_ids_and_versions:
       - module_id: cli_frontend
-        module_version: *module_version
+        module_version: 1.1.0
         public_interface_version: *interface_version
     content_hashes_and_expected_preconditions: *common_preconditions
     authorization_envelope: [plan_only, destructive_cleanup_requires_separate_authorization]
@@ -491,7 +497,7 @@ modules:
     replacement_evidence: *replacement_evidence
 
   - module_id: cli_frontend
-    module_version: *module_version
+    module_version: &cli_frontend_module_version 1.1.0
     owner: tool-system
     lifecycle: *active
     status: *registered
@@ -534,13 +540,13 @@ modules:
         module_version: *module_version
         public_interface_version: *interface_version
       - module_id: task_planner
-        module_version: *module_version
+        module_version: *task_planner_module_version
         public_interface_version: *interface_version
       - module_id: task_runner
-        module_version: *module_version
+        module_version: *task_runner_module_version
         public_interface_version: *interface_version
       - module_id: role_runtime
-        module_version: *module_version
+        module_version: *role_runtime_module_version
         public_interface_version: *interface_version
       - module_id: target_repo_adapter
         module_version: *module_version

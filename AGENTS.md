@@ -43,7 +43,7 @@ Agents must not rely on long conversation context as execution authority. Every 
 
 A stage should be short, have one natural objective, one branch, one change plan, one evidence record, and a clear stop condition. If drift is found, the next action is documentation or process correction, not feature expansion.
 
-Existing reports, task manifests, change plans, and `examples/active_gates.yaml` remain legacy machine inputs pending a separately authorized caller and reference migration audit. Their presence is not a claim of finance-governance process-file compliance, and unread objects must not be deleted or reclassified in this reconciliation.
+The caller and reference audit is complete. `config/process_authority_v1.yaml` requires one explicitly supplied manifest/change-plan pair for current execution, with exact pair binding before commands. Repository-wide implicit task authority is disabled. `config/replay_snapshot_v1.yaml` content-addresses the retained legacy pair set; `examples/active_gates.yaml` is explicit, non-executing replay input only. Existing reports, manifests, plans, and the legacy index remain present and are not claimed finance-governance process-file compliant. Do not delete or reclassify them without the separate cleanup authorization.
 
 ## 4. Blueprint alignment invariant
 
@@ -142,6 +142,7 @@ Allowed now:
 
 - local durable-module authority semantics owned by the blueprint and local principles; `docs/reports/p14mr_milestone_module_invariant.md` is existing acceptance evidence only;
 - local validation of `config/module_registry_v1.yaml` within its registered structural and no-target-mutation authority envelope;
+- explicit current-task pair validation through `config/process_authority_v1.yaml`; legacy active-gate input is replay-only and cannot authorize commands;
 - read-only verification of the accepted P14A and P14B contracts and evidence;
 - read-only verification of the accepted P13 security and reliability evidence;
 - read-only verification of accepted P12 durable-orchestrator state and evidence;

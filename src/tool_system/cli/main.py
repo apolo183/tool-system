@@ -10,7 +10,16 @@ from tool_system.runner.task_runner import run_batch_file, run_task_pipeline
 
 
 def _add_common_options(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--active-gates", type=Path, default=Path("examples/active_gates.yaml"))
+    parser.add_argument(
+        "--process-authority",
+        type=Path,
+        default=Path("config/process_authority_v1.yaml"),
+    )
+    parser.add_argument(
+        "--active-gates",
+        type=Path,
+        help="Legacy replay-only pair index; never authorizes command execution.",
+    )
     parser.add_argument("--policy", type=Path, default=Path("policy/repo_write_policy.yaml"))
     parser.add_argument("--autonomy-policy", type=Path, default=Path("policy/autonomy_policy.yaml"))
     parser.add_argument("--cwd", type=Path, default=Path.cwd())
@@ -21,9 +30,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="tool-system", description="Run tool-system local automation gates.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    run_parser = subparsers.add_parser("run", help="Run one task manifest and optional change plan.")
+    run_parser = subparsers.add_parser(
+        "run",
+        help="Run one explicit manifest/change-plan pair or a non-executing legacy replay.",
+    )
     run_parser.add_argument("task_manifest", type=Path)
-    run_parser.add_argument("--change-plan", type=Path)
+    run_parser.add_argument(
+        "--change-plan",
+        type=Path,
+        help="Required for current execution; omission is allowed only for legacy replay.",
+    )
     run_parser.add_argument("--audit-path", type=Path, default=Path("artifacts/task_runner_audit.jsonl"))
     _add_common_options(run_parser)
 
@@ -48,6 +64,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         output = run_task_pipeline(
             task_manifest_path=args.task_manifest,
             change_plan_path=args.change_plan,
+            process_authority_path=args.process_authority,
             active_gates_path=args.active_gates,
             policy_path=args.policy,
             autonomy_policy_path=args.autonomy_policy,
@@ -58,6 +75,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.command == "batch":
         output = run_batch_file(
             batch_path=args.batch,
+            process_authority_path=args.process_authority,
             active_gates_path=args.active_gates,
             policy_path=args.policy,
             autonomy_policy_path=args.autonomy_policy,
@@ -69,6 +87,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         output = run_task_graph_pipeline(
             graph_path=args.graph,
             blueprint_path=args.blueprint,
+            process_authority_path=args.process_authority,
             active_gates_path=args.active_gates,
             policy_path=args.policy,
             autonomy_policy_path=args.autonomy_policy,

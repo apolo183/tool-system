@@ -92,7 +92,9 @@ Modules communicate only through versioned public interfaces; hidden dependencie
 
 These are tool-system-local product and engineering rules. tool-system may provide tools or recommendations to another repository only under that repository's own authority. A tool-system local rule cannot change another repository's owner, authority, status, responsibility, or write authorization. The authorized immutable reference at `config/governance_reference_v1.yaml` pins candidate finance-governance commit `f039a5355e1e5ea3fa865b827947b0c1153a2745`. The reference alone does not activate group governance or complete cutover. tool-system remains under current local authority until finance-governance `repo-check` passes and central cutover is confirmed; after activation, local rules may add constraints but may not override the pinned group governance.
 
-Existing reports, task manifests, change plans, and `examples/active_gates.yaml` remain legacy machine inputs pending an independent caller and reference migration audit. They are not claimed compliant with finance-governance process-file discipline and are not deleted or reclassified here.
+The caller and reference audit is complete. `config/process_authority_v1.yaml` now requires one explicitly supplied, manifest-bound change-plan pair for current execution; task, batch, graph, stage, and role-runtime defaults no longer select a repository-wide implicit task index. `config/replay_snapshot_v1.yaml` content-addresses the 108 retained legacy pairs. `examples/active_gates.yaml` can be selected only for non-executing legacy replay, never as current authority. The detailed boundary is `docs/process_authority_contract_v1.md`.
+
+Existing reports, task manifests, change plans, and `examples/active_gates.yaml` remain present for the separately gated disposition step. Their presence is not a claim of finance-governance process-file compliance, and this migration does not delete or reclassify them.
 
 ## Repository contract
 

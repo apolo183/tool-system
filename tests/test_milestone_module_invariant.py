@@ -222,13 +222,19 @@ def test_p14mr_report_is_acceptance_evidence_not_durable_rule_owner() -> None:
     assert execution["authority_effect"] == "tool_system_local_only"
 
 
-def test_process_inputs_remain_pending_separate_migration() -> None:
+def test_process_inputs_use_explicit_authority_and_remain_pending_cleanup() -> None:
     boundary = _invariant()["process_migration_boundary"]
     active_gates = load_yaml_file(ACTIVE_GATES)
 
     assert boundary == {
         "reports_task_manifests_change_plans_active_gates_are_legacy_machine_inputs": True,
-        "caller_and_reference_audit_complete": False,
+        "process_authority_contract_path": "config/process_authority_v1.yaml",
+        "canonical_replay_snapshot_path": "config/replay_snapshot_v1.yaml",
+        "current_task_authority_mode": "explicit_manifest_change_plan_pair",
+        "implicit_legacy_repository_authority_removed": True,
+        "legacy_compatibility_replay_only": True,
+        "legacy_execution_authorized": False,
+        "caller_and_reference_audit_complete": True,
         "group_process_file_compliance_claimed": False,
         "deletion_or_reclassification_authorized": False,
     }

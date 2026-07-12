@@ -48,6 +48,12 @@ def _matches_path(left: str | Path, right: str | Path) -> bool:
     return bool(_path_keys(left) & _path_keys(right))
 
 
+def paths_match(left: str | Path, right: str | Path) -> bool:
+    """Return whether two repository-path spellings identify the same file."""
+
+    return _matches_path(left, right)
+
+
 def _reject_duplicate_paths(entries: list[str], label: str) -> None:
     for index, entry in enumerate(entries):
         if any(_matches_path(entry, previous) for previous in entries[:index]):

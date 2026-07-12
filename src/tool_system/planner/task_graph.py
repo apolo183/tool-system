@@ -7,6 +7,10 @@ from typing import Any
 import yaml
 
 from tool_system.manifest.task_manifest import load_yaml_file
+from tool_system.process_authority.contract import (
+    validate_explicit_task_pair,
+    validate_process_authority,
+)
 from tool_system.runner.active_gate_resolver import resolve_change_plan_from_active_gates
 
 REQUIRED_GRAPH_KEYS = {"graph_id", "phase", "tasks"}
@@ -208,6 +212,65 @@ def validate_task_graph_active_gates_file(
     graph = load_yaml_file(graph_path)
     blueprint = load_yaml_file(blueprint_path)
     result = validate_task_graph_active_gates(graph, blueprint, active_gates_path)
+    return {
+        **result,
+        "graph_path": str(graph_path),
+        "blueprint_path": str(blueprint_path),
+    }
+
+
+def validate_task_graph_process_authority(
+    graph: dict[str, Any],
+    blueprint: dict[str, Any],
+    process_authority_path: str | Path = "config/process_authority_v1.yaml",
+) -> dict[str, object]:
+    graph_result = validate_task_graph(graph, blueprint)
+    reasons = list(graph_result.get("reasons") or [])
+    authority_result = validate_process_authority(process_authority_path)
+    reasons.extend(str(reason) for reason in authority_result.get("reasons", []))
+    pair_checks: list[dict[str, object]] = []
+
+    if graph_result["status"] == "PASS":
+        for task in graph_result["execution_plan"]:
+            task_manifest = task.get("task_manifest")
+            change_plan = task.get("change_plan")
+            if not isinstance(change_plan, str) or not change_plan.strip():
+                check = {
+                    "status": "BLOCK",
+                    "task_id": task.get("task_id"),
+                    "reasons": ["explicit change plan is required"],
+                }
+            else:
+                check = {
+                    **validate_explicit_task_pair(str(task_manifest), change_plan),
+                    "task_id": task.get("task_id"),
+                }
+            pair_checks.append(check)
+            reasons.extend(str(reason) for reason in check.get("reasons", []))
+
+    return {
+        **graph_result,
+        "status": "PASS" if not reasons else "BLOCK",
+        "mode": "tool_system_task_graph_process_authority_validation",
+        "process_authority_path": str(process_authority_path),
+        "process_authority_result": authority_result,
+        "process_authority_checks": pair_checks,
+        "reasons": reasons,
+    }
+
+
+def validate_task_graph_process_authority_file(
+    graph_path: str | Path,
+    blueprint_path: str | Path = "blueprint/tool_system_v0.yaml",
+    process_authority_path: str | Path = "config/process_authority_v1.yaml",
+) -> dict[str, object]:
+    graph = load_yaml_file(graph_path)
+    blueprint = load_yaml_file(blueprint_path)
+    result = validate_task_graph_process_authority(
+        graph,
+        blueprint,
+        process_authority_path,
+    )
     return {
         **result,
         "graph_path": str(graph_path),

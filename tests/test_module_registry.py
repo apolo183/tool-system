@@ -216,13 +216,21 @@ def test_registry_preserves_process_migration_and_cleanup_boundaries() -> None:
     modules = _modules_by_id(_registry())
     process = modules["process_authority"]
 
+    assert process["module_version"] == "2.0.0"
+    assert process["public_interface_version"] == "2"
     assert process["input_contract"] == [
-        "legacy_active_gates_pair_registry_pending_separate_migration"
+        "explicit_manifest_change_plan_pair",
+        "explicit_non_authoritative_legacy_replay_request",
     ]
     assert process["cleanup_boundary"] == [
         "legacy_input_retained_pending_cleanup_authorization"
     ]
-    assert "deletion_or_cleanup_not_authorized" in process["authorization_envelope"]
+    assert "legacy_replay_never_authorizes_execution" in process[
+        "authorization_envelope"
+    ]
+    assert "deletion_or_cleanup_not_authorized" in process[
+        "authorization_envelope"
+    ]
 
 
 def test_blueprint_claims_structural_not_runtime_enforcement() -> None:

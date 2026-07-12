@@ -34,3 +34,9 @@ jobs:
 
       - name: Validate active gates
         run: python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+
+      - name: Validate process authority
+        run: python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+
+      - name: Validate module registry
+        run: python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml
