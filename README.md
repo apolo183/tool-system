@@ -5,7 +5,7 @@ role: repository overview
 purpose: define the domain-agnostic tool system boundary and current controller contract  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-12 UTC+09:00
+updated_at: 2026-07-13 UTC+09:00
 
 ## Definition
 
@@ -13,7 +13,7 @@ tool-system is a domain-agnostic software factory for controlled agentic develop
 
 It coordinates agents, harness workflows, CI checks, patch generation, review gates, and repository write controls. It does not contain finance logic, trading logic, portfolio logic, market-data logic, or investment decision logic.
 
-Its permanent product objective is bounded blueprint-driven autonomous software development: given an approved project blueprint, repository snapshot, authorization envelope, and acceptance requirements, the system must be able to produce an executable task graph, implement code in an isolated workspace through a real AI worker, test and repair the result, verify both parent and global-objective alignment, create a bounded local Git history, and produce auditable acceptance evidence.
+Its permanent product objective is bounded blueprint-driven autonomous software development: given an approved project blueprint, repository snapshot, authorization envelope, acceptance requirements, authorized provider-model portfolio, and private economics context, the system must be able to profile task complexity, independent risk, and critical-path impact, select an eligible worker route from task-class evidence and expected total economic cost, produce an executable task graph, implement code in an isolated workspace through a real AI worker, test and repair the result, verify both parent and global-objective alignment, create a bounded local Git history, and produce auditable acceptance evidence.
 
 ## System boundary
 
@@ -37,6 +37,8 @@ Its permanent product objective is bounded blueprint-driven autonomous software 
 - Execute a real local process-backed worker inside a controlled fixture-only runtime after minimum safety gates pass.
 - Persist and reconcile single-host orchestration state inside the accepted local-fixture SQLite boundary.
 - Build the missing blueprint-to-code autonomous implementation, test, repair, review, and local Git loop before multi-project benchmarking.
+- Qualify replaceable provider adapters and select models per task class under hard safety, quality, data, and authorization floors.
+- Optimize expected total economic cost per accepted module, including critical-path time and avoidable renewal cost, without committing private economic values.
 
 ### Out of scope
 
@@ -47,6 +49,18 @@ Its permanent product objective is bounded blueprint-driven autonomous software 
 - Market-data ingestion.
 - Direct modification of business-system rules without explicit approval.
 - Production deployment without separate explicit approval.
+
+## Provider portfolio and development economics
+
+The provider architecture is pluggable behind the versioned `AIWorkerProvider` interface. Roadmap candidates include a supported ChatGPT/Codex subscription surface, OpenAI's metered API, separately qualified domestic metered APIs such as DeepSeek, Qwen, GLM, and Kimi, and future local inference. Naming a candidate does not enable it. Each live provider, exact model, network route, credential reference, data policy, and execution limit remains separately controlled.
+
+A dedicated task-complexity assessor produces an advisory profile; deterministic policy makes the final route decision. Complexity and operational risk are independent. Provider availability failures use bounded failover among already eligible authorized routes, while output-quality failures use bounded repair and evidence-backed model escalation. Policy, data, budget, authorization, and stale-precondition failures block rather than switch around the control.
+
+Models are scored per task class from exact-version benchmark, reliability, time-to-acceptance, availability, and economic evidence. New models enter quarantine and qualification rather than becoming active from version number or launch price alone. Repeated failures demote a model only from affected task classes when possible; accepted replacements are published atomically and history remains auditable.
+
+The soft objective is expected total economic cost per accepted module. It includes provider usage, future renewals caused by delay, critical-path operating burn, local compute and electricity, verification, retry, rework, recovery, rollback, and opportunity cost. Safety, quality, data, and authorization remain hard constraints. Exact salaries, rent, electricity rates, subscription dates, billing values, and revenue assumptions are private installation inputs and never public-repository constants. The detailed contract is `docs/model_provider_portfolio_and_economics_contract_v1.md`.
+
+P14 remains the provider-neutral autonomous-development core plus one separately authorized bounded real-provider proof. P15 owns multi-provider qualification and benchmark acceptance. P16 owns continuous model discovery, price/health refresh, portfolio lifecycle, renewal forecasting, and production-operations acceptance. P15 and P16 remain roadmap-only until separately authorized.
 
 ## Current phase state
 

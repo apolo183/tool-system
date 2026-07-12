@@ -50,15 +50,18 @@ product_objective:
   id: blueprint_driven_autonomous_software_development
   statement: >-
     Given an approved project blueprint, repository snapshot, authorization
-    envelope, and acceptance requirements, tool-system maps each authorized
-    milestone to a controlled change against one durable module or one versioned
-    public interface, decomposes that change into tasks, prepares controlled
-    implementation plans, modifies code in an isolated workspace, runs tests,
-    diagnoses and repairs failures, reviews blueprint alignment, isolates and
-    replaces failed or drifted modules without disturbing unaffected modules,
-    produces auditable evidence, and completes a bounded local Git development
-    workflow; an external draft pull request is published only under separate
-    action-scoped repository authorization.
+    envelope, acceptance requirements, authorized provider-model portfolio, and
+    private economics context, tool-system maps each authorized milestone to a
+    controlled change against one durable module or one versioned public
+    interface, profiles task complexity, risk, and critical-path impact, selects
+    an eligible worker route from benchmark evidence and expected total economic
+    cost, decomposes the change into tasks, prepares controlled implementation
+    plans, modifies code in an isolated workspace, runs tests, diagnoses and
+    repairs failures, reviews blueprint alignment, isolates and replaces failed
+    or drifted modules without disturbing unaffected modules, produces auditable
+    evidence, and completes a bounded local Git development workflow; an external
+    draft pull request is published only under separate action-scoped repository
+    authorization.
   required_end_to_end_flow:
     - ingest_approved_blueprint
     - inspect_repository_state
@@ -71,7 +74,12 @@ product_objective:
     - generate_task_manifests
     - generate_change_plans
     - identify_natural_owners
+    - profile_task_complexity_risk_and_critical_path
+    - resolve_authorized_provider_model_portfolio
+    - select_route_by_expected_total_economic_cost
     - invoke_bounded_real_ai_worker
+    - execute_bounded_provider_availability_failover
+    - execute_bounded_model_quality_escalation
     - implement_code_changes
     - validate_file_scope
     - run_tests
@@ -84,6 +92,7 @@ product_objective:
     - create_local_git_commits
     - produce_draft_pull_request_plan
     - prepare_separately_authorized_repository_publish_action
+    - record_provider_model_outcomes_and_economics
     - produce_acceptance_evidence
     - close_completed_milestones
   completion_definition:
@@ -100,6 +109,12 @@ product_objective:
     - failed_runs_stop_or_rollback_without_silent_scope_expansion
     - isolated_multi_project_fixtures_pass_acceptance
     - remote_side_effects_remain_action_scoped_and_separately_authorized
+    - task_profile_and_routing_decisions_are_auditable_and_reproducible
+    - provider_unavailability_and_quality_failure_have_distinct_bounded_controls
+    - model_selection_uses_task_class_evidence_and_expected_total_economic_cost
+    - critical_path_time_and_avoidable_renewal_cost_are_measured
+    - safety_quality_data_and_authorization_floors_override_economics
+    - credentials_and_private_economic_values_remain_outside_public_repository
   non_goals:
     - unrestricted_remote_repository_mutation
     - autonomous_production_deployment
@@ -116,6 +131,10 @@ product_contract:
     - durable_module_contract_and_milestone_change_binding
     - authorization_envelope
     - validation_and_acceptance_requirements
+    - authorized_provider_model_portfolio_snapshot
+    - task_complexity_risk_and_critical_path_context
+    - provider_price_quota_health_and_billing_context
+    - private_project_economics_references
   outputs:
     - milestone_hierarchy
     - durable_module_dag_and_milestone_change_bindings
@@ -132,6 +151,10 @@ product_contract:
     - separately_authorized_draft_pull_request
     - acceptance_and_closure_record
     - module_isolation_replacement_and_revalidation_evidence
+    - task_complexity_and_risk_profile
+    - provider_model_routing_failover_and_escalation_plan
+    - provider_model_outcome_and_economic_evidence
+    - versioned_provider_model_portfolio_scorecard
 
 milestone_module_invariant:
   id: durable_module_and_milestone_change_boundary
@@ -269,6 +292,10 @@ boundaries:
     - security_reliability_hardening
     - blueprint_to_code_autonomous_development
     - durable_module_and_milestone_change_governance
+    - adaptive_provider_model_routing
+    - task_complexity_and_risk_profiling
+    - provider_model_portfolio_lifecycle
+    - development_time_and_economic_cost_optimization
     - multi_project_benchmark
     - production_operations_acceptance
   does_not_own:
@@ -300,6 +327,22 @@ agents:
     permissions:
       - propose_blueprint_change
       - update_contract_docs
+  task_complexity_assessor:
+    group: planning
+    role: produce an advisory structured profile of task complexity, independent risk, required capabilities, verification burden, and critical-path impact
+    permissions:
+      - assess_task_complexity
+      - assess_task_risk
+      - identify_critical_path_context
+      - propose_provider_model_capability_floor
+  model_portfolio_analyst:
+    group: optimization
+    role: compare task-class benchmark, reliability, availability, time, and economic evidence and propose versioned portfolio changes
+    permissions:
+      - read_redacted_provider_model_evidence
+      - propose_task_class_route_scores
+      - propose_provider_model_promotion_or_demotion
+      - propose_portfolio_recalculation
   task_decomposer:
     group: planning
     role: split approved objectives into bounded tasks with explicit inputs and outputs
@@ -398,6 +441,16 @@ role_control_rules:
   production_deployment_requires_execution_approval: true
   business_domain_roles_forbidden_in_tool_system: true
   dag_must_include_evidence_policy_verification_and_audit_nodes: true
+  task_complexity_assessment_is_advisory_only: true
+  provider_model_route_decision_is_deterministic_policy_owned: true
+  risk_and_authorization_floors_cannot_be_downgraded_for_cost: true
+  provider_availability_failover_must_remain_authorized_and_bounded: true
+  quality_failure_escalation_must_be_bounded_and_evidence_backed: true
+  policy_data_budget_or_precondition_failure_never_triggers_provider_bypass: true
+  public_repository_stores_credential_references_only: true
+  private_economic_values_must_not_be_committed: true
+  critical_path_time_is_primary_soft_optimization_metric: true
+  safety_quality_data_and_authorization_constraints_override_economics: true
 
 milestones:
   P1_BOOTSTRAP:
@@ -564,6 +617,7 @@ milestones:
       - end-to-end product and acceptance contract
       - durable versioned module graph, interfaces, and milestone change bindings
       - bounded real AI model-provider worker runtime
+      - provider-neutral worker interface and one separately authorized bounded provider proof
       - repository context builder and natural-owner discovery
       - blueprint-to-milestone and executable task-DAG compiler
       - autonomous patch-test-diagnose-repair-review loop
@@ -648,20 +702,58 @@ milestones:
       or drifted modules, and record a local Git software change through an
       auditable, resumable, fail-closed workflow.
   P15_MULTI_PROJECT_BENCHMARK:
-    objective: benchmark the accepted blueprint-to-code product across multiple isolated projects and read-only real repositories before any optional target pilot
+    objective: qualify and benchmark the accepted blueprint-to-code product and adaptive provider-model portfolio across task classes, multiple isolated projects, and read-only real repositories before any optional target pilot
     entry_requires:
       - P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT accepted
       - explicit P15 phase-entry authorization
+      - each live provider benchmark has a named provider-model-network-credential-reference-limit execution packet
       - each real repository mutation separately authorized
       - each benchmark project supplies its own explicitly authorized durable-module contract
     outputs:
       - representative multi-project benchmark suite
-      - quality, latency, cost, recovery, and policy metrics
+      - replaceable provider adapters qualified by execution surface and task class
+      - advisory task complexity, independent risk, and critical-path profiles
+      - deterministic policy-owned routing decisions and hard capability floors
+      - versioned exact-model catalog with dated price, quota, data-policy, health, and benchmark evidence
+      - quality, time-to-acceptance, expected total economic cost, recovery, and policy metrics
+      - distinct bounded availability-failover, quality-repair, and model-escalation evidence
       - cross-project isolation and generalization evidence
       - real-repository read-only benchmark evidence
       - failed-case and rollback corpus
       - optional separately authorized controlled target pilot
       - release-candidate acceptance review
+    stage_plan:
+      - stage: P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION
+        objective: lock provider interfaces, task profiles, hard floors, economics, benchmark corpus, credentials, evidence, and authorization boundaries
+        execution_boundary: governance_only
+      - stage: P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES
+        objective: implement provider-neutral adapter, task-profile, deterministic-routing, catalog, and failure-classification fixtures
+        entry_requires:
+          - P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION accepted
+        execution_boundary: isolated_fixture_no_live_provider
+      - stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
+        objective: run separately authorized provider-model candidates against deterministic fixtures and read-only real repositories without target mutation
+        entry_requires:
+          - P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES accepted
+          - named execution packet for every live provider surface
+        execution_boundary: separately_authorized_live_provider_read_only_repositories
+      - stage: P15D_FAILURE_ROLLBACK_ISOLATION_AND_ECONOMICS_CORPUS
+        objective: prove bounded failover, repair, escalation, cancellation, no-progress, isolation, rollback, and total-economic-cost decisions
+        entry_requires:
+          - P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK accepted
+        execution_boundary: isolated_fixture_and_read_only_evidence
+      - stage: P15E_OPTIONAL_CONTROLLED_TARGET_MUTATION_PILOT
+        objective: optionally validate one named route against one separately authorized target change without granting general target authority
+        entry_requires:
+          - P15D_FAILURE_ROLLBACK_ISOLATION_AND_ECONOMICS_CORPUS accepted
+          - named action-scoped target execution approval
+        execution_boundary: separately_authorized_optional_target_mutation
+      - stage: P15F_BENCHMARK_ACCEPTANCE_CLOSURE
+        objective: accept or reject the release candidate and stop at P16 authorization
+        entry_requires:
+          - P15D_FAILURE_ROLLBACK_ISOLATION_AND_ECONOMICS_CORPUS accepted
+          - optional P15E pilot execution or explicit omission decision is recorded
+        execution_boundary: governance_only
   P16_PRODUCTION_OPERATIONS_ACCEPTANCE:
     objective: establish sustainable production operations and decide production acceptance without silently granting deployment authority
     entry_requires:
@@ -674,7 +766,14 @@ milestones:
       - upgrade, downgrade, backup, restore, and disaster recovery evidence
       - observability SLOs, alerting, and incident response
       - audit and run retention policy
-      - cost, quota, and provider-outage controls
+      - event-driven provider-model release, deprecation, price, policy, quota, and health refresh
+      - daily lightweight availability, critical-path, and economic recomputation
+      - changed-model incremental benchmark at a default 72-hour cadence
+      - weekly task-class portfolio review and promotion-demotion decisions
+      - monthly and pre-renewal subscription and completion-forecast review
+      - exact-version model lifecycle from discovery and quarantine through retirement
+      - versioned atomic portfolio publication and rollback
+      - total-economic-cost, quota, concentration-risk, and provider-outage controls
       - operator runbook and deprecation policy
       - production acceptance decision record
 

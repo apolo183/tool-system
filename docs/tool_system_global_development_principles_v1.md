@@ -7,7 +7,7 @@
 - purpose: define mandatory evidence, documentation-first execution, blueprint alignment, durable replaceable modules, milestone discipline, scope, file disposition, cleanup, validation, rollback, side-effect tool use, and claims rules for tool-system work
 - author: ChatGPT / apolo183
 - created_at: 2026-07-08 09:20 UTC+08:00
-- updated_at: 2026-07-12 UTC+09:00
+- updated_at: 2026-07-13 UTC+09:00
 
 ## 1. Authority
 
@@ -164,6 +164,22 @@ tool-system may provide module-planning tools, validators, or recommendations to
 
 Task planning, blueprint compilation, module graph validation, interface compatibility evidence, fault-isolation impact records, acceptance, benchmarks, and production review remain future tool-system product responsibilities. Documentation-only declaration is not sufficient for final product acceptance: P14E owns compiler enforcement and P15 owns separately authorized multi-project evidence. Neither stage receives downstream governance or write authority from this file.
 
-## 25. Final state
+## 25. Provider portfolio, model routing, and development economics
 
-Status: ACTIVE. Applies only to tool-system, including its blueprint, durable modules, milestone-change planning, docs, source, tests, examples, policies, cleanup planning, repository-control work, side-effect tool use, and target-repository adapters. P14 remains active and P14C remains unauthorized.
+Provider integrations are replaceable adapters behind a versioned worker interface. Provider-specific credentials, billing, transport, retry behavior, and data policy must not leak into the task planner or unrelated modules. The public repository stores credential references, schemas, redacted fixtures, and policy only; it never stores secret values, browser session material, private billing records, or private operating-cost values. ChatGPT/Codex subscription access and metered APIs are different execution surfaces and accounting models. A supported subscription surface must not be treated as API credit or implemented by scraping authentication material.
+
+A dedicated task-complexity assessor may produce an advisory structured profile, but a deterministic policy engine owns the final provider/model route. Complexity, operational risk, data sensitivity, repository-mutation risk, required capability, confidence, verification burden, and critical-path impact are distinct inputs. Cost cannot lower a capability, safety, data, quality, or authorization floor. The same profile, portfolio snapshot, and policy version must reproduce the same route decision.
+
+Provider unavailability and output-quality failure are distinct. Missing credentials, quota, balance, rate limit, timeout, or outage may trigger bounded failover to another eligible authorized route; the replacement need not be stronger. Quality failure may receive bounded same-route repair and then evidence-backed escalation to a stronger eligible route. Policy denial, unauthorized data transfer, stale precondition, hard budget exhaustion, or missing required evidence blocks execution and cannot be bypassed through provider switching.
+
+Models are qualified per task class rather than by one global ranking. Discovery does not activate a model, version number does not prove superiority, and moving aliases are not reproducible evidence. Promotion, demotion, degradation, and retirement use exact model IDs plus dated price, policy, health, and benchmark snapshots. A repeatedly failing model is removed from affected task classes and may serve lower-complexity classes only while current evidence meets their floors. Replacing an active route requires an accepted replacement, one atomic publication, and retention of catalog, benchmark, audit, and Git evidence.
+
+The primary soft optimization objective is expected total economic cost per accepted module. It includes metered provider usage, avoidable future subscription renewals caused by delay, critical-path personnel/rent/operating burn, local compute and electricity, verification, retry, rework, failure recovery, rollback, incident handling, lost revenue, and opportunity cost without double counting. An already committed non-refundable current-period payment is sunk for the current decision; a future renewal crossed because of delay is avoidable step cost. Full time-cost weight applies only to critical-path delay or consumed slack that becomes critical.
+
+Provider and economics defaults are maintained by event-driven updates, a 24-hour lightweight score refresh, a 72-hour changed-model incremental benchmark, a weekly portfolio review, and a monthly plus pre-renewal forecast review. Severe outages, security advisories, material price changes, or regressions trigger immediate review. Exact private currency values and weights remain installation configuration outside the public repository.
+
+`docs/model_provider_portfolio_and_economics_contract_v1.md` owns the detailed roadmap contract. P14 remains the provider-neutral blueprint-to-code core plus one separately authorized bounded real-provider proof. P15 owns multi-provider qualification and benchmark acceptance. P16 owns continuous portfolio operations. This principle grants no live provider, credential, target-repository, phase-entry, or production authority.
+
+## 26. Final state
+
+Status: ACTIVE. Applies only to tool-system, including its blueprint, durable modules, milestone-change planning, provider/model portfolio roadmap, development economics, docs, source, tests, examples, policies, cleanup planning, repository-control work, side-effect tool use, and target-repository adapters. P14 remains active and P14C remains unauthorized.
