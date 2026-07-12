@@ -63,9 +63,18 @@ def test_public_contracts_have_same_current_phase() -> None:
         "P14MR_MILESTONE_MODULE_INVARIANT"
     )
     assert execution["phase_entry_authorized"] is True
-    assert execution["authorized_scope"] == (
-        "global_milestone_module_governance_only"
-    )
+    assert execution["authority_effect"] == "tool_system_local_only"
+    assert "authorized_scope" not in execution
+    assert "authorized_scope_role" not in execution
+    assert "global_milestone_module_governance_only" not in execution.values()
+    assert execution["record_role"] == "existing_acceptance_evidence_only"
+    assert execution["durable_rule_owners"] == [
+        "blueprint/tool_system_v0.yaml:milestone_module_invariant",
+        (
+            "docs/tool_system_global_development_principles_v1.md:"
+            "durable_module_and_milestone_discipline"
+        ),
+    ]
     assert execution["phase_source_implementation_authorized"] is False
     assert execution["next_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
     assert execution["next_stage_authorized"] is False

@@ -24,13 +24,14 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
     alignment = blueprint["global_alignment"]
 
     assert blueprint["schema_version"] == 0.5
+    assert "compatibility_identifier_semantics" not in blueprint
     assert objective["id"] == "blueprint_driven_autonomous_software_development"
     assert set(objective["required_end_to_end_flow"]) == {
         "ingest_approved_blueprint",
         "inspect_repository_state",
         "build_repository_context",
         "decompose_milestones",
-        "assemble_versioned_milestone_module_dag",
+        "assemble_durable_module_dag_and_milestone_change_bindings",
         "validate_module_interfaces_and_dependencies",
         "generate_task_dag",
         "generate_phase_documents",
@@ -45,7 +46,7 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
         "repair_with_bounded_retry",
         "review_parent_alignment",
         "review_global_product_objective_alignment",
-        "isolate_and_replace_invalid_modules",
+        "isolate_and_replace_failed_or_drifted_modules",
         "revalidate_affected_module_dependents",
         "create_local_git_commits",
         "produce_draft_pull_request_plan",
@@ -55,13 +56,16 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
     }
     assert "approved_project_blueprint" in contract["inputs"]
     assert "authorization_envelope" in contract["inputs"]
-    assert "milestone_module_invariant_and_project_adoption_record" in (
+    assert "durable_module_contract_and_milestone_change_binding" in (
+        contract["inputs"]
+    )
+    assert "milestone_module_invariant_and_project_adoption_record" not in (
         contract["inputs"]
     )
     assert "bounded_code_patches" in contract["outputs"]
-    assert "versioned_milestone_module_dag" in contract["outputs"]
+    assert "durable_module_dag_and_milestone_change_bindings" in contract["outputs"]
     assert "module_interface_and_dependency_contracts" in contract["outputs"]
-    assert "module_invalidation_replacement_and_revalidation_evidence" in (
+    assert "module_isolation_replacement_and_revalidation_evidence" in (
         contract["outputs"]
     )
     assert "separately_authorized_draft_pull_request" in contract["outputs"]
@@ -86,9 +90,9 @@ def test_completion_and_non_goals_prevent_false_product_claims() -> None:
         "bounded_projects_complete_end_to_end_in_isolated_repositories",
         "real_ai_worker_performs_controlled_implementation_and_repair",
         "every_milestone_proves_parent_and_global_objective_alignment",
-        "every_project_and_milestone_has_a_versioned_module_contract",
+        "every_milestone_identifies_one_durable_module_or_versioned_interface_change",
         "interface_compatible_replacement_preserves_unaffected_modules",
-        "invalidated_modules_block_dependents_until_revalidation",
+        "failed_or_drifted_modules_pause_dependents_until_revalidation",
         "hidden_cross_module_dependencies_are_rejected",
         "failed_runs_stop_or_rollback_without_silent_scope_expansion",
     }
@@ -118,7 +122,13 @@ def test_successor_chain_builds_product_before_benchmark_and_operations() -> Non
     assert "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT accepted" in (
         p15["entry_requires"]
     )
-    assert "every benchmark project passes the milestone-module adoption gate" in (
+    assert (
+        "each benchmark project supplies its own explicitly authorized "
+        "durable-module contract"
+    ) in (
+        p15["entry_requires"]
+    )
+    assert "every benchmark project passes the milestone-module adoption gate" not in (
         p15["entry_requires"]
     )
     assert "each real repository mutation separately authorized" in (

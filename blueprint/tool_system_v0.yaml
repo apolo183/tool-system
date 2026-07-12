@@ -28,9 +28,13 @@ successor_authorization:
 
 active_phase_execution:
   record: docs/reports/p14mr_milestone_module_invariant.md
+  record_role: existing_acceptance_evidence_only
+  durable_rule_owners:
+    - "blueprint/tool_system_v0.yaml:milestone_module_invariant"
+    - "docs/tool_system_global_development_principles_v1.md:durable_module_and_milestone_discipline"
   current_stage: P14MR_MILESTONE_MODULE_INVARIANT
   phase_entry_authorized: true
-  authorized_scope: global_milestone_module_governance_only
+  authority_effect: tool_system_local_only
   phase_source_implementation_authorized: false
   next_stage: P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
   next_stage_authorized: false
@@ -46,20 +50,21 @@ product_objective:
   id: blueprint_driven_autonomous_software_development
   statement: >-
     Given an approved project blueprint, repository snapshot, authorization
-    envelope, and acceptance requirements, tool-system autonomously decomposes
-    milestones into versioned replaceable capability modules and tasks,
-    prepares controlled implementation plans, modifies code in an isolated
-    workspace, runs tests, diagnoses and repairs failures, reviews blueprint
-    alignment, isolates and replaces invalid modules without disturbing
-    unaffected modules, produces auditable evidence, and completes a bounded
-    local Git development workflow; an external draft pull request is published
-    only under separate action-scoped repository authorization.
+    envelope, and acceptance requirements, tool-system maps each authorized
+    milestone to a controlled change against one durable module or one versioned
+    public interface, decomposes that change into tasks, prepares controlled
+    implementation plans, modifies code in an isolated workspace, runs tests,
+    diagnoses and repairs failures, reviews blueprint alignment, isolates and
+    replaces failed or drifted modules without disturbing unaffected modules,
+    produces auditable evidence, and completes a bounded local Git development
+    workflow; an external draft pull request is published only under separate
+    action-scoped repository authorization.
   required_end_to_end_flow:
     - ingest_approved_blueprint
     - inspect_repository_state
     - build_repository_context
     - decompose_milestones
-    - assemble_versioned_milestone_module_dag
+    - assemble_durable_module_dag_and_milestone_change_bindings
     - validate_module_interfaces_and_dependencies
     - generate_task_dag
     - generate_phase_documents
@@ -74,7 +79,7 @@ product_objective:
     - repair_with_bounded_retry
     - review_parent_alignment
     - review_global_product_objective_alignment
-    - isolate_and_replace_invalid_modules
+    - isolate_and_replace_failed_or_drifted_modules
     - revalidate_affected_module_dependents
     - create_local_git_commits
     - produce_draft_pull_request_plan
@@ -87,9 +92,9 @@ product_objective:
     - real_ai_worker_performs_controlled_implementation_and_repair
     - every_change_traces_to_blueprint_task_and_authorization
     - every_milestone_proves_parent_and_global_objective_alignment
-    - every_project_and_milestone_has_a_versioned_module_contract
+    - every_milestone_identifies_one_durable_module_or_versioned_interface_change
     - interface_compatible_replacement_preserves_unaffected_modules
-    - invalidated_modules_block_dependents_until_revalidation
+    - failed_or_drifted_modules_pause_dependents_until_revalidation
     - hidden_cross_module_dependencies_are_rejected
     - interrupted_runs_resume_without_duplicate_side_effects
     - failed_runs_stop_or_rollback_without_silent_scope_expansion
@@ -108,12 +113,12 @@ product_contract:
     - approved_project_blueprint
     - repository_snapshot
     - repository_governance_documents
-    - milestone_module_invariant_and_project_adoption_record
+    - durable_module_contract_and_milestone_change_binding
     - authorization_envelope
     - validation_and_acceptance_requirements
   outputs:
     - milestone_hierarchy
-    - versioned_milestone_module_dag
+    - durable_module_dag_and_milestone_change_bindings
     - module_interface_and_dependency_contracts
     - executable_task_dag
     - phase_entry_records
@@ -126,18 +131,33 @@ product_contract:
     - draft_pull_request_plan
     - separately_authorized_draft_pull_request
     - acceptance_and_closure_record
-    - module_invalidation_replacement_and_revalidation_evidence
+    - module_isolation_replacement_and_revalidation_evidence
 
 milestone_module_invariant:
-  id: replaceable_milestone_capability_modules
-  status: active
+  id: durable_module_and_milestone_change_boundary
+  contract_active: true
+  authority_scope:
+    repository: tool-system
+    governs_other_repositories: false
+    may_offer_tools_and_recommendations: true
+    may_change_downstream_owner_authority_status_or_write_authorization: false
+    immutable_group_reference_effect: conditional_on_later_registered_reference
+    group_reference_created_by_this_change: false
+    group_cutover_completed_by_this_change: false
   applies_to:
-    - tool_system
-    - every_project_generated_by_tool_system
-    - every_project_controlled_by_tool_system
-    - every_project_adopted_into_tool_system
-    - every_major_milestone
-    - every_sub_milestone
+    - tool_system_durable_modules
+    - tool_system_module_interfaces
+    - tool_system_module_dependency_boundaries
+    - tool_system_milestone_change_bindings
+  module_definition:
+    persistent_functional_boundary: true
+    replaceable: true
+    single_responsibility: true
+    versioned_public_interface_required: true
+  milestone_definition:
+    controlled_change_and_acceptance_unit: true
+    persistent_module_by_existence: false
+    normally_changes_one_module_or_versioned_public_interface: true
   project_architecture:
     module_graph_required: true
     dependency_graph_type: directed_acyclic_graph
@@ -148,46 +168,41 @@ milestone_module_invariant:
   required_module_contract_fields:
     - module_id
     - module_version
+    - single_responsibility
     - blueprint_objective_ref
-    - direct_parent_refs
     - natural_owner_paths
+    - public_interface_version
     - input_contract
     - output_contract
-    - public_interface
-    - dependency_module_ids_and_versions
+    - error_semantics
+    - externally_visible_side_effects
+    - code_boundary
+    - data_boundary
+    - test_boundary
+    - runtime_artifact_boundary
+    - cleanup_boundary
+    - upstream_dependency_module_ids_and_versions
+    - downstream_dependency_module_ids_and_versions
     - content_hashes_and_expected_preconditions
     - authorization_envelope
-    - acceptance_tests_and_evidence
-    - invalidation_conditions
-    - rollback_and_cleanup_disposition
-    - replacement_or_supersession_ref
-  lifecycle:
-    states:
-      - DEFINED
-      - IMPLEMENTING
-      - VALIDATING
-      - ACCEPTED
-      - ACTIVE
-      - INVALIDATED
-      - ISOLATED
-      - REPLACED
-      - REVALIDATED
-      - RETIRED
-    invalidated_module_may_remain_active: false
-    replacement_activation_requires_acceptance: true
-    active_swap_is_atomic: true
+    - acceptance_evidence
+    - rollback_evidence
+    - replacement_evidence
   defect_disposition:
     implementation_defect_with_valid_contract: repair_inside_module_boundary_and_reaccept
-    contract_or_blueprint_drift: invalidate_isolate_and_replace_module
+    contract_or_blueprint_drift: isolate_module_stop_outputs_and_require_accepted_replacement
   failure_isolation:
-    invalid_module_removed_from_active_graph: true
-    dependent_modules_blocked_until_revalidation: true
-    descendant_acceptance_suspect_until_revalidated: true
-    unrelated_modules_remain_active: true
+    failed_or_drifted_module_isolated_from_active_output: true
+    dependent_modules_pause_consumption_until_current_revalidation: true
+    affected_downstream_dependency_closure_requires_revalidation: true
+    unrelated_modules_and_acceptance_remain_valid: true
     hidden_dependency_discovery_expands_explicit_impact_set: true
   compatibility_replacement:
+    replacement_module_requires_revalidation: true
+    public_upstream_and_downstream_boundaries_require_revalidation: true
+    affected_downstream_dependency_closure_requires_revalidation: true
     interface_compatible_replacement_changes_unaffected_modules: false
-    direct_dependents_require_revalidation: true
+    unrelated_modules_and_acceptance_remain_valid: true
     direct_dependents_require_reimplementation_by_default: false
     interface_incompatible_change_requires_versioned_migration: true
     global_blueprint_change_requires_impacted_module_replanning: true
@@ -200,16 +215,24 @@ milestone_module_invariant:
     audit_and_git_history_retained: true
     creator_owned_temporary_cleanup_required: true
     destructive_cleanup_requires_separate_authorization: true
-  project_adoption_gate:
-    inheritance_or_equivalent_embedded_contract_required: true
-    missing_adoption_blocks_phase_entry_and_write: true
-    adoption_verified_before_next_controlled_write: true
-    existing_project_retroactive_mutation_automatic: false
+  tooling_boundary:
+    may_offer_tools_and_recommendations: true
+    downstream_use_requires_downstream_authorization: true
+    downstream_governance_authority: false
+    may_change_downstream_owner_authority_status_or_write_authorization: false
+    external_project_retroactive_mutation_automatic: false
+  process_migration_boundary:
+    reports_task_manifests_change_plans_active_gates_are_legacy_machine_inputs: true
+    caller_and_reference_audit_complete: false
+    group_process_file_compliance_claimed: false
+    deletion_or_reclassification_authorized: false
   enforcement:
+    current_contract_scope: local_declaration_and_alignment_tests
+    runtime_module_enforcement_implemented: false
     machine_alignment_tests_required: true
     module_graph_validation_required: true
     interface_compatibility_evidence_required: true
-    invalidation_blast_radius_record_required: true
+    fault_isolation_blast_radius_record_required: true
     blueprint_compiler_owner: P14E_BLUEPRINT_COMPILER
     multi_project_acceptance_owner: P15_MULTI_PROJECT_BENCHMARK
 
@@ -245,7 +268,7 @@ boundaries:
     - durable_orchestrator
     - security_reliability_hardening
     - blueprint_to_code_autonomous_development
-    - milestone_module_governance
+    - durable_module_and_milestone_change_governance
     - multi_project_benchmark
     - production_operations_acceptance
   does_not_own:
@@ -539,7 +562,7 @@ milestones:
       - implementation begins in isolated local fixture repositories only
     outputs:
       - end-to-end product and acceptance contract
-      - versioned replaceable milestone-module graph and contracts
+      - durable versioned module graph, interfaces, and milestone change bindings
       - bounded real AI model-provider worker runtime
       - repository context builder and natural-owner discovery
       - blueprint-to-milestone and executable task-DAG compiler
@@ -561,11 +584,15 @@ milestones:
           - explicit P14B source-implementation authorization
         execution_boundary: no_live_provider
       - stage: P14MR_MILESTONE_MODULE_INVARIANT
-        objective: make every controlled project and milestone a versioned replaceable capability module with bounded invalidation and compatibility semantics
+        objective: reconcile tool-system milestone planning with durable replaceable capability modules without treating milestone packets as modules or governing downstream repositories
         entry_requires:
           - P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT accepted
-          - explicit global milestone-module governance authorization
+          - explicit tool-system-local durable-module governance authorization
         execution_boundary: governance_only
+        authority_effect: tool_system_local_only
+        durable_rule_owners:
+          - milestone_module_invariant
+          - docs/tool_system_global_development_principles_v1.md
       - stage: P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
         objective: prove one bounded real provider path with cost, secret, network, timeout, cancellation, retry, validation, and audit controls
         entry_requires:
@@ -579,7 +606,7 @@ milestones:
           - P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION accepted
         execution_boundary: isolated_fixture_repositories
       - stage: P14E_BLUEPRINT_COMPILER
-        objective: derive versioned milestone modules, interfaces, dependency DAGs, stages, tasks, documents, manifests, plans, gates, tests, invalidation paths, replacements, and rollback nodes from approved inputs
+        objective: derive durable versioned modules, milestone-to-module change bindings, interfaces, dependency DAGs, stages, tasks, documents, manifests, plans, gates, tests, isolation paths, replacements, and rollback nodes from approved inputs
         entry_requires:
           - P14D_REPOSITORY_CONTEXT_NATURAL_OWNER accepted
         execution_boundary: isolated_fixture_repositories
@@ -616,17 +643,17 @@ milestones:
       - deterministic_content_addressed_replay
     accepted_claim: >-
       Given an approved bounded blueprint and isolated repository fixture,
-      tool-system can autonomously plan versioned replaceable milestone modules,
-      implement, test, repair, review, isolate invalid modules, and record a
-      local Git software change through an auditable, resumable, fail-closed
-      workflow.
+      tool-system can autonomously plan durable versioned replaceable modules and
+      milestone change bindings, implement, test, repair, review, isolate failed
+      or drifted modules, and record a local Git software change through an
+      auditable, resumable, fail-closed workflow.
   P15_MULTI_PROJECT_BENCHMARK:
     objective: benchmark the accepted blueprint-to-code product across multiple isolated projects and read-only real repositories before any optional target pilot
     entry_requires:
       - P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT accepted
       - explicit P15 phase-entry authorization
       - each real repository mutation separately authorized
-      - every benchmark project passes the milestone-module adoption gate
+      - each benchmark project supplies its own explicitly authorized durable-module contract
     outputs:
       - representative multi-project benchmark suite
       - quality, latency, cost, recovery, and policy metrics

@@ -11,7 +11,7 @@ updated_at: 2026-07-12 UTC+09:00
 
 tool-system builds and controls automated software-development workflows. It is domain-agnostic infrastructure.
 
-The permanent product objective is bounded blueprint-driven autonomous software development. An approved blueprint must ultimately be convertible into versioned replaceable milestone modules, an executable task DAG, controlled AI-assisted code changes, test/repair/review evidence, bounded local Git commits, and an acceptance record without silent scope or authority expansion.
+The permanent product objective is bounded blueprint-driven autonomous software development. An approved blueprint must ultimately be convertible into durable, versioned, replaceable single-responsibility modules, milestone-to-module change bindings, an executable task DAG, controlled AI-assisted code changes, test/repair/review evidence, bounded local Git commits, and an acceptance record without silent scope or authority expansion.
 
 ## 2. Mandatory first step
 
@@ -20,6 +20,8 @@ Before material tool-system engineering work, read:
 ```text
 docs/tool_system_global_development_principles_v1.md
 ```
+
+These repository-local principles govern only tool-system. If a later authorized cutover creates a registered immutable finance-governance reference, the governance commit pinned by that reference is upstream and local rules may add constraints but may not override it. This contract does not create that reference or complete cutover.
 
 ## 3. Documentation-first execution loop
 
@@ -35,6 +37,8 @@ Agents must not rely on long conversation context as execution authority. Every 
 
 A stage should be short, have one natural objective, one branch, one change plan, one evidence record, and a clear stop condition. If drift is found, the next action is documentation or process correction, not feature expansion.
 
+Existing reports, task manifests, change plans, and `examples/active_gates.yaml` remain legacy machine inputs pending a separately authorized caller and reference migration audit. Their presence is not a claim of finance-governance process-file compliance, and unread objects must not be deleted or reclassified in this reconciliation.
+
 ## 4. Blueprint alignment invariant
 
 Every major milestone, sub-milestone, task manifest, change plan, evidence record, and acceptance record must prove:
@@ -46,13 +50,15 @@ Parent-only alignment is not enough. Small local deviations can accumulate into 
 
 For P14 and later work, global alignment means explicit alignment to `blueprint/tool_system_v0.yaml:product_objective`, not merely to the current milestone entry. Missing direct-parent or product-objective alignment blocks execution.
 
-## 5. Milestone module invariant
+## 5. Durable module and milestone invariant
 
-Every project controlled, generated, or adopted by tool-system is a DAG of versioned replaceable capability modules. Every major milestone and sub-milestone is one module with a public input/output interface, explicit dependency versions, natural owners, content hashes, acceptance evidence, invalidation conditions, rollback, cleanup, and replacement disposition.
+Within tool-system, a module is a persistent, replaceable functional boundary with one responsibility and a versioned public interface. A milestone is a controlled unit of change and acceptance; it does not become a persistent module merely because it existed. As a rule, one milestone adds, modifies, or replaces one durable module or one versioned public interface.
 
-Interface-compatible replacement must leave unaffected modules unchanged; direct dependents are revalidated rather than reimplemented by default. Contract or blueprint drift invalidates and isolates the module, blocks its dependents, preserves unrelated modules, and requires an accepted replacement before atomic reactivation. Hidden dependencies, cross-module internal-state access, parallel active mainlines, and undocumented whole-project rewrites are prohibited.
+Interface-compatible replacement must leave unaffected modules unchanged; the replacement, its public upstream and downstream boundaries, and the affected downstream dependency closure are revalidated rather than reimplemented by default. Failure, evidence loss, or contract drift isolates the affected module and stops its outputs, pauses dependent consumption pending current revalidation, and preserves unrelated modules and evidence. Hidden dependencies, cross-module internal-state access, parallel active mainlines, and undocumented whole-project rewrites are prohibited.
 
-Every controlled project must inherit `blueprint/tool_system_v0.yaml:milestone_module_invariant` or embed an equivalent machine-readable contract before its next phase entry or controlled write.
+This rule does not define new machine lifecycle or status values. Isolation, paused consumption, replacement, and revalidation are ordinary rule language unless a separately authorized applicable schema registers corresponding values.
+
+tool-system may offer tools and recommendations to a downstream repository under that repository's own authority. A tool-system local rule cannot change another repository's owner, authority, status, responsibility, or write authorization.
 
 ## 6. Evidence-first rule
 
@@ -110,11 +116,11 @@ Current phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.
 
 Status: `active`.
 
-P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract is accepted and closed. P14 is active at the P14MR global milestone-module governance scope only. Live model/provider execution, project benchmarks, and target mutations are not authorized. P15-P16 remain roadmap-only.
+P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract is accepted and closed. P14 remains active while the accepted P14MR evidence is retained and its durable local module rules are owned by `blueprint/tool_system_v0.yaml` and `docs/tool_system_global_development_principles_v1.md`. Live model/provider execution, project benchmarks, and target mutations are not authorized. P15-P16 remain roadmap-only.
 
 Allowed now:
 
-- P14MR governance documents, machine-alignment tests, internal pull-request lifecycle, merge, and bounded closure under `docs/reports/p14mr_milestone_module_invariant.md`;
+- local durable-module authority semantics owned by the blueprint and local principles; `docs/reports/p14mr_milestone_module_invariant.md` is existing acceptance evidence only;
 - read-only verification of the accepted P14A and P14B contracts and evidence;
 - read-only verification of the accepted P13 security and reliability evidence;
 - read-only verification of accepted P12 durable-orchestrator state and evidence;
@@ -128,7 +134,7 @@ Not allowed now:
 - target-repository main-branch mutation outside the approved merge flow;
 - finance-us P1B target implementation without a named, action-scoped target execution approval;
 - treating a P1B implementation approval as ready or merge approval;
-- further P14B source expansion under the accepted and closed module;
+- further P14B source expansion under the accepted and closed milestone scope;
 - P14C or later P14 source implementation before a named authorization;
 - any live model/provider call before a named provider, model, credential, network, cost, and execution packet is authorized;
 - P15 or later phase entry or implementation before a named authorization;

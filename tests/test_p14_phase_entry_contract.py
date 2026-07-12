@@ -65,8 +65,14 @@ def test_p14_stage_sequence_closes_each_missing_product_link() -> None:
     ]
     assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["entry_requires"] == [
         "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT accepted",
-        "explicit global milestone-module governance authorization",
+        "explicit tool-system-local durable-module governance authorization",
     ]
+    assert "explicit global milestone-module governance authorization" not in stages[
+        "P14MR_MILESTONE_MODULE_INVARIANT"
+    ]["entry_requires"]
+    assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["authority_effect"] == (
+        "tool_system_local_only"
+    )
     assert stages["P14I_ACCEPTANCE_CLOSURE"]["entry_requires"] == [
         "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE accepted"
     ]

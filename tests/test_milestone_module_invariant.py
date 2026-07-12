@@ -7,34 +7,40 @@ from tool_system.manifest.task_manifest import load_yaml_file
 
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
-GLOBAL_PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
-AGENTS = ROOT / "AGENTS.md"
-README = ROOT / "README.md"
+ACTIVE_GATES = ROOT / "examples" / "active_gates.yaml"
 REPORT = ROOT / "docs" / "reports" / "p14mr_milestone_module_invariant.md"
-MANIFEST = (
-    ROOT
-    / "examples"
-    / "task_manifests"
-    / "tool_system_p14mr_milestone_module_invariant.yaml"
-)
+
+
+def _blueprint() -> dict[str, object]:
+    return load_yaml_file(BLUEPRINT)
 
 
 def _invariant() -> dict[str, object]:
-    return load_yaml_file(BLUEPRINT)["milestone_module_invariant"]
+    return _blueprint()["milestone_module_invariant"]
 
 
-def test_invariant_applies_to_every_controlled_project_and_milestone() -> None:
+def test_invariant_applies_only_to_tool_system_durable_modules() -> None:
     invariant = _invariant()
 
-    assert invariant["id"] == "replaceable_milestone_capability_modules"
-    assert invariant["status"] == "active"
+    assert invariant["id"] == "durable_module_and_milestone_change_boundary"
+    assert invariant["contract_active"] is True
+    assert "status" not in invariant
     assert set(invariant["applies_to"]) == {
-        "tool_system",
-        "every_project_generated_by_tool_system",
-        "every_project_controlled_by_tool_system",
-        "every_project_adopted_into_tool_system",
-        "every_major_milestone",
-        "every_sub_milestone",
+        "tool_system_durable_modules",
+        "tool_system_module_interfaces",
+        "tool_system_module_dependency_boundaries",
+        "tool_system_milestone_change_bindings",
+    }
+    assert invariant["module_definition"] == {
+        "persistent_functional_boundary": True,
+        "replaceable": True,
+        "single_responsibility": True,
+        "versioned_public_interface_required": True,
+    }
+    assert invariant["milestone_definition"] == {
+        "controlled_change_and_acceptance_unit": True,
+        "persistent_module_by_existence": False,
+        "normally_changes_one_module_or_versioned_public_interface": True,
     }
     assert invariant["project_architecture"] == {
         "module_graph_required": True,
@@ -50,47 +56,51 @@ def test_every_module_has_a_versioned_auditable_contract() -> None:
     assert set(_invariant()["required_module_contract_fields"]) == {
         "module_id",
         "module_version",
+        "single_responsibility",
         "blueprint_objective_ref",
-        "direct_parent_refs",
         "natural_owner_paths",
+        "public_interface_version",
         "input_contract",
         "output_contract",
-        "public_interface",
-        "dependency_module_ids_and_versions",
+        "error_semantics",
+        "externally_visible_side_effects",
+        "code_boundary",
+        "data_boundary",
+        "test_boundary",
+        "runtime_artifact_boundary",
+        "cleanup_boundary",
+        "upstream_dependency_module_ids_and_versions",
+        "downstream_dependency_module_ids_and_versions",
         "content_hashes_and_expected_preconditions",
         "authorization_envelope",
-        "acceptance_tests_and_evidence",
-        "invalidation_conditions",
-        "rollback_and_cleanup_disposition",
-        "replacement_or_supersession_ref",
+        "acceptance_evidence",
+        "rollback_evidence",
+        "replacement_evidence",
     }
 
 
-def test_module_lifecycle_separates_repair_from_drift_replacement() -> None:
+def test_fault_rules_do_not_create_unregistered_lifecycle_enums() -> None:
     invariant = _invariant()
 
-    assert invariant["lifecycle"] == {
-        "states": [
-            "DEFINED",
-            "IMPLEMENTING",
-            "VALIDATING",
-            "ACCEPTED",
-            "ACTIVE",
-            "INVALIDATED",
-            "ISOLATED",
-            "REPLACED",
-            "REVALIDATED",
-            "RETIRED",
-        ],
-        "invalidated_module_may_remain_active": False,
-        "replacement_activation_requires_acceptance": True,
-        "active_swap_is_atomic": True,
-    }
+    assert "lifecycle" not in invariant
+    serialized = repr(invariant)
+    for unregistered_state in (
+        "DEFINED",
+        "IMPLEMENTING",
+        "VALIDATING",
+        "INVALIDATED",
+        "ISOLATED",
+        "REVALIDATED",
+        "RETIRED",
+    ):
+        assert unregistered_state not in serialized
     assert invariant["defect_disposition"] == {
         "implementation_defect_with_valid_contract": (
             "repair_inside_module_boundary_and_reaccept"
         ),
-        "contract_or_blueprint_drift": "invalidate_isolate_and_replace_module",
+        "contract_or_blueprint_drift": (
+            "isolate_module_stop_outputs_and_require_accepted_replacement"
+        ),
     }
 
 
@@ -98,15 +108,18 @@ def test_failure_isolation_preserves_unrelated_modules() -> None:
     invariant = _invariant()
 
     assert invariant["failure_isolation"] == {
-        "invalid_module_removed_from_active_graph": True,
-        "dependent_modules_blocked_until_revalidation": True,
-        "descendant_acceptance_suspect_until_revalidated": True,
-        "unrelated_modules_remain_active": True,
+        "failed_or_drifted_module_isolated_from_active_output": True,
+        "dependent_modules_pause_consumption_until_current_revalidation": True,
+        "affected_downstream_dependency_closure_requires_revalidation": True,
+        "unrelated_modules_and_acceptance_remain_valid": True,
         "hidden_dependency_discovery_expands_explicit_impact_set": True,
     }
     assert invariant["compatibility_replacement"] == {
+        "replacement_module_requires_revalidation": True,
+        "public_upstream_and_downstream_boundaries_require_revalidation": True,
+        "affected_downstream_dependency_closure_requires_revalidation": True,
         "interface_compatible_replacement_changes_unaffected_modules": False,
-        "direct_dependents_require_revalidation": True,
+        "unrelated_modules_and_acceptance_remain_valid": True,
         "direct_dependents_require_reimplementation_by_default": False,
         "interface_incompatible_change_requires_versioned_migration": True,
         "global_blueprint_change_requires_impacted_module_replanning": True,
@@ -114,7 +127,7 @@ def test_failure_isolation_preserves_unrelated_modules() -> None:
     }
 
 
-def test_replacement_cleanup_and_project_adoption_fail_closed() -> None:
+def test_replacement_cleanup_and_downstream_authority_fail_closed() -> None:
     invariant = _invariant()
 
     assert invariant["replacement_and_cleanup"] == {
@@ -126,63 +139,131 @@ def test_replacement_cleanup_and_project_adoption_fail_closed() -> None:
         "creator_owned_temporary_cleanup_required": True,
         "destructive_cleanup_requires_separate_authorization": True,
     }
-    assert invariant["project_adoption_gate"] == {
-        "inheritance_or_equivalent_embedded_contract_required": True,
-        "missing_adoption_blocks_phase_entry_and_write": True,
-        "adoption_verified_before_next_controlled_write": True,
-        "existing_project_retroactive_mutation_automatic": False,
+    assert invariant["tooling_boundary"] == {
+        "may_offer_tools_and_recommendations": True,
+        "downstream_use_requires_downstream_authorization": True,
+        "downstream_governance_authority": False,
+        "may_change_downstream_owner_authority_status_or_write_authorization": False,
+        "external_project_retroactive_mutation_automatic": False,
     }
     assert invariant["enforcement"] == {
+        "current_contract_scope": "local_declaration_and_alignment_tests",
+        "runtime_module_enforcement_implemented": False,
         "machine_alignment_tests_required": True,
         "module_graph_validation_required": True,
         "interface_compatibility_evidence_required": True,
-        "invalidation_blast_radius_record_required": True,
+        "fault_isolation_blast_radius_record_required": True,
         "blueprint_compiler_owner": "P14E_BLUEPRINT_COMPILER",
         "multi_project_acceptance_owner": "P15_MULTI_PROJECT_BENCHMARK",
     }
 
 
-def test_global_public_contracts_and_packet_agree() -> None:
-    principles = GLOBAL_PRINCIPLES.read_text(encoding="utf-8")
-    agents = AGENTS.read_text(encoding="utf-8")
-    readme = README.read_text(encoding="utf-8")
-    report = REPORT.read_text(encoding="utf-8")
-    manifest = load_yaml_file(MANIFEST)
-
-    for text in (principles, agents, readme, report):
-        assert "versioned" in text
-        assert "module" in text.lower()
-        assert "unaffected" in text
-    assert "Hidden dependencies" in principles
-    assert "whole-project rewrite" in principles
-    assert "parallel active implementations" in readme
-    assert "P14C" in report
-    assert manifest["alignment"]["global"]["section_or_key"] == (
-        "product_objective"
-    )
-    assert set(manifest["scope"]["out_of_scope"]) >= {
-        "runtime source or policy changes",
-        "automatic module replacement implementation",
-        "modification of existing external projects",
-        "P14C live provider, model, credential, network, or cost execution",
-    }
-
-
-def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
-    blueprint = load_yaml_file(BLUEPRINT)
+def test_local_authority_does_not_govern_other_repositories() -> None:
+    blueprint = _blueprint()
+    invariant = blueprint["milestone_module_invariant"]
+    authority = invariant["authority_scope"]
+    execution = blueprint["active_phase_execution"]
     p14 = blueprint["milestones"]["P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"]
     stages = {stage["stage"]: stage for stage in p14["stage_plan"]}
 
+    assert authority == {
+        "repository": "tool-system",
+        "governs_other_repositories": False,
+        "may_offer_tools_and_recommendations": True,
+        "may_change_downstream_owner_authority_status_or_write_authorization": False,
+        "immutable_group_reference_effect": (
+            "conditional_on_later_registered_reference"
+        ),
+        "group_reference_created_by_this_change": False,
+        "group_cutover_completed_by_this_change": False,
+    }
+    assert execution["authority_effect"] == "tool_system_local_only"
+    assert "authorized_scope" not in execution
+    assert "authorized_scope_role" not in execution
+    assert "global_milestone_module_governance_only" not in execution.values()
+    assert "compatibility_identifier_semantics" not in blueprint
+    assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["entry_requires"] == [
+        "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT accepted",
+        "explicit tool-system-local durable-module governance authorization",
+    ]
+    assert "explicit global milestone-module governance authorization" not in stages[
+        "P14MR_MILESTONE_MODULE_INVARIANT"
+    ]["entry_requires"]
+    assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["authority_effect"] == (
+        "tool_system_local_only"
+    )
+
+
+def test_p14mr_report_is_acceptance_evidence_not_durable_rule_owner() -> None:
+    blueprint = load_yaml_file(BLUEPRINT)
+    execution = blueprint["active_phase_execution"]
+
+    assert REPORT.is_file()
+    assert execution["record"] == (
+        "docs/reports/p14mr_milestone_module_invariant.md"
+    )
+    assert execution["record_role"] == "existing_acceptance_evidence_only"
+    assert execution["durable_rule_owners"] == [
+        "blueprint/tool_system_v0.yaml:milestone_module_invariant",
+        (
+            "docs/tool_system_global_development_principles_v1.md:"
+            "durable_module_and_milestone_discipline"
+        ),
+    ]
+    assert execution["authority_effect"] == "tool_system_local_only"
+
+
+def test_process_inputs_remain_pending_separate_migration() -> None:
+    boundary = _invariant()["process_migration_boundary"]
+    active_gates = load_yaml_file(ACTIVE_GATES)
+
+    assert boundary == {
+        "reports_task_manifests_change_plans_active_gates_are_legacy_machine_inputs": True,
+        "caller_and_reference_audit_complete": False,
+        "group_process_file_compliance_claimed": False,
+        "deletion_or_reclassification_authorized": False,
+    }
+    assert isinstance(active_gates["task_manifests"], list)
+    assert active_gates["task_manifests"]
+    assert all(isinstance(path, str) for path in active_gates["task_manifests"])
+    assert isinstance(active_gates["change_plans"], list)
+    assert active_gates["change_plans"]
+    assert all(isinstance(path, str) for path in active_gates["change_plans"])
+
+
+def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
+    blueprint = _blueprint()
+    p14 = blueprint["milestones"]["P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"]
+    stages = {stage["stage"]: stage for stage in p14["stage_plan"]}
+    execution = blueprint["active_phase_execution"]
+
+    assert blueprint["phase"] == "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
+    assert blueprint["status"] == "active"
+    assert execution["current_stage"] == "P14MR_MILESTONE_MODULE_INVARIANT"
+    assert execution["record_role"] == "existing_acceptance_evidence_only"
     assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["execution_boundary"] == (
         "governance_only"
+    )
+    assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["authority_effect"] == (
+        "tool_system_local_only"
+    )
+    assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["objective"] == (
+        "reconcile tool-system milestone planning with durable replaceable "
+        "capability modules without treating milestone packets as modules or "
+        "governing downstream repositories"
     )
     assert "P14MR_MILESTONE_MODULE_INVARIANT accepted" in stages[
         "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
     ]["entry_requires"]
-    assert "versioned milestone modules" in stages["P14E_BLUEPRINT_COMPILER"][
-        "objective"
-    ]
-    assert "every benchmark project passes the milestone-module adoption gate" in (
+    assert (
+        "each benchmark project supplies its own explicitly authorized "
+        "durable-module contract"
+    ) in (
         blueprint["milestones"]["P15_MULTI_PROJECT_BENCHMARK"]["entry_requires"]
     )
-    assert "milestone_module_governance" in blueprint["boundaries"]["owns"]
+    assert "durable_module_and_milestone_change_governance" in blueprint[
+        "boundaries"
+    ]["owns"]
+    assert execution["next_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
+    assert execution["next_stage_authorized"] is False
+    assert execution["live_model_provider_execution_authorized"] is False

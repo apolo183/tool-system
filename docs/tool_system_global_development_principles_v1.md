@@ -4,14 +4,16 @@
 
 - repo_rel_path: `docs/tool_system_global_development_principles_v1.md`
 - role: active project-wide engineering discipline contract for tool-system
-- purpose: define mandatory evidence, documentation-first execution, blueprint alignment, replaceable milestone modules, scope, file disposition, cleanup, validation, rollback, side-effect tool use, and claims rules for tool-system work
+- purpose: define mandatory evidence, documentation-first execution, blueprint alignment, durable replaceable modules, milestone discipline, scope, file disposition, cleanup, validation, rollback, side-effect tool use, and claims rules for tool-system work
 - author: ChatGPT / apolo183
 - created_at: 2026-07-08 09:20 UTC+08:00
 - updated_at: 2026-07-12 UTC+09:00
 
 ## 1. Authority
 
-This file is the project-wide discipline contract for tool-system. Narrower task manifests, change plans, tests, runbooks, and PR descriptions may add constraints but must not silently override this file. A conflict stops work until a cross-document disposition is recorded.
+This file is the repository-local discipline contract for tool-system and governs only tool-system work. It does not govern another repository. A tool-system local rule cannot change another repository's owner, authority, status, responsibility, or write authorization. Narrower tool-system task manifests, change plans, tests, runbooks, and PR descriptions may add constraints but must not silently override this file. A conflict stops work until a cross-document disposition is recorded.
+
+If a later authorized cutover creates a registered immutable finance-governance reference, the governance commit pinned by that reference is upstream. These local rules may add constraints but may not override the pinned group governance. This reconciliation creates no governance reference, performs no cutover, and makes no governance-activation claim.
 
 ## 2. Evidence hierarchy
 
@@ -32,6 +34,8 @@ A document, PR, green test, audit, or dry-run authorizes only its explicit scope
 ## 6. Formal and process file discipline
 
 Formal files are active contracts, source, configs, tests, runbooks, docs, examples, and audit interfaces required to run, validate, operate, audit, or roll back tool-system. Process files are notes, temporary scripts, dry-run outputs, proposal drafts, patch plans, debug logs, and intermediate evidence. Process files must use the narrowest project-local task root such as `tmp/<task_id>/`, `reports/<task_id>/`, or `artifacts/<task_id>/`, unless an explicit exception names path, reason, retention, side effects, and cleanup responsibility.
+
+Existing `docs/reports/**`, `examples/task_manifests/**`, `examples/change_plans/**`, and `examples/active_gates.yaml` objects remain legacy machine inputs pending a separately authorized caller and reference migration audit. This reconciliation does not claim that they comply with finance-governance process-file discipline, does not delete or reclassify them, and leaves every unread disposition as `UNKNOWN`.
 
 ## 7. File disposition
 
@@ -126,42 +130,40 @@ Each stage may create at most one working branch. The branch name must be define
 
 Any accidental branch, PR, file, label, comment, or other side effect is residue. The next action is an incident or cleanup plan, not continued feature expansion. Residue cleanup must be handled through a separate cleanup gate/PR when it requires deletion, branch deletion, history-affecting action, or any destructive cleanup.
 
-## 20. Milestone module invariant
+## 20. Durable module and milestone discipline
 
-Every project generated, controlled, or adopted by tool-system is a directed acyclic graph of versioned capability modules. Every major milestone and sub-milestone is one such module, even when its natural implementation spans several files or packages. A module is defined by its blueprint objective, direct parents, version, content and precondition hashes, public input/output interface, dependency versions, natural owners, authorization envelope, acceptance evidence, invalidation conditions, rollback, cleanup, and replacement disposition.
+A module is a persistent, replaceable functional boundary inside tool-system with one responsibility and one versioned public interface. A milestone is a controlled unit of change and acceptance. A milestone does not become a persistent module merely because it existed. As a rule, one milestone adds, modifies, or replaces one durable module or one versioned public interface.
 
-Downstream modules depend only on accepted public interfaces and recorded outputs. Hidden dependencies, cross-module access to internal state, and more than one active implementation for the same module responsibility are prohibited. Shared foundations must be minimized, versioned, and assigned an explicit blast-radius review because their failure can affect more than one branch of the module graph.
+Each active tool-system module requires a stable identity, owner, single responsibility, version, versioned public interface, input and output contracts, error semantics, externally visible side effects, code/data/test/runtime-artifact/cleanup boundaries, explicit upstream and downstream dependency edges, and acceptance, rollback, and replacement evidence.
 
-## 21. Defect, drift, and invalidation disposition
+Modules depend only on accepted public interfaces and recorded outputs. Hidden dependencies, interface bypasses, cross-module access to private state, undeclared dependency edges, circular dependencies, and more than one active implementation for the same responsibility are prohibited. Shared foundations must be minimized, stable, versioned, narrowly responsible, and assigned an explicit blast-radius review.
 
-An implementation defect with a still-correct module objective and public contract is repaired inside that module boundary and reaccepted. A module whose objective, interface, scope, evidence, or implementation has drifted from either its direct parent or the global blueprint is `INVALIDATED`, removed from the active graph, and isolated before further dependent execution.
+The durable rule owners are this file and `blueprint/tool_system_v0.yaml`. `docs/reports/p14mr_milestone_module_invariant.md` remains existing P14MR acceptance evidence only; it is not the permanent rule owner.
 
-Invalidation blocks dependent modules and makes descendant acceptance suspect until the dependency graph is revalidated. Unrelated modules remain active. Discovery of a hidden dependency expands the explicit impact set and is itself a governance defect; it does not justify an undocumented whole-project rewrite.
+## 21. Failure isolation without new lifecycle status
+
+An implementation defect with a still-correct module objective and public contract is repaired inside that module boundary and reaccepted. When a module fails, drifts from its approved objective or public interface, or loses valid evidence, isolate that module and stop its outputs before further dependent execution.
+
+Dependent modules pause consumption and wait for current revalidation. The affected downstream dependency closure is revalidated, while unrelated modules and existing unrelated acceptance evidence remain valid. Discovery of a hidden dependency expands the explicit impact set and is itself a governance defect; it does not justify an undocumented whole-project rewrite.
+
+Terms such as isolate, pause consumption, replace, and revalidate are ordinary rule language here. This file defines no new machine lifecycle or status enumeration; any such values require a separately authorized applicable schema.
 
 ## 22. Compatible replacement and bounded blast radius
 
-An interface-compatible replacement must not require code or contract changes in unaffected modules. Direct dependents are revalidated against the replacement but are not reimplemented by default. An interface-incompatible replacement requires a new version, an explicit migration plan, and a dependency-derived impact set. A global-blueprint change requires replanning only the impacted module set, while a shared-foundation change requires an explicit wider blast-radius review.
+An interface-compatible replacement must preserve the approved interface version, inputs, outputs, error semantics, and externally visible side effects. It must not require code or contract changes in unaffected modules. The replacement itself, its public upstream and downstream boundaries, and the affected downstream dependency closure are revalidated; dependents are not reimplemented by default. An interface-incompatible replacement requires a new version, an explicit migration plan, and a dependency-derived impact set. A product-blueprint change requires replanning only the impacted module set, while a shared-foundation change requires an explicit wider blast-radius review.
 
 The replacement must prove direct-parent and global-blueprint alignment and pass its acceptance suite before an atomic active-graph swap. After acceptance, the superseded route is removed from the active tree so two mainlines do not persist. Git and audit evidence remain available for diagnosis and rollback; invalid code, documents, tests, or routes are not retained as active fallback, archive, or compatibility paths.
 
-## 23. Module lifecycle and cleanup
+## 23. Replacement activation and cleanup
 
-The controlled lifecycle is:
+A failed or drifted module may not continue producing active outputs. A replacement must pass its acceptance suite and boundary revalidation before one atomic active-route swap; afterward exactly one active authority and route remains. Creator-owned temporary files are removed by their creator. Destructive cleanup, branch deletion, history-affecting action, or rollback still requires its applicable gate and authorization. Replacing a module means removing the wrong route from the current system after the replacement passes, not erasing Git history or bypassing evidence requirements.
 
-```text
-DEFINED -> IMPLEMENTING -> VALIDATING -> ACCEPTED -> ACTIVE
-ACTIVE -> INVALIDATED -> ISOLATED -> REPLACED -> REVALIDATED -> ACTIVE
-ACTIVE | REPLACED -> RETIRED
-```
+## 24. Tooling and downstream authority boundary
 
-An invalidated module may not remain active. Creator-owned temporary files are removed by their creator. Destructive cleanup, branch deletion, history-affecting action, or rollback still requires its applicable gate and authorization. “Replace the module” means remove the wrong route from the current system after the replacement passes, not erase Git history or bypass evidence requirements.
+tool-system may provide module-planning tools, validators, or recommendations to another repository. Their use remains controlled by that repository's own authority and explicit authorization. A tool-system contract, blueprint, test, planner result, or recommendation cannot impose governance on another repository or change its owner, authority, status, responsibility, or write authorization.
 
-## 24. Universal project adoption and enforcement
-
-Every controlled project must inherit `blueprint/tool_system_v0.yaml:milestone_module_invariant` or embed an equivalent machine-readable contract. Missing adoption blocks the next phase entry and controlled write. Existing external projects are not silently or retroactively mutated; adoption is verified at their next authorized phase-entry or write packet.
-
-Task planning, blueprint compilation, module graph validation, interface compatibility evidence, invalidation blast-radius records, acceptance, benchmarks, and production review must enforce this invariant. Documentation-only declaration is not sufficient for final product acceptance: P14E owns compiler enforcement and P15 owns multi-project evidence.
+Task planning, blueprint compilation, module graph validation, interface compatibility evidence, fault-isolation impact records, acceptance, benchmarks, and production review remain future tool-system product responsibilities. Documentation-only declaration is not sufficient for final product acceptance: P14E owns compiler enforcement and P15 owns separately authorized multi-project evidence. Neither stage receives downstream governance or write authority from this file.
 
 ## 25. Final state
 
-Status: ACTIVE. Applies to tool-system and every project it generates, controls, or adopts, including their blueprints, milestone modules, docs, source, tests, examples, policies, cleanup planning, repository-control work, side-effect tool use, and target-repository adapters.
+Status: ACTIVE. Applies only to tool-system, including its blueprint, durable modules, milestone-change planning, docs, source, tests, examples, policies, cleanup planning, repository-control work, side-effect tool use, and target-repository adapters. P14 remains active and P14C remains unauthorized.
