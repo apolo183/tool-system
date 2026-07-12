@@ -10,7 +10,16 @@ from tool_system.runner.task_runner import run_batch_file
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run a batch of tool-system task manifests and change plans through one local gate pipeline.")
     parser.add_argument("batch", type=Path)
-    parser.add_argument("--active-gates", type=Path, default=Path("examples/active_gates.yaml"))
+    parser.add_argument(
+        "--process-authority",
+        type=Path,
+        default=Path("config/process_authority_v1.yaml"),
+    )
+    parser.add_argument(
+        "--active-gates",
+        type=Path,
+        help="Legacy replay-only pair index; never authorizes command execution.",
+    )
     parser.add_argument("--policy", type=Path, default=Path("policy/repo_write_policy.yaml"))
     parser.add_argument("--autonomy-policy", type=Path, default=Path("policy/autonomy_policy.yaml"))
     parser.add_argument("--cwd", type=Path, default=Path.cwd())
@@ -20,6 +29,7 @@ def main() -> int:
 
     output = run_batch_file(
         batch_path=args.batch,
+        process_authority_path=args.process_authority,
         active_gates_path=args.active_gates,
         policy_path=args.policy,
         autonomy_policy_path=args.autonomy_policy,

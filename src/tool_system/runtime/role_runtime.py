@@ -5,7 +5,7 @@ from typing import Any
 
 from tool_system.agent_worker.interface import run_role_steps_with_worker
 from tool_system.manifest.task_manifest import load_yaml_file
-from tool_system.planner.task_graph import validate_task_graph_active_gates
+from tool_system.planner.task_graph import validate_task_graph_process_authority
 from tool_system.repo_controller.artifact import write_jsonl_record
 
 
@@ -52,9 +52,13 @@ def _worker_reasons(worker_results: list[dict[str, object]]) -> list[str]:
 def build_role_runtime_plan(
     graph: dict[str, Any],
     blueprint: dict[str, Any],
-    active_gates_path: str | Path = "examples/active_gates.yaml",
+    process_authority_path: str | Path = "config/process_authority_v1.yaml",
 ) -> dict[str, object]:
-    validation = validate_task_graph_active_gates(graph, blueprint, active_gates_path)
+    validation = validate_task_graph_process_authority(
+        graph,
+        blueprint,
+        process_authority_path,
+    )
     validation_reasons = list(validation.get("reasons") or [])
     role_steps: list[dict[str, object]] = []
     worker_results: list[dict[str, object]] = []
@@ -73,7 +77,7 @@ def build_role_runtime_plan(
         "mode": "tool_system_role_runtime_plan",
         "graph_id": graph.get("graph_id"),
         "phase": graph.get("phase"),
-        "active_gates_path": str(active_gates_path),
+        "process_authority_path": str(process_authority_path),
         "validation": validation,
         "role_steps": role_steps,
         "role_step_count": len(role_steps),
@@ -89,13 +93,13 @@ def build_role_runtime_plan(
 def build_role_runtime_plan_file(
     graph_path: str | Path,
     blueprint_path: str | Path = "blueprint/tool_system_v0.yaml",
-    active_gates_path: str | Path = "examples/active_gates.yaml",
+    process_authority_path: str | Path = "config/process_authority_v1.yaml",
     audit_path: str | Path | None = None,
 ) -> dict[str, object]:
     graph = load_yaml_file(graph_path)
     blueprint = load_yaml_file(blueprint_path)
     output = {
-        **build_role_runtime_plan(graph, blueprint, active_gates_path),
+        **build_role_runtime_plan(graph, blueprint, process_authority_path),
         "graph_path": str(graph_path),
         "blueprint_path": str(blueprint_path),
     }

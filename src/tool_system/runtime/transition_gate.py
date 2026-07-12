@@ -67,7 +67,7 @@ def build_role_transition_gate(
 def build_role_transition_gate_file(
     graph_path: str | Path,
     blueprint_path: str | Path = "blueprint/tool_system_v0.yaml",
-    active_gates_path: str | Path = "examples/active_gates.yaml",
+    process_authority_path: str | Path = "config/process_authority_v1.yaml",
     audit_path: str | Path | None = None,
     rollback_reference: str = "branch commits or pull request reversal",
     transition_name: str = "p8_runtime_to_milestone_review",
@@ -75,14 +75,14 @@ def build_role_transition_gate_file(
     runtime_audit_record = build_runtime_audit_bundle_file(
         graph_path=graph_path,
         blueprint_path=blueprint_path,
-        active_gates_path=active_gates_path,
+        process_authority_path=process_authority_path,
         rollback_reference=rollback_reference,
     )
     record = {
         **build_role_transition_gate(runtime_audit_record, transition_name=transition_name),
         "graph_path": str(graph_path),
         "blueprint_path": str(blueprint_path),
-        "active_gates_path": str(active_gates_path),
+        "process_authority_path": str(process_authority_path),
     }
     if audit_path is not None:
         artifact_path = write_jsonl_record(audit_path, record)

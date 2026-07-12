@@ -35,7 +35,7 @@ A document, PR, green test, audit, or dry-run authorizes only its explicit scope
 
 Formal files are active contracts, source, configs, tests, runbooks, docs, examples, and audit interfaces required to run, validate, operate, audit, or roll back tool-system. Process files are notes, temporary scripts, dry-run outputs, proposal drafts, patch plans, debug logs, and intermediate evidence. Process files must use the narrowest project-local task root such as `tmp/<task_id>/`, `reports/<task_id>/`, or `artifacts/<task_id>/`, unless an explicit exception names path, reason, retention, side effects, and cleanup responsibility.
 
-Existing `docs/reports/**`, `examples/task_manifests/**`, `examples/change_plans/**`, and `examples/active_gates.yaml` objects remain legacy machine inputs pending a separately authorized caller and reference migration audit. This reconciliation does not claim that they comply with finance-governance process-file discipline, does not delete or reclassify them, and leaves every unread disposition as `UNKNOWN`.
+The caller and reference audit is complete. `config/process_authority_v1.yaml` is the local current-task authority contract and requires one explicitly supplied manifest/change-plan pair with exact binding. No repository-wide task index is implicit execution authority. `config/replay_snapshot_v1.yaml` content-addresses the retained legacy pair set, and `examples/active_gates.yaml` may be selected only for non-executing replay. Existing `docs/reports/**`, `examples/task_manifests/**`, `examples/change_plans/**`, and the legacy index remain present pending a separately authorized disposition and cleanup step. Their presence is not a claim of finance-governance process-file compliance.
 
 ## 7. File disposition
 

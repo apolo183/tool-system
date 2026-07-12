@@ -209,7 +209,7 @@ def test_task_runner_resolves_change_plan_when_omitted(tmp_path: Path) -> None:
 
     assert result["status"] == "PASS"
     assert result["change_plan_path"] == str(RESOLVED_PLAN)
-    assert result["change_plan_resolution_source"] == "active_gates"
+    assert result["change_plan_resolution_source"] == "legacy_replay"
     assert result["writes_target_repo"] is False
     assert result["executes_target_repo_mutation"] is False
 
@@ -224,7 +224,10 @@ def test_batch_runner_resolves_omitted_change_plans(tmp_path: Path) -> None:
 
     assert result["status"] == "PASS"
     assert result["completed_task_count"] == 2
-    assert all(task["change_plan_resolution_source"] == "active_gates" for task in result["task_results"])
+    assert all(
+        task["change_plan_resolution_source"] == "legacy_replay"
+        for task in result["task_results"]
+    )
 
 
 def test_active_gate_resolver_change_plan_validates() -> None:

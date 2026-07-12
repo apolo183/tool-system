@@ -1,0 +1,30 @@
+contract_version: process_authority_v1
+authority_id: tool_system_explicit_task_pair_authority
+blueprint_objective_ref: product_objective
+module:
+  module_id: process_authority
+  module_version: 2.0.0
+  public_interface_version: "2"
+current_task_input:
+  mode: explicit_manifest_change_plan_pair
+  task_manifest_required: true
+  change_plan_required: true
+  pair_binding_required: true
+  implicit_repository_index_allowed: false
+legacy_compatibility:
+  index_path: examples/active_gates.yaml
+  authority: false
+  explicit_opt_in_only: true
+  replay_only: true
+  execution_allowed: false
+  cleanup_authorized: false
+canonical_replay:
+  snapshot_path: config/replay_snapshot_v1.yaml
+  authority: false
+  required_for_legacy_replay: true
+authorization_boundary:
+  repository: tool-system
+  target_repo_mutation: false
+  production_deployment: false
+  live_provider_execution: false
+  cleanup_execution: false

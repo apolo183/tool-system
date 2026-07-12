@@ -246,7 +246,13 @@ milestone_module_invariant:
     external_project_retroactive_mutation_automatic: false
   process_migration_boundary:
     reports_task_manifests_change_plans_active_gates_are_legacy_machine_inputs: true
-    caller_and_reference_audit_complete: false
+    process_authority_contract_path: config/process_authority_v1.yaml
+    canonical_replay_snapshot_path: config/replay_snapshot_v1.yaml
+    current_task_authority_mode: explicit_manifest_change_plan_pair
+    implicit_legacy_repository_authority_removed: true
+    legacy_compatibility_replay_only: true
+    legacy_execution_authorized: false
+    caller_and_reference_audit_complete: true
     group_process_file_compliance_claimed: false
     deletion_or_reclassification_authorized: false
   enforcement:

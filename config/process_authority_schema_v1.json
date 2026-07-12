@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:tool-system:process-authority-schema:v1",
+  "title": "tool-system Process Authority Contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "authority_id",
+    "blueprint_objective_ref",
+    "module",
+    "current_task_input",
+    "legacy_compatibility",
+    "canonical_replay",
+    "authorization_boundary"
+  ],
+  "properties": {
+    "contract_version": {"const": "process_authority_v1"},
+    "authority_id": {"const": "tool_system_explicit_task_pair_authority"},
+    "blueprint_objective_ref": {"const": "product_objective"},
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["module_id", "module_version", "public_interface_version"],
+      "properties": {
+        "module_id": {"const": "process_authority"},
+        "module_version": {"const": "2.0.0"},
+        "public_interface_version": {"const": "2"}
+      }
+    },
+    "current_task_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "task_manifest_required",
+        "change_plan_required",
+        "pair_binding_required",
+        "implicit_repository_index_allowed"
+      ],
+      "properties": {
+        "mode": {"const": "explicit_manifest_change_plan_pair"},
+        "task_manifest_required": {"const": true},
+        "change_plan_required": {"const": true},
+        "pair_binding_required": {"const": true},
+        "implicit_repository_index_allowed": {"const": false}
+      }
+    },
+    "legacy_compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index_path",
+        "authority",
+        "explicit_opt_in_only",
+        "replay_only",
+        "execution_allowed",
+        "cleanup_authorized"
+      ],
+      "properties": {
+        "index_path": {"const": "examples/active_gates.yaml"},
+        "authority": {"const": false},
+        "explicit_opt_in_only": {"const": true},
+        "replay_only": {"const": true},
+        "execution_allowed": {"const": false},
+        "cleanup_authorized": {"const": false}
+      }
+    },
+    "canonical_replay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshot_path", "authority", "required_for_legacy_replay"],
+      "properties": {
+        "snapshot_path": {"const": "config/replay_snapshot_v1.yaml"},
+        "authority": {"const": false},
+        "required_for_legacy_replay": {"const": true}
+      }
+    },
+    "authorization_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "target_repo_mutation",
+        "production_deployment",
+        "live_provider_execution",
+        "cleanup_execution"
+      ],
+      "properties": {
+        "repository": {"const": "tool-system"},
+        "target_repo_mutation": {"const": false},
+        "production_deployment": {"const": false},
+        "live_provider_execution": {"const": false},
+        "cleanup_execution": {"const": false}
+      }
+    }
+  }
+}
