@@ -5,11 +5,13 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-11 UTC+08:00
+updated_at: 2026-07-12 UTC+09:00
 
 ## 1. Mission
 
 tool-system builds and controls automated software-development workflows. It is domain-agnostic infrastructure.
+
+The permanent product objective is bounded blueprint-driven autonomous software development. An approved blueprint must ultimately be convertible into milestones, an executable task DAG, controlled AI-assisted code changes, test/repair/review evidence, bounded local Git commits, and an acceptance record without silent scope or authority expansion.
 
 ## 2. Mandatory first step
 
@@ -41,6 +43,8 @@ Every major milestone, sub-milestone, task manifest, change plan, evidence recor
 - global alignment: it still follows the active blueprint or requirement source.
 
 Parent-only alignment is not enough. Small local deviations can accumulate into material blueprint drift. Scripts, CLIs, agents, and repository-control tools execute documents; they do not define scope by themselves.
+
+For P14 and later work, global alignment means explicit alignment to `blueprint/tool_system_v0.yaml:product_objective`, not merely to the current milestone entry. Missing direct-parent or product-objective alignment blocks execution.
 
 ## 5. Evidence-first rule
 
@@ -98,7 +102,7 @@ Current phase: P13_SECURITY_RELIABILITY_HARDENING.
 
 Status: `accepted_and_closed`.
 
-P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14-P15 remain roadmap-only; P14 phase entry, repository benchmarks, and target mutations are not authorized.
+P10, P11, P12, and P13 are accepted and closed at their recorded scopes. The defined but unauthorized successors are P14 Blueprint-to-Code Autonomous Development, P15 Multi-project Benchmark, and P16 Production Operations and Acceptance. P14 phase entry and implementation, model/provider execution, project benchmarks, and target mutations are not authorized.
 
 Allowed now:
 
