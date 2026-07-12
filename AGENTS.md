@@ -98,14 +98,15 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 ## 12. Current phase state
 
-Current phase: P13_SECURITY_RELIABILITY_HARDENING.
+Current phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.
 
-Status: `accepted_and_closed`.
+Status: `active`.
 
-P10, P11, P12, and P13 are accepted and closed at their recorded scopes. The defined but unauthorized successors are P14 Blueprint-to-Code Autonomous Development, P15 Multi-project Benchmark, and P16 Production Operations and Acceptance. P14 phase entry and implementation, model/provider execution, project benchmarks, and target mutations are not authorized.
+P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14 Blueprint-to-Code Autonomous Development is active at P14A governance and end-to-end specification scope only. P14B implementation, live model/provider execution, project benchmarks, and target mutations are not authorized. P15-P16 remain roadmap-only.
 
 Allowed now:
 
+- read-only verification of the accepted P14A contract and authorization state;
 - read-only verification of the accepted P13 security and reliability evidence;
 - read-only verification of accepted P12 durable-orchestrator state and evidence;
 - read-only verification of the accepted P11 runtime;
@@ -118,7 +119,9 @@ Not allowed now:
 - target-repository main-branch mutation outside the approved merge flow;
 - finance-us P1B target implementation without a named, action-scoped target execution approval;
 - treating a P1B implementation approval as ready or merge approval;
-- P14 or later phase entry or implementation before a named authorization;
+- P14B or later P14 source implementation before a named authorization;
+- any live model/provider call before a named provider, model, credential, network, cost, and execution packet is authorized;
+- P15 or later phase entry or implementation before a named authorization;
 - further P13 runtime, orchestrator, or evidence expansion under the closed milestone;
 - further P12 runtime expansion under the closed milestone;
 - P12 fixtures that call a real external side effect, remote provider, or target repository;
