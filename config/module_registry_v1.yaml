@@ -1,0 +1,556 @@
+registry_version: module_registry_v1
+blueprint_objective_ref: product_objective
+modules:
+  - module_id: architecture_registry
+    module_version: &module_version 1.0.0
+    owner: tool-system
+    lifecycle: &active ACTIVE
+    status: &registered REGISTERED
+    single_responsibility: validate the durable module inventory, natural owners, versions, and declared dependency DAG
+    blueprint_objective_ref: &product_objective product_objective
+    natural_owner_paths:
+      - src/tool_system/__init__.py
+      - src/tool_system/architecture/*.py
+      - src/tool_system/cli/validate_module_registry.py
+      - config/module_registry_schema_v1.json
+      - config/module_registry_v1.yaml
+    public_interface_version: &interface_version "1"
+    input_contract: [module_registry_v1]
+    output_contract: [module_registry_validation_result_v1]
+    error_semantics: [fail_closed_with_structured_reasons]
+    externally_visible_side_effects: [none]
+    code_boundary: [module_registry_loader_and_validator]
+    data_boundary: [versioned_registry_and_schema]
+    test_boundary: [tests/test_module_registry.py]
+    runtime_artifact_boundary: [validation_result_only]
+    cleanup_boundary: [no_destructive_cleanup]
+    upstream_dependency_module_ids_and_versions:
+      - module_id: manifest_validation
+        module_version: *module_version
+        public_interface_version: *interface_version
+    downstream_dependency_module_ids_and_versions: []
+    content_hashes_and_expected_preconditions: &common_preconditions [git_tracked_content_and_expected_HEAD_precondition]
+    authorization_envelope: &local_authority [tool_system_local_only, no_target_repo_mutation, no_production_deployment]
+    acceptance_evidence: [docs/reports/durable_module_interface_registry_v1.md, module_registry_focused_and_full_test_pass]
+    rollback_evidence: &rollback_evidence [named_revert_PR_preserving_git_and_audit_history]
+    replacement_evidence: &replacement_evidence [interface_compatible_replacement_and_dependency_closure_revalidation]
+
+  - module_id: manifest_validation
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: load and validate task manifests, change plans, alignment gates, and repository write policy
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths:
+      - src/tool_system/manifest/*.py
+      - src/tool_system/gate/*
+      - src/tool_system/policy/*.py
+      - src/tool_system/cli/validate_task_manifest.py
+      - src/tool_system/cli/validate_change_plan.py
+      - src/tool_system/cli/validate_alignment_gate.py
+    public_interface_version: *interface_version
+    input_contract: [task_manifest_and_change_plan_yaml]
+    output_contract: [validation_decision_and_reasons]
+    error_semantics: [invalid_or_missing_input_blocks]
+    externally_visible_side_effects: [bounded_local_command_execution_only_when_explicitly_invoked]
+    code_boundary: [manifest_gate_and_policy_packages]
+    data_boundary: [caller_supplied_yaml_and_policy_documents]
+    test_boundary: [manifest_gate_and_policy_tests]
+    runtime_artifact_boundary: [validation_and_command_results]
+    cleanup_boundary: [command_outputs_are_creator_owned]
+    upstream_dependency_module_ids_and_versions: []
+    downstream_dependency_module_ids_and_versions:
+      - module_id: architecture_registry
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: repository_controller
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: process_authority
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: task_planner
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: task_runner
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: role_runtime
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: target_repo_adapter
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: cleanup_planner
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: cli_frontend
+        module_version: *module_version
+        public_interface_version: *interface_version
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: *local_authority
+    acceptance_evidence: [manifest_gate_and_policy_test_suites]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: agent_worker_runtime
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: execute bounded fixture-only process workers behind the worker request interface
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths: [src/tool_system/agent_worker/*.py]
+    public_interface_version: *interface_version
+    input_contract: [WorkerRequest_v1]
+    output_contract: [WorkerResult_v1]
+    error_semantics: [bounded_worker_error_codes]
+    externally_visible_side_effects: [isolated_fixture_workspace_process_only]
+    code_boundary: [agent_worker_package]
+    data_boundary: [scrubbed_environment_and_fixture_workspace]
+    test_boundary: [tests/test_agent_worker.py]
+    runtime_artifact_boundary: [bounded_stdout_stderr_and_result]
+    cleanup_boundary: [ephemeral_workspace_creator_cleanup]
+    upstream_dependency_module_ids_and_versions: []
+    downstream_dependency_module_ids_and_versions:
+      - module_id: role_runtime
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: worker_adapter
+        module_version: *module_version
+        public_interface_version: *interface_version
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [fixture_workspace_only, no_remote_target_mutation, no_production_deployment]
+    acceptance_evidence: [P11_fixture_runtime_acceptance]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: ai_worker_runtime
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: provide a provider-neutral structured AI worker contract and deterministic fixture implementation
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths: [src/tool_system/ai_worker/*.py]
+    public_interface_version: *interface_version
+    input_contract: [AIWorkerRequest_v1]
+    output_contract: [AIWorkerResult_v1]
+    error_semantics: [stable_redacted_provider_neutral_errors]
+    externally_visible_side_effects: [deterministic_in_memory_fixture_only]
+    code_boundary: [ai_worker_package]
+    data_boundary: [structured_request_result_and_redacted_audit]
+    test_boundary: [tests/test_ai_worker_contract.py]
+    runtime_artifact_boundary: [in_memory_replay_record]
+    cleanup_boundary: [no_persistent_runtime_artifact]
+    upstream_dependency_module_ids_and_versions: []
+    downstream_dependency_module_ids_and_versions: []
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [deterministic_fixture_provider_only, no_live_credential_or_network, no_target_repo_mutation]
+    acceptance_evidence: [P14B_provider_neutral_contract_acceptance]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: durable_orchestrator
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: persist and reconcile single-host task state, leases, attempts, and side-effect evidence
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths: [src/tool_system/orchestrator/*.py]
+    public_interface_version: *interface_version
+    input_contract: [durable_task_and_side_effect_intent_v1]
+    output_contract: [durable_task_state_and_reconciliation_result_v1]
+    error_semantics: [lease_retry_recovery_and_terminal_error_states]
+    externally_visible_side_effects: [single_host_local_SQLite_state]
+    code_boundary: [orchestrator_package]
+    data_boundary: [versioned_single_host_SQLite_schema]
+    test_boundary: [tests/test_durable_orchestrator.py]
+    runtime_artifact_boundary: [local_SQLite_database]
+    cleanup_boundary: [database_lifecycle_is_explicit_and_creator_owned]
+    upstream_dependency_module_ids_and_versions: []
+    downstream_dependency_module_ids_and_versions: []
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [single_host_local_fixture_scope, no_remote_side_effect, no_production_deployment]
+    acceptance_evidence: [P12_durable_orchestrator_acceptance]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: repository_controller
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: evaluate and execute explicitly authorized repository control actions with audit records
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths: [src/tool_system/repo_controller/*.py]
+    public_interface_version: *interface_version
+    input_contract: [repository_state_policy_and_action_intent]
+    output_contract: [action_plan_decision_and_append_only_audit_record]
+    error_semantics: [deny_or_block_on_missing_authority_and_stale_state]
+    externally_visible_side_effects: [action_scoped_git_or_GitHub_mutation_after_authorization]
+    code_boundary: [repo_controller_package]
+    data_boundary: [repository_state_and_append_only_JSONL_records]
+    test_boundary: [repository_controller_test_suites]
+    runtime_artifact_boundary: [controller_and_audit_records]
+    cleanup_boundary: [controller_artifacts_retained_unless_cleanup_is_authorized]
+    upstream_dependency_module_ids_and_versions:
+      - module_id: manifest_validation
+        module_version: *module_version
+        public_interface_version: *interface_version
+    downstream_dependency_module_ids_and_versions:
+      - module_id: task_runner
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: role_runtime
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: worker_adapter
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: target_repo_adapter
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: cleanup_planner
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: cli_frontend
+        module_version: *module_version
+        public_interface_version: *interface_version
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [action_scoped_authorization_required, expected_SHA_required_for_mutation, no_implicit_target_authority]
+    acceptance_evidence: [repository_controller_test_suites]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: process_authority
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: resolve and validate the currently registered manifest and change-plan authority pair
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths:
+      - src/tool_system/runner/active_gate_resolver.py
+      - src/tool_system/cli/validate_active_gates.py
+    public_interface_version: *interface_version
+    input_contract: [legacy_active_gates_pair_registry_pending_separate_migration]
+    output_contract: [validated_manifest_change_plan_pairing]
+    error_semantics: [missing_blank_duplicate_or_mismatched_pair_blocks]
+    externally_visible_side_effects: [none]
+    code_boundary: [active_gate_resolver_and_validator]
+    data_boundary: [legacy_process_authority_input_pending_migration]
+    test_boundary: [tests/test_active_gates.py, tests/test_active_gate_resolver.py]
+    runtime_artifact_boundary: [validation_result_only]
+    cleanup_boundary: [legacy_input_retained_pending_cleanup_authorization]
+    upstream_dependency_module_ids_and_versions:
+      - module_id: manifest_validation
+        module_version: *module_version
+        public_interface_version: *interface_version
+    downstream_dependency_module_ids_and_versions:
+      - module_id: task_planner
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: task_runner
+        module_version: *module_version
+        public_interface_version: *interface_version
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [validation_only, migration_requires_separate_module_change, deletion_or_cleanup_not_authorized]
+    acceptance_evidence: [pair_binding_and_active_gate_test_suites]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: task_planner
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: compile requirements and task graphs into validated execution plans
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths: [src/tool_system/planner/*.py]
+    public_interface_version: *interface_version
+    input_contract: [requirement_and_task_graph_v1]
+    output_contract: [validated_task_graph_and_batch_plan_v1]
+    error_semantics: [invalid_dependency_or_authority_binding_blocks]
+    externally_visible_side_effects: [optional_local_plan_artifact]
+    code_boundary: [planner_package]
+    data_boundary: [requirement_task_graph_and_batch_documents]
+    test_boundary: [planner_test_suites]
+    runtime_artifact_boundary: [local_task_graph_and_batch_plan]
+    cleanup_boundary: [generated_plans_are_creator_owned]
+    upstream_dependency_module_ids_and_versions:
+      - module_id: manifest_validation
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: process_authority
+        module_version: *module_version
+        public_interface_version: *interface_version
+    downstream_dependency_module_ids_and_versions:
+      - module_id: task_runner
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: role_runtime
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: cli_frontend
+        module_version: *module_version
+        public_interface_version: *interface_version
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [local_planning_only, execution_authority_not_implied]
+    acceptance_evidence: [planner_test_suites]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: task_runner
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: execute validated task, batch, graph, and stage plans through bounded gates
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths:
+      - src/tool_system/runner/stage_runner.py
+      - src/tool_system/runner/task_graph_runner.py
+      - src/tool_system/runner/task_runner.py
+    public_interface_version: *interface_version
+    input_contract: [validated_task_manifest_change_plan_and_task_graph]
+    output_contract: [pipeline_result_gate_decision_and_audit_record]
+    error_semantics: [first_failed_gate_or_command_stops_pipeline]
+    externally_visible_side_effects: [configured_command_execution_and_local_audit_artifact]
+    code_boundary: [task_batch_graph_and_stage_runners]
+    data_boundary: [validated_execution_inputs_and_pipeline_results]
+    test_boundary: [runner_test_suites]
+    runtime_artifact_boundary: [local_pipeline_audit_JSONL]
+    cleanup_boundary: [runner_artifacts_are_creator_owned]
+    upstream_dependency_module_ids_and_versions:
+      - module_id: manifest_validation
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: process_authority
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: task_planner
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: repository_controller
+        module_version: *module_version
+        public_interface_version: *interface_version
+    downstream_dependency_module_ids_and_versions:
+      - module_id: cli_frontend
+        module_version: *module_version
+        public_interface_version: *interface_version
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [validated_local_execution_only, configured_commands_do_not_expand_authority]
+    acceptance_evidence: [runner_test_suites]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: role_runtime
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: build bounded multi-role runtime plans and audit bundles
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths: [src/tool_system/runtime/*.py]
+    public_interface_version: *interface_version
+    input_contract: [role_graph_worker_and_transition_inputs]
+    output_contract: [role_runtime_plan_transition_decision_and_audit_bundle]
+    error_semantics: [invalid_role_graph_or_transition_blocks]
+    externally_visible_side_effects: [local_runtime_plan_and_audit_artifact]
+    code_boundary: [runtime_package]
+    data_boundary: [role_graph_transition_and_audit_documents]
+    test_boundary: [runtime_test_suites]
+    runtime_artifact_boundary: [local_role_runtime_and_audit_files]
+    cleanup_boundary: [runtime_artifacts_are_creator_owned]
+    upstream_dependency_module_ids_and_versions:
+      - module_id: agent_worker_runtime
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: manifest_validation
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: task_planner
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: repository_controller
+        module_version: *module_version
+        public_interface_version: *interface_version
+    downstream_dependency_module_ids_and_versions:
+      - module_id: cli_frontend
+        module_version: *module_version
+        public_interface_version: *interface_version
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [fixture_or_local_plan_scope, no_remote_target_mutation]
+    acceptance_evidence: [runtime_test_suites]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: worker_adapter
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: adapt no-mutation worker requests into policy-gated orchestration records
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths: [src/tool_system/worker_adapter/*.py]
+    public_interface_version: *interface_version
+    input_contract: [AdapterRequest_v1_and_WorkerRequest_v1]
+    output_contract: [adapter_orchestration_and_policy_gate_record_v1]
+    error_semantics: [policy_denial_or_worker_contract_error]
+    externally_visible_side_effects: [local_append_only_adapter_record]
+    code_boundary: [worker_adapter_package]
+    data_boundary: [adapter_request_and_redacted_orchestration_record]
+    test_boundary: [worker_adapter_test_suites]
+    runtime_artifact_boundary: [local_adapter_JSONL]
+    cleanup_boundary: [adapter_artifacts_are_creator_owned]
+    upstream_dependency_module_ids_and_versions:
+      - module_id: agent_worker_runtime
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: repository_controller
+        module_version: *module_version
+        public_interface_version: *interface_version
+    downstream_dependency_module_ids_and_versions: []
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [no_mutation_worker_scope, no_remote_target_mutation]
+    acceptance_evidence: [worker_adapter_test_suites]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: target_repo_adapter
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: construct target-repository dry-run, precheck, snapshot, intent, and separately gated mutation packets
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths: [src/tool_system/target_repo/*.py]
+    public_interface_version: *interface_version
+    input_contract: [target_state_manifest_change_plan_and_action_authority]
+    output_contract: [dry_run_precheck_snapshot_intent_and_mutation_packet_records]
+    error_semantics: [missing_authority_or_stale_target_state_blocks]
+    externally_visible_side_effects: [dry_run_or_separately_authorized_target_action]
+    code_boundary: [target_repo_package]
+    data_boundary: [target_state_and_action_packet_records]
+    test_boundary: [target_repo_adapter_test_suites]
+    runtime_artifact_boundary: [local_target_action_evidence]
+    cleanup_boundary: [target_evidence_retained_and_cleanup_separately_gated]
+    upstream_dependency_module_ids_and_versions:
+      - module_id: manifest_validation
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: repository_controller
+        module_version: *module_version
+        public_interface_version: *interface_version
+    downstream_dependency_module_ids_and_versions:
+      - module_id: cli_frontend
+        module_version: *module_version
+        public_interface_version: *interface_version
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [packet_preparation_does_not_authorize_mutation, action_scoped_target_approval_required]
+    acceptance_evidence: [target_repo_adapter_test_suites]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: cleanup_planner
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: inventory residue and emit non-executing cleanup plans
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths: [src/tool_system/cleanup/*.py]
+    public_interface_version: *interface_version
+    input_contract: [residue_inventory_and_cleanup_authority]
+    output_contract: [cleanup_plan_without_execution]
+    error_semantics: [invalid_inventory_or_missing_authority_blocks]
+    externally_visible_side_effects: [cleanup_plan_artifact_only]
+    code_boundary: [cleanup_package]
+    data_boundary: [residue_inventory_and_cleanup_plan]
+    test_boundary: [tests/test_cleanup_planner.py]
+    runtime_artifact_boundary: [local_cleanup_plan]
+    cleanup_boundary: [planner_never_executes_cleanup]
+    upstream_dependency_module_ids_and_versions:
+      - module_id: manifest_validation
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: repository_controller
+        module_version: *module_version
+        public_interface_version: *interface_version
+    downstream_dependency_module_ids_and_versions:
+      - module_id: cli_frontend
+        module_version: *module_version
+        public_interface_version: *interface_version
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [plan_only, destructive_cleanup_requires_separate_authorization]
+    acceptance_evidence: [cleanup_planner_test_suite]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence
+
+  - module_id: cli_frontend
+    module_version: *module_version
+    owner: tool-system
+    lifecycle: *active
+    status: *registered
+    single_responsibility: expose stable command-line entry points that delegate to registered public module interfaces
+    blueprint_objective_ref: *product_objective
+    natural_owner_paths:
+      - src/tool_system/cli/__init__.py
+      - src/tool_system/cli/cleanup_plan.py
+      - src/tool_system/cli/controller_run.py
+      - src/tool_system/cli/controller_self_check.py
+      - src/tool_system/cli/evaluate_github_state.py
+      - src/tool_system/cli/evaluate_repo_write.py
+      - src/tool_system/cli/execute_change_plan.py
+      - src/tool_system/cli/main.py
+      - src/tool_system/cli/observe_main_ci.py
+      - src/tool_system/cli/plan_requirement.py
+      - src/tool_system/cli/plan_task_graph.py
+      - src/tool_system/cli/run_batch.py
+      - src/tool_system/cli/run_role_graph.py
+      - src/tool_system/cli/run_stage.py
+      - src/tool_system/cli/run_task.py
+      - src/tool_system/cli/run_task_graph.py
+      - src/tool_system/cli/target_repo_dry_run.py
+      - src/tool_system/cli/target_repo_pr_plan_preview.py
+    public_interface_version: *interface_version
+    input_contract: [command_line_arguments_and_versioned_module_inputs]
+    output_contract: [exit_code_and_structured_or_human_readable_result]
+    error_semantics: [nonzero_exit_on_block_or_failure]
+    externally_visible_side_effects: [delegates_only_to_the_selected_modules_authorized_effect]
+    code_boundary: [non_validator_CLI_entry_points]
+    data_boundary: [command_arguments_and_delegated_results]
+    test_boundary: [CLI_and_delegated_module_test_suites]
+    runtime_artifact_boundary: [stdout_stderr_and_delegated_artifacts]
+    cleanup_boundary: [delegated_artifact_owner_controls_cleanup]
+    upstream_dependency_module_ids_and_versions:
+      - module_id: manifest_validation
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: repository_controller
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: task_planner
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: task_runner
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: role_runtime
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: target_repo_adapter
+        module_version: *module_version
+        public_interface_version: *interface_version
+      - module_id: cleanup_planner
+        module_version: *module_version
+        public_interface_version: *interface_version
+    downstream_dependency_module_ids_and_versions: []
+    content_hashes_and_expected_preconditions: *common_preconditions
+    authorization_envelope: [CLI_delegation_does_not_expand_module_authority]
+    acceptance_evidence: [CLI_and_full_test_suites]
+    rollback_evidence: *rollback_evidence
+    replacement_evidence: *replacement_evidence

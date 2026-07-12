@@ -147,7 +147,16 @@ def test_replacement_cleanup_and_downstream_authority_fail_closed() -> None:
         "external_project_retroactive_mutation_automatic": False,
     }
     assert invariant["enforcement"] == {
-        "current_contract_scope": "local_declaration_and_alignment_tests",
+        "current_contract_scope": (
+            "local_registry_structure_declared_dag_natural_owners_and_alignment_tests"
+        ),
+        "module_registry_path": "config/module_registry_v1.yaml",
+        "module_registry_schema_path": "config/module_registry_schema_v1.json",
+        "module_registry_structural_validation_implemented": True,
+        "declared_dependency_dag_validation_implemented": True,
+        "natural_owner_overlap_validation_implemented": True,
+        "source_ownership_coverage_validation_implemented": True,
+        "source_import_edge_enforcement_implemented": False,
         "runtime_module_enforcement_implemented": False,
         "machine_alignment_tests_required": True,
         "module_graph_validation_required": True,

@@ -250,7 +250,14 @@ milestone_module_invariant:
     group_process_file_compliance_claimed: false
     deletion_or_reclassification_authorized: false
   enforcement:
-    current_contract_scope: local_declaration_and_alignment_tests
+    current_contract_scope: local_registry_structure_declared_dag_natural_owners_and_alignment_tests
+    module_registry_path: config/module_registry_v1.yaml
+    module_registry_schema_path: config/module_registry_schema_v1.json
+    module_registry_structural_validation_implemented: true
+    declared_dependency_dag_validation_implemented: true
+    natural_owner_overlap_validation_implemented: true
+    source_ownership_coverage_validation_implemented: true
+    source_import_edge_enforcement_implemented: false
     runtime_module_enforcement_implemented: false
     machine_alignment_tests_required: true
     module_graph_validation_required: true

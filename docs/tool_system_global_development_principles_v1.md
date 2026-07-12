@@ -140,6 +140,8 @@ Modules depend only on accepted public interfaces and recorded outputs. Hidden d
 
 The durable rule owners are this file and `blueprint/tool_system_v0.yaml`. `docs/reports/p14mr_milestone_module_invariant.md` remains existing P14MR acceptance evidence only; it is not the permanent rule owner.
 
+`config/module_registry_v1.yaml` is the machine-readable inventory of current tool-system modules and public dependency declarations. Its validator enforces the registered field set, natural-owner coverage without overlap, dependency version/interface references, reciprocal edges, and an acyclic declared graph. It is an implementation of local structural registration, not evidence that Python import edges are derived automatically, runtime state is isolated by module, interfaces are behaviorally compatible, or replacement is performed automatically.
+
 ## 21. Failure isolation without new lifecycle status
 
 An implementation defect with a still-correct module objective and public contract is repaired inside that module boundary and reaccepted. When a module fails, drifts from its approved objective or public interface, or loses valid evidence, isolate that module and stop its outputs before further dependent execution.
@@ -162,7 +164,7 @@ A failed or drifted module may not continue producing active outputs. A replacem
 
 tool-system may provide module-planning tools, validators, or recommendations to another repository. Their use remains controlled by that repository's own authority and explicit authorization. A tool-system contract, blueprint, test, planner result, or recommendation cannot impose governance on another repository or change its owner, authority, status, responsibility, or write authorization.
 
-Task planning, blueprint compilation, module graph validation, interface compatibility evidence, fault-isolation impact records, acceptance, benchmarks, and production review remain future tool-system product responsibilities. Documentation-only declaration is not sufficient for final product acceptance: P14E owns compiler enforcement and P15 owns separately authorized multi-project evidence. Neither stage receives downstream governance or write authority from this file.
+Declared module-graph structure now has a local machine validator. Source-import edge derivation, runtime module isolation, task planning from the graph, blueprint compilation, behavioral interface compatibility evidence, fault-isolation impact records, automated replacement, multi-project acceptance, benchmarks, and production review remain future tool-system product responsibilities. Registry declaration alone is not sufficient for final product acceptance: P14E owns compiler and runtime-flow integration and P15 owns separately authorized multi-project evidence. Neither stage receives downstream governance or write authority from this file.
 
 ## 25. Provider portfolio, model routing, and development economics
 

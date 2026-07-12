@@ -136,11 +136,12 @@ Current phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.
 
 Status: `active`.
 
-P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract is accepted and closed. P14 remains active while the accepted P14MR evidence is retained and its durable local module rules are owned by `blueprint/tool_system_v0.yaml` and `docs/tool_system_global_development_principles_v1.md`. Live model/provider execution, project benchmarks, and target mutations are not authorized. P15-P16 remain roadmap-only.
+P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract is accepted and closed. P14 remains active while the accepted P14MR evidence is retained, its durable local module rules are owned by `blueprint/tool_system_v0.yaml` and `docs/tool_system_global_development_principles_v1.md`, and its current module inventory is registered in `config/module_registry_v1.yaml`. The registry enforces declared structure, natural owners, dependency versions, reciprocal edges, and DAG validity; it does not claim source-import enforcement, runtime isolation, compatibility proof, or automatic replacement. Live model/provider execution, project benchmarks, and target mutations are not authorized. P15-P16 remain roadmap-only.
 
 Allowed now:
 
 - local durable-module authority semantics owned by the blueprint and local principles; `docs/reports/p14mr_milestone_module_invariant.md` is existing acceptance evidence only;
+- local validation of `config/module_registry_v1.yaml` within its registered structural and no-target-mutation authority envelope;
 - read-only verification of the accepted P14A and P14B contracts and evidence;
 - read-only verification of the accepted P13 security and reliability evidence;
 - read-only verification of accepted P12 durable-orchestrator state and evidence;

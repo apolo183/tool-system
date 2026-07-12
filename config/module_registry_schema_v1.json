@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:tool-system:module-registry-schema:v1",
+  "title": "tool-system Durable Module Registry Schema v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "registry_version",
+    "blueprint_objective_ref",
+    "modules"
+  ],
+  "properties": {
+    "registry_version": {
+      "const": "module_registry_v1"
+    },
+    "blueprint_objective_ref": {
+      "const": "product_objective"
+    },
+    "modules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/module"
+      }
+    }
+  },
+  "$defs": {
+    "non_empty_string": {
+      "type": "string",
+      "minLength": 1
+    },
+    "non_empty_string_array": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/non_empty_string"
+      }
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "module_id",
+        "module_version",
+        "public_interface_version"
+      ],
+      "properties": {
+        "module_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "module_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "public_interface_version": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      }
+    },
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "module_id",
+        "module_version",
+        "owner",
+        "lifecycle",
+        "status",
+        "single_responsibility",
+        "blueprint_objective_ref",
+        "natural_owner_paths",
+        "public_interface_version",
+        "input_contract",
+        "output_contract",
+        "error_semantics",
+        "externally_visible_side_effects",
+        "code_boundary",
+        "data_boundary",
+        "test_boundary",
+        "runtime_artifact_boundary",
+        "cleanup_boundary",
+        "upstream_dependency_module_ids_and_versions",
+        "downstream_dependency_module_ids_and_versions",
+        "content_hashes_and_expected_preconditions",
+        "authorization_envelope",
+        "acceptance_evidence",
+        "rollback_evidence",
+        "replacement_evidence"
+      ],
+      "properties": {
+        "module_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "module_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "owner": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "lifecycle": {
+          "enum": [
+            "ACTIVE",
+            "PLANNED",
+            "RETIRED"
+          ]
+        },
+        "status": {
+          "enum": [
+            "REGISTERED",
+            "DEGRADED",
+            "RETIRED"
+          ]
+        },
+        "single_responsibility": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "blueprint_objective_ref": {
+          "const": "product_objective"
+        },
+        "natural_owner_paths": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "public_interface_version": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "input_contract": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "output_contract": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "error_semantics": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "externally_visible_side_effects": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "code_boundary": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "data_boundary": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "test_boundary": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "runtime_artifact_boundary": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "cleanup_boundary": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "upstream_dependency_module_ids_and_versions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/dependency"
+          }
+        },
+        "downstream_dependency_module_ids_and_versions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/dependency"
+          }
+        },
+        "content_hashes_and_expected_preconditions": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "authorization_envelope": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "acceptance_evidence": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "rollback_evidence": {
+          "$ref": "#/$defs/non_empty_string_array"
+        },
+        "replacement_evidence": {
+          "$ref": "#/$defs/non_empty_string_array"
+        }
+      }
+    }
+  }
+}
