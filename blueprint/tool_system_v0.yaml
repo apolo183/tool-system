@@ -1,19 +1,19 @@
-schema_version: 0.3
+schema_version: 0.4
 system: tool-system
-phase: P13_SECURITY_RELIABILITY_HARDENING
-status: accepted_and_closed
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+status: active
 acceptance:
   record: docs/reports/p13e_security_reliability_acceptance_closure.md
   accepted_at: 2026-07-12 UTC+09:00
   accepted_scope: application_guarded_local_fixture_worker_and_single_host_sqlite_hardening
-  successor_phase_authorized: false
+  successor_phase_authorized: true
   prior_acceptance:
     phase: P12_DURABLE_ORCHESTRATOR
     record: docs/reports/p12e_durable_orchestrator_acceptance_closure.md
     accepted_scope: single_host_local_fixture_sqlite_durable_orchestrator
 successor_authorization:
-  record: docs/reports/p14r_blueprint_product_objective_roadmap_reconciliation.md
-  authorized_at: null
+  record: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
+  authorized_at: 2026-07-12 UTC+09:00
   defined_roadmap:
     - P11_REAL_WORKER_RUNTIME
     - P12_DURABLE_ORCHESTRATOR
@@ -21,10 +21,22 @@ successor_authorization:
     - P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
     - P15_MULTI_PROJECT_BENCHMARK
     - P16_PRODUCTION_OPERATIONS_ACCEPTANCE
-  active_phase: null
+  active_phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
   later_phase_entry_authorized: false
-  next_phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+  next_phase: P15_MULTI_PROJECT_BENCHMARK
   next_phase_entry_authorized: false
+
+active_phase_execution:
+  record: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
+  current_stage: P14A_PHASE_ENTRY_END_TO_END_SPECIFICATION
+  phase_entry_authorized: true
+  authorized_scope: governance_and_end_to_end_specification_only
+  phase_source_implementation_authorized: false
+  next_stage: P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT
+  next_stage_authorized: false
+  live_model_provider_execution_authorized: false
+  remote_target_mutation_authorized: false
+  production_deployment_authorized: false
 
 identity:
   description: Domain-agnostic agentic software factory for blueprint parsing, task planning, patch generation, test execution, and repository control.
@@ -435,6 +447,70 @@ milestones:
       - isolated local Git branch, commit, conflict, and draft-PR-plan workflow
       - multi-stack end-to-end fixture-project acceptance evidence
       - blueprint-to-code autonomous development acceptance record
+    stage_plan:
+      - stage: P14A_PHASE_ENTRY_END_TO_END_SPECIFICATION
+        objective: lock the product contract, capability gaps, stages, owners, fixtures, claims, and authorization boundaries
+        entry_requires:
+          - P14 phase-entry authorization
+        execution_boundary: governance_only
+      - stage: P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT
+        objective: implement structured AI request/result, resource controls, error taxonomy, replay safety, and a deterministic fixture provider
+        entry_requires:
+          - P14A_PHASE_ENTRY_END_TO_END_SPECIFICATION accepted
+          - explicit P14B source-implementation authorization
+        execution_boundary: no_live_provider
+      - stage: P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+        objective: prove one bounded real provider path with cost, secret, network, timeout, cancellation, retry, validation, and audit controls
+        entry_requires:
+          - P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT accepted
+          - named provider-model-network-credential-cost execution packet authorized
+        execution_boundary: separately_authorized_live_provider_no_repository_mutation
+      - stage: P14D_REPOSITORY_CONTEXT_NATURAL_OWNER
+        objective: build bounded repository context, relevance selection, dependency and test mapping, natural-owner evidence, and stale-snapshot checks
+        entry_requires:
+          - P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION accepted
+        execution_boundary: isolated_fixture_repositories
+      - stage: P14E_BLUEPRINT_COMPILER
+        objective: derive milestones, stages, task DAGs, documents, manifests, plans, gates, tests, and rollback nodes from approved inputs
+        entry_requires:
+          - P14D_REPOSITORY_CONTEXT_NATURAL_OWNER accepted
+        execution_boundary: isolated_fixture_repositories
+      - stage: P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW
+        objective: implement structured patching, verification, diagnosis, bounded repair, no-progress detection, and independent review
+        entry_requires:
+          - P14E_BLUEPRINT_COMPILER accepted
+        execution_boundary: isolated_fixture_repositories
+      - stage: P14G_DURABLE_LOCAL_GIT_ORCHESTRATION
+        objective: integrate durable state, resume, side-effect markers, local branches, commits, conflicts, rollback, and cleanup
+        entry_requires:
+          - P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW accepted
+        execution_boundary: isolated_local_git_only
+      - stage: P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE
+        objective: prove successful, blocked, repaired, resumed, rolled-back, and deterministic blueprint-to-code scenarios across fixture stacks
+        entry_requires:
+          - P14G_DURABLE_LOCAL_GIT_ORCHESTRATION accepted
+        execution_boundary: isolated_fixture_repositories
+      - stage: P14I_ACCEPTANCE_CLOSURE
+        objective: accept the bounded blueprint-to-code product and stop at P15 authorization
+        entry_requires:
+          - P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE accepted
+        execution_boundary: governance_only
+    required_acceptance_fixtures:
+      - greenfield_python_cli
+      - existing_python_library_natural_owner_change
+      - typescript_package_language_neutral_flow
+      - bounded_failing_test_repair
+      - ambiguous_blueprint_pre_mutation_block
+      - out_of_scope_patch_block_and_rollback
+      - timeout_cancellation_cleanup_and_resume
+      - completed_side_effect_crash_without_duplicate_replay
+      - local_git_conflict_policy
+      - deterministic_content_addressed_replay
+    accepted_claim: >-
+      Given an approved bounded blueprint and isolated repository fixture,
+      tool-system can autonomously plan, implement, test, repair, review, and
+      record a local Git software change through an auditable, resumable,
+      fail-closed workflow.
   P15_MULTI_PROJECT_BENCHMARK:
     objective: benchmark the accepted blueprint-to-code product across multiple isolated projects and read-only real repositories before any optional target pilot
     entry_requires:

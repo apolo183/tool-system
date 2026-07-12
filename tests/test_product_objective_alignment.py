@@ -23,7 +23,7 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
     contract = blueprint["product_contract"]
     alignment = blueprint["global_alignment"]
 
-    assert blueprint["schema_version"] == 0.3
+    assert blueprint["schema_version"] == 0.4
     assert objective["id"] == "blueprint_driven_autonomous_software_development"
     assert set(objective["required_end_to_end_flow"]) == {
         "ingest_approved_blueprint",

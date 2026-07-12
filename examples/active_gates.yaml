@@ -108,6 +108,7 @@ task_manifests:
   - examples/task_manifests/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
   - examples/task_manifests/tool_system_p13e_security_reliability_acceptance_closure.yaml
   - examples/task_manifests/tool_system_p14r_blueprint_product_objective_roadmap_reconciliation.yaml
+  - examples/task_manifests/tool_system_p14a_blueprint_to_code_phase_entry.yaml
 change_plans:
   - examples/change_plans/tool_system_p2_gate_foundation.yaml
   - examples/change_plans/tool_system_p3_repo_controller.yaml
@@ -214,3 +215,4 @@ change_plans:
   - examples/change_plans/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
   - examples/change_plans/tool_system_p13e_security_reliability_acceptance_closure.yaml
   - examples/change_plans/tool_system_p14r_blueprint_product_objective_roadmap_reconciliation.yaml
+  - examples/change_plans/tool_system_p14a_blueprint_to_code_phase_entry.yaml
