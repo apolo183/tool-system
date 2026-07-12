@@ -1,6 +1,6 @@
 # P14MR Milestone Module Invariant
 
-status: IMPLEMENTED_ACCEPTANCE_CANDIDATE
+status: ACCEPTED_CLOSED
 phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
 stage: P14MR_MILESTONE_MODULE_INVARIANT
 parent: docs/reports/p14b_provider_neutral_ai_worker_contract.md
@@ -119,7 +119,22 @@ target_repo_mutation: false
 production_deployment: false
 ```
 
-This evidence makes the branch an acceptance candidate only. Closure requires the exact remote diff, successful CI, squash merge, and fresh-main verification.
+## CI acceptance and closure evidence
+
+```text
+candidate_remote_head: 759721590a4e172286fe2a9c6fcb67482ea28726
+candidate_base: 212af8228b8879dc5332fc1d3fab2c401ba6a280
+candidate_compare: ahead_1_behind_0
+candidate_diff: 12_files_671_additions_39_deletions
+github_actions_workflow: tool-system-ci
+github_actions_run: 29183847936
+github_actions_run_number: 940
+github_actions_conclusion: success
+closure_record_scope_delta: this_report_only
+final_closure_gate: closure_head_CI_success_and_squash_merge_required
+```
+
+P14MR acceptance and closure are effective only when this closure-record head passes CI, the same PR squash-merges to `main`, and fresh-state verification confirms the merged state. The closure grants no P14C execution authority.
 
 ## Rollback and stop condition
 
