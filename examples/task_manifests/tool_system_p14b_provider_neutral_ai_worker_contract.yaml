@@ -1,0 +1,102 @@
+task_id: tool-system-p14b-provider-neutral-ai-worker-contract
+task_type: code_change
+target_repo: apolo183/tool-system
+target_branch: p14b-provider-neutral-ai-worker-contract
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stage_plan.P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
+    section_or_key: P14 short-stage sequence.P14B Provider-Neutral AI Worker Contract
+    scope: Implement only the provider-neutral contract and deterministic fixture provider with no live call.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Add the bounded structured AI-worker boundary required by the blueprint-to-code flow without expanding repository authority.
+scope:
+  summary: Implement and accept the provider-neutral AI worker contract and deterministic in-memory fixture runtime.
+  in_scope:
+    - src/tool_system/ai_worker/__init__.py
+    - src/tool_system/ai_worker/contract.py
+    - src/tool_system/ai_worker/runtime.py
+    - src/tool_system/ai_worker/fixture_provider.py
+    - tests/test_ai_worker_contract.py
+    - tests/test_ai_worker_fixture_provider.py
+    - tests/test_phase_alignment.py
+    - tests/test_p14_phase_entry_contract.py
+    - docs/reports/p14b_provider_neutral_ai_worker_contract.md
+    - examples/task_manifests/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+    - examples/change_plans/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+    - examples/active_gates.yaml
+    - blueprint/tool_system_v0.yaml
+    - README.md
+    - AGENTS.md
+  out_of_scope:
+    - live model or provider execution
+    - provider credentials or network access
+    - modification of accepted agent_worker, process runtime, worker adapter, orchestrator, policy, or repository-controller owners
+    - repository context, blueprint compiler, patch-test-repair, or Git orchestration implementation
+    - finance-us or any target-repository read or mutation
+    - branch cleanup or deletion
+    - P14C-P16 implementation or production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
+    ref: 9acac526c4579f69f792bd0770d962f6540ab5b1
+    why_relevant: Merged P14A contract assigns P14B the exact provider-neutral no-live-provider objective.
+  - repo: apolo183/tool-system
+    path: src/tool_system/agent_worker/interface.py
+    ref: 9acac526c4579f69f792bd0770d962f6540ab5b1
+    why_relevant: Confirms the accepted role worker remains record-only and must not be silently replaced.
+allowed_files:
+  - src/tool_system/ai_worker/__init__.py
+  - src/tool_system/ai_worker/contract.py
+  - src/tool_system/ai_worker/runtime.py
+  - src/tool_system/ai_worker/fixture_provider.py
+  - tests/test_ai_worker_contract.py
+  - tests/test_ai_worker_fixture_provider.py
+  - tests/test_phase_alignment.py
+  - tests/test_p14_phase_entry_contract.py
+  - docs/reports/p14b_provider_neutral_ai_worker_contract.md
+  - examples/task_manifests/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+  - examples/change_plans/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+  - examples/active_gates.yaml
+  - blueprint/tool_system_v0.yaml
+  - README.md
+  - AGENTS.md
+forbidden_files:
+  - policy/**
+  - src/tool_system/agent_worker/**
+  - src/tool_system/worker_adapter/**
+  - src/tool_system/orchestrator/**
+  - src/tool_system/target_repo/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - python -m compileall src/tool_system tests
+    - python -m pytest -q tests/test_ai_worker_contract.py tests/test_ai_worker_fixture_provider.py tests/test_phase_alignment.py tests/test_p14_phase_entry_contract.py tests/test_product_objective_alignment.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - provider-neutral request/result, budgets, cancellation, stable errors, redacted audit, and replay tests pass
+    - deterministic fixture provider performs no external IO and duplicate replay does not reinvoke it
+    - full tests and active gates pass
+    - no live provider, credential, network, target repository, cleanup, or production action occurs
+rollback:
+  method: git_revert
+  reference: p14b-provider-neutral-ai-worker-contract
+approval:
+  required: true
+  approved_by: user_authorized_p14b_source_implementation_lifecycle

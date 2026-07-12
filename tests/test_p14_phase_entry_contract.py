@@ -86,23 +86,14 @@ def test_p14_acceptance_fixtures_and_claim_are_bounded() -> None:
     assert "local Git software change" in p14["accepted_claim"]
 
 
-def test_phase_entry_authorizes_specification_but_not_implementation() -> None:
+def test_p14a_manifest_authorized_specification_but_not_implementation() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
-    execution = blueprint["active_phase_execution"]
     manifest = load_yaml_file(MANIFEST)
 
-    assert execution == {
-        "record": "docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md",
-        "current_stage": "P14A_PHASE_ENTRY_END_TO_END_SPECIFICATION",
-        "phase_entry_authorized": True,
-        "authorized_scope": "governance_and_end_to_end_specification_only",
-        "phase_source_implementation_authorized": False,
-        "next_stage": "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT",
-        "next_stage_authorized": False,
-        "live_model_provider_execution_authorized": False,
-        "remote_target_mutation_authorized": False,
-        "production_deployment_authorized": False,
-    }
+    assert blueprint["active_phase_execution"]["current_stage"] == (
+        "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT"
+    )
+    assert manifest["task_type"] == "docs_update"
     assert manifest["alignment"]["global"]["section_or_key"] == (
         "product_objective"
     )

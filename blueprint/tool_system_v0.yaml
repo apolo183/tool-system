@@ -27,12 +27,12 @@ successor_authorization:
   next_phase_entry_authorized: false
 
 active_phase_execution:
-  record: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
-  current_stage: P14A_PHASE_ENTRY_END_TO_END_SPECIFICATION
+  record: docs/reports/p14b_provider_neutral_ai_worker_contract.md
+  current_stage: P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT
   phase_entry_authorized: true
-  authorized_scope: governance_and_end_to_end_specification_only
-  phase_source_implementation_authorized: false
-  next_stage: P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT
+  authorized_scope: provider_neutral_contract_and_deterministic_fixture_only
+  phase_source_implementation_authorized: true
+  next_stage: P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
   next_stage_authorized: false
   live_model_provider_execution_authorized: false
   remote_target_mutation_authorized: false
