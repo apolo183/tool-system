@@ -1,0 +1,27 @@
+plan_id: tool-system-p13d-integrated-local-attack-stress-recovery-evidence
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
+changed_files:
+  - tests/test_p13_integrated_security_reliability.py
+  - docs/reports/p13d_integrated_local_attack_stress_recovery_evidence.md
+  - examples/task_manifests/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
+  - examples/change_plans/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
+  - examples/active_gates.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
+    section_or_key: task_id
+    scope: Follow the exact evidence-only P13D manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+    scope: Execute bounded local evidence without source, external, production, or P14 changes.
+verification:
+  commands:
+    - python -m pytest -q tests/test_p13_integrated_security_reliability.py
+    - python -m pytest -q tests/test_process_worker_runtime_*.py tests/test_durable_orchestrator_*.py tests/test_p13_integrated_security_reliability.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: p13d-integrated-local-evidence

@@ -1,0 +1,77 @@
+task_id: tool-system-p13d-integrated-local-attack-stress-recovery-evidence
+task_type: test_change
+target_repo: apolo183/tool-system
+target_branch: p13d-integrated-local-evidence
+phase: P13_SECURITY_RELIABILITY_HARDENING
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+alignment:
+  parent:
+    document: docs/reports/p13a_security_reliability_phase_entry.md
+    section_or_key: P13D evidence boundary
+    scope: Execute only temporary local integrated attack, stress, cancellation, and recovery evidence.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P13_SECURITY_RELIABILITY_HARDENING
+    scope: Prove fault injection, recovery, resource pressure, cancellation, and cleanup without external mutation.
+scope:
+  summary: Add integrated local evidence over the merged P13B and P13C natural owners without changing those owners.
+  in_scope:
+    - tests/test_p13_integrated_security_reliability.py
+    - docs/reports/p13d_integrated_local_attack_stress_recovery_evidence.md
+    - examples/task_manifests/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
+    - examples/change_plans/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
+    - examples/active_gates.yaml
+  out_of_scope:
+    - src/**
+    - policy/**
+    - blueprint/**
+    - finance-us or any remote target mutation
+    - production or P14-P15 execution
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p13a_security_reliability_phase_entry.md
+    ref: c64ec9419cc450d1072079faea939592ef18972e
+    why_relevant: Merged P13D evidence boundary and P14 stop condition.
+  - repo: apolo183/tool-system
+    path: docs/reports/p13b_adversarial_isolation_hardening.md
+    ref: c64ec9419cc450d1072079faea939592ef18972e
+    why_relevant: Accepted process-worker hardening under test.
+  - repo: apolo183/tool-system
+    path: docs/reports/p13c_durable_orchestrator_fault_resource_hardening.md
+    ref: c64ec9419cc450d1072079faea939592ef18972e
+    why_relevant: Accepted durable-orchestrator hardening under test.
+allowed_files:
+  - tests/test_p13_integrated_security_reliability.py
+  - docs/reports/p13d_integrated_local_attack_stress_recovery_evidence.md
+  - examples/task_manifests/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
+  - examples/change_plans/tool_system_p13d_integrated_local_attack_stress_recovery_evidence.yaml
+  - examples/active_gates.yaml
+forbidden_files:
+  - src/**
+  - policy/**
+  - blueprint/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m pytest -q tests/test_p13_integrated_security_reliability.py
+    - python -m pytest -q tests/test_process_worker_runtime_*.py tests/test_durable_orchestrator_*.py tests/test_p13_integrated_security_reliability.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+  pass_conditions:
+    - every integrated local scenario passes with workspace cleanup
+    - merged P11-P12 owner regressions pass
+    - full tests and active gates pass
+    - no source, remote-target, finance-us, or production mutation occurs
+rollback:
+  method: git_revert
+  reference: p13d-integrated-local-evidence
+approval:
+  required: true
+  approved_by: user_explicit_p13_full_lifecycle_authorization
