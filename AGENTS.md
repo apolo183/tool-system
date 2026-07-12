@@ -96,15 +96,13 @@ Rollback uses Git history, commit SHAs, pull requests, or patch reversal.
 
 Current phase: P13_SECURITY_RELIABILITY_HARDENING.
 
-Status: `active`.
+Status: `accepted_and_closed`.
 
-P10, P11, and P12 are accepted at their recorded scopes. P13 Security and Reliability Hardening is authorized and active. P14-P15 remain roadmap-only; P14 phase entry is not authorized.
+P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14-P15 remain roadmap-only; P14 phase entry, repository benchmarks, and target mutations are not authorized.
 
 Allowed now:
 
-- P13 phase-entry records, threat model, implementation packets, source hardening, adversarial and fault tests, local fixture evidence, review, merge, and closure;
-- application-level process-worker guard hardening without hostile-code sandbox claims;
-- single-host local-fixture SQLite reliability hardening;
+- read-only verification of the accepted P13 security and reliability evidence;
 - read-only verification of accepted P12 durable-orchestrator state and evidence;
 - read-only verification of the accepted P11 runtime;
 - read-only verification of accepted target state;
@@ -117,6 +115,7 @@ Not allowed now:
 - finance-us P1B target implementation without a named, action-scoped target execution approval;
 - treating a P1B implementation approval as ready or merge approval;
 - P14 or later phase entry or implementation before a named authorization;
+- further P13 runtime, orchestrator, or evidence expansion under the closed milestone;
 - further P12 runtime expansion under the closed milestone;
 - P12 fixtures that call a real external side effect, remote provider, or target repository;
 - P13 fixtures that call a real external side effect, remote provider, or target repository;

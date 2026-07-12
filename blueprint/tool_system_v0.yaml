@@ -1,26 +1,26 @@
 schema_version: 0.2
 system: tool-system
 phase: P13_SECURITY_RELIABILITY_HARDENING
-status: active
+status: accepted_and_closed
 acceptance:
-  record: docs/reports/p12e_durable_orchestrator_acceptance_closure.md
-  accepted_at: 2026-07-11 UTC+08:00
-  accepted_scope: single_host_local_fixture_sqlite_durable_orchestrator
-  successor_phase_authorized: true
+  record: docs/reports/p13e_security_reliability_acceptance_closure.md
+  accepted_at: 2026-07-12 UTC+09:00
+  accepted_scope: application_guarded_local_fixture_worker_and_single_host_sqlite_hardening
+  successor_phase_authorized: false
   prior_acceptance:
-    phase: P11_REAL_WORKER_RUNTIME
-    record: docs/reports/p11e_real_worker_runtime_acceptance_closure.md
-    accepted_scope: local_fixture_only_application_guarded_process_worker
+    phase: P12_DURABLE_ORCHESTRATOR
+    record: docs/reports/p12e_durable_orchestrator_acceptance_closure.md
+    accepted_scope: single_host_local_fixture_sqlite_durable_orchestrator
 successor_authorization:
-  record: docs/reports/p13a_security_reliability_phase_entry.md
-  authorized_at: 2026-07-11 UTC+08:00
+  record: docs/reports/p13e_security_reliability_acceptance_closure.md
+  authorized_at: null
   authorized_roadmap:
     - P11_REAL_WORKER_RUNTIME
     - P12_DURABLE_ORCHESTRATOR
     - P13_SECURITY_RELIABILITY_HARDENING
     - P14_MULTI_REPO_BENCHMARK
     - P15_PRODUCTION_OPERATIONS_ACCEPTANCE
-  active_phase: P13_SECURITY_RELIABILITY_HARDENING
+  active_phase: null
   later_phase_entry_authorized: false
   next_phase: P14_MULTI_REPO_BENCHMARK
   next_phase_entry_authorized: false
