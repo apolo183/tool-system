@@ -1,0 +1,39 @@
+plan_id: tool-system-p14b-provider-neutral-ai-worker-contract
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+changed_files:
+  - src/tool_system/ai_worker/__init__.py
+  - src/tool_system/ai_worker/contract.py
+  - src/tool_system/ai_worker/runtime.py
+  - src/tool_system/ai_worker/fixture_provider.py
+  - tests/test_ai_worker_contract.py
+  - tests/test_ai_worker_fixture_provider.py
+  - tests/test_phase_alignment.py
+  - tests/test_p14_phase_entry_contract.py
+  - docs/reports/p14b_provider_neutral_ai_worker_contract.md
+  - examples/task_manifests/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+  - examples/change_plans/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+  - examples/active_gates.yaml
+  - blueprint/tool_system_v0.yaml
+  - README.md
+  - AGENTS.md
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+    section_or_key: task_id
+    scope: Follow the exact P14B no-live-provider implementation manifest.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Implement only the bounded provider-neutral AI-worker link in the approved blueprint-to-code flow.
+verification:
+  commands:
+    - git diff --check
+    - python -m compileall src/tool_system tests
+    - python -m pytest -q tests/test_ai_worker_contract.py tests/test_ai_worker_fixture_provider.py tests/test_phase_alignment.py tests/test_p14_phase_entry_contract.py tests/test_product_objective_alignment.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14b_provider_neutral_ai_worker_contract.yaml
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+rollback:
+  method: git_revert
+  reference: p14b-provider-neutral-ai-worker-contract
