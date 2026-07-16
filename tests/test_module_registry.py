@@ -1,15 +1,22 @@
 from __future__ import annotations
 
+import ast
 import copy
+import hashlib
 import json
 from pathlib import Path
 
+import pytest
 import yaml
 
+import tool_system.architecture.module_registry as module_registry
 from tool_system.architecture.module_registry import (
+    CENTRAL_COMPATIBILITY_INPUT_MODE,
+    LEGACY_REGISTRY_INPUT_MODE,
     LIFECYCLES,
     REQUIRED_MODULE_FIELDS,
     STATUSES,
+    load_s0_identity_mapping,
     validate_module_registry,
 )
 from tool_system.manifest.task_manifest import load_yaml_file
@@ -19,6 +26,9 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "config" / "module_registry_v1.yaml"
 SCHEMA = ROOT / "config" / "module_registry_schema_v1.json"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
+S0_CONTRACT = (
+    ROOT / "docs" / "tool_system_module_registry_adoption_contract_v1.md"
+)
 
 EXPECTED_MODULE_IDS = {
     "architecture_registry",
@@ -63,6 +73,131 @@ def _dependency(module_id: str) -> dict[str, str]:
     }
 
 
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _contract_reference() -> dict[str, str]:
+    return {
+        "repo_relative_path": S0_CONTRACT.relative_to(ROOT).as_posix(),
+        "sha256": _sha256(S0_CONTRACT),
+        "format_identity": "markdown-v1",
+        "schema_identity": "tool-system-module-registry-adoption-v1",
+    }
+
+
+def central_registry_fixture() -> dict[str, object]:
+    legacy = _registry()
+    legacy_modules = _modules_by_id(legacy)
+    mappings = load_s0_identity_mapping(ROOT)
+    mapping_by_current = {
+        mapping["current_module_id"]: mapping for mapping in mappings
+    }
+    reference = _contract_reference()
+    modules: list[dict[str, object]] = []
+    interfaces: list[dict[str, object]] = []
+
+    for mapping in mappings:
+        current_id = mapping["current_module_id"]
+        canonical_id = mapping["canonical_module_id"]
+        legacy_module = legacy_modules[current_id]
+        owned_paths = sorted(
+            {
+                path.relative_to(ROOT).as_posix()
+                for pattern in legacy_module["natural_owner_paths"]
+                for path in ROOT.glob(pattern)
+                if path.is_file()
+            }
+        )
+        code_boundaries = [
+            {
+                "boundary_id": f"{canonical_id}-code-{index}",
+                "location_kind": "repository_local",
+                "path_kind": "exact",
+                "path": path,
+            }
+            for index, path in enumerate(owned_paths, start=1)
+        ]
+        dependencies = [
+            {
+                "interface_id": mapping_by_current[
+                    dependency["module_id"]
+                ]["aggregate_interface_id"],
+                "interface_version": mapping_by_current[
+                    dependency["module_id"]
+                ]["aggregate_interface_version"],
+            }
+            for dependency in legacy_module[
+                "upstream_dependency_module_ids_and_versions"
+            ]
+        ]
+        modules.append(
+            {
+                "module_id": canonical_id,
+                "module_version": mapping["current_module_version"],
+                "role": legacy_module["single_responsibility"],
+                "owner": legacy_module["owner"],
+                "public_interface_refs": [
+                    {
+                        "interface_id": mapping["aggregate_interface_id"],
+                        "interface_version": mapping[
+                            "aggregate_interface_version"
+                        ],
+                    }
+                ],
+                "internal_dependencies": dependencies,
+                "external_dependencies": [],
+                "boundaries": {
+                    "code": code_boundaries,
+                    "data": [],
+                    "tests": [
+                        {
+                            "boundary_id": f"{canonical_id}-test-evidence",
+                            "location_kind": "repository_local",
+                            "path_kind": "exact",
+                            "path": "tests/test_module_registry.py",
+                        }
+                    ],
+                    "runtime_artifacts": [],
+                    "cleanup": [],
+                },
+                "permitted_side_effects": [],
+                "rollback_boundary": copy.deepcopy(reference),
+                "replacement_boundary": copy.deepcopy(reference),
+            }
+        )
+        interfaces.append(
+            {
+                "interface_id": mapping["aggregate_interface_id"],
+                "interface_version": mapping["aggregate_interface_version"],
+                "provider_module_id": canonical_id,
+                "consumers": [
+                    {
+                        "consumer_module_id": mapping_by_current[consumer][
+                            "canonical_module_id"
+                        ]
+                    }
+                    for consumer in mapping["current_observed_consumers"]
+                ],
+                "input_contract": copy.deepcopy(reference),
+                "output_contract": copy.deepcopy(reference),
+                "error_contract": copy.deepcopy(reference),
+                "side_effect_contract": copy.deepcopy(reference),
+                "compatibility_policy": copy.deepcopy(reference),
+                "replacement_revalidation_boundary": copy.deepcopy(
+                    reference
+                ),
+            }
+        )
+
+    return {
+        "registry_contract_version": "module_registry_v1",
+        "canonical_repo_id": "tool-system",
+        "modules": modules,
+        "interfaces": interfaces,
+    }
+
+
 def test_current_registry_passes_with_declared_acyclic_execution_order() -> None:
     result = validate_module_registry(REGISTRY, ROOT)
 
@@ -70,6 +205,278 @@ def test_current_registry_passes_with_declared_acyclic_execution_order() -> None
     assert result["reasons"] == []
     assert result["module_count"] == len(EXPECTED_MODULE_IDS)
     assert set(result["execution_order"]) == EXPECTED_MODULE_IDS
+    assert result["registry_input_mode"] == LEGACY_REGISTRY_INPUT_MODE
+    assert result["current_registry_authority"] is True
+    assert result["compatibility_adapter"]["applied"] is False
+    assert result["compatibility_adapter"]["authority"] is False
+
+
+def test_central_shape_passes_local_compatibility_validation(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_registry(tmp_path, central_registry_fixture())
+
+    result = validate_module_registry(fixture, ROOT)
+
+    assert result["status"] == "PASS"
+    assert result["reasons"] == []
+    assert result["module_count"] == len(EXPECTED_MODULE_IDS)
+    assert result["registry_input_mode"] == CENTRAL_COMPATIBILITY_INPUT_MODE
+    assert result["current_registry_authority"] is False
+    assert result["validation_scope"] == "tool_system_local_semantics_only"
+    assert result["declared_import_graph"] == result["observed_import_graph"]
+    assert result["compatibility_adapter"] == {
+        "applied": True,
+        "authority": False,
+        "persistence": "none",
+        "translation_boundary": "memory_only",
+        "caller_boundary": "registry_loader_and_validator_entrypoints_only",
+        "registry_files_read": [str(fixture)],
+        "mapping_owner_path": (
+            "docs/tool_system_module_registry_adoption_contract_v1.md"
+        ),
+        "generated_projection": False,
+        "persistent_projection": False,
+        "cache_registry": False,
+        "serializes_projection": False,
+        "second_registry_authority": False,
+        "second_schema_authority": False,
+        "current_formal_registry_owner": "config/module_registry_v1.yaml",
+        "removal_stage": "S11",
+        "central_schema_compliance_claimed": False,
+        "central_gate_compliance_claimed": False,
+        "registry_adoption_claimed": False,
+        "governance_activation_claimed": False,
+    }
+
+
+def test_validator_blocks_mixed_top_level_shape(tmp_path: Path) -> None:
+    registry = copy.deepcopy(_registry())
+    registry["registry_contract_version"] = "module_registry_v1"
+
+    result = validate_module_registry(_write_registry(tmp_path, registry), ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert result["reasons"] == [
+        "mixed legacy/central top-level shape is not permitted"
+    ]
+
+
+def test_validator_blocks_mixed_module_field_shape(tmp_path: Path) -> None:
+    registry = central_registry_fixture()
+    registry["modules"][0]["lifecycle"] = "ACTIVE"
+
+    result = validate_module_registry(_write_registry(tmp_path, registry), ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert any(
+        "mixed module field shape" in reason for reason in result["reasons"]
+    )
+
+
+def test_validator_blocks_partial_or_unrecognized_shape(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_registry(tmp_path, {"modules": []})
+
+    result = validate_module_registry(fixture, ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert result["reasons"] == [
+        "module registry shape is partial or unrecognized"
+    ]
+
+
+def test_validator_blocks_duplicate_canonical_module_id(
+    tmp_path: Path,
+) -> None:
+    registry = central_registry_fixture()
+    registry["modules"].append(copy.deepcopy(registry["modules"][0]))
+
+    result = validate_module_registry(_write_registry(tmp_path, registry), ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert any(
+        reason.startswith("duplicate canonical module ID:")
+        for reason in result["reasons"]
+    )
+
+
+def test_validator_blocks_unknown_s0_mapping(tmp_path: Path) -> None:
+    registry = central_registry_fixture()
+    registry["modules"][0]["module_id"] = "unknown-module"
+
+    result = validate_module_registry(_write_registry(tmp_path, registry), ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert "missing or unknown S0 mapping for module: unknown-module" in result[
+        "reasons"
+    ]
+
+
+def test_validator_blocks_unclosed_interface_consumers(
+    tmp_path: Path,
+) -> None:
+    registry = central_registry_fixture()
+    interface = next(
+        item
+        for item in registry["interfaces"]
+        if item["interface_id"] == "manifest-validation-api"
+    )
+    interface["consumers"] = []
+
+    result = validate_module_registry(_write_registry(tmp_path, registry), ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert (
+        "manifest-validation-api@1.0.0 provider/consumer declarations "
+        "do not close"
+    ) in result["reasons"]
+
+
+def test_compatibility_result_cannot_satisfy_authority(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_registry(tmp_path, central_registry_fixture())
+
+    result = validate_module_registry(
+        fixture,
+        ROOT,
+        require_current_authority=True,
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["current_registry_authority"] is False
+    assert (
+        "non-authoritative compatibility result cannot satisfy current "
+        "registry authority"
+    ) in result["reasons"]
+
+
+def test_registry_symlink_cannot_alias_current_authority(
+    tmp_path: Path,
+) -> None:
+    alias = tmp_path / "module_registry_alias.yaml"
+    alias.symlink_to(REGISTRY)
+
+    result = validate_module_registry(alias, ROOT)
+
+    assert result["status"] == "PASS"
+    assert result["registry_input_mode"] == LEGACY_REGISTRY_INPUT_MODE
+    assert result["current_registry_authority"] is False
+
+
+def test_adapter_is_memory_only_and_does_not_mutate_registry_or_index(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_registry(tmp_path, central_registry_fixture())
+    registry_sha = _sha256(REGISTRY)
+    fixture_sha = _sha256(fixture)
+    index_sha = _sha256(ROOT / ".git" / "index")
+    repo_files = {
+        path.relative_to(ROOT).as_posix()
+        for path in ROOT.rglob("*")
+        if path.is_file() and ".git" not in path.relative_to(ROOT).parts
+    }
+
+    result = validate_module_registry(fixture, ROOT)
+
+    assert result["status"] == "PASS"
+    assert _sha256(REGISTRY) == registry_sha
+    assert _sha256(fixture) == fixture_sha
+    assert _sha256(ROOT / ".git" / "index") == index_sha
+    assert {
+        path.relative_to(ROOT).as_posix()
+        for path in ROOT.rglob("*")
+        if path.is_file() and ".git" not in path.relative_to(ROOT).parts
+    } == repo_files
+    assert [
+        path.relative_to(ROOT).as_posix()
+        for path in ROOT.rglob("*module_registry*.y*ml")
+        if ".git" not in path.relative_to(ROOT).parts
+    ] == ["config/module_registry_v1.yaml"]
+
+
+def test_registry_validator_has_no_persistence_calls() -> None:
+    source = (
+        ROOT / "src" / "tool_system" / "architecture" / "module_registry.py"
+    )
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    forbidden = {
+        "dump",
+        "dumps",
+        "mkdir",
+        "open",
+        "safe_dump",
+        "touch",
+        "write",
+        "write_bytes",
+        "write_text",
+    }
+    observed = {
+        node.func.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    }
+
+    assert observed.isdisjoint(forbidden)
+
+
+def test_duplicate_current_id_after_mapping_blocks(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    registry = central_registry_fixture()
+    mappings = copy.deepcopy(load_s0_identity_mapping(ROOT))
+    mappings[1]["current_module_id"] = mappings[0]["current_module_id"]
+    monkeypatch.setattr(
+        "tool_system.architecture.module_registry.load_s0_identity_mapping",
+        lambda _root: mappings,
+    )
+
+    result = validate_module_registry(_write_registry(tmp_path, registry), ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert any(
+        reason.startswith("duplicate current module ID after mapping:")
+        for reason in result["reasons"]
+    )
+
+
+def test_s0_id_mapping_collision_blocks() -> None:
+    mappings = copy.deepcopy(load_s0_identity_mapping(ROOT))
+    mappings[1]["canonical_module_id"] = mappings[0]["canonical_module_id"]
+    mapping_contract = {
+        "mapping_version": "s0-identity-interface-mapping-v1",
+        "module_count": len(mappings),
+        "identity_mapping_owner": (
+            "src/tool_system/architecture/module_registry.py"
+        ),
+        "mappings": mappings,
+    }
+
+    with pytest.raises(ValueError, match="mapping collision"):
+        module_registry._validate_s0_mapping_records(mapping_contract)
+
+
+def test_central_adapter_reads_exactly_one_registry_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _write_registry(tmp_path, central_registry_fixture())
+    calls: list[Path] = []
+    real_loader = module_registry.load_yaml_file
+
+    def tracked_loader(path: str | Path) -> dict[str, object]:
+        calls.append(Path(path).resolve())
+        return real_loader(path)
+
+    monkeypatch.setattr(module_registry, "load_yaml_file", tracked_loader)
+
+    result = validate_module_registry(fixture, ROOT)
+
+    assert result["status"] == "PASS"
+    assert calls == [fixture.resolve()]
 
 
 def test_registry_inventory_and_contract_fields_match_blueprint() -> None:

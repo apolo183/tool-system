@@ -17,8 +17,19 @@ def main() -> int:
         default=Path("config/module_registry_v1.yaml"),
         nargs="?",
     )
+    parser.add_argument(
+        "--require-current-authority",
+        action="store_true",
+        help=(
+            "Block unless the input is the unchanged current legacy registry; "
+            "central compatibility results are always non-authoritative."
+        ),
+    )
     args = parser.parse_args()
-    result = validate_module_registry(args.registry)
+    result = validate_module_registry(
+        args.registry,
+        require_current_authority=args.require_current_authority,
+    )
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     return 0 if result["status"] == "PASS" else 1
 
