@@ -338,29 +338,24 @@ def _selector_matches(selector: dict[str, Any], import_name: str) -> bool:
     return import_name == name or import_name.startswith(f"{name}.")
 
 
-def _resolve_from_import(
+def _resolve_from_import_base(
     source_root: Path,
     path: Path,
     node: ast.ImportFrom,
-) -> list[str]:
+) -> str | None:
     current = _source_import_identity(source_root, path)
     package = current if path.name == "__init__.py" else current.rpartition(".")[0]
-    if node.level:
-        parts = package.split(".") if package else []
-        ascend = node.level - 1
-        if ascend > len(parts):
-            return []
-        parts = parts[: len(parts) - ascend] if ascend else parts
-        if node.module:
-            parts.append(node.module)
-        base = ".".join(parts)
-    else:
-        base = node.module or ""
-    return [
-        f"{base}.{alias.name}" if base else alias.name
-        for alias in node.names
-        if alias.name != "*"
-    ]
+    if not node.level:
+        return node.module
+
+    parts = package.split(".") if package else []
+    ascend = node.level - 1
+    if ascend >= len(parts):
+        return None
+    base_parts = parts[: len(parts) - ascend] if ascend else parts
+    if node.module:
+        base_parts.extend(node.module.split("."))
+    return ".".join(base_parts)
 
 
 def extract_managed_import_graph(
@@ -413,17 +408,8 @@ def extract_managed_import_graph(
                 f"{selector_matches[0]} but boundary owner is {owner}"
             )
 
-    known_names = sorted(import_name_to_path, key=len, reverse=True)
-
-    def resolve(import_name: str) -> Path | None:
-        for candidate in known_names:
-            if import_name == candidate or import_name.startswith(
-                f"{candidate}."
-            ):
-                return import_name_to_path[candidate]
-        return None
-
     hidden_dependencies: set[tuple[str, str]] = set()
+    invalid_relative_imports: set[tuple[str, int, str]] = set()
     for path in managed_paths:
         relative = path.relative_to(root).as_posix()
         consumer = owner_by_path.get(relative)
@@ -437,22 +423,39 @@ def extract_managed_import_graph(
         except (OSError, SyntaxError) as exc:
             reasons.append(f"unable to parse managed source {relative}: {exc}")
             continue
-        imported_names: list[str] = []
+        imported_targets: set[Path] = set()
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
-                imported_names.extend(alias.name for alias in node.names)
+                for alias in node.names:
+                    target = import_name_to_path.get(alias.name)
+                    if target is not None:
+                        imported_targets.add(target)
+                    elif alias.name == "tool_system" or alias.name.startswith(
+                        "tool_system."
+                    ):
+                        hidden_dependencies.add((relative, alias.name))
             elif isinstance(node, ast.ImportFrom):
-                imported_names.extend(
-                    _resolve_from_import(source_root, path, node)
-                )
-        for import_name in imported_names:
-            target = resolve(import_name)
-            if target is None:
-                if import_name == "tool_system" or import_name.startswith(
-                    "tool_system."
-                ):
-                    hidden_dependencies.add((relative, import_name))
-                continue
+                base = _resolve_from_import_base(source_root, path, node)
+                if base is None:
+                    invalid_relative_imports.add(
+                        (relative, node.level, node.module or "")
+                    )
+                    continue
+                base_target = import_name_to_path.get(base)
+                if base_target is None:
+                    if base == "tool_system" or base.startswith(
+                        "tool_system."
+                    ):
+                        hidden_dependencies.add((relative, base))
+                    continue
+                for alias in node.names:
+                    child_target = (
+                        import_name_to_path.get(f"{base}.{alias.name}")
+                        if alias.name != "*"
+                        else None
+                    )
+                    imported_targets.add(child_target or base_target)
+        for target in sorted(imported_targets):
             provider_relative = target.relative_to(root).as_posix()
             provider = owner_by_path.get(provider_relative)
             if provider not in canonical_ids:
@@ -468,6 +471,11 @@ def extract_managed_import_graph(
         reasons.append(
             f"unmanaged or hidden tool_system dependency in {relative}: "
             f"{import_name}"
+        )
+    for relative, level, module in sorted(invalid_relative_imports):
+        reasons.append(
+            f"unresolvable relative import in {relative}: "
+            f"level={level}, module={module}"
         )
     return (
         {
