@@ -82,7 +82,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_set_count"] == 27
+    assert result["formal_set_count"] == 28
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == 291
     assert result["unclassified_path_count"] == 0
@@ -104,7 +104,7 @@ def test_both_manifest_formats_have_stable_explicit_parser_modes() -> None:
     central_mode, central_rows, central_reasons = central_result
     assert legacy_mode == LEGACY_FORMAL_PARSER_MODE
     assert legacy_reasons == []
-    assert len(legacy_rows) == 27
+    assert len(legacy_rows) == 28
     assert central_mode == CENTRAL_FORMAL_PARSER_MODE
     assert central_reasons == []
     assert [row["path"] for row in central_rows] == [
@@ -300,6 +300,29 @@ def test_manifest_tables_use_registered_columns_and_one_root() -> None:
     assert all(row["status"] == "REGISTERED" for row in formal)
     assert all(row["authority"] == "false" for row in legacy)
     assert all(row["runtime_default"] == "false" for row in legacy)
+
+
+def test_module_contract_set_is_registered_once_without_membership_or_cutover() -> None:
+    formal, reasons = _table_rows(
+        _manifest_text(),
+        "## Formal File Sets",
+        FORMAL_COLUMNS,
+    )
+    matches = [row for row in formal if row["path"] == "docs/modules/**/*"]
+
+    assert reasons == []
+    assert len(matches) == 1
+    row = matches[0]
+    assert row["role"] == "module-owned compound contracts"
+    assert row["owner"] == "respective natural module owners"
+    assert row["upstream"].split("; ") == [
+        "docs/tool_system_module_registry_adoption_contract_v1.md",
+        "blueprint/**/*",
+    ]
+    assert "without establishing registry membership" in row["purpose"]
+    assert "central gate PASS" in row["purpose"]
+    assert "cutover" in row["purpose"]
+    assert row["status"] == "REGISTERED"
 
 
 def test_legacy_sets_are_exactly_the_retained_non_authority_roots() -> None:
