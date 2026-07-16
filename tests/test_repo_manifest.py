@@ -2,11 +2,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tool_system.architecture.repo_manifest import (
+    CENTRAL_FORMAL_PARSER_MODE,
+    CENTRAL_FORMAL_SECTION,
+    CENTRAL_MODULE_REGISTRY_PATH,
     FORMAL_COLUMNS,
+    FORMAL_SECTION,
+    LEGACY_FORMAL_PARSER_MODE,
     LEGACY_COLUMNS,
     _git_environment,
     _table_rows,
+    parse_manifest_formal_rows,
     validate_repo_manifest,
 )
 from tool_system.manifest.task_manifest import load_yaml_file
@@ -16,6 +24,43 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "REPO_MANIFEST.md"
 MODULE_REGISTRY = ROOT / "config" / "module_registry_v1.yaml"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
+
+
+def _central_row(path: str, upstream: str = "ROOT") -> str:
+    return (
+        f"| {path} | formal role | formal purpose | formal owner | ACTIVE | "
+        f"{upstream} | formal consumer | formal validation | REGISTERED |"
+    )
+
+
+def _central_manifest_text(
+    *,
+    columns: tuple[str, ...] = FORMAL_COLUMNS,
+    rows: list[str] | None = None,
+    section: str = CENTRAL_FORMAL_SECTION,
+) -> str:
+    formal_rows = rows or [
+        _central_row("docs/global_development_principles_v1.md"),
+        _central_row(
+            CENTRAL_MODULE_REGISTRY_PATH,
+            "docs/global_development_principles_v1.md",
+        ),
+    ]
+    return "\n".join(
+        [
+            "# REPO_MANIFEST.md",
+            "",
+            section,
+            "",
+            f"| {' | '.join(columns)} |",
+            f"| {' | '.join('---' for _ in columns)} |",
+            *formal_rows,
+            "",
+            "## Non-Claims",
+            "",
+            "Fixture only.",
+        ]
+    )
 
 
 def _manifest_text() -> str:
@@ -33,6 +78,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
 
     assert result["status"] == "PASS"
     assert result["reasons"] == []
+    assert result["parser_mode"] == LEGACY_FORMAL_PARSER_MODE
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
@@ -43,6 +89,195 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["group_process_file_compliance_claimed"] is False
     assert result["cleanup_authorized"] is False
     assert result["executes_target_repo_mutation"] is False
+
+
+def test_both_manifest_formats_have_stable_explicit_parser_modes() -> None:
+    legacy_text = _manifest_text()
+    central_text = _central_manifest_text()
+
+    legacy_result = parse_manifest_formal_rows(legacy_text)
+    central_result = parse_manifest_formal_rows(central_text)
+
+    assert legacy_result == parse_manifest_formal_rows(legacy_text)
+    assert central_result == parse_manifest_formal_rows(central_text)
+    legacy_mode, legacy_rows, legacy_reasons = legacy_result
+    central_mode, central_rows, central_reasons = central_result
+    assert legacy_mode == LEGACY_FORMAL_PARSER_MODE
+    assert legacy_reasons == []
+    assert len(legacy_rows) == 27
+    assert central_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert central_reasons == []
+    assert [row["path"] for row in central_rows] == [
+        "docs/global_development_principles_v1.md",
+        CENTRAL_MODULE_REGISTRY_PATH,
+    ]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        _manifest_text() + f"\n{FORMAL_SECTION}\n",
+        _central_manifest_text() + f"\n{CENTRAL_FORMAL_SECTION}\n",
+        _manifest_text() + "\n" + _central_manifest_text(),
+    ],
+    ids=["duplicate-legacy", "duplicate-central", "mixed-formats"],
+)
+def test_manifest_parser_blocks_duplicate_or_mixed_formal_sections(text: str) -> None:
+    parser_mode, rows, reasons = parse_manifest_formal_rows(text)
+
+    assert parser_mode is None
+    assert rows == []
+    assert reasons
+
+
+@pytest.mark.parametrize(
+    "section",
+    [
+        "",
+        "## Formal File",
+        "## Formal File Set",
+        "## Formal Files ",
+        "### Formal Files",
+    ],
+)
+def test_manifest_parser_blocks_missing_or_wrong_formal_heading(section: str) -> None:
+    text = _central_manifest_text(section=section)
+
+    parser_mode, rows, reasons = parse_manifest_formal_rows(text)
+
+    assert parser_mode is None
+    assert rows == []
+    assert reasons
+
+
+@pytest.mark.parametrize("missing_index", range(len(FORMAL_COLUMNS)))
+def test_central_manifest_blocks_each_missing_header_column(
+    missing_index: int,
+) -> None:
+    columns = tuple(
+        column for index, column in enumerate(FORMAL_COLUMNS) if index != missing_index
+    )
+
+    parser_mode, _, reasons = parse_manifest_formal_rows(
+        _central_manifest_text(columns=columns)
+    )
+
+    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert any("columns must be exactly" in reason for reason in reasons)
+
+
+@pytest.mark.parametrize(
+    "columns",
+    [
+        (*FORMAL_COLUMNS, "extra"),
+        (FORMAL_COLUMNS[1], FORMAL_COLUMNS[0], *FORMAL_COLUMNS[2:]),
+    ],
+    ids=["additional-column", "reordered-columns"],
+)
+def test_central_manifest_blocks_additional_or_reordered_header_columns(
+    columns: tuple[str, ...],
+) -> None:
+    parser_mode, _, reasons = parse_manifest_formal_rows(
+        _central_manifest_text(columns=columns)
+    )
+
+    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert any("columns must be exactly" in reason for reason in reasons)
+
+
+@pytest.mark.parametrize(
+    "registry_row",
+    [
+        "| config/module_registry_v1.yaml | too | few | columns |",
+        "config/module_registry_v1.yaml is formal",
+    ],
+    ids=["wrong-column-count", "non-table-text"],
+)
+def test_central_manifest_blocks_malformed_rows(registry_row: str) -> None:
+    text = _central_manifest_text(
+        rows=[
+            _central_row("docs/global_development_principles_v1.md"),
+            registry_row,
+        ]
+    )
+
+    parser_mode, _, reasons = parse_manifest_formal_rows(text)
+
+    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert reasons
+
+
+def test_central_manifest_blocks_duplicate_exact_path() -> None:
+    registry_row = _central_row(
+        CENTRAL_MODULE_REGISTRY_PATH,
+        "docs/global_development_principles_v1.md",
+    )
+    text = _central_manifest_text(
+        rows=[
+            _central_row("docs/global_development_principles_v1.md"),
+            registry_row,
+            registry_row,
+        ]
+    )
+
+    parser_mode, _, reasons = parse_manifest_formal_rows(text)
+
+    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert any("duplicate central formal path" in reason for reason in reasons)
+
+
+@pytest.mark.parametrize(
+    "registry_path",
+    [
+        "config/module_registry*.yaml",
+        "./config/module_registry_v1.yaml",
+        "config/module_registry_v1.yaml/",
+        "config/module_registry_v1.yml",
+    ],
+)
+def test_central_manifest_requires_literal_module_registry_row(
+    registry_path: str,
+) -> None:
+    text = _central_manifest_text(
+        rows=[
+            _central_row("docs/global_development_principles_v1.md"),
+            _central_row(
+                registry_path,
+                "docs/global_development_principles_v1.md",
+            ),
+        ]
+    )
+
+    parser_mode, rows, reasons = parse_manifest_formal_rows(text)
+
+    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert CENTRAL_MODULE_REGISTRY_PATH not in {row["path"] for row in rows}
+    assert any("exact module registry path" in reason for reason in reasons)
+
+
+def test_central_manifest_blocks_missing_module_registry_row() -> None:
+    text = _central_manifest_text(
+        rows=[_central_row("docs/global_development_principles_v1.md")]
+    )
+
+    parser_mode, rows, reasons = parse_manifest_formal_rows(text)
+
+    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert [row["path"] for row in rows] == ["docs/global_development_principles_v1.md"]
+    assert any("exact module registry path" in reason for reason in reasons)
+
+
+def test_central_parser_does_not_activate_local_validator_adapter(
+    tmp_path: Path,
+) -> None:
+    result = validate_repo_manifest(
+        _write_manifest(tmp_path, _central_manifest_text()),
+        ROOT,
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["parser_mode"] == CENTRAL_FORMAL_PARSER_MODE
+    assert any("parse-only" in reason for reason in result["reasons"])
 
 
 def test_manifest_tables_use_registered_columns_and_one_root() -> None:
