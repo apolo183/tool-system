@@ -7,7 +7,11 @@ from pathlib import Path, PurePosixPath
 
 
 FORMAL_SECTION = "## Formal File Sets"
+CENTRAL_FORMAL_SECTION = "## Formal Files"
 LEGACY_SECTION = "## Retained Non-Authority Sets"
+LEGACY_FORMAL_PARSER_MODE = "legacy_formal_file_sets"
+CENTRAL_FORMAL_PARSER_MODE = "central_formal_files"
+CENTRAL_MODULE_REGISTRY_PATH = "config/module_registry_v1.yaml"
 FORMAL_COLUMNS = (
     "path",
     "role",
@@ -119,11 +123,145 @@ def _table_rows(
     return rows, reasons
 
 
+def _central_formal_rows(text: str) -> tuple[list[dict[str, str]], list[str]]:
+    reasons: list[str] = []
+    lines = text.splitlines()
+    section_index = lines.index(CENTRAL_FORMAL_SECTION)
+    table_lines: list[tuple[int, str]] = []
+    for line_number, line in enumerate(
+        lines[section_index + 1 :],
+        start=section_index + 2,
+    ):
+        if line.startswith("## "):
+            break
+        if not line.strip():
+            continue
+        if not line.startswith("|"):
+            reasons.append(
+                f"{CENTRAL_FORMAL_SECTION} contains non-table content at line "
+                f"{line_number}"
+            )
+            continue
+        table_lines.append((line_number, line))
+    if len(table_lines) < 3:
+        return [], [
+            *reasons,
+            f"{CENTRAL_FORMAL_SECTION} must contain a header and at least one row",
+        ]
+
+    def cells(line: str) -> list[str]:
+        return [cell.strip() for cell in line.strip().strip("|").split("|")]
+
+    header = tuple(cells(table_lines[0][1]))
+    if header != FORMAL_COLUMNS:
+        reasons.append(
+            f"{CENTRAL_FORMAL_SECTION} columns must be exactly {list(FORMAL_COLUMNS)}"
+        )
+    separator = cells(table_lines[1][1])
+    if len(separator) != len(FORMAL_COLUMNS) or not all(
+        value and set(value) <= {"-", ":"} for value in separator
+    ):
+        reasons.append(f"{CENTRAL_FORMAL_SECTION} separator row is invalid")
+
+    rows: list[dict[str, str]] = []
+    seen_paths: set[str] = set()
+    for line_number, line in table_lines[2:]:
+        values = cells(line)
+        if len(values) != len(FORMAL_COLUMNS):
+            reasons.append(
+                f"{CENTRAL_FORMAL_SECTION} row at line {line_number} "
+                "has the wrong column count"
+            )
+            continue
+        if any(not value for value in values):
+            reasons.append(
+                f"{CENTRAL_FORMAL_SECTION} row at line {line_number} has an empty field"
+            )
+            continue
+        row = dict(zip(FORMAL_COLUMNS, values, strict=True))
+        exact_path = row["path"]
+        if not _safe_exact_path(exact_path):
+            reasons.append(
+                f"{CENTRAL_FORMAL_SECTION} path must be an exact "
+                f"repository-relative path: {exact_path}"
+            )
+            continue
+        if exact_path in seen_paths:
+            reasons.append(f"duplicate central formal path: {exact_path}")
+            continue
+        seen_paths.add(exact_path)
+        rows.append(row)
+
+    if CENTRAL_MODULE_REGISTRY_PATH not in seen_paths:
+        reasons.append(
+            f"{CENTRAL_FORMAL_SECTION} must register the exact module registry path: "
+            f"{CENTRAL_MODULE_REGISTRY_PATH}"
+        )
+    return rows, reasons
+
+
+def parse_manifest_formal_rows(
+    text: str,
+) -> tuple[str | None, list[dict[str, str]], list[str]]:
+    lines = text.splitlines()
+    legacy_count = lines.count(FORMAL_SECTION)
+    central_count = lines.count(CENTRAL_FORMAL_SECTION)
+    reasons: list[str] = []
+
+    if legacy_count > 1:
+        reasons.append(f"manifest section must appear exactly once: {FORMAL_SECTION}")
+    if central_count > 1:
+        reasons.append(
+            f"manifest section must appear exactly once: {CENTRAL_FORMAL_SECTION}"
+        )
+    if legacy_count and central_count:
+        reasons.append(
+            "manifest must not contain both active formal sections: "
+            f"{FORMAL_SECTION}; {CENTRAL_FORMAL_SECTION}"
+        )
+    if reasons:
+        return None, [], reasons
+
+    if legacy_count == 1:
+        rows, row_reasons = _table_rows(text, FORMAL_SECTION, FORMAL_COLUMNS)
+        return LEGACY_FORMAL_PARSER_MODE, rows, row_reasons
+    if central_count == 1:
+        rows, row_reasons = _central_formal_rows(text)
+        return CENTRAL_FORMAL_PARSER_MODE, rows, row_reasons
+
+    wrong_headings = sorted(
+        {
+            line
+            for line in lines
+            if line.startswith("## Formal File")
+            and line not in {FORMAL_SECTION, CENTRAL_FORMAL_SECTION}
+        }
+    )
+    if wrong_headings:
+        reasons.append(
+            "unsupported manifest formal section heading: " + ", ".join(wrong_headings)
+        )
+    else:
+        reasons.append(
+            "manifest must contain exactly one active formal section: "
+            f"{FORMAL_SECTION} or {CENTRAL_FORMAL_SECTION}"
+        )
+    return None, [], reasons
+
+
 def _safe_pattern(pattern: str) -> bool:
     if pattern.startswith(("/", "-")) or "\\" in pattern:
         return False
     parts = PurePosixPath(pattern).parts
     return bool(parts) and all(part not in {"", ".", ".."} for part in parts)
+
+
+def _safe_exact_path(path: str) -> bool:
+    return (
+        _safe_pattern(path)
+        and PurePosixPath(path).as_posix() == path
+        and not any(character in path for character in "*?[]{}")
+    )
 
 
 def _expand_tracked_pattern(
@@ -238,6 +376,7 @@ def validate_repo_manifest(
         return {
             "status": "BLOCK",
             "manifest_path": str(path),
+            "parser_mode": None,
             "reasons": ["repository manifest must not be a symlink"],
         }
     try:
@@ -247,14 +386,17 @@ def validate_repo_manifest(
         return {
             "status": "BLOCK",
             "manifest_path": str(path),
+            "parser_mode": None,
             "reasons": [f"unable to read repository manifest inputs: {exc}"],
         }
 
-    formal_rows, formal_reasons = _table_rows(
-        text,
-        FORMAL_SECTION,
-        FORMAL_COLUMNS,
-    )
+    parser_mode, parsed_formal_rows, formal_reasons = parse_manifest_formal_rows(text)
+    formal_rows = parsed_formal_rows if parser_mode == LEGACY_FORMAL_PARSER_MODE else []
+    if parser_mode == CENTRAL_FORMAL_PARSER_MODE and not formal_reasons:
+        formal_reasons.append(
+            "central Formal Files parser mode is parse-only; "
+            "local validation requires Formal File Sets"
+        )
     legacy_rows, legacy_reasons = _table_rows(
         text,
         LEGACY_SECTION,
@@ -303,6 +445,7 @@ def validate_repo_manifest(
     return {
         "status": "PASS" if not reasons else "BLOCK",
         "manifest_path": str(path),
+        "parser_mode": parser_mode,
         "tracked_path_count": len(tracked),
         "formal_set_count": len(formal_rows),
         "formal_path_count": len(formal_paths),
