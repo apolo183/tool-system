@@ -106,10 +106,38 @@ module_compound_contract:
     boundary: Argument errors, delegated BLOCK or failure status, or delegated exceptions do not become success and cannot be hidden by CLI routing.
   side_effect_contract:
     taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
-    effect_classes: []
+    effect_classes:
+      - repository_write
+      - data_write
+      - generated_artifact_write
+      - git_write
+      - database_write
+      - network_write
+      - external_system_write
+      - production_operation
     direct_effects: []
     delegated_effects:
-      - File, command, GitHub, target-evidence, planning, runner, runtime, and cleanup-plan effects remain owned and bounded by the selected module interface.
+      - capability_id: selected-module-interface
+        capability_state: conditional-delegated-maximum
+        effect_classes:
+          - repository_write
+          - data_write
+          - generated_artifact_write
+          - git_write
+          - database_write
+          - network_write
+          - external_system_write
+          - production_operation
+        evidence_paths:
+          - src/tool_system/cli/controller_run.py
+          - src/tool_system/cli/execute_change_plan.py
+          - src/tool_system/cli/main.py
+          - src/tool_system/cli/plan_requirement.py
+          - src/tool_system/cli/plan_task_graph.py
+          - src/tool_system/cli/target_repo_dry_run.py
+        activation_condition: A caller selects one concrete CLI entry point and that delegated interface independently satisfies its plan, policy, state, and authorization gates.
+        boundary: This is the conservative maximum classification of callable interfaces, not a claim that argument parsing directly performs every effect or that the CLI currently performs a production operation.
+        classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
     interface_compatible_replacement: Preserve command names, required and optional argument semantics, module delegation, structured output, and exit-code behavior.

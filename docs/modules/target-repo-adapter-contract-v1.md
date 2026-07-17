@@ -65,24 +65,10 @@ module_compound_contract:
   side_effect_contract:
     taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
     effect_classes:
-      - generated_artifact_write
       - repository_write
+      - data_write
+      - generated_artifact_write
     direct_effects:
-      - effect_class: generated_artifact_write
-        evidence_paths:
-          - src/tool_system/target_repo/dry_run_adapter.py
-          - src/tool_system/target_repo/execution_approval.py
-          - src/tool_system/target_repo/execution_state_snapshot.py
-          - src/tool_system/target_repo/mutation_command_packet.py
-          - src/tool_system/target_repo/p4c_preview_module.py
-          - src/tool_system/target_repo/p4d_precheck.py
-          - src/tool_system/target_repo/p5h_record.py
-          - src/tool_system/target_repo/p5i_bundle.py
-          - src/tool_system/target_repo/pr_plan_preview.py
-          - src/tool_system/target_repo/state_collector.py
-          - src/tool_system/target_repo/write_intent_record.py
-          - src/tool_system/target_repo/write_packet.py
-        boundary: Append one no-execution target plan, gate, state, intent, packet, final, or audit record to the caller-selected JSONL path.
       - effect_class: repository_write
         evidence_paths:
           - src/tool_system/target_repo/dry_run_adapter.py
@@ -98,8 +84,37 @@ module_compound_contract:
           - src/tool_system/target_repo/write_intent_record.py
           - src/tool_system/target_repo/write_packet.py
         boundary: If the selected audit path is inside an authorized repository, the append-only evidence write is also a repository write.
-    delegated_effects:
-      - A future target action described by a packet requires a new explicit execution request, fresh state match, and separate executor; packet preparation performs no such action.
+      - effect_class: data_write
+        evidence_paths:
+          - src/tool_system/target_repo/dry_run_adapter.py
+          - src/tool_system/target_repo/execution_approval.py
+          - src/tool_system/target_repo/execution_state_snapshot.py
+          - src/tool_system/target_repo/mutation_command_packet.py
+          - src/tool_system/target_repo/p4c_preview_module.py
+          - src/tool_system/target_repo/p4d_precheck.py
+          - src/tool_system/target_repo/p5h_record.py
+          - src/tool_system/target_repo/p5i_bundle.py
+          - src/tool_system/target_repo/pr_plan_preview.py
+          - src/tool_system/target_repo/state_collector.py
+          - src/tool_system/target_repo/write_intent_record.py
+          - src/tool_system/target_repo/write_packet.py
+        boundary: Persist one no-execution target plan, gate, state, intent, packet, final, or audit record as append-only JSONL data at the caller-selected path.
+      - effect_class: generated_artifact_write
+        evidence_paths:
+          - src/tool_system/target_repo/dry_run_adapter.py
+          - src/tool_system/target_repo/execution_approval.py
+          - src/tool_system/target_repo/execution_state_snapshot.py
+          - src/tool_system/target_repo/mutation_command_packet.py
+          - src/tool_system/target_repo/p4c_preview_module.py
+          - src/tool_system/target_repo/p4d_precheck.py
+          - src/tool_system/target_repo/p5h_record.py
+          - src/tool_system/target_repo/p5i_bundle.py
+          - src/tool_system/target_repo/pr_plan_preview.py
+          - src/tool_system/target_repo/state_collector.py
+          - src/tool_system/target_repo/write_intent_record.py
+          - src/tool_system/target_repo/write_packet.py
+        boundary: Append one no-execution target plan, gate, state, intent, packet, final, or audit record to the caller-selected JSONL path.
+    delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
     interface_compatible_replacement: Preserve target evidence checks, approval separation, no-execution flags, state normalization, SHA preconditions, packet shapes, final records, audit bundles, and CLI result fields.
@@ -121,8 +136,8 @@ module_compound_contract:
       mode: evidence-write-only
       contract: The module does not modify the target repository; only a caller-selected local JSONL evidence path may be written.
     data:
-      mode: target-state-and-packet-records
-      contract: Target manifests, policies, approvals, observations, file states, PR states, SHAs, plans, and packets remain structured evidence.
+      mode: target-state-packet-and-jsonl-records
+      contract: Target manifests, policies, approvals, observations, file states, PR states, SHAs, plans, and packets are structured evidence that may persist as append-only JSONL at the selected audit path.
     artifact:
       mode: append-only-jsonl
       contract: Target dry-run, preview, precheck, state, intent, packet, final, and audit records are creator-owned local artifacts.

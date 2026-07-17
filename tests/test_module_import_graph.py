@@ -6,7 +6,12 @@ from pathlib import Path
 
 import yaml
 
-from test_module_registry import central_registry_fixture
+from test_module_registry import (
+    EXPECTED_MANAGED_PYTHON_FILE_COUNT,
+    TARGET_OWNER_DELTAS,
+    central_registry_fixture,
+    target_python_owner_by_path,
+)
 from tool_system.architecture.module_registry import (
     compare_managed_import_graphs,
     extract_managed_import_graph,
@@ -56,22 +61,16 @@ def _current_boundaries() -> tuple[
         mapping["current_module_id"]: mapping["canonical_module_id"]
         for mapping in mappings
     }
-    owner_by_path: dict[str, str] = {}
+    owner_by_path = {
+        path: canonical_by_current[current_owner]
+        for path, current_owner in target_python_owner_by_path().items()
+    }
     declared: dict[str, set[str]] = {
         mapping["canonical_module_id"]: set() for mapping in mappings
     }
     for module in registry["modules"]:
         current_id = module["module_id"]
         canonical_id = canonical_by_current[current_id]
-        for pattern in module["natural_owner_paths"]:
-            for path in ROOT.glob(pattern):
-                if not path.is_file() or not path.is_relative_to(
-                    ROOT / "src" / "tool_system"
-                ) or path.suffix != ".py":
-                    continue
-                relative = path.relative_to(ROOT).as_posix()
-                assert relative not in owner_by_path
-                owner_by_path[relative] = canonical_id
         for dependency in module[
             "upstream_dependency_module_ids_and_versions"
         ]:
@@ -196,9 +195,15 @@ def test_real_managed_import_dag_matches_boundaries_s0_and_declarations() -> Non
     )
 
     assert reasons == []
-    assert len(owner_by_path) == len(
-        list((ROOT / "src" / "tool_system").rglob("*.py"))
+    assert len(owner_by_path) == EXPECTED_MANAGED_PYTHON_FILE_COUNT
+    assert len(list((ROOT / "src" / "tool_system").rglob("*.py"))) == (
+        EXPECTED_MANAGED_PYTHON_FILE_COUNT
     )
+    assert {
+        path: owner_by_path[path] for path in TARGET_OWNER_DELTAS
+    } == {
+        path: "task-runner" for path in TARGET_OWNER_DELTAS
+    }
     assert independent_graph == production_graph
     assert independent_graph == declared_graph
     assert independent_graph == _s0_declared_graph()

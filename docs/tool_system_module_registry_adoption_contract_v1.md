@@ -80,7 +80,9 @@ mapping_contract:
       runtime_id_preserved_during_s0: true
       python_import_identities:
         - {kind: prefix, name: tool_system.manifest}
-        - {kind: prefix, name: tool_system.gate}
+        - {kind: exact, name: tool_system.gate}
+        - {kind: exact, name: tool_system.gate.alignment_gate}
+        - {kind: exact, name: tool_system.gate.change_plan}
         - {kind: prefix, name: tool_system.policy}
         - {kind: exact, name: tool_system.cli.validate_task_manifest}
         - {kind: exact, name: tool_system.cli.validate_change_plan}
@@ -186,6 +188,8 @@ mapping_contract:
       aggregate_interface_version: 1.0.0
       runtime_id_preserved_during_s0: true
       python_import_identities:
+        - {kind: exact, name: tool_system.gate.command_runner}
+        - {kind: exact, name: tool_system.gate.test_gate}
         - {kind: exact, name: tool_system.runner.stage_runner}
         - {kind: exact, name: tool_system.runner.task_graph_runner}
         - {kind: exact, name: tool_system.runner.task_runner}
@@ -278,13 +282,15 @@ central Interface object or claim behavioral compatibility.
 ## Current static Python import DAG
 
 The edge direction below is provider to direct consumer. The graph is derived
-from AST import nodes in the Python files owned by the current registry and
-resolved back to those current natural owners.
+from AST import nodes in the Python files under the fixed S4 target ownership
+boundary: the current registry ownership baseline plus only the accepted
+`command_runner.py` and `test_gate.py` transfer from manifest-validation to
+task-runner. Physical paths and the accepted module DAG remain unchanged.
 
 <!-- S0-STATIC-DAG:BEGIN -->
 ~~~yaml
 static_import_dag:
-  basis: python_ast_import_nodes_in_current_registry_owned_source
+  basis: python_ast_import_nodes_in_s4_target_owned_source
   direction: provider_to_direct_consumer
   providers:
     architecture_registry: []

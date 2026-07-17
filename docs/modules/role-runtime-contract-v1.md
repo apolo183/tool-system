@@ -57,22 +57,24 @@ module_compound_contract:
   side_effect_contract:
     taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
     effect_classes:
-      - generated_artifact_write
       - repository_write
-    direct_effects:
-      - effect_class: generated_artifact_write
+      - data_write
+      - generated_artifact_write
+    direct_effects: []
+    delegated_effects:
+      - capability_id: repository-controller-jsonl-persistence
+        capability_state: conditional-delegated-maximum
+        effect_classes:
+          - repository_write
+          - data_write
+          - generated_artifact_write
         evidence_paths:
           - src/tool_system/runtime/audit_bundle.py
           - src/tool_system/runtime/role_runtime.py
           - src/tool_system/runtime/transition_gate.py
-        boundary: Append one role plan, runtime audit bundle, or transition record to the caller-selected JSONL audit path.
-      - effect_class: repository_write
-        evidence_paths:
-          - src/tool_system/runtime/audit_bundle.py
-          - src/tool_system/runtime/role_runtime.py
-          - src/tool_system/runtime/transition_gate.py
-        boundary: If the selected audit path is inside an authorized repository, the append-only audit write is also a repository write.
-    delegated_effects: []
+        activation_condition: A caller invokes a role-runtime file API with an audit_path after the corresponding record passes validation.
+        boundary: The file APIs delegate append-only JSONL persistence to repository-controller; data_write and generated_artifact_write apply, while repository_write applies only when the selected path is inside an authorized repository. The delegation grants no target mutation or execution authority.
+        classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
     interface_compatible_replacement: Preserve role taxonomy mapping, step ordering, no-mutation flags, worker parity, audit and rollback bundle fields, and transition gate behavior.
@@ -94,8 +96,8 @@ module_compound_contract:
       mode: read-and-conditional-audit-write
       contract: Read graph, blueprint, process authority, and source references; write only the caller-selected local audit record.
     data:
-      mode: runtime-plan-records
-      contract: Role steps, worker results, audit bundles, rollback bundles, and transition decisions remain structured records.
+      mode: runtime-records-and-optional-jsonl
+      contract: Role steps, worker results, audit bundles, rollback bundles, and transition decisions are structured records that may persist as append-only JSONL through repository-controller when an audit path is supplied.
     artifact:
       mode: optional-jsonl
       contract: Role plan, audit bundle, and transition artifacts are creator-owned local evidence with no target mutation.
@@ -110,9 +112,11 @@ module_compound_contract:
         evidence_paths:
           - src/tool_system/runtime/audit_bundle.py
           - src/tool_system/runtime/role_runtime.py
+          - src/tool_system/runtime/transition_gate.py
         evidence_symbols:
           - build_role_runtime_plan_file
           - build_runtime_audit_bundle_file
+          - build_role_transition_gate_file
         boundary_parameters:
           - graph_path
           - blueprint_path

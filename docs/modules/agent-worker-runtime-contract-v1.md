@@ -53,13 +53,25 @@ module_compound_contract:
   side_effect_contract:
     taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
     effect_classes:
+      - data_write
       - generated_artifact_write
+      - database_write
     direct_effects:
       - effect_class: generated_artifact_write
         evidence_paths:
           - src/tool_system/agent_worker/process_runtime.py
         boundary: Create guard and worker files only inside the creator-owned temporary workspace and remove that workspace before returning.
-    delegated_effects: []
+    delegated_effects:
+      - capability_id: fixture-sqlite-inside-ephemeral-workspace
+        capability_state: conditional-delegated-maximum
+        effect_classes:
+          - data_write
+          - database_write
+        evidence_paths:
+          - src/tool_system/agent_worker/process_runtime.py
+        activation_condition: An approved fixture explicitly opens a SQLite database inside its isolated ephemeral workspace while the audit guard is active.
+        boundary: The fixture may persist SQLite data only inside the temporary workspace; database_write is also data_write, and the workspace is removed before return.
+        classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
     interface_compatible_replacement: Preserve request and result fields, guard behavior, resource limits, output caps, path isolation, and cleanup evidence.

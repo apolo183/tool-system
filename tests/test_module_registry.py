@@ -46,6 +46,78 @@ EXPECTED_MODULE_IDS = {
     "cleanup_planner",
     "cli_frontend",
 }
+TARGET_OWNER_DELTAS = {
+    "src/tool_system/gate/command_runner.py": (
+        "manifest_validation",
+        "task_runner",
+    ),
+    "src/tool_system/gate/test_gate.py": (
+        "manifest_validation",
+        "task_runner",
+    ),
+}
+EXPECTED_MANAGED_PYTHON_FILE_COUNT = 90
+
+
+def _python_import_identity(path: Path) -> str:
+    parts = list(
+        path.relative_to(ROOT / "src").with_suffix("").parts
+    )
+    if parts[-1] == "__init__":
+        parts.pop()
+    return ".".join(parts)
+
+
+def _selector_matches(selector: dict[str, str], import_name: str) -> bool:
+    if selector["kind"] == "exact":
+        return import_name == selector["name"]
+    return import_name == selector["name"] or import_name.startswith(
+        f"{selector['name']}."
+    )
+
+
+def _legacy_python_owner_by_path() -> dict[str, str]:
+    owner_by_path: dict[str, str] = {}
+    for module in _registry()["modules"]:
+        for pattern in module["natural_owner_paths"]:
+            for path in ROOT.glob(pattern):
+                if (
+                    not path.is_file()
+                    or path.suffix != ".py"
+                    or not path.is_relative_to(ROOT / "src" / "tool_system")
+                ):
+                    continue
+                relative = path.relative_to(ROOT).as_posix()
+                assert relative not in owner_by_path
+                owner_by_path[relative] = module["module_id"]
+    return owner_by_path
+
+
+def target_python_owner_by_path() -> dict[str, str]:
+    mappings = load_s0_identity_mapping(ROOT)
+    target_owner_by_path: dict[str, str] = {}
+    for path in sorted((ROOT / "src" / "tool_system").rglob("*.py")):
+        import_name = _python_import_identity(path)
+        matches = [
+            mapping["current_module_id"]
+            for mapping in mappings
+            for selector in mapping["python_import_identities"]
+            if _selector_matches(selector, import_name)
+        ]
+        assert len(matches) == 1
+        target_owner_by_path[path.relative_to(ROOT).as_posix()] = matches[0]
+
+    legacy_owner_by_path = _legacy_python_owner_by_path()
+    assert len(target_owner_by_path) == EXPECTED_MANAGED_PYTHON_FILE_COUNT
+    assert set(target_owner_by_path) == set(legacy_owner_by_path)
+    for path, target_owner in target_owner_by_path.items():
+        if path in TARGET_OWNER_DELTAS:
+            legacy_owner, accepted_target_owner = TARGET_OWNER_DELTAS[path]
+            assert legacy_owner_by_path[path] == legacy_owner
+            assert target_owner == accepted_target_owner
+        else:
+            assert target_owner == legacy_owner_by_path[path]
+    return target_owner_by_path
 
 
 def _registry() -> dict[str, object]:
@@ -96,19 +168,29 @@ def central_registry_fixture() -> dict[str, object]:
     reference = _contract_reference()
     modules: list[dict[str, object]] = []
     interfaces: list[dict[str, object]] = []
+    target_owned_paths = {
+        current_id: {
+            path.relative_to(ROOT).as_posix()
+            for pattern in module["natural_owner_paths"]
+            for path in ROOT.glob(pattern)
+            if path.is_file()
+        }
+        for current_id, module in legacy_modules.items()
+    }
+    for path, target_owner in target_python_owner_by_path().items():
+        legacy_owner = next(
+            current_id
+            for current_id, paths in target_owned_paths.items()
+            if path in paths
+        )
+        target_owned_paths[legacy_owner].remove(path)
+        target_owned_paths[target_owner].add(path)
 
     for mapping in mappings:
         current_id = mapping["current_module_id"]
         canonical_id = mapping["canonical_module_id"]
         legacy_module = legacy_modules[current_id]
-        owned_paths = sorted(
-            {
-                path.relative_to(ROOT).as_posix()
-                for pattern in legacy_module["natural_owner_paths"]
-                for path in ROOT.glob(pattern)
-                if path.is_file()
-            }
-        )
+        owned_paths = sorted(target_owned_paths[current_id])
         code_boundaries = [
             {
                 "boundary_id": f"{canonical_id}-code-{index}",
@@ -248,6 +330,105 @@ def test_central_shape_passes_local_compatibility_validation(
         "registry_adoption_claimed": False,
         "governance_activation_claimed": False,
     }
+
+
+def test_target_fixture_applies_only_two_accepted_owner_deltas() -> None:
+    registry = central_registry_fixture()
+    owner_by_path: dict[str, str] = {}
+
+    for module in registry["modules"]:
+        for boundary in module["boundaries"]["code"]:
+            assert boundary["path_kind"] == "exact"
+            path = boundary["path"]
+            assert path not in owner_by_path
+            owner_by_path[path] = module["module_id"]
+
+    managed_paths = {
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / "src" / "tool_system").rglob("*.py")
+    }
+    assert len(managed_paths) == EXPECTED_MANAGED_PYTHON_FILE_COUNT
+    managed_owner_paths = {
+        path
+        for path in owner_by_path
+        if path.startswith("src/tool_system/") and path.endswith(".py")
+    }
+    assert managed_owner_paths == managed_paths
+    assert {
+        path: owner_by_path[path] for path in TARGET_OWNER_DELTAS
+    } == {
+        path: "task-runner" for path in TARGET_OWNER_DELTAS
+    }
+
+
+def test_central_target_fixture_blocks_directory_prefix_exact_overlap(
+    tmp_path: Path,
+) -> None:
+    registry = central_registry_fixture()
+    manifest_module = next(
+        module
+        for module in registry["modules"]
+        if module["module_id"] == "manifest-validation"
+    )
+    manifest_module["boundaries"]["code"] = [
+        boundary
+        for boundary in manifest_module["boundaries"]["code"]
+        if not boundary["path"].startswith("src/tool_system/gate/")
+    ]
+    manifest_module["boundaries"]["code"].append(
+        {
+            "boundary_id": "manifest-validation-broad-gate-overlap",
+            "location_kind": "repository_local",
+            "path_kind": "directory_prefix",
+            "path": "src/tool_system/gate",
+        }
+    )
+
+    result = validate_module_registry(_write_registry(tmp_path, registry), ROOT)
+
+    assert result["status"] == "BLOCK"
+    for path in TARGET_OWNER_DELTAS:
+        assert any(
+            reason == (
+                f"duplicate path owner: {path} belongs to "
+                "manifest-validation and task-runner"
+            )
+            for reason in result["reasons"]
+        )
+
+
+def test_central_target_fixture_blocks_duplicate_exact_owner(
+    tmp_path: Path,
+) -> None:
+    registry = central_registry_fixture()
+    manifest_module = next(
+        module
+        for module in registry["modules"]
+        if module["module_id"] == "manifest-validation"
+    )
+    manifest_module["boundaries"]["code"].append(
+        {
+            "boundary_id": "manifest-validation-command-runner-duplicate",
+            "location_kind": "repository_local",
+            "path_kind": "exact",
+            "path": "src/tool_system/gate/command_runner.py",
+        }
+    )
+
+    result = validate_module_registry(_write_registry(tmp_path, registry), ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert any(
+        reason == (
+            "duplicate path owner: src/tool_system/gate/command_runner.py "
+            "belongs to manifest-validation and task-runner"
+        )
+        or reason == (
+            "duplicate path owner: src/tool_system/gate/command_runner.py "
+            "belongs to task-runner and manifest-validation"
+        )
+        for reason in result["reasons"]
+    )
 
 
 def test_validator_blocks_mixed_top_level_shape(tmp_path: Path) -> None:
