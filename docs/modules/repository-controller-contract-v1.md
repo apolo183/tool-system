@@ -65,16 +65,21 @@ module_compound_contract:
   side_effect_contract:
     taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
     effect_classes:
-      - external_system_write
+      - repository_write
+      - data_write
       - generated_artifact_write
       - git_write
       - network_write
-      - repository_write
+      - external_system_write
     direct_effects:
-      - effect_class: external_system_write
+      - effect_class: repository_write
         evidence_paths:
-          - src/tool_system/repo_controller/actions.py
-        boundary: Submit only the approved pull-request merge action to the named GitHub repository after all guards pass.
+          - src/tool_system/repo_controller/artifact.py
+        boundary: If the caller selects an audit path inside an authorized repository, the append-only audit write is also a repository write.
+      - effect_class: data_write
+        evidence_paths:
+          - src/tool_system/repo_controller/artifact.py
+        boundary: Persist one structured controller or observation record as append-only JSONL data at the caller-selected audit path.
       - effect_class: generated_artifact_write
         evidence_paths:
           - src/tool_system/repo_controller/artifact.py
@@ -86,11 +91,12 @@ module_compound_contract:
       - effect_class: network_write
         evidence_paths:
           - src/tool_system/repo_controller/actions.py
-        boundary: Network mutation occurs only through the guarded gh pull-request merge command when dry-run is false.
-      - effect_class: repository_write
+          - src/tool_system/repo_controller/live_github_collector.py
+        boundary: GitHub PR and workflow reads use the network, and network mutation occurs only through the guarded gh pull-request merge command when dry-run is false.
+      - effect_class: external_system_write
         evidence_paths:
-          - src/tool_system/repo_controller/artifact.py
-        boundary: If the caller selects an audit path inside an authorized repository, the append-only audit write is also a repository write.
+          - src/tool_system/repo_controller/actions.py
+        boundary: Submit only the approved pull-request merge action to the named GitHub repository after all guards pass; this classification does not authorize merge.
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
@@ -113,8 +119,8 @@ module_compound_contract:
       mode: action-scoped
       contract: Repository mutation requires exact named action authorization, current state, expected head SHA, allowed merge method, and non-draft mergeable PR.
     data:
-      mode: state-and-policy-input
-      contract: Pull-request, workflow, manifest, plan, policy, rollback, and approval mappings remain caller-supplied evidence.
+      mode: state-policy-and-append-only-audit
+      contract: Pull-request, workflow, manifest, plan, policy, rollback, and approval mappings are caller-supplied evidence; controller records may persist as append-only JSONL data at the selected audit path.
     artifact:
       mode: append-only-jsonl
       contract: Controller, self-check, and main-CI records append to a caller-selected path and retain structured reasons.

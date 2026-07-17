@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import ast
 import copy
 import hashlib
 import re
@@ -11,6 +10,7 @@ import pytest
 import yaml
 
 from tool_system.architecture.repo_manifest import FORMAL_COLUMNS, _table_rows
+from tool_system.architecture.module_registry import extract_managed_import_graph
 from tool_system.manifest.task_manifest import load_yaml_file
 
 
@@ -25,6 +25,16 @@ CANONICAL_ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SEMVER_RE = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 BASE_COMMIT = "2b86079dbb82d0426240fd6b5836868e5b9c9697"
 MAPPING_OWNER = "src/tool_system/architecture/module_registry.py"
+TARGET_OWNER_DELTAS = {
+    "src/tool_system/gate/command_runner.py": (
+        "manifest_validation",
+        "task_runner",
+    ),
+    "src/tool_system/gate/test_gate.py": (
+        "manifest_validation",
+        "task_runner",
+    ),
+}
 
 
 class AdoptionContractError(ValueError):
@@ -84,6 +94,13 @@ def _source_owners() -> dict[Path, str]:
         if path.is_file()
     }
     _require(set(owners) == expected, "current registry must own every Python source")
+    for relative, (legacy_owner, target_owner) in TARGET_OWNER_DELTAS.items():
+        path = (ROOT / relative).resolve()
+        _require(
+            owners.get(path) == legacy_owner,
+            f"accepted legacy owner delta is unavailable: {relative}",
+        )
+        owners[path] = target_owner
     return owners
 
 
@@ -111,55 +128,27 @@ def _selector_matches(selector: dict[str, str], import_name: str) -> bool:
     return import_name == name or import_name.startswith(f"{name}.")
 
 
-def _resolve_from_import(path: Path, node: ast.ImportFrom) -> list[str]:
-    current = _import_identity(path)
-    package = current if path.name == "__init__.py" else current.rpartition(".")[0]
-    if node.level:
-        parts = package.split(".") if package else []
-        ascend = node.level - 1
-        if ascend > len(parts):
-            return []
-        parts = parts[: len(parts) - ascend] if ascend else parts
-        if node.module:
-            parts.append(node.module)
-        base = ".".join(parts)
-    else:
-        base = node.module or ""
-    return [
-        f"{base}.{alias.name}" if base else alias.name
-        for alias in node.names
-        if alias.name != "*"
-    ]
-
-
 def _static_provider_consumers() -> dict[str, list[str]]:
-    owners = _source_owners()
-    name_to_path = {_import_identity(path): path for path in owners}
-    known_names = sorted(name_to_path, key=len, reverse=True)
-
-    def resolve(import_name: str) -> Path | None:
-        for candidate in known_names:
-            if import_name == candidate or import_name.startswith(f"{candidate}."):
-                return name_to_path[candidate]
-        return None
-
-    graph = {module_id: set() for module_id in _registry_by_id()}
-    for path, consumer in owners.items():
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        imported_names: list[str] = []
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                imported_names.extend(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom):
-                imported_names.extend(_resolve_from_import(path, node))
-        for import_name in imported_names:
-            target = resolve(import_name)
-            if target is None:
-                continue
-            provider = owners[target]
-            if provider != consumer:
-                graph[provider].add(consumer)
-    return {module_id: sorted(consumers) for module_id, consumers in graph.items()}
+    records = _yaml_block("S0-IDENTITY-MAPPING")["mapping_contract"]["mappings"]
+    canonical_by_current = {
+        record["current_module_id"]: record["canonical_module_id"]
+        for record in records
+    }
+    current_by_canonical = {
+        canonical: current for current, canonical in canonical_by_current.items()
+    }
+    owner_by_path = {
+        path.relative_to(ROOT).as_posix(): canonical_by_current[current_owner]
+        for path, current_owner in _source_owners().items()
+    }
+    graph, reasons = extract_managed_import_graph(ROOT, owner_by_path, records)
+    _require(reasons == [], f"managed import graph must resolve exactly: {reasons}")
+    return {
+        current_by_canonical[provider]: sorted(
+            current_by_canonical[consumer] for consumer in consumers
+        )
+        for provider, consumers in graph.items()
+    }
 
 
 def _declared_provider_consumers() -> dict[str, list[str]]:
@@ -278,7 +267,7 @@ def _validate_mapping_data(data: dict[str, Any]) -> None:
                     selector_match_count[key] = selector_match_count.get(key, 0) + 1
         _require(
             matches == [expected_owner],
-            f"{import_name} must map to exactly its current module owner",
+            f"{import_name} must map exactly once to its S4 target module owner",
         )
         _require("-" not in import_name, "Python imports must not become formal IDs")
 
@@ -417,6 +406,13 @@ def test_mapping_matches_dynamic_registry_and_separates_python_identity() -> Non
         record["canonical_module_id"] != record["current_module_id"]
         for record in records
     )
+    target_owners = _source_owners()
+    assert {
+        relative: target_owners[(ROOT / relative).resolve()]
+        for relative in TARGET_OWNER_DELTAS
+    } == {
+        relative: "task_runner" for relative in TARGET_OWNER_DELTAS
+    }
 
 
 def test_aggregate_interface_identities_and_versions_are_unique() -> None:
@@ -439,7 +435,7 @@ def test_static_ast_import_graph_matches_contract_and_declared_dag() -> None:
     dag = _yaml_block("S0-STATIC-DAG")["static_import_dag"]
     observed = _static_provider_consumers()
 
-    assert dag["basis"] == "python_ast_import_nodes_in_current_registry_owned_source"
+    assert dag["basis"] == "python_ast_import_nodes_in_s4_target_owned_source"
     assert dag["direction"] == "provider_to_direct_consumer"
     assert dag["providers"] == observed
     assert observed == _declared_provider_consumers()
@@ -571,6 +567,68 @@ def test_invalid_identity_and_consumer_mappings_are_rejected() -> None:
         "current_observed_consumers"
     ] = ["cli_frontend"]
     invalid_cases.append(invented_consumer)
+
+    legacy_broad_gate = copy.deepcopy(original)
+    manifest = next(
+        record
+        for record in legacy_broad_gate["mapping_contract"]["mappings"]
+        if record["current_module_id"] == "manifest_validation"
+    )
+    manifest["python_import_identities"][1] = {
+        "kind": "prefix",
+        "name": "tool_system.gate",
+    }
+    invalid_cases.append(legacy_broad_gate)
+
+    duplicate_exact_owner = copy.deepcopy(original)
+    manifest = next(
+        record
+        for record in duplicate_exact_owner["mapping_contract"]["mappings"]
+        if record["current_module_id"] == "manifest_validation"
+    )
+    manifest["python_import_identities"].append(
+        {"kind": "exact", "name": "tool_system.gate.command_runner"}
+    )
+    invalid_cases.append(duplicate_exact_owner)
+
+    legacy_exact_owner = copy.deepcopy(original)
+    manifest = next(
+        record
+        for record in legacy_exact_owner["mapping_contract"]["mappings"]
+        if record["current_module_id"] == "manifest_validation"
+    )
+    task_runner = next(
+        record
+        for record in legacy_exact_owner["mapping_contract"]["mappings"]
+        if record["current_module_id"] == "task_runner"
+    )
+    transferred_selectors = [
+        selector
+        for selector in task_runner["python_import_identities"]
+        if selector["name"]
+        in {
+            "tool_system.gate.command_runner",
+            "tool_system.gate.test_gate",
+        }
+    ]
+    task_runner["python_import_identities"] = [
+        selector
+        for selector in task_runner["python_import_identities"]
+        if selector not in transferred_selectors
+    ]
+    manifest["python_import_identities"].extend(transferred_selectors)
+    invalid_cases.append(legacy_exact_owner)
+
+    prefix_exact_overlap = copy.deepcopy(original)
+    task_runner = next(
+        record
+        for record in prefix_exact_overlap["mapping_contract"]["mappings"]
+        if record["current_module_id"] == "task_runner"
+    )
+    task_runner["python_import_identities"].append(
+        {"kind": "prefix", "name": "tool_system.gate.command_runner"}
+    )
+    invalid_cases.append(prefix_exact_overlap)
 
     for invalid in invalid_cases:
         with pytest.raises(AdoptionContractError):

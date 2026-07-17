@@ -53,17 +53,22 @@ module_compound_contract:
   side_effect_contract:
     taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
     effect_classes:
-      - generated_artifact_write
       - repository_write
+      - data_write
+      - generated_artifact_write
     direct_effects:
-      - effect_class: generated_artifact_write
-        evidence_paths:
-          - src/tool_system/cleanup/residue_plan.py
-        boundary: Append the non-executing cleanup plan to the caller-selected JSONL audit path.
       - effect_class: repository_write
         evidence_paths:
           - src/tool_system/cleanup/residue_plan.py
         boundary: If the selected audit path is inside an authorized repository, the append-only cleanup-plan evidence is also a repository write.
+      - effect_class: data_write
+        evidence_paths:
+          - src/tool_system/cleanup/residue_plan.py
+        boundary: Persist the non-executing cleanup plan as append-only JSONL data at the caller-selected audit path.
+      - effect_class: generated_artifact_write
+        evidence_paths:
+          - src/tool_system/cleanup/residue_plan.py
+        boundary: Append the non-executing cleanup plan to the caller-selected JSONL audit path.
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:

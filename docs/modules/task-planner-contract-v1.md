@@ -56,19 +56,25 @@ module_compound_contract:
   side_effect_contract:
     taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
     effect_classes:
-      - generated_artifact_write
       - repository_write
+      - data_write
+      - generated_artifact_write
     direct_effects:
-      - effect_class: generated_artifact_write
-        evidence_paths:
-          - src/tool_system/planner/requirement_graph.py
-          - src/tool_system/planner/task_graph.py
-        boundary: Write one caller-selected YAML task graph or batch plan only when the explicit write helper is invoked.
       - effect_class: repository_write
         evidence_paths:
           - src/tool_system/planner/requirement_graph.py
           - src/tool_system/planner/task_graph.py
         boundary: If the selected output is inside an authorized repository, the generated plan write is also a repository write.
+      - effect_class: data_write
+        evidence_paths:
+          - src/tool_system/planner/requirement_graph.py
+          - src/tool_system/planner/task_graph.py
+        boundary: Persist one caller-selected YAML task graph or batch plan as structured data only when the explicit write helper is invoked.
+      - effect_class: generated_artifact_write
+        evidence_paths:
+          - src/tool_system/planner/requirement_graph.py
+          - src/tool_system/planner/task_graph.py
+        boundary: Write one caller-selected YAML task graph or batch plan only when the explicit write helper is invoked.
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
@@ -91,8 +97,8 @@ module_compound_contract:
       mode: read-and-conditional-write
       contract: Read blueprint and process inputs; write only the caller-selected generated plan path when the explicit helper is invoked.
     data:
-      mode: structured-planning-input
-      contract: Requirement, task, dependency, role, and process-binding mappings remain caller-owned planning data.
+      mode: structured-planning-and-persistent-yaml
+      contract: Requirement, task, dependency, role, and process-binding mappings are caller-owned planning data; explicit writer APIs may persist graph or batch YAML at the selected output path.
     artifact:
       mode: optional-yaml-plan
       contract: Generated graph and batch YAML files are local creator-owned artifacts, not process or governance authority by existence.

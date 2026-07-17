@@ -54,20 +54,47 @@ module_compound_contract:
   side_effect_contract:
     taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
     effect_classes:
-      - generated_artifact_write
       - repository_write
+      - data_write
+      - generated_artifact_write
+      - git_write
+      - database_write
+      - network_write
+      - external_system_write
+      - production_operation
     direct_effects:
-      - effect_class: generated_artifact_write
-        evidence_paths:
-          - src/tool_system/worker_adapter/orchestration.py
-          - src/tool_system/worker_adapter/policy_gate.py
-        boundary: Append one adapter orchestration or policy-gate record to the caller-selected JSONL audit path.
       - effect_class: repository_write
         evidence_paths:
           - src/tool_system/worker_adapter/orchestration.py
           - src/tool_system/worker_adapter/policy_gate.py
         boundary: If the selected audit path is inside an authorized repository, the append-only adapter record is also a repository write.
-    delegated_effects: []
+      - effect_class: data_write
+        evidence_paths:
+          - src/tool_system/worker_adapter/orchestration.py
+          - src/tool_system/worker_adapter/policy_gate.py
+        boundary: Persist one adapter orchestration or policy-gate record as append-only JSONL data at the caller-selected audit path.
+      - effect_class: generated_artifact_write
+        evidence_paths:
+          - src/tool_system/worker_adapter/orchestration.py
+          - src/tool_system/worker_adapter/policy_gate.py
+        boundary: Append one adapter orchestration or policy-gate record to the caller-selected JSONL audit path.
+    delegated_effects:
+      - capability_id: injected-worker-adapter
+        capability_state: conditional-delegated-maximum
+        effect_classes:
+          - repository_write
+          - data_write
+          - generated_artifact_write
+          - git_write
+          - database_write
+          - network_write
+          - external_system_write
+          - production_operation
+        evidence_paths:
+          - src/tool_system/worker_adapter/contract.py
+        activation_condition: A caller explicitly injects a non-default WorkerAdapter into run_adapter_requests under its own provider-specific effect contract and applicable authorization.
+        boundary: The default remains DryRunWorkerAdapter. The current runtime does not dynamically validate provider effect-contract completeness; this conservative maximum does not claim direct external, Git, database, network, or production effects and grants no authority.
+        classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
     interface_compatible_replacement: Preserve request and result fields, default dry-run adapter, no-mutation flags, orchestration parity, rollback bundle, policy gate, and audit shapes.
@@ -89,8 +116,8 @@ module_compound_contract:
       mode: conditional-audit-write
       contract: No code or target mutation is performed; only the selected local audit path may receive an append-only record.
     data:
-      mode: adapter-records
-      contract: Worker requests, adapter requests, results, orchestration, rollback, and policy mappings remain structured local records.
+      mode: adapter-records-and-optional-jsonl
+      contract: Worker requests, adapter requests, results, orchestration, rollback, and policy mappings are structured local records; optional audit records persist as append-only JSONL at the selected path.
     artifact:
       mode: optional-jsonl
       contract: Adapter orchestration and policy-gate audit records are creator-owned local evidence.

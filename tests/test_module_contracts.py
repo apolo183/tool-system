@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 import copy
 import hashlib
+import json
 import re
 import subprocess
 from pathlib import Path
@@ -11,7 +12,14 @@ from typing import Any, Iterator
 import pytest
 import yaml
 
+from test_module_registry import (
+    EXPECTED_MANAGED_PYTHON_FILE_COUNT,
+    TARGET_OWNER_DELTAS,
+    target_python_owner_by_path,
+)
+from tool_system.cleanup.residue_plan import build_cleanup_plan_file
 from tool_system.manifest.task_manifest import load_yaml_file
+from tool_system.planner.requirement_graph import write_requirement_task_graph_file
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,7 +52,13 @@ EFFECT_SOURCE_SIGNALS = {
         "write_bytes",
         ".open(",
     ),
-    "data_write": ("sqlite3", "INSERT INTO", "UPDATE "),
+    "data_write": (
+        "write_jsonl_record",
+        "write_text",
+        "sqlite3",
+        "INSERT INTO",
+        "UPDATE ",
+    ),
     "generated_artifact_write": (
         "write_jsonl_record",
         "write_text",
@@ -56,6 +70,75 @@ EFFECT_SOURCE_SIGNALS = {
     "network_write": ("run_gh", "subprocess.run"),
     "external_system_write": ("run_gh", "execute_action_plan"),
     "production_operation": ("production",),
+}
+DIRECT_EFFECT_EXPECTATIONS = {
+    "architecture_registry": frozenset(),
+    "manifest_validation": frozenset(),
+    "agent_worker_runtime": frozenset({"generated_artifact_write"}),
+    "ai_worker_runtime": frozenset(),
+    "durable_orchestrator": frozenset({"data_write", "database_write"}),
+    "repository_controller": frozenset(
+        {
+            "repository_write",
+            "data_write",
+            "generated_artifact_write",
+            "git_write",
+            "network_write",
+            "external_system_write",
+        }
+    ),
+    "process_authority": frozenset(),
+    "task_planner": frozenset(
+        {"repository_write", "data_write", "generated_artifact_write"}
+    ),
+    "task_runner": frozenset(
+        {"repository_write", "data_write", "generated_artifact_write"}
+    ),
+    "role_runtime": frozenset(),
+    "worker_adapter": frozenset(
+        {"repository_write", "data_write", "generated_artifact_write"}
+    ),
+    "target_repo_adapter": frozenset(
+        {"repository_write", "data_write", "generated_artifact_write"}
+    ),
+    "cleanup_planner": frozenset(
+        {"repository_write", "data_write", "generated_artifact_write"}
+    ),
+    "cli_frontend": frozenset(),
+}
+DELEGATED_EFFECT_EXPECTATIONS = {
+    "architecture_registry": {},
+    "manifest_validation": {},
+    "agent_worker_runtime": {
+        "fixture-sqlite-inside-ephemeral-workspace": frozenset(
+            {"data_write", "database_write"}
+        )
+    },
+    "ai_worker_runtime": {},
+    "durable_orchestrator": {
+        "caller-supplied-outbox-delivery-sink": frozenset(
+            CENTRAL_EFFECT_CLASSES
+        )
+    },
+    "repository_controller": {},
+    "process_authority": {},
+    "task_planner": {},
+    "task_runner": {
+        "configured-command-execution": frozenset(CENTRAL_EFFECT_CLASSES)
+    },
+    "role_runtime": {
+        "repository-controller-jsonl-persistence": frozenset(
+            {"repository_write", "data_write", "generated_artifact_write"}
+        )
+    },
+    "worker_adapter": {
+        "injected-worker-adapter": frozenset(CENTRAL_EFFECT_CLASSES)
+    },
+    "target_repo_adapter": {},
+    "cleanup_planner": {},
+    "cli_frontend": {
+        "selected-module-interface": frozenset(CENTRAL_EFFECT_CLASSES)
+    },
 }
 TOKEN_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SEMVER_RE = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
@@ -224,6 +307,31 @@ def _expanded_owner_paths(
             _require(path not in owners, f"duplicate natural owner: {path}")
             owners[path] = module_id
         expanded[module_id] = sorted(paths)
+    target_python_owners = target_python_owner_by_path()
+    for path, target_owner in target_python_owners.items():
+        legacy_owner = owners[path]
+        if legacy_owner != target_owner:
+            expanded[legacy_owner].remove(path)
+            expanded[target_owner].append(path)
+            expanded[target_owner].sort()
+        owners[path] = target_owner
+    managed_paths = {
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / "src" / "tool_system").rglob("*.py")
+    }
+    _require(
+        len(managed_paths) == EXPECTED_MANAGED_PYTHON_FILE_COUNT,
+        "managed Python source count drifted",
+    )
+    managed_owner_paths = {
+        path
+        for path in owners
+        if path.startswith("src/tool_system/") and path.endswith(".py")
+    }
+    _require(
+        managed_owner_paths == managed_paths == set(target_python_owners),
+        "target owner oracle must cover every managed Python source",
+    )
     return expanded
 
 
@@ -254,6 +362,24 @@ def _source_symbols(path: Path) -> set[str]:
         node.name
         for node in tree.body
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+    }
+
+
+def _call_names(path: Path) -> set[str]:
+    def dotted_name(node: ast.expr) -> str | None:
+        if isinstance(node, ast.Name):
+            return node.id
+        if isinstance(node, ast.Attribute):
+            prefix = dotted_name(node.value)
+            return f"{prefix}.{node.attr}" if prefix else node.attr
+        return None
+
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    return {
+        name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        if (name := dotted_name(node.func)) is not None
     }
 
 
@@ -509,14 +635,19 @@ def _validate_contract(
     )
     direct_effects = effects["direct_effects"]
     _require(isinstance(direct_effects, list), f"{module_id}: direct effects must be a list")
-    observed_effects: set[str] = set()
+    observed_direct_effects: set[str] = set()
     for effect in direct_effects:
         _require(
             isinstance(effect, dict)
             and set(effect) == {"effect_class", "evidence_paths", "boundary"},
             f"{module_id}: direct effect shape drifted",
         )
-        observed_effects.add(effect["effect_class"])
+        effect_class = effect["effect_class"]
+        _require(
+            effect_class in CENTRAL_EFFECT_CLASSES,
+            f"{module_id}: non-central direct effect class",
+        )
+        observed_direct_effects.add(effect_class)
         _require(
             isinstance(effect["evidence_paths"], list)
             and bool(effect["evidence_paths"])
@@ -530,14 +661,85 @@ def _validate_contract(
         _require(
             any(
                 signal in source_text
-                for signal in EFFECT_SOURCE_SIGNALS[effect["effect_class"]]
+                for signal in EFFECT_SOURCE_SIGNALS[effect_class]
             ),
             f"{module_id}: effect class lacks source evidence",
         )
-    _require(observed_effects == set(effect_classes), f"{module_id}: effect evidence incomplete")
     _require(
         isinstance(effects["delegated_effects"], list),
         f"{module_id}: delegated effects must be a list",
+    )
+    observed_delegated: dict[str, frozenset[str]] = {}
+    for capability in effects["delegated_effects"]:
+        _require(
+            isinstance(capability, dict)
+            and set(capability)
+            == {
+                "capability_id",
+                "capability_state",
+                "effect_classes",
+                "evidence_paths",
+                "activation_condition",
+                "boundary",
+                "classification_grants_authority",
+            },
+            f"{module_id}: delegated effect shape drifted",
+        )
+        capability_id = capability["capability_id"]
+        _require(
+            isinstance(capability_id, str) and TOKEN_RE.fullmatch(capability_id),
+            f"{module_id}: delegated capability ID is invalid",
+        )
+        _require(
+            capability["capability_state"] == "conditional-delegated-maximum",
+            f"{module_id}: delegated capability state drifted",
+        )
+        delegated_classes = capability["effect_classes"]
+        _require(
+            isinstance(delegated_classes, list)
+            and len(delegated_classes) == len(set(delegated_classes))
+            and set(delegated_classes) <= CENTRAL_EFFECT_CLASSES,
+            f"{module_id}: delegated effect classes are invalid",
+        )
+        _require(
+            capability_id not in observed_delegated,
+            f"{module_id}: duplicate delegated capability",
+        )
+        observed_delegated[capability_id] = frozenset(delegated_classes)
+        evidence_paths = capability["evidence_paths"]
+        _require(
+            isinstance(evidence_paths, list)
+            and bool(evidence_paths)
+            and set(evidence_paths) <= set(owner_paths),
+            f"{module_id}: delegated evidence must be target-module-owned",
+        )
+        _require(
+            isinstance(capability["activation_condition"], str)
+            and bool(capability["activation_condition"].strip())
+            and isinstance(capability["boundary"], str)
+            and bool(capability["boundary"].strip()),
+            f"{module_id}: delegated boundary is incomplete",
+        )
+        _require(
+            capability["classification_grants_authority"] is False,
+            f"{module_id}: delegated classification cannot grant authority",
+        )
+    _require(
+        observed_direct_effects == DIRECT_EFFECT_EXPECTATIONS[module_id],
+        f"{module_id}: direct effect classification drifted",
+    )
+    _require(
+        observed_delegated == DELEGATED_EFFECT_EXPECTATIONS[module_id],
+        f"{module_id}: delegated effect classification drifted",
+    )
+    delegated_union = {
+        effect_class
+        for delegated_classes in observed_delegated.values()
+        for effect_class in delegated_classes
+    }
+    _require(
+        set(effect_classes) == observed_direct_effects | delegated_union,
+        f"{module_id}: effect evidence incomplete",
     )
     _require(
         effects["classification_grants_authority"] is False,
@@ -666,6 +868,12 @@ def _validated_contracts() -> tuple[list[dict[str, Any]], list[str]]:
     consumers = _s0_consumers()
     providers = _direct_providers(consumers)
     owner_paths = _expanded_owner_paths(registry)
+    _require(
+        set(mappings)
+        == set(DIRECT_EFFECT_EXPECTATIONS)
+        == set(DELEGATED_EFFECT_EXPECTATIONS),
+        "independent effect oracle must cover the dynamic S0 module set",
+    )
     expected_paths = {
         ROOT / "docs" / "modules" / f"{mapping['canonical_module_id']}-contract-v1.md"
         for mapping in mappings.values()
@@ -699,6 +907,202 @@ def test_all_module_contracts_match_s0_registry_and_real_owner_evidence() -> Non
     assert len(contracts) == 14
     assert len(digests) == len(set(digests)) == 14
     assert all(re.fullmatch(r"[0-9a-f]{64}", digest) for digest in digests)
+
+
+def test_target_owner_oracle_rejects_both_legacy_gate_owners() -> None:
+    mappings = _mappings_by_current_id()
+    registry = _registry_by_id()
+    consumers = _s0_consumers()
+    providers = _direct_providers(consumers)
+    owner_paths = _expanded_owner_paths(registry)
+
+    for module_id, path_delta in (
+        (
+            "manifest_validation",
+            sorted(owner_paths["manifest_validation"] + list(TARGET_OWNER_DELTAS)),
+        ),
+        (
+            "task_runner",
+            sorted(
+                set(owner_paths["task_runner"]) - set(TARGET_OWNER_DELTAS)
+            ),
+        ),
+    ):
+        mapping = mappings[module_id]
+        path = CONTRACT_DIR / f"{mapping['canonical_module_id']}-contract-v1.md"
+        contract = copy.deepcopy(_yaml_block(path))
+        contract["natural_owner_evidence_paths"] = path_delta
+        with pytest.raises(ModuleContractError, match="natural-owner evidence drifted"):
+            _validate_contract(
+                contract,
+                path,
+                mapping,
+                registry[module_id],
+                consumers[module_id],
+                providers[module_id],
+                owner_paths[module_id],
+            )
+
+
+def test_real_jsonl_and_yaml_writers_persist_data_in_task_tmp(
+    tmp_path: Path,
+) -> None:
+    assert tmp_path.is_relative_to(Path("/tmp"))
+    jsonl_path = tmp_path / "effects" / "evidence.jsonl"
+    yaml_path = tmp_path / "effects" / "requirement-graph.yaml"
+
+    cleanup_result = build_cleanup_plan_file(
+        ROOT / "examples" / "cleanup" / "tool_system_residue_state.yaml",
+        jsonl_path,
+    )
+    graph_result = write_requirement_task_graph_file(
+        ROOT / "examples" / "requirements" / "tool_system_p7d.yaml",
+        yaml_path,
+        ROOT / "blueprint" / "tool_system_v0.yaml",
+    )
+
+    assert cleanup_result["status"] == "PASS"
+    assert cleanup_result["audit_path"] == str(jsonl_path)
+    jsonl_record = json.loads(jsonl_path.read_text(encoding="utf-8"))
+    assert jsonl_record["mode"] == "tool_system_cleanup_plan"
+    assert jsonl_record["execute"] is False
+    assert graph_result["status"] == "PASS"
+    assert graph_result["graph_output_path"] == str(yaml_path)
+    assert yaml.safe_load(yaml_path.read_text(encoding="utf-8")) == graph_result[
+        "graph"
+    ]
+    assert "data_write" in DIRECT_EFFECT_EXPECTATIONS["cleanup_planner"]
+    assert "data_write" in DIRECT_EFFECT_EXPECTATIONS["task_planner"]
+
+
+def test_real_callers_prove_direct_and_delegated_effect_boundaries() -> None:
+    assert "subprocess.run" in _call_names(
+        ROOT / "src" / "tool_system" / "gate" / "command_runner.py"
+    )
+    assert "run_commands" in _call_names(
+        ROOT / "src" / "tool_system" / "runner" / "task_runner.py"
+    )
+    durable_calls = _call_names(
+        ROOT / "src" / "tool_system" / "orchestrator" / "durable.py"
+    )
+    assert {"sqlite3.connect", "deliver"} <= durable_calls
+    assert "active_adapter.run" in _call_names(
+        ROOT / "src" / "tool_system" / "worker_adapter" / "contract.py"
+    )
+    cli_calls = set().union(
+        *(
+            _call_names(ROOT / relative)
+            for relative in (
+                "src/tool_system/cli/controller_run.py",
+                "src/tool_system/cli/execute_change_plan.py",
+                "src/tool_system/cli/main.py",
+                "src/tool_system/cli/plan_requirement.py",
+                "src/tool_system/cli/plan_task_graph.py",
+                "src/tool_system/cli/target_repo_dry_run.py",
+            )
+        )
+    )
+    assert {
+        "run_controller",
+        "run_commands",
+        "run_task_pipeline",
+        "write_requirement_task_graph_file",
+        "write_task_graph_batch_file",
+        "run_target_repo_dry_run",
+    } <= cli_calls
+    for relative in (
+        "src/tool_system/runtime/audit_bundle.py",
+        "src/tool_system/runtime/role_runtime.py",
+        "src/tool_system/runtime/transition_gate.py",
+        "src/tool_system/target_repo/write_packet.py",
+        "src/tool_system/runner/task_runner.py",
+    ):
+        assert "write_jsonl_record" in _call_names(ROOT / relative)
+    assert "destination.write_text" in _call_names(
+        ROOT / "src" / "tool_system" / "planner" / "requirement_graph.py"
+    )
+    agent_source = (
+        ROOT / "src" / "tool_system" / "agent_worker" / "process_runtime.py"
+    ).read_text(encoding="utf-8")
+    assert '"sqlite3.connect"' in agent_source
+
+
+def test_missing_and_misclassified_effects_fail_independent_oracle() -> None:
+    mappings = _mappings_by_current_id()
+    registry = _registry_by_id()
+    consumers = _s0_consumers()
+    providers = _direct_providers(consumers)
+    owner_paths = _expanded_owner_paths(registry)
+
+    cases: list[tuple[str, dict[str, Any], str]] = []
+
+    cleanup = copy.deepcopy(
+        _yaml_block(CONTRACT_DIR / "cleanup-planner-contract-v1.md")
+    )
+    cleanup["side_effect_contract"]["effect_classes"].remove("data_write")
+    cleanup["side_effect_contract"]["direct_effects"] = [
+        effect
+        for effect in cleanup["side_effect_contract"]["direct_effects"]
+        if effect["effect_class"] != "data_write"
+    ]
+    cases.append(("cleanup_planner", cleanup, "direct effect classification drifted"))
+
+    runner = copy.deepcopy(_yaml_block(CONTRACT_DIR / "task-runner-contract-v1.md"))
+    runner["side_effect_contract"]["delegated_effects"] = []
+    runner["side_effect_contract"]["effect_classes"] = sorted(
+        DIRECT_EFFECT_EXPECTATIONS["task_runner"]
+    )
+    cases.append(("task_runner", runner, "delegated effect classification drifted"))
+
+    role = copy.deepcopy(_yaml_block(CONTRACT_DIR / "role-runtime-contract-v1.md"))
+    role["side_effect_contract"]["delegated_effects"] = []
+    role["side_effect_contract"]["direct_effects"] = [
+        {
+            "effect_class": effect_class,
+            "evidence_paths": ["src/tool_system/runtime/role_runtime.py"],
+            "boundary": "Deliberately incorrect direct classification fixture.",
+        }
+        for effect_class in sorted(
+            {"repository_write", "data_write", "generated_artifact_write"}
+        )
+    ]
+    cases.append(("role_runtime", role, "direct effect classification drifted"))
+
+    wrong_state = copy.deepcopy(
+        _yaml_block(CONTRACT_DIR / "worker-adapter-contract-v1.md")
+    )
+    wrong_state["side_effect_contract"]["delegated_effects"][0][
+        "capability_state"
+    ] = "active"
+    cases.append(("worker_adapter", wrong_state, "capability state drifted"))
+
+    grants_authority = copy.deepcopy(
+        _yaml_block(CONTRACT_DIR / "cli-frontend-contract-v1.md")
+    )
+    grants_authority["side_effect_contract"]["delegated_effects"][0][
+        "classification_grants_authority"
+    ] = True
+    cases.append(
+        (
+            "cli_frontend",
+            grants_authority,
+            "delegated classification cannot grant authority",
+        )
+    )
+
+    for module_id, contract, message in cases:
+        mapping = mappings[module_id]
+        path = CONTRACT_DIR / f"{mapping['canonical_module_id']}-contract-v1.md"
+        with pytest.raises(ModuleContractError, match=message):
+            _validate_contract(
+                contract,
+                path,
+                mapping,
+                registry[module_id],
+                consumers[module_id],
+                providers[module_id],
+                owner_paths[module_id],
+            )
 
 
 @pytest.mark.parametrize(

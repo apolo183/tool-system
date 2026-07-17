@@ -50,8 +50,14 @@ module_compound_contract:
   side_effect_contract:
     taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
     effect_classes:
+      - repository_write
       - data_write
+      - generated_artifact_write
+      - git_write
       - database_write
+      - network_write
+      - external_system_write
+      - production_operation
     direct_effects:
       - effect_class: data_write
         evidence_paths:
@@ -62,7 +68,22 @@ module_compound_contract:
           - src/tool_system/orchestrator/durable.py
         boundary: Create, migrate, transact, checkpoint, and integrity-check one local SQLite database and its SQLite sidecars.
     delegated_effects:
-      - Outbox callbacks remain caller-supplied idempotent sinks and receive no external-write authority from the store.
+      - capability_id: caller-supplied-outbox-delivery-sink
+        capability_state: conditional-delegated-maximum
+        effect_classes:
+          - repository_write
+          - data_write
+          - generated_artifact_write
+          - git_write
+          - database_write
+          - network_write
+          - external_system_write
+          - production_operation
+        evidence_paths:
+          - src/tool_system/orchestrator/durable.py
+        activation_condition: A caller explicitly supplies an idempotent deliver callback and invokes outbox reconciliation for a claimed event.
+        boundary: The callback owns its provider-specific effects and authorization; this conservative maximum classification does not grant the sink any write or production authority.
+        classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
     interface_compatible_replacement: Preserve schema migration, state machine, leases, attempts, idempotency, preconditions, transactions, outbox, recovery, integrity, and record shapes.

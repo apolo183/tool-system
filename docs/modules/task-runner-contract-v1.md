@@ -23,6 +23,10 @@ module_compound_contract:
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_runner@1.1.0
     python_import_identities:
       - kind: exact
+        name: tool_system.gate.command_runner
+      - kind: exact
+        name: tool_system.gate.test_gate
+      - kind: exact
         name: tool_system.runner.stage_runner
       - kind: exact
         name: tool_system.runner.task_graph_runner
@@ -32,6 +36,8 @@ module_compound_contract:
     summary: execute validated task, batch, graph, and stage plans through bounded gates
     responsibility_boundary: Resolve one explicit current task pair, run validation and policy gates, optionally execute its configured local commands, aggregate batches or graphs, and record local audit results.
   natural_owner_evidence_paths:
+    - src/tool_system/gate/command_runner.py
+    - src/tool_system/gate/test_gate.py
     - src/tool_system/runner/stage_runner.py
     - src/tool_system/runner/task_graph_runner.py
     - src/tool_system/runner/task_runner.py
@@ -60,23 +66,51 @@ module_compound_contract:
   side_effect_contract:
     taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
     effect_classes:
-      - generated_artifact_write
       - repository_write
+      - data_write
+      - generated_artifact_write
+      - git_write
+      - database_write
+      - network_write
+      - external_system_write
+      - production_operation
     direct_effects:
-      - effect_class: generated_artifact_write
-        evidence_paths:
-          - src/tool_system/runner/stage_runner.py
-          - src/tool_system/runner/task_graph_runner.py
-          - src/tool_system/runner/task_runner.py
-        boundary: Append structured task, batch, graph, or stage results to the caller-selected local JSONL audit path.
       - effect_class: repository_write
         evidence_paths:
           - src/tool_system/runner/stage_runner.py
           - src/tool_system/runner/task_graph_runner.py
           - src/tool_system/runner/task_runner.py
         boundary: If the selected audit path is inside an authorized repository, the append-only audit write is also a repository write.
+      - effect_class: data_write
+        evidence_paths:
+          - src/tool_system/runner/stage_runner.py
+          - src/tool_system/runner/task_graph_runner.py
+          - src/tool_system/runner/task_runner.py
+        boundary: Persist structured task, batch, graph, or stage results as append-only JSONL data at the caller-selected local audit path.
+      - effect_class: generated_artifact_write
+        evidence_paths:
+          - src/tool_system/runner/stage_runner.py
+          - src/tool_system/runner/task_graph_runner.py
+          - src/tool_system/runner/task_runner.py
+        boundary: Append structured task, batch, graph, or stage results to the caller-selected local JSONL audit path.
     delegated_effects:
-      - Effects of configured commands remain those of the exact authorized command and cannot be expanded by the runner, a batch, a graph, or a CLI.
+      - capability_id: configured-command-execution
+        capability_state: conditional-delegated-maximum
+        effect_classes:
+          - repository_write
+          - data_write
+          - generated_artifact_write
+          - git_write
+          - database_write
+          - network_write
+          - external_system_write
+          - production_operation
+        evidence_paths:
+          - src/tool_system/gate/command_runner.py
+          - src/tool_system/runner/task_runner.py
+        activation_condition: An exact configured command is selected from the explicit current change plan and every process-authority, manifest, policy, gate, and caller authorization precondition passes.
+        boundary: This is the conservative maximum classification of the exact configured command. It is not a claim that the runner directly performs a production operation and does not grant command execution or any listed effect authority.
+        classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
     interface_compatible_replacement: Preserve explicit-pair resolution, gate order, stop behavior, command-result fields, batch and graph aggregation, no-target flags, and audit result shapes.
@@ -98,8 +132,8 @@ module_compound_contract:
       mode: validated-local-execution
       contract: Read current task inputs and policies; command and audit writes remain limited to the explicit authorization and selected local paths.
     data:
-      mode: pipeline-records
-      contract: Manifest, plan, policy, graph, batch, command, and result mappings are bounded pipeline data.
+      mode: pipeline-records-and-optional-jsonl
+      contract: Manifest, plan, policy, graph, batch, command, and result mappings are bounded pipeline data; optional audit records persist as append-only JSONL at the selected path.
     artifact:
       mode: append-only-jsonl
       contract: Optional task, batch, graph, and stage audit records append to a caller-selected creator-owned path.
@@ -127,8 +161,9 @@ module_compound_contract:
       - system_id: local-command-subprocess
         mode: exact configured command after passing gates
         evidence_paths:
+          - src/tool_system/gate/command_runner.py
           - src/tool_system/runner/task_runner.py
-        boundary: Invoke command execution only after explicit-pair, process-authority, manifest, plan, policy, and gate preconditions pass.
+        boundary: Invoke the exact configured command only after explicit-pair, process-authority, manifest, plan, policy, gate, and caller authorization preconditions pass; classification itself grants no execution authority.
   non_claims:
     registry_membership: false
     central_registry_adopted: false
