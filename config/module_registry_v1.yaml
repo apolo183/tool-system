@@ -1,564 +1,1843 @@
-registry_version: module_registry_v1
-blueprint_objective_ref: product_objective
+registry_contract_version: module_registry_v1
+canonical_repo_id: tool-system
 modules:
-  - module_id: architecture_registry
-    module_version: 1.1.0
-    owner: tool-system
-    lifecycle: &active ACTIVE
-    status: &registered REGISTERED
-    single_responsibility: validate the durable module inventory, natural owners, versions, and declared dependency DAG
-    blueprint_objective_ref: &product_objective product_objective
-    natural_owner_paths:
-      - src/tool_system/__init__.py
-      - src/tool_system/architecture/*.py
-      - src/tool_system/cli/validate_module_registry.py
-      - src/tool_system/cli/validate_repo_manifest.py
-      - config/module_registry_schema_v1.json
-      - config/module_registry_v1.yaml
-      - REPO_MANIFEST.md
-    public_interface_version: &interface_version "1"
-    input_contract: [module_registry_v1, repository_formal_file_set_manifest_v1]
-    output_contract: [module_registry_validation_result_v1, repository_manifest_validation_result_v1]
-    error_semantics: [fail_closed_with_structured_reasons]
-    externally_visible_side_effects: [none]
-    code_boundary: [module_and_repository_registry_loaders_and_validators]
-    data_boundary: [versioned_module_registry_schema_and_repository_manifest]
-    test_boundary: [tests/test_module_registry.py, tests/test_repo_manifest.py]
-    runtime_artifact_boundary: [validation_result_only]
-    cleanup_boundary: [no_destructive_cleanup]
-    upstream_dependency_module_ids_and_versions:
-      - module_id: manifest_validation
-        module_version: 1.0.0
-        public_interface_version: *interface_version
-    downstream_dependency_module_ids_and_versions: []
-    content_hashes_and_expected_preconditions: &common_preconditions [git_tracked_content_and_expected_HEAD_precondition]
-    authorization_envelope: &local_authority [tool_system_local_only, no_target_repo_mutation, no_production_deployment]
-    acceptance_evidence: [module_and_repository_registry_focused_and_full_test_pass]
-    rollback_evidence: &rollback_evidence [named_revert_PR_preserving_git_and_audit_history]
-    replacement_evidence: &replacement_evidence [interface_compatible_replacement_and_dependency_closure_revalidation]
-
-  - module_id: manifest_validation
-    module_version: &module_version 1.0.0
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: load and validate task manifests, change plans, alignment gates, and repository write policy
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths:
-      - src/tool_system/manifest/*.py
-      - src/tool_system/gate/*
-      - src/tool_system/policy/*.py
-      - src/tool_system/cli/validate_task_manifest.py
-      - src/tool_system/cli/validate_change_plan.py
-      - src/tool_system/cli/validate_alignment_gate.py
-    public_interface_version: *interface_version
-    input_contract: [task_manifest_and_change_plan_yaml]
-    output_contract: [validation_decision_and_reasons]
-    error_semantics: [invalid_or_missing_input_blocks]
-    externally_visible_side_effects: [bounded_local_command_execution_only_when_explicitly_invoked]
-    code_boundary: [manifest_gate_and_policy_packages]
-    data_boundary: [caller_supplied_yaml_and_policy_documents]
-    test_boundary: [manifest_gate_and_policy_tests]
-    runtime_artifact_boundary: [validation_and_command_results]
-    cleanup_boundary: [command_outputs_are_creator_owned]
-    upstream_dependency_module_ids_and_versions: []
-    downstream_dependency_module_ids_and_versions:
-      - module_id: architecture_registry
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-      - module_id: repository_controller
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: process_authority
-        module_version: 2.0.0
-        public_interface_version: "2"
-      - module_id: task_planner
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-      - module_id: task_runner
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-      - module_id: role_runtime
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-      - module_id: target_repo_adapter
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: cleanup_planner
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: cli_frontend
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: *local_authority
-    acceptance_evidence: [manifest_gate_and_policy_test_suites]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: agent_worker_runtime
-    module_version: *module_version
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: execute bounded fixture-only process workers behind the worker request interface
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths: [src/tool_system/agent_worker/*.py]
-    public_interface_version: *interface_version
-    input_contract: [WorkerRequest_v1]
-    output_contract: [WorkerResult_v1]
-    error_semantics: [bounded_worker_error_codes]
-    externally_visible_side_effects: [isolated_fixture_workspace_process_only]
-    code_boundary: [agent_worker_package]
-    data_boundary: [scrubbed_environment_and_fixture_workspace]
-    test_boundary: [tests/test_agent_worker.py]
-    runtime_artifact_boundary: [bounded_stdout_stderr_and_result]
-    cleanup_boundary: [ephemeral_workspace_creator_cleanup]
-    upstream_dependency_module_ids_and_versions: []
-    downstream_dependency_module_ids_and_versions:
-      - module_id: role_runtime
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-      - module_id: worker_adapter
-        module_version: *module_version
-        public_interface_version: *interface_version
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [fixture_workspace_only, no_remote_target_mutation, no_production_deployment]
-    acceptance_evidence: [P11_fixture_runtime_acceptance]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: ai_worker_runtime
-    module_version: *module_version
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: provide a provider-neutral structured AI worker contract and deterministic fixture implementation
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths: [src/tool_system/ai_worker/*.py]
-    public_interface_version: *interface_version
-    input_contract: [AIWorkerRequest_v1]
-    output_contract: [AIWorkerResult_v1]
-    error_semantics: [stable_redacted_provider_neutral_errors]
-    externally_visible_side_effects: [deterministic_in_memory_fixture_only]
-    code_boundary: [ai_worker_package]
-    data_boundary: [structured_request_result_and_redacted_audit]
-    test_boundary: [tests/test_ai_worker_contract.py]
-    runtime_artifact_boundary: [in_memory_replay_record]
-    cleanup_boundary: [no_persistent_runtime_artifact]
-    upstream_dependency_module_ids_and_versions: []
-    downstream_dependency_module_ids_and_versions: []
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [deterministic_fixture_provider_only, no_live_credential_or_network, no_target_repo_mutation]
-    acceptance_evidence: [P14B_provider_neutral_contract_acceptance]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: durable_orchestrator
-    module_version: *module_version
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: persist and reconcile single-host task state, leases, attempts, and side-effect evidence
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths: [src/tool_system/orchestrator/*.py]
-    public_interface_version: *interface_version
-    input_contract: [durable_task_and_side_effect_intent_v1]
-    output_contract: [durable_task_state_and_reconciliation_result_v1]
-    error_semantics: [lease_retry_recovery_and_terminal_error_states]
-    externally_visible_side_effects: [single_host_local_SQLite_state]
-    code_boundary: [orchestrator_package]
-    data_boundary: [versioned_single_host_SQLite_schema]
-    test_boundary: [tests/test_durable_orchestrator.py]
-    runtime_artifact_boundary: [local_SQLite_database]
-    cleanup_boundary: [database_lifecycle_is_explicit_and_creator_owned]
-    upstream_dependency_module_ids_and_versions: []
-    downstream_dependency_module_ids_and_versions: []
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [single_host_local_fixture_scope, no_remote_side_effect, no_production_deployment]
-    acceptance_evidence: [P12_durable_orchestrator_acceptance]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: repository_controller
-    module_version: *module_version
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: evaluate and execute explicitly authorized repository control actions with audit records
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths: [src/tool_system/repo_controller/*.py]
-    public_interface_version: *interface_version
-    input_contract: [repository_state_policy_and_action_intent]
-    output_contract: [action_plan_decision_and_append_only_audit_record]
-    error_semantics: [deny_or_block_on_missing_authority_and_stale_state]
-    externally_visible_side_effects: [action_scoped_git_or_GitHub_mutation_after_authorization]
-    code_boundary: [repo_controller_package]
-    data_boundary: [repository_state_and_append_only_JSONL_records]
-    test_boundary: [repository_controller_test_suites]
-    runtime_artifact_boundary: [controller_and_audit_records]
-    cleanup_boundary: [controller_artifacts_retained_unless_cleanup_is_authorized]
-    upstream_dependency_module_ids_and_versions:
-      - module_id: manifest_validation
-        module_version: *module_version
-        public_interface_version: *interface_version
-    downstream_dependency_module_ids_and_versions:
-      - module_id: task_runner
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-      - module_id: role_runtime
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-      - module_id: worker_adapter
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: target_repo_adapter
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: cleanup_planner
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: cli_frontend
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [action_scoped_authorization_required, expected_SHA_required_for_mutation, no_implicit_target_authority]
-    acceptance_evidence: [repository_controller_test_suites]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: process_authority
-    module_version: &process_module_version 2.0.0
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: require one explicit current task pair and validate non-authoritative content-addressed legacy replay
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths:
-      - src/tool_system/process_authority/*.py
-      - src/tool_system/runner/active_gate_resolver.py
-      - src/tool_system/cli/validate_active_gates.py
-      - src/tool_system/cli/validate_process_authority.py
-      - config/process_authority_schema_v1.json
-      - config/process_authority_v1.yaml
-      - config/replay_snapshot_v1.yaml
-      - docs/process_authority_contract_v1.md
-    public_interface_version: &process_interface_version "2"
-    input_contract: [explicit_manifest_change_plan_pair, explicit_non_authoritative_legacy_replay_request]
-    output_contract: [validated_explicit_pair_or_content_addressed_replay_result]
-    error_semantics: [missing_mismatched_implicit_or_drifted_input_blocks]
-    externally_visible_side_effects: [none]
-    code_boundary: [process_authority_contract_and_legacy_replay_adapter]
-    data_boundary: [formal_process_authority_contract_and_canonical_replay_snapshot]
-    test_boundary: [tests/test_process_authority.py, tests/test_active_gates.py, tests/test_active_gate_resolver.py]
-    runtime_artifact_boundary: [validation_result_only]
-    cleanup_boundary: [legacy_input_retained_pending_cleanup_authorization]
-    upstream_dependency_module_ids_and_versions:
-      - module_id: manifest_validation
-        module_version: *module_version
-        public_interface_version: *interface_version
-    downstream_dependency_module_ids_and_versions:
-      - module_id: task_planner
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-      - module_id: task_runner
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [explicit_current_pair_only, legacy_replay_never_authorizes_execution, deletion_or_cleanup_not_authorized]
-    acceptance_evidence: [process_authority_replay_pair_binding_and_full_test_suites]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: task_planner
-    module_version: &task_planner_module_version 1.1.0
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: compile requirements and task graphs into validated execution plans
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths: [src/tool_system/planner/*.py]
-    public_interface_version: *interface_version
-    input_contract: [requirement_and_task_graph_v1]
-    output_contract: [validated_task_graph_and_batch_plan_v1]
-    error_semantics: [invalid_dependency_or_authority_binding_blocks]
-    externally_visible_side_effects: [optional_local_plan_artifact]
-    code_boundary: [planner_package]
-    data_boundary: [requirement_task_graph_and_batch_documents]
-    test_boundary: [planner_test_suites]
-    runtime_artifact_boundary: [local_task_graph_and_batch_plan]
-    cleanup_boundary: [generated_plans_are_creator_owned]
-    upstream_dependency_module_ids_and_versions:
-      - module_id: manifest_validation
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: process_authority
-        module_version: *process_module_version
-        public_interface_version: *process_interface_version
-    downstream_dependency_module_ids_and_versions:
-      - module_id: task_runner
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-      - module_id: role_runtime
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-      - module_id: cli_frontend
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [local_planning_only, execution_authority_not_implied]
-    acceptance_evidence: [planner_test_suites]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: task_runner
-    module_version: &task_runner_module_version 1.1.0
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: execute validated task, batch, graph, and stage plans through bounded gates
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths:
-      - src/tool_system/runner/stage_runner.py
-      - src/tool_system/runner/task_graph_runner.py
-      - src/tool_system/runner/task_runner.py
-    public_interface_version: *interface_version
-    input_contract: [validated_task_manifest_change_plan_and_task_graph]
-    output_contract: [pipeline_result_gate_decision_and_audit_record]
-    error_semantics: [first_failed_gate_or_command_stops_pipeline]
-    externally_visible_side_effects: [configured_command_execution_and_local_audit_artifact]
-    code_boundary: [task_batch_graph_and_stage_runners]
-    data_boundary: [validated_execution_inputs_and_pipeline_results]
-    test_boundary: [runner_test_suites]
-    runtime_artifact_boundary: [local_pipeline_audit_JSONL]
-    cleanup_boundary: [runner_artifacts_are_creator_owned]
-    upstream_dependency_module_ids_and_versions:
-      - module_id: manifest_validation
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: process_authority
-        module_version: *process_module_version
-        public_interface_version: *process_interface_version
-      - module_id: task_planner
-        module_version: *task_planner_module_version
-        public_interface_version: *interface_version
-      - module_id: repository_controller
-        module_version: *module_version
-        public_interface_version: *interface_version
-    downstream_dependency_module_ids_and_versions:
-      - module_id: cli_frontend
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [validated_local_execution_only, configured_commands_do_not_expand_authority]
-    acceptance_evidence: [runner_test_suites]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: role_runtime
-    module_version: &role_runtime_module_version 1.1.0
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: build bounded multi-role runtime plans and audit bundles
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths: [src/tool_system/runtime/*.py]
-    public_interface_version: *interface_version
-    input_contract: [role_graph_worker_and_transition_inputs]
-    output_contract: [role_runtime_plan_transition_decision_and_audit_bundle]
-    error_semantics: [invalid_role_graph_or_transition_blocks]
-    externally_visible_side_effects: [local_runtime_plan_and_audit_artifact]
-    code_boundary: [runtime_package]
-    data_boundary: [role_graph_transition_and_audit_documents]
-    test_boundary: [runtime_test_suites]
-    runtime_artifact_boundary: [local_role_runtime_and_audit_files]
-    cleanup_boundary: [runtime_artifacts_are_creator_owned]
-    upstream_dependency_module_ids_and_versions:
-      - module_id: agent_worker_runtime
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: manifest_validation
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: task_planner
-        module_version: *task_planner_module_version
-        public_interface_version: *interface_version
-      - module_id: repository_controller
-        module_version: *module_version
-        public_interface_version: *interface_version
-    downstream_dependency_module_ids_and_versions:
-      - module_id: cli_frontend
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [fixture_or_local_plan_scope, no_remote_target_mutation]
-    acceptance_evidence: [runtime_test_suites]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: worker_adapter
-    module_version: *module_version
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: adapt no-mutation worker requests into policy-gated orchestration records
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths: [src/tool_system/worker_adapter/*.py]
-    public_interface_version: *interface_version
-    input_contract: [AdapterRequest_v1_and_WorkerRequest_v1]
-    output_contract: [adapter_orchestration_and_policy_gate_record_v1]
-    error_semantics: [policy_denial_or_worker_contract_error]
-    externally_visible_side_effects: [local_append_only_adapter_record]
-    code_boundary: [worker_adapter_package]
-    data_boundary: [adapter_request_and_redacted_orchestration_record]
-    test_boundary: [worker_adapter_test_suites]
-    runtime_artifact_boundary: [local_adapter_JSONL]
-    cleanup_boundary: [adapter_artifacts_are_creator_owned]
-    upstream_dependency_module_ids_and_versions:
-      - module_id: agent_worker_runtime
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: repository_controller
-        module_version: *module_version
-        public_interface_version: *interface_version
-    downstream_dependency_module_ids_and_versions: []
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [no_mutation_worker_scope, no_remote_target_mutation]
-    acceptance_evidence: [worker_adapter_test_suites]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: target_repo_adapter
-    module_version: *module_version
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: construct target-repository dry-run, precheck, snapshot, intent, and separately gated mutation packets
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths: [src/tool_system/target_repo/*.py]
-    public_interface_version: *interface_version
-    input_contract: [target_state_manifest_change_plan_and_action_authority]
-    output_contract: [dry_run_precheck_snapshot_intent_and_mutation_packet_records]
-    error_semantics: [missing_authority_or_stale_target_state_blocks]
-    externally_visible_side_effects: [dry_run_or_separately_authorized_target_action]
-    code_boundary: [target_repo_package]
-    data_boundary: [target_state_and_action_packet_records]
-    test_boundary: [target_repo_adapter_test_suites]
-    runtime_artifact_boundary: [local_target_action_evidence]
-    cleanup_boundary: [target_evidence_retained_and_cleanup_separately_gated]
-    upstream_dependency_module_ids_and_versions:
-      - module_id: manifest_validation
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: repository_controller
-        module_version: *module_version
-        public_interface_version: *interface_version
-    downstream_dependency_module_ids_and_versions:
-      - module_id: cli_frontend
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [packet_preparation_does_not_authorize_mutation, action_scoped_target_approval_required]
-    acceptance_evidence: [target_repo_adapter_test_suites]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: cleanup_planner
-    module_version: *module_version
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: inventory residue and emit non-executing cleanup plans
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths: [src/tool_system/cleanup/*.py]
-    public_interface_version: *interface_version
-    input_contract: [residue_inventory_and_cleanup_authority]
-    output_contract: [cleanup_plan_without_execution]
-    error_semantics: [invalid_inventory_or_missing_authority_blocks]
-    externally_visible_side_effects: [cleanup_plan_artifact_only]
-    code_boundary: [cleanup_package]
-    data_boundary: [residue_inventory_and_cleanup_plan]
-    test_boundary: [tests/test_cleanup_planner.py]
-    runtime_artifact_boundary: [local_cleanup_plan]
-    cleanup_boundary: [planner_never_executes_cleanup]
-    upstream_dependency_module_ids_and_versions:
-      - module_id: manifest_validation
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: repository_controller
-        module_version: *module_version
-        public_interface_version: *interface_version
-    downstream_dependency_module_ids_and_versions:
-      - module_id: cli_frontend
-        module_version: 1.1.0
-        public_interface_version: *interface_version
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [plan_only, destructive_cleanup_requires_separate_authorization]
-    acceptance_evidence: [cleanup_planner_test_suite]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
-
-  - module_id: cli_frontend
-    module_version: &cli_frontend_module_version 1.1.0
-    owner: tool-system
-    lifecycle: *active
-    status: *registered
-    single_responsibility: expose stable command-line entry points that delegate to registered public module interfaces
-    blueprint_objective_ref: *product_objective
-    natural_owner_paths:
-      - src/tool_system/cli/__init__.py
-      - src/tool_system/cli/cleanup_plan.py
-      - src/tool_system/cli/controller_run.py
-      - src/tool_system/cli/controller_self_check.py
-      - src/tool_system/cli/evaluate_github_state.py
-      - src/tool_system/cli/evaluate_repo_write.py
-      - src/tool_system/cli/execute_change_plan.py
-      - src/tool_system/cli/main.py
-      - src/tool_system/cli/observe_main_ci.py
-      - src/tool_system/cli/plan_requirement.py
-      - src/tool_system/cli/plan_task_graph.py
-      - src/tool_system/cli/run_batch.py
-      - src/tool_system/cli/run_role_graph.py
-      - src/tool_system/cli/run_stage.py
-      - src/tool_system/cli/run_task.py
-      - src/tool_system/cli/run_task_graph.py
-      - src/tool_system/cli/target_repo_dry_run.py
-      - src/tool_system/cli/target_repo_pr_plan_preview.py
-    public_interface_version: *interface_version
-    input_contract: [command_line_arguments_and_versioned_module_inputs]
-    output_contract: [exit_code_and_structured_or_human_readable_result]
-    error_semantics: [nonzero_exit_on_block_or_failure]
-    externally_visible_side_effects: [delegates_only_to_the_selected_modules_authorized_effect]
-    code_boundary: [non_validator_CLI_entry_points]
-    data_boundary: [command_arguments_and_delegated_results]
-    test_boundary: [CLI_and_delegated_module_test_suites]
-    runtime_artifact_boundary: [stdout_stderr_and_delegated_artifacts]
-    cleanup_boundary: [delegated_artifact_owner_controls_cleanup]
-    upstream_dependency_module_ids_and_versions:
-      - module_id: manifest_validation
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: repository_controller
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: task_planner
-        module_version: *task_planner_module_version
-        public_interface_version: *interface_version
-      - module_id: task_runner
-        module_version: *task_runner_module_version
-        public_interface_version: *interface_version
-      - module_id: role_runtime
-        module_version: *role_runtime_module_version
-        public_interface_version: *interface_version
-      - module_id: target_repo_adapter
-        module_version: *module_version
-        public_interface_version: *interface_version
-      - module_id: cleanup_planner
-        module_version: *module_version
-        public_interface_version: *interface_version
-    downstream_dependency_module_ids_and_versions: []
-    content_hashes_and_expected_preconditions: *common_preconditions
-    authorization_envelope: [CLI_delegation_does_not_expand_module_authority]
-    acceptance_evidence: [CLI_and_full_test_suites]
-    rollback_evidence: *rollback_evidence
-    replacement_evidence: *replacement_evidence
+- module_id: architecture-registry
+  module_version: 1.1.0
+  role: validate the durable module inventory, natural owners, versions, and declared dependency DAG. Parse and validate the one current module registry and repository manifest without changing either authority source.
+  owner: architecture-registry
+  public_interface_refs:
+  - interface_id: architecture-registry-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: manifest-validation-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: REPO_MANIFEST.md
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: config/module_registry_schema_v1.json
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: config/module_registry_v1.yaml
+    - boundary_id: code-004
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/__init__.py
+    - boundary_id: code-005
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/architecture/__init__.py
+    - boundary_id: code-006
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/architecture/module_registry.py
+    - boundary_id: code-007
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/architecture/repo_manifest.py
+    - boundary_id: code-008
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/validate_module_registry.py
+    - boundary_id: code-009
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/validate_repo_manifest.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_module_registry.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary:
+    repo_relative_path: docs/modules/architecture-registry-contract-v1.md
+    sha256: 3dd69b54961a2f8ec8968fc3bdbf6f9da8b2b9dbdcbcb762e2bf02faeaea9341
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/architecture-registry-contract-v1.md
+    sha256: 3dd69b54961a2f8ec8968fc3bdbf6f9da8b2b9dbdcbcb762e2bf02faeaea9341
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: manifest-validation
+  module_version: 1.0.0
+  role: load and validate task manifests, change plans, alignment gates, and repository write policy. Validate document structure, alignment, scope, and policy without executing configured commands or manufacturing authority.
+  owner: manifest-validation
+  public_interface_refs:
+  - interface_id: manifest-validation-api
+    interface_version: 1.0.0
+  internal_dependencies: []
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/validate_alignment_gate.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/validate_change_plan.py
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/validate_task_manifest.py
+    - boundary_id: code-004
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/gate/README.md
+    - boundary_id: code-005
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/gate/__init__.py
+    - boundary_id: code-006
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/gate/alignment_gate.py
+    - boundary_id: code-007
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/gate/change_plan.py
+    - boundary_id: code-008
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/manifest/__init__.py
+    - boundary_id: code-009
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/manifest/task_manifest.py
+    - boundary_id: code-010
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/policy/__init__.py
+    - boundary_id: code-011
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/policy/autonomy_policy.py
+    - boundary_id: code-012
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/policy/repo_write_policy.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_task_manifest_policy.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary:
+    repo_relative_path: docs/modules/manifest-validation-contract-v1.md
+    sha256: 71706b03b1a48f846c50c2b7693c06d9988bdb73e84b10eb845bef371e1a5626
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/manifest-validation-contract-v1.md
+    sha256: 71706b03b1a48f846c50c2b7693c06d9988bdb73e84b10eb845bef371e1a5626
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: agent-worker-runtime
+  module_version: 1.0.0
+  role: execute bounded fixture-only process workers behind the worker request interface. Validate and run one approved Python fixture in an isolated ephemeral workspace with bounded resources and fail-closed guards.
+  owner: agent-worker-runtime
+  public_interface_refs:
+  - interface_id: agent-worker-runtime-api
+    interface_version: 1.0.0
+  internal_dependencies: []
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/agent_worker/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/agent_worker/interface.py
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/agent_worker/process_runtime.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_agent_worker_interface.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects:
+  - effect_id: direct-effects-code-003
+    effect_classes:
+    - generated_artifact_write
+    target_boundary_id: code-003
+    effect_contract:
+      repo_relative_path: docs/modules/agent-worker-runtime-contract-v1.md
+      sha256: e517b5defade58f2e53bb85d12fdc144e110bbec996a6281ba0f27326761ed29
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-003
+    effect_classes:
+    - data_write
+    - database_write
+    target_boundary_id: code-003
+    effect_contract:
+      repo_relative_path: docs/modules/agent-worker-runtime-contract-v1.md
+      sha256: e517b5defade58f2e53bb85d12fdc144e110bbec996a6281ba0f27326761ed29
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  rollback_boundary:
+    repo_relative_path: docs/modules/agent-worker-runtime-contract-v1.md
+    sha256: e517b5defade58f2e53bb85d12fdc144e110bbec996a6281ba0f27326761ed29
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/agent-worker-runtime-contract-v1.md
+    sha256: e517b5defade58f2e53bb85d12fdc144e110bbec996a6281ba0f27326761ed29
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: ai-worker-runtime
+  module_version: 1.0.0
+  role: provide a provider-neutral structured AI worker contract and deterministic fixture implementation. Validate content-addressed requests and execute only deterministic in-memory fixture scenarios with redacted audit records.
+  owner: ai-worker-runtime
+  public_interface_refs:
+  - interface_id: ai-worker-runtime-api
+    interface_version: 1.0.0
+  internal_dependencies: []
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/ai_worker/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/ai_worker/contract.py
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/ai_worker/fixture_provider.py
+    - boundary_id: code-004
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/ai_worker/runtime.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_ai_worker_contract.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary:
+    repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
+    sha256: cc79d816231800aa0e630689f111d0d5f1ddd08ee7ab39924ecc58ae8f05f53c
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
+    sha256: cc79d816231800aa0e630689f111d0d5f1ddd08ee7ab39924ecc58ae8f05f53c
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: durable-orchestrator
+  module_version: 1.0.0
+  role: persist and reconcile single-host task state, leases, attempts, and side-effect evidence. Own one hardened local SQLite state store for task, lease, checkpoint, side-effect, outbox, recovery, and integrity records.
+  owner: durable-orchestrator
+  public_interface_refs:
+  - interface_id: durable-orchestrator-api
+    interface_version: 1.0.0
+  internal_dependencies: []
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/orchestrator/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/orchestrator/durable.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_durable_orchestrator_state.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects:
+  - effect_id: direct-effects-code-002
+    effect_classes:
+    - data_write
+    - database_write
+    target_boundary_id: code-002
+    effect_contract:
+      repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
+      sha256: c21539612e47412669ba47f409d833c00c83cae8ff39547a9fd2570a3d0c3e22
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-002
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    - git_write
+    - database_write
+    - network_write
+    - external_system_write
+    - production_operation
+    target_boundary_id: code-002
+    effect_contract:
+      repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
+      sha256: c21539612e47412669ba47f409d833c00c83cae8ff39547a9fd2570a3d0c3e22
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  rollback_boundary:
+    repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
+    sha256: c21539612e47412669ba47f409d833c00c83cae8ff39547a9fd2570a3d0c3e22
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
+    sha256: c21539612e47412669ba47f409d833c00c83cae8ff39547a9fd2570a3d0c3e22
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: repository-controller
+  module_version: 1.0.0
+  role: evaluate and execute explicitly authorized repository control actions with audit records. Evaluate current PR, policy, check, manifest, plan, approval, and head-SHA evidence before an optional action-scoped GitHub merge and append-only audit record.
+  owner: repository-controller
+  public_interface_refs:
+  - interface_id: repository-controller-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: manifest-validation-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repo_controller/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repo_controller/actions.py
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repo_controller/artifact.py
+    - boundary_id: code-004
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repo_controller/audit_log.py
+    - boundary_id: code-005
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repo_controller/controller.py
+    - boundary_id: code-006
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repo_controller/controller_run.py
+    - boundary_id: code-007
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repo_controller/github_state.py
+    - boundary_id: code-008
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repo_controller/live_github_collector.py
+    - boundary_id: code-009
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repo_controller/main_ci.py
+    - boundary_id: code-010
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repo_controller/self_check.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_repo_controller.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects:
+  - effect_id: direct-effects-code-003
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-003
+    effect_contract:
+      repo_relative_path: docs/modules/repository-controller-contract-v1.md
+      sha256: 64d5859cfa5e22dfc951c717b9e7da1d9db068b7bd61eb968c58dbf328d9b895
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-002
+    effect_classes:
+    - git_write
+    - network_write
+    - external_system_write
+    target_boundary_id: code-002
+    effect_contract:
+      repo_relative_path: docs/modules/repository-controller-contract-v1.md
+      sha256: 64d5859cfa5e22dfc951c717b9e7da1d9db068b7bd61eb968c58dbf328d9b895
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-008
+    effect_classes:
+    - network_write
+    target_boundary_id: code-008
+    effect_contract:
+      repo_relative_path: docs/modules/repository-controller-contract-v1.md
+      sha256: 64d5859cfa5e22dfc951c717b9e7da1d9db068b7bd61eb968c58dbf328d9b895
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  rollback_boundary:
+    repo_relative_path: docs/modules/repository-controller-contract-v1.md
+    sha256: 64d5859cfa5e22dfc951c717b9e7da1d9db068b7bd61eb968c58dbf328d9b895
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/repository-controller-contract-v1.md
+    sha256: 64d5859cfa5e22dfc951c717b9e7da1d9db068b7bd61eb968c58dbf328d9b895
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: process-authority
+  module_version: 2.0.0
+  role: require one explicit current task pair and validate non-authoritative content-addressed legacy replay. Validate the current process-authority contract, one exact manifest/change-plan pair, and the pinned non-executing legacy replay snapshot.
+  owner: process-authority
+  public_interface_refs:
+  - interface_id: process-authority-api
+    interface_version: 2.0.0
+  internal_dependencies:
+  - interface_id: manifest-validation-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: config/process_authority_schema_v1.json
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: config/process_authority_v1.yaml
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: config/replay_snapshot_v1.yaml
+    - boundary_id: code-004
+      location_kind: repository_local
+      path_kind: exact
+      path: docs/process_authority_contract_v1.md
+    - boundary_id: code-005
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/validate_active_gates.py
+    - boundary_id: code-006
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/validate_process_authority.py
+    - boundary_id: code-007
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/process_authority/__init__.py
+    - boundary_id: code-008
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/process_authority/contract.py
+    - boundary_id: code-009
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/runner/active_gate_resolver.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_process_authority.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary:
+    repo_relative_path: docs/modules/process-authority-contract-v1.md
+    sha256: 5f696deaa5ff7208a7249be40b0f8655556b047adaf62bcb2d778b72c65819cb
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/process-authority-contract-v1.md
+    sha256: 5f696deaa5ff7208a7249be40b0f8655556b047adaf62bcb2d778b72c65819cb
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: task-planner
+  module_version: 1.1.0
+  role: compile requirements and task graphs into validated execution plans. Normalize structured requirements, validate task DAGs and process bindings, topologically order work, and optionally write local graph or batch plans.
+  owner: task-planner
+  public_interface_refs:
+  - interface_id: task-planner-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: manifest-validation-api
+    interface_version: 1.0.0
+  - interface_id: process-authority-api
+    interface_version: 2.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/planner/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/planner/requirement_graph.py
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/planner/task_graph.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_task_graph.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects:
+  - effect_id: direct-effects-code-002
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-002
+    effect_contract:
+      repo_relative_path: docs/modules/task-planner-contract-v1.md
+      sha256: ff6d9217df2583e249e918eabd6546595f092c60d7e7a9786f548de2529843a1
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-003
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-003
+    effect_contract:
+      repo_relative_path: docs/modules/task-planner-contract-v1.md
+      sha256: ff6d9217df2583e249e918eabd6546595f092c60d7e7a9786f548de2529843a1
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  rollback_boundary:
+    repo_relative_path: docs/modules/task-planner-contract-v1.md
+    sha256: ff6d9217df2583e249e918eabd6546595f092c60d7e7a9786f548de2529843a1
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/task-planner-contract-v1.md
+    sha256: ff6d9217df2583e249e918eabd6546595f092c60d7e7a9786f548de2529843a1
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: task-runner
+  module_version: 1.1.0
+  role: execute validated task, batch, graph, and stage plans through bounded gates. Resolve one explicit current task pair, run validation and policy gates, optionally execute its configured local commands, aggregate batches or graphs, and record local audit results.
+  owner: task-runner
+  public_interface_refs:
+  - interface_id: task-runner-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: manifest-validation-api
+    interface_version: 1.0.0
+  - interface_id: process-authority-api
+    interface_version: 2.0.0
+  - interface_id: repository-controller-api
+    interface_version: 1.0.0
+  - interface_id: task-planner-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/gate/command_runner.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/gate/test_gate.py
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/runner/stage_runner.py
+    - boundary_id: code-004
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/runner/task_graph_runner.py
+    - boundary_id: code-005
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/runner/task_runner.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_task_runner.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects:
+  - effect_id: direct-effects-code-003
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-003
+    effect_contract:
+      repo_relative_path: docs/modules/task-runner-contract-v1.md
+      sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-004
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-004
+    effect_contract:
+      repo_relative_path: docs/modules/task-runner-contract-v1.md
+      sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-005
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-005
+    effect_contract:
+      repo_relative_path: docs/modules/task-runner-contract-v1.md
+      sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-001
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    - git_write
+    - database_write
+    - network_write
+    - external_system_write
+    - production_operation
+    target_boundary_id: code-001
+    effect_contract:
+      repo_relative_path: docs/modules/task-runner-contract-v1.md
+      sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-005
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    - git_write
+    - database_write
+    - network_write
+    - external_system_write
+    - production_operation
+    target_boundary_id: code-005
+    effect_contract:
+      repo_relative_path: docs/modules/task-runner-contract-v1.md
+      sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  rollback_boundary:
+    repo_relative_path: docs/modules/task-runner-contract-v1.md
+    sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/task-runner-contract-v1.md
+    sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: role-runtime
+  module_version: 1.1.0
+  role: build bounded multi-role runtime plans and audit bundles. Validate an explicitly bound task graph, build deterministic no-mutation role steps and worker records, assemble audit and rollback bundles, and gate the next review transition.
+  owner: role-runtime
+  public_interface_refs:
+  - interface_id: role-runtime-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: agent-worker-runtime-api
+    interface_version: 1.0.0
+  - interface_id: manifest-validation-api
+    interface_version: 1.0.0
+  - interface_id: repository-controller-api
+    interface_version: 1.0.0
+  - interface_id: task-planner-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/runtime/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/runtime/audit_bundle.py
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/runtime/role_runtime.py
+    - boundary_id: code-004
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/runtime/transition_gate.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_role_runtime.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects:
+  - effect_id: conditional-delegated-effects-code-002
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-002
+    effect_contract:
+      repo_relative_path: docs/modules/role-runtime-contract-v1.md
+      sha256: 0512de1915135f18ccf4b9991b23cf178c4250ecf72be12cf3c50d2597c66782
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-003
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-003
+    effect_contract:
+      repo_relative_path: docs/modules/role-runtime-contract-v1.md
+      sha256: 0512de1915135f18ccf4b9991b23cf178c4250ecf72be12cf3c50d2597c66782
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-004
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-004
+    effect_contract:
+      repo_relative_path: docs/modules/role-runtime-contract-v1.md
+      sha256: 0512de1915135f18ccf4b9991b23cf178c4250ecf72be12cf3c50d2597c66782
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  rollback_boundary:
+    repo_relative_path: docs/modules/role-runtime-contract-v1.md
+    sha256: 0512de1915135f18ccf4b9991b23cf178c4250ecf72be12cf3c50d2597c66782
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/role-runtime-contract-v1.md
+    sha256: 0512de1915135f18ccf4b9991b23cf178c4250ecf72be12cf3c50d2597c66782
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: worker-adapter
+  module_version: 1.0.0
+  role: adapt no-mutation worker requests into policy-gated orchestration records. Convert worker requests into adapter requests, run the deterministic no-mutation adapter, assemble orchestration and rollback records, and enforce all false mutation flags.
+  owner: worker-adapter
+  public_interface_refs:
+  - interface_id: worker-adapter-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: agent-worker-runtime-api
+    interface_version: 1.0.0
+  - interface_id: repository-controller-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/worker_adapter/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/worker_adapter/contract.py
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/worker_adapter/orchestration.py
+    - boundary_id: code-004
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/worker_adapter/policy_gate.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_worker_adapter_contract.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects:
+  - effect_id: direct-effects-code-003
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-003
+    effect_contract:
+      repo_relative_path: docs/modules/worker-adapter-contract-v1.md
+      sha256: 31403de8bf66ec5f7dd4669b0dd63f9f8a4295c02402fade134872601675a939
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-004
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-004
+    effect_contract:
+      repo_relative_path: docs/modules/worker-adapter-contract-v1.md
+      sha256: 31403de8bf66ec5f7dd4669b0dd63f9f8a4295c02402fade134872601675a939
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-002
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    - git_write
+    - database_write
+    - network_write
+    - external_system_write
+    - production_operation
+    target_boundary_id: code-002
+    effect_contract:
+      repo_relative_path: docs/modules/worker-adapter-contract-v1.md
+      sha256: 31403de8bf66ec5f7dd4669b0dd63f9f8a4295c02402fade134872601675a939
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  rollback_boundary:
+    repo_relative_path: docs/modules/worker-adapter-contract-v1.md
+    sha256: 31403de8bf66ec5f7dd4669b0dd63f9f8a4295c02402fade134872601675a939
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/worker-adapter-contract-v1.md
+    sha256: 31403de8bf66ec5f7dd4669b0dd63f9f8a4295c02402fade134872601675a939
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: target-repo-adapter
+  module_version: 1.0.0
+  role: construct target-repository dry-run, precheck, snapshot, intent, and separately gated mutation packets. Validate target evidence and approvals, normalize caller-supplied target state, and construct no-execution previews, intent, command, final-plan, audit, and rollback records.
+  owner: target-repo-adapter
+  public_interface_refs:
+  - interface_id: target-repo-adapter-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: manifest-validation-api
+    interface_version: 1.0.0
+  - interface_id: repository-controller-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/dry_run_adapter.py
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/execution_approval.py
+    - boundary_id: code-004
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/execution_state_snapshot.py
+    - boundary_id: code-005
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/mutation_command_packet.py
+    - boundary_id: code-006
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/p4c_preview_module.py
+    - boundary_id: code-007
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/p4d_precheck.py
+    - boundary_id: code-008
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/p5h_record.py
+    - boundary_id: code-009
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/p5i_bundle.py
+    - boundary_id: code-010
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/pr_plan_preview.py
+    - boundary_id: code-011
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/state_collector.py
+    - boundary_id: code-012
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/write_intent_record.py
+    - boundary_id: code-013
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/target_repo/write_packet.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_target_repo_dry_run.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects:
+  - effect_id: direct-effects-code-002
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-002
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-003
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-003
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-004
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-004
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-005
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-005
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-006
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-006
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-007
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-007
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-008
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-008
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-009
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-009
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-010
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-010
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-011
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-011
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-012
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-012
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: direct-effects-code-013
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-013
+    effect_contract:
+      repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+      sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  rollback_boundary:
+    repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+    sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+    sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: cleanup-planner
+  module_version: 1.0.0
+  role: inventory residue and emit non-executing cleanup plans. Classify temporary branch, closed-PR branch, and temporary artifact candidates from caller-supplied state and emit actions with execute false.
+  owner: cleanup-planner
+  public_interface_refs:
+  - interface_id: cleanup-planner-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: manifest-validation-api
+    interface_version: 1.0.0
+  - interface_id: repository-controller-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cleanup/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cleanup/residue_plan.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_cleanup_plan.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects:
+  - effect_id: direct-effects-code-002
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    target_boundary_id: code-002
+    effect_contract:
+      repo_relative_path: docs/modules/cleanup-planner-contract-v1.md
+      sha256: 96b60edcd72b17e1dc876bb1e4c8ca1ec7e4e783efb5498de00b02d1b1d51945
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  rollback_boundary:
+    repo_relative_path: docs/modules/cleanup-planner-contract-v1.md
+    sha256: 96b60edcd72b17e1dc876bb1e4c8ca1ec7e4e783efb5498de00b02d1b1d51945
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/cleanup-planner-contract-v1.md
+    sha256: 96b60edcd72b17e1dc876bb1e4c8ca1ec7e4e783efb5498de00b02d1b1d51945
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: cli-frontend
+  module_version: 1.1.0
+  role: expose stable command-line entry points that delegate to registered public module interfaces. Parse command-line arguments, select one current public module entry point, render its result, and derive a process exit code without changing delegated authority.
+  owner: cli-frontend
+  public_interface_refs:
+  - interface_id: cli-frontend-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: cleanup-planner-api
+    interface_version: 1.0.0
+  - interface_id: manifest-validation-api
+    interface_version: 1.0.0
+  - interface_id: repository-controller-api
+    interface_version: 1.0.0
+  - interface_id: role-runtime-api
+    interface_version: 1.0.0
+  - interface_id: target-repo-adapter-api
+    interface_version: 1.0.0
+  - interface_id: task-planner-api
+    interface_version: 1.0.0
+  - interface_id: task-runner-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/cleanup_plan.py
+    - boundary_id: code-003
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/controller_run.py
+    - boundary_id: code-004
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/controller_self_check.py
+    - boundary_id: code-005
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/evaluate_github_state.py
+    - boundary_id: code-006
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/evaluate_repo_write.py
+    - boundary_id: code-007
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/execute_change_plan.py
+    - boundary_id: code-008
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/main.py
+    - boundary_id: code-009
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/observe_main_ci.py
+    - boundary_id: code-010
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/plan_requirement.py
+    - boundary_id: code-011
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/plan_task_graph.py
+    - boundary_id: code-012
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/run_batch.py
+    - boundary_id: code-013
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/run_role_graph.py
+    - boundary_id: code-014
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/run_stage.py
+    - boundary_id: code-015
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/run_task.py
+    - boundary_id: code-016
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/run_task_graph.py
+    - boundary_id: code-017
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/target_repo_dry_run.py
+    - boundary_id: code-018
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/cli/target_repo_pr_plan_preview.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_root_cli.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects:
+  - effect_id: conditional-delegated-effects-code-003
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    - git_write
+    - database_write
+    - network_write
+    - external_system_write
+    - production_operation
+    target_boundary_id: code-003
+    effect_contract:
+      repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+      sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-007
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    - git_write
+    - database_write
+    - network_write
+    - external_system_write
+    - production_operation
+    target_boundary_id: code-007
+    effect_contract:
+      repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+      sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-008
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    - git_write
+    - database_write
+    - network_write
+    - external_system_write
+    - production_operation
+    target_boundary_id: code-008
+    effect_contract:
+      repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+      sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-010
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    - git_write
+    - database_write
+    - network_write
+    - external_system_write
+    - production_operation
+    target_boundary_id: code-010
+    effect_contract:
+      repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+      sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-011
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    - git_write
+    - database_write
+    - network_write
+    - external_system_write
+    - production_operation
+    target_boundary_id: code-011
+    effect_contract:
+      repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+      sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-017
+    effect_classes:
+    - repository_write
+    - data_write
+    - generated_artifact_write
+    - git_write
+    - database_write
+    - network_write
+    - external_system_write
+    - production_operation
+    target_boundary_id: code-017
+    effect_contract:
+      repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+      sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  rollback_boundary:
+    repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+    sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+    sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+interfaces:
+- interface_id: architecture-registry-api
+  interface_version: 1.0.0
+  provider_module_id: architecture-registry
+  consumers: []
+  input_contract:
+    repo_relative_path: docs/modules/architecture-registry-contract-v1.md
+    sha256: 3dd69b54961a2f8ec8968fc3bdbf6f9da8b2b9dbdcbcb762e2bf02faeaea9341
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/architecture-registry-contract-v1.md
+    sha256: 3dd69b54961a2f8ec8968fc3bdbf6f9da8b2b9dbdcbcb762e2bf02faeaea9341
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/architecture-registry-contract-v1.md
+    sha256: 3dd69b54961a2f8ec8968fc3bdbf6f9da8b2b9dbdcbcb762e2bf02faeaea9341
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/architecture-registry-contract-v1.md
+    sha256: 3dd69b54961a2f8ec8968fc3bdbf6f9da8b2b9dbdcbcb762e2bf02faeaea9341
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/architecture-registry-contract-v1.md
+    sha256: 3dd69b54961a2f8ec8968fc3bdbf6f9da8b2b9dbdcbcb762e2bf02faeaea9341
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/architecture-registry-contract-v1.md
+    sha256: 3dd69b54961a2f8ec8968fc3bdbf6f9da8b2b9dbdcbcb762e2bf02faeaea9341
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: manifest-validation-api
+  interface_version: 1.0.0
+  provider_module_id: manifest-validation
+  consumers:
+  - consumer_module_id: architecture-registry
+  - consumer_module_id: cleanup-planner
+  - consumer_module_id: cli-frontend
+  - consumer_module_id: process-authority
+  - consumer_module_id: repository-controller
+  - consumer_module_id: role-runtime
+  - consumer_module_id: target-repo-adapter
+  - consumer_module_id: task-planner
+  - consumer_module_id: task-runner
+  input_contract:
+    repo_relative_path: docs/modules/manifest-validation-contract-v1.md
+    sha256: 71706b03b1a48f846c50c2b7693c06d9988bdb73e84b10eb845bef371e1a5626
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/manifest-validation-contract-v1.md
+    sha256: 71706b03b1a48f846c50c2b7693c06d9988bdb73e84b10eb845bef371e1a5626
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/manifest-validation-contract-v1.md
+    sha256: 71706b03b1a48f846c50c2b7693c06d9988bdb73e84b10eb845bef371e1a5626
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/manifest-validation-contract-v1.md
+    sha256: 71706b03b1a48f846c50c2b7693c06d9988bdb73e84b10eb845bef371e1a5626
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/manifest-validation-contract-v1.md
+    sha256: 71706b03b1a48f846c50c2b7693c06d9988bdb73e84b10eb845bef371e1a5626
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/manifest-validation-contract-v1.md
+    sha256: 71706b03b1a48f846c50c2b7693c06d9988bdb73e84b10eb845bef371e1a5626
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: agent-worker-runtime-api
+  interface_version: 1.0.0
+  provider_module_id: agent-worker-runtime
+  consumers:
+  - consumer_module_id: role-runtime
+  - consumer_module_id: worker-adapter
+  input_contract:
+    repo_relative_path: docs/modules/agent-worker-runtime-contract-v1.md
+    sha256: e517b5defade58f2e53bb85d12fdc144e110bbec996a6281ba0f27326761ed29
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/agent-worker-runtime-contract-v1.md
+    sha256: e517b5defade58f2e53bb85d12fdc144e110bbec996a6281ba0f27326761ed29
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/agent-worker-runtime-contract-v1.md
+    sha256: e517b5defade58f2e53bb85d12fdc144e110bbec996a6281ba0f27326761ed29
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/agent-worker-runtime-contract-v1.md
+    sha256: e517b5defade58f2e53bb85d12fdc144e110bbec996a6281ba0f27326761ed29
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/agent-worker-runtime-contract-v1.md
+    sha256: e517b5defade58f2e53bb85d12fdc144e110bbec996a6281ba0f27326761ed29
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/agent-worker-runtime-contract-v1.md
+    sha256: e517b5defade58f2e53bb85d12fdc144e110bbec996a6281ba0f27326761ed29
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: ai-worker-runtime-api
+  interface_version: 1.0.0
+  provider_module_id: ai-worker-runtime
+  consumers: []
+  input_contract:
+    repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
+    sha256: cc79d816231800aa0e630689f111d0d5f1ddd08ee7ab39924ecc58ae8f05f53c
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
+    sha256: cc79d816231800aa0e630689f111d0d5f1ddd08ee7ab39924ecc58ae8f05f53c
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
+    sha256: cc79d816231800aa0e630689f111d0d5f1ddd08ee7ab39924ecc58ae8f05f53c
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
+    sha256: cc79d816231800aa0e630689f111d0d5f1ddd08ee7ab39924ecc58ae8f05f53c
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
+    sha256: cc79d816231800aa0e630689f111d0d5f1ddd08ee7ab39924ecc58ae8f05f53c
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
+    sha256: cc79d816231800aa0e630689f111d0d5f1ddd08ee7ab39924ecc58ae8f05f53c
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: durable-orchestrator-api
+  interface_version: 1.0.0
+  provider_module_id: durable-orchestrator
+  consumers: []
+  input_contract:
+    repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
+    sha256: c21539612e47412669ba47f409d833c00c83cae8ff39547a9fd2570a3d0c3e22
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
+    sha256: c21539612e47412669ba47f409d833c00c83cae8ff39547a9fd2570a3d0c3e22
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
+    sha256: c21539612e47412669ba47f409d833c00c83cae8ff39547a9fd2570a3d0c3e22
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
+    sha256: c21539612e47412669ba47f409d833c00c83cae8ff39547a9fd2570a3d0c3e22
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
+    sha256: c21539612e47412669ba47f409d833c00c83cae8ff39547a9fd2570a3d0c3e22
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
+    sha256: c21539612e47412669ba47f409d833c00c83cae8ff39547a9fd2570a3d0c3e22
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: repository-controller-api
+  interface_version: 1.0.0
+  provider_module_id: repository-controller
+  consumers:
+  - consumer_module_id: cleanup-planner
+  - consumer_module_id: cli-frontend
+  - consumer_module_id: role-runtime
+  - consumer_module_id: target-repo-adapter
+  - consumer_module_id: task-runner
+  - consumer_module_id: worker-adapter
+  input_contract:
+    repo_relative_path: docs/modules/repository-controller-contract-v1.md
+    sha256: 64d5859cfa5e22dfc951c717b9e7da1d9db068b7bd61eb968c58dbf328d9b895
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/repository-controller-contract-v1.md
+    sha256: 64d5859cfa5e22dfc951c717b9e7da1d9db068b7bd61eb968c58dbf328d9b895
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/repository-controller-contract-v1.md
+    sha256: 64d5859cfa5e22dfc951c717b9e7da1d9db068b7bd61eb968c58dbf328d9b895
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/repository-controller-contract-v1.md
+    sha256: 64d5859cfa5e22dfc951c717b9e7da1d9db068b7bd61eb968c58dbf328d9b895
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/repository-controller-contract-v1.md
+    sha256: 64d5859cfa5e22dfc951c717b9e7da1d9db068b7bd61eb968c58dbf328d9b895
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/repository-controller-contract-v1.md
+    sha256: 64d5859cfa5e22dfc951c717b9e7da1d9db068b7bd61eb968c58dbf328d9b895
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: process-authority-api
+  interface_version: 2.0.0
+  provider_module_id: process-authority
+  consumers:
+  - consumer_module_id: task-planner
+  - consumer_module_id: task-runner
+  input_contract:
+    repo_relative_path: docs/modules/process-authority-contract-v1.md
+    sha256: 5f696deaa5ff7208a7249be40b0f8655556b047adaf62bcb2d778b72c65819cb
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/process-authority-contract-v1.md
+    sha256: 5f696deaa5ff7208a7249be40b0f8655556b047adaf62bcb2d778b72c65819cb
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/process-authority-contract-v1.md
+    sha256: 5f696deaa5ff7208a7249be40b0f8655556b047adaf62bcb2d778b72c65819cb
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/process-authority-contract-v1.md
+    sha256: 5f696deaa5ff7208a7249be40b0f8655556b047adaf62bcb2d778b72c65819cb
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/process-authority-contract-v1.md
+    sha256: 5f696deaa5ff7208a7249be40b0f8655556b047adaf62bcb2d778b72c65819cb
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/process-authority-contract-v1.md
+    sha256: 5f696deaa5ff7208a7249be40b0f8655556b047adaf62bcb2d778b72c65819cb
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: task-planner-api
+  interface_version: 1.0.0
+  provider_module_id: task-planner
+  consumers:
+  - consumer_module_id: cli-frontend
+  - consumer_module_id: role-runtime
+  - consumer_module_id: task-runner
+  input_contract:
+    repo_relative_path: docs/modules/task-planner-contract-v1.md
+    sha256: ff6d9217df2583e249e918eabd6546595f092c60d7e7a9786f548de2529843a1
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/task-planner-contract-v1.md
+    sha256: ff6d9217df2583e249e918eabd6546595f092c60d7e7a9786f548de2529843a1
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/task-planner-contract-v1.md
+    sha256: ff6d9217df2583e249e918eabd6546595f092c60d7e7a9786f548de2529843a1
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/task-planner-contract-v1.md
+    sha256: ff6d9217df2583e249e918eabd6546595f092c60d7e7a9786f548de2529843a1
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/task-planner-contract-v1.md
+    sha256: ff6d9217df2583e249e918eabd6546595f092c60d7e7a9786f548de2529843a1
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/task-planner-contract-v1.md
+    sha256: ff6d9217df2583e249e918eabd6546595f092c60d7e7a9786f548de2529843a1
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: task-runner-api
+  interface_version: 1.0.0
+  provider_module_id: task-runner
+  consumers:
+  - consumer_module_id: cli-frontend
+  input_contract:
+    repo_relative_path: docs/modules/task-runner-contract-v1.md
+    sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/task-runner-contract-v1.md
+    sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/task-runner-contract-v1.md
+    sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/task-runner-contract-v1.md
+    sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/task-runner-contract-v1.md
+    sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/task-runner-contract-v1.md
+    sha256: 89ecf8e232adf1e0f3b51df30fafd9ad573ac861e871ce0a34c777d02c00d0d3
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: role-runtime-api
+  interface_version: 1.0.0
+  provider_module_id: role-runtime
+  consumers:
+  - consumer_module_id: cli-frontend
+  input_contract:
+    repo_relative_path: docs/modules/role-runtime-contract-v1.md
+    sha256: 0512de1915135f18ccf4b9991b23cf178c4250ecf72be12cf3c50d2597c66782
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/role-runtime-contract-v1.md
+    sha256: 0512de1915135f18ccf4b9991b23cf178c4250ecf72be12cf3c50d2597c66782
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/role-runtime-contract-v1.md
+    sha256: 0512de1915135f18ccf4b9991b23cf178c4250ecf72be12cf3c50d2597c66782
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/role-runtime-contract-v1.md
+    sha256: 0512de1915135f18ccf4b9991b23cf178c4250ecf72be12cf3c50d2597c66782
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/role-runtime-contract-v1.md
+    sha256: 0512de1915135f18ccf4b9991b23cf178c4250ecf72be12cf3c50d2597c66782
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/role-runtime-contract-v1.md
+    sha256: 0512de1915135f18ccf4b9991b23cf178c4250ecf72be12cf3c50d2597c66782
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: worker-adapter-api
+  interface_version: 1.0.0
+  provider_module_id: worker-adapter
+  consumers: []
+  input_contract:
+    repo_relative_path: docs/modules/worker-adapter-contract-v1.md
+    sha256: 31403de8bf66ec5f7dd4669b0dd63f9f8a4295c02402fade134872601675a939
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/worker-adapter-contract-v1.md
+    sha256: 31403de8bf66ec5f7dd4669b0dd63f9f8a4295c02402fade134872601675a939
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/worker-adapter-contract-v1.md
+    sha256: 31403de8bf66ec5f7dd4669b0dd63f9f8a4295c02402fade134872601675a939
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/worker-adapter-contract-v1.md
+    sha256: 31403de8bf66ec5f7dd4669b0dd63f9f8a4295c02402fade134872601675a939
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/worker-adapter-contract-v1.md
+    sha256: 31403de8bf66ec5f7dd4669b0dd63f9f8a4295c02402fade134872601675a939
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/worker-adapter-contract-v1.md
+    sha256: 31403de8bf66ec5f7dd4669b0dd63f9f8a4295c02402fade134872601675a939
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: target-repo-adapter-api
+  interface_version: 1.0.0
+  provider_module_id: target-repo-adapter
+  consumers:
+  - consumer_module_id: cli-frontend
+  input_contract:
+    repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+    sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+    sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+    sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+    sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+    sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/target-repo-adapter-contract-v1.md
+    sha256: 509bdb2be7330fe1cef5af9a179083774c2a947c68dd62e1f89b2284ce49af25
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: cleanup-planner-api
+  interface_version: 1.0.0
+  provider_module_id: cleanup-planner
+  consumers:
+  - consumer_module_id: cli-frontend
+  input_contract:
+    repo_relative_path: docs/modules/cleanup-planner-contract-v1.md
+    sha256: 96b60edcd72b17e1dc876bb1e4c8ca1ec7e4e783efb5498de00b02d1b1d51945
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/cleanup-planner-contract-v1.md
+    sha256: 96b60edcd72b17e1dc876bb1e4c8ca1ec7e4e783efb5498de00b02d1b1d51945
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/cleanup-planner-contract-v1.md
+    sha256: 96b60edcd72b17e1dc876bb1e4c8ca1ec7e4e783efb5498de00b02d1b1d51945
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/cleanup-planner-contract-v1.md
+    sha256: 96b60edcd72b17e1dc876bb1e4c8ca1ec7e4e783efb5498de00b02d1b1d51945
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/cleanup-planner-contract-v1.md
+    sha256: 96b60edcd72b17e1dc876bb1e4c8ca1ec7e4e783efb5498de00b02d1b1d51945
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/cleanup-planner-contract-v1.md
+    sha256: 96b60edcd72b17e1dc876bb1e4c8ca1ec7e4e783efb5498de00b02d1b1d51945
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: cli-frontend-api
+  interface_version: 1.0.0
+  provider_module_id: cli-frontend
+  consumers: []
+  input_contract:
+    repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+    sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+    sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+    sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+    sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+    sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/cli-frontend-contract-v1.md
+    sha256: a08845f5fc1e39750c2b5a2d4b4622d53ca19fb6941e068e571dc547f9012e97
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1

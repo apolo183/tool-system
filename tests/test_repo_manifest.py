@@ -435,7 +435,7 @@ def test_blueprint_module_registry_packaging_and_ci_register_manifest() -> None:
         module["module_id"]: module
         for module in load_yaml_file(MODULE_REGISTRY)["modules"]
     }
-    architecture = modules["architecture_registry"]
+    architecture = modules["architecture-registry"]
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     workflow = (
         ROOT / ".github" / "workflows" / "tool-system-ci.yml"
@@ -447,10 +447,11 @@ def test_blueprint_module_registry_packaging_and_ci_register_manifest() -> None:
     assert boundary["legacy_non_authority_sets_registered"] is True
     assert boundary["group_process_file_compliance_claimed"] is False
     assert architecture["module_version"] == "1.1.0"
-    assert "REPO_MANIFEST.md" in architecture["natural_owner_paths"]
-    assert "src/tool_system/cli/validate_repo_manifest.py" in architecture[
-        "natural_owner_paths"
-    ]
+    architecture_paths = {
+        boundary["path"] for boundary in architecture["boundaries"]["code"]
+    }
+    assert "REPO_MANIFEST.md" in architecture_paths
+    assert "src/tool_system/cli/validate_repo_manifest.py" in architecture_paths
     assert (
         'tool-system-validate-repo-manifest = "tool_system.cli.validate_repo_manifest:main"'
         in pyproject

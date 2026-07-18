@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import re
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -18,7 +19,7 @@ EXACT_SEMVER_RE = re.compile(
 )
 INTERFACE_VERSION_RE = re.compile(r"^[1-9][0-9]*$")
 LEGACY_REGISTRY_INPUT_MODE = "legacy_module_registry"
-CENTRAL_COMPATIBILITY_INPUT_MODE = "central_module_registry_compatibility"
+CENTRAL_COMPATIBILITY_INPUT_MODE = "central_module_registry"
 CURRENT_REGISTRY_PATH = "config/module_registry_v1.yaml"
 S0_MAPPING_CONTRACT_PATH = (
     "docs/tool_system_module_registry_adoption_contract_v1.md"
@@ -677,7 +678,7 @@ def _current_registry_authority(
     ).absolute()
     expected = (repo_root / CURRENT_REGISTRY_PATH).absolute()
     return (
-        input_mode == LEGACY_REGISTRY_INPUT_MODE
+        input_mode == CENTRAL_COMPATIBILITY_INPUT_MODE
         and candidate == expected
         and not candidate.is_symlink()
     )
@@ -699,13 +700,13 @@ def _with_compatibility_metadata(
             input_mode,
         ),
         "validation_scope": (
-            "tool_system_current_legacy_registry"
-            if input_mode == LEGACY_REGISTRY_INPUT_MODE
-            else "tool_system_local_semantics_only"
+            "tool_system_current_central_registry"
+            if _current_registry_authority(registry_path, repo_root, input_mode)
+            else "tool_system_local_compatibility_only"
         ),
         "compatibility_adapter": _compatibility_metadata(
             registry_path,
-            applied=input_mode == CENTRAL_COMPATIBILITY_INPUT_MODE,
+            applied=input_mode == LEGACY_REGISTRY_INPUT_MODE,
         ),
     }
 
@@ -809,6 +810,219 @@ def _central_boundary_paths(
                 owner_by_path[relative] = module_id
 
 
+def _iter_central_contract_references(
+    registry: dict[str, Any],
+) -> list[tuple[str, dict[str, Any]]]:
+    references: list[tuple[str, dict[str, Any]]] = []
+    for module_index, module in enumerate(registry.get("modules", [])):
+        if not isinstance(module, dict):
+            continue
+        base = f"modules[{module_index}]"
+        for field in ("rollback_boundary", "replacement_boundary"):
+            reference = module.get(field)
+            if isinstance(reference, dict):
+                references.append((f"{base}.{field}", reference))
+        boundaries = module.get("boundaries")
+        if isinstance(boundaries, dict):
+            for category in CENTRAL_BOUNDARY_GROUP_FIELDS:
+                values = boundaries.get(category)
+                if not isinstance(values, list):
+                    continue
+                for boundary_index, boundary in enumerate(values):
+                    if isinstance(boundary, dict) and isinstance(
+                        boundary.get("root_contract"), dict
+                    ):
+                        references.append(
+                            (
+                                f"{base}.boundaries.{category}"
+                                f"[{boundary_index}].root_contract",
+                                boundary["root_contract"],
+                            )
+                        )
+        effects = module.get("permitted_side_effects")
+        if isinstance(effects, list):
+            for effect_index, effect in enumerate(effects):
+                if isinstance(effect, dict) and isinstance(
+                    effect.get("effect_contract"), dict
+                ):
+                    references.append(
+                        (
+                            f"{base}.permitted_side_effects"
+                            f"[{effect_index}].effect_contract",
+                            effect["effect_contract"],
+                        )
+                    )
+    for interface_index, interface in enumerate(registry.get("interfaces", [])):
+        if not isinstance(interface, dict):
+            continue
+        for field in (
+            "input_contract",
+            "output_contract",
+            "error_contract",
+            "side_effect_contract",
+            "compatibility_policy",
+            "replacement_revalidation_boundary",
+        ):
+            reference = interface.get(field)
+            if isinstance(reference, dict):
+                references.append(
+                    (f"interfaces[{interface_index}].{field}", reference)
+                )
+    return references
+
+
+def _validate_central_contract_references(
+    registry: dict[str, Any],
+    root: Path,
+    reasons: list[str],
+) -> int:
+    required_fields = {
+        "repo_relative_path",
+        "sha256",
+        "format_identity",
+        "schema_identity",
+    }
+    identities_by_path: dict[str, tuple[str, str, str]] = {}
+    references = _iter_central_contract_references(registry)
+    for location, reference in references:
+        if set(reference) != required_fields:
+            reasons.append(f"{location} fields are incomplete or unrecognized")
+            continue
+        relative = reference.get("repo_relative_path")
+        digest = reference.get("sha256")
+        format_identity = reference.get("format_identity")
+        schema_identity = reference.get("schema_identity")
+        if not isinstance(relative, str) or not _safe_repo_exact_path(relative):
+            reasons.append(f"{location}.repo_relative_path is unsafe")
+            continue
+        if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+            reasons.append(f"{location}.sha256 is invalid")
+            continue
+        if not _non_empty_string(format_identity) or not _non_empty_string(
+            schema_identity
+        ):
+            reasons.append(f"{location} contract identity is incomplete")
+            continue
+        identity = (digest, str(format_identity), str(schema_identity))
+        previous = identities_by_path.setdefault(relative, identity)
+        if previous != identity:
+            reasons.append(f"contract reference identity conflicts for {relative}")
+        path = root / relative
+        if not path.is_file() or path.is_symlink():
+            reasons.append(f"contract reference path is missing: {relative}")
+            continue
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != digest:
+            reasons.append(
+                f"contract reference SHA256 mismatch: {relative}; "
+                f"expected={digest}; actual={actual}"
+            )
+    return len(references)
+
+
+def _validate_central_effect_targets(
+    module_id: str,
+    module: dict[str, Any],
+    reasons: list[str],
+) -> None:
+    boundaries = module.get("boundaries")
+    if not isinstance(boundaries, dict):
+        return
+    boundary_ids: list[str] = []
+    for category in CENTRAL_BOUNDARY_GROUP_FIELDS:
+        values = boundaries.get(category)
+        if isinstance(values, list):
+            boundary_ids.extend(
+                str(boundary.get("boundary_id"))
+                for boundary in values
+                if isinstance(boundary, dict)
+                and isinstance(boundary.get("boundary_id"), str)
+            )
+    duplicate_boundaries = sorted(
+        boundary_id
+        for boundary_id in set(boundary_ids)
+        if boundary_ids.count(boundary_id) > 1
+    )
+    for boundary_id in duplicate_boundaries:
+        reasons.append(f"{module_id} repeats boundary ID: {boundary_id}")
+
+    effects = module.get("permitted_side_effects")
+    if not isinstance(effects, list):
+        return
+    effect_ids: list[str] = []
+    for index, effect in enumerate(effects):
+        if not isinstance(effect, dict):
+            reasons.append(f"{module_id}.permitted_side_effects[{index}] must be a mapping")
+            continue
+        effect_id = effect.get("effect_id")
+        if isinstance(effect_id, str):
+            effect_ids.append(effect_id)
+        target = effect.get("target_boundary_id")
+        if not isinstance(target, str) or target not in set(boundary_ids):
+            reasons.append(
+                f"{module_id}.permitted_side_effects[{index}] references "
+                f"unknown target boundary: {target}"
+            )
+    duplicate_effects = sorted(
+        effect_id
+        for effect_id in set(effect_ids)
+        if effect_ids.count(effect_id) > 1
+    )
+    for effect_id in duplicate_effects:
+        reasons.append(f"{module_id} repeats effect ID: {effect_id}")
+
+
+def _validate_central_boundary_overlap(
+    registry: dict[str, Any],
+    root: Path,
+    reasons: list[str],
+) -> None:
+    coverage: dict[str, list[str]] = {}
+    for module in registry.get("modules", []):
+        if not isinstance(module, dict):
+            continue
+        module_id = str(module.get("module_id"))
+        boundaries = module.get("boundaries")
+        if not isinstance(boundaries, dict):
+            continue
+        for category in CENTRAL_BOUNDARY_GROUP_FIELDS:
+            values = boundaries.get(category)
+            if not isinstance(values, list):
+                continue
+            for index, boundary in enumerate(values):
+                if not isinstance(boundary, dict) or boundary.get(
+                    "location_kind"
+                ) != "repository_local":
+                    continue
+                boundary_path = boundary.get("path")
+                path_kind = boundary.get("path_kind")
+                if (
+                    not isinstance(boundary_path, str)
+                    or not _safe_repo_exact_path(boundary_path)
+                    or path_kind not in {"exact", "directory_prefix"}
+                ):
+                    continue
+                absolute = root / boundary_path
+                if path_kind == "exact":
+                    matches = [absolute] if absolute.is_file() else []
+                else:
+                    matches = (
+                        sorted(path for path in absolute.rglob("*") if path.is_file())
+                        if absolute.is_dir()
+                        else []
+                    )
+                owner = f"{module_id}:{category}:{index}"
+                for path in matches:
+                    relative = path.relative_to(root).as_posix()
+                    coverage.setdefault(relative, []).append(owner)
+    for relative, owners in sorted(coverage.items()):
+        if len(owners) > 1:
+            reasons.append(
+                f"repository-local boundary overlap: {relative} belongs to "
+                + " and ".join(sorted(owners))
+            )
+
+
 def _central_interface_reference(
     value: object,
     label: str,
@@ -880,6 +1094,7 @@ def _validate_central_registry(
         raw_modules = []
     modules_by_id: dict[str, dict[str, Any]] = {}
     current_ids: set[str] = set()
+    owners: set[str] = set()
     owner_by_path: dict[str, str] = {}
     module_dependencies: dict[str, set[tuple[str, str]]] = {}
 
@@ -923,8 +1138,13 @@ def _validate_central_registry(
                 )
         if not _non_empty_string(raw_module.get("role")):
             reasons.append(f"{module_id}.role must be a non-empty string")
-        if not _non_empty_string(raw_module.get("owner")):
+        owner = raw_module.get("owner")
+        if not _non_empty_string(owner):
             reasons.append(f"{module_id}.owner must be a non-empty string")
+        elif owner in owners:
+            reasons.append(f"duplicate central module owner: {owner}")
+        else:
+            owners.add(str(owner))
         if raw_module.get("external_dependencies") != []:
             reasons.append(
                 f"{module_id}.external_dependencies are outside this local adapter"
@@ -986,6 +1206,7 @@ def _validate_central_registry(
             owner_by_path,
             reasons,
         )
+        _validate_central_effect_targets(module_id, raw_module, reasons)
 
     expected_canonical_ids = set(mapping_by_canonical)
     missing_modules = sorted(expected_canonical_ids - set(modules_by_id))
@@ -1183,6 +1404,13 @@ def _validate_central_registry(
     if len(execution_order) != len(modules_by_id):
         reasons.append("module dependency graph must be acyclic")
 
+    contract_reference_count = _validate_central_contract_references(
+        registry,
+        root,
+        reasons,
+    )
+    _validate_central_boundary_overlap(registry, root, reasons)
+
     return {
         "status": "PASS" if not reasons else "BLOCK",
         "registry_path": str(path),
@@ -1190,6 +1418,8 @@ def _validate_central_registry(
         "execution_order": execution_order,
         "owned_path_count": len(owner_by_path),
         "required_owned_path_count": len(required_owned_paths),
+        "contract_reference_count": contract_reference_count,
+        "external_provider_count": 0,
         "declared_import_graph": declared_graph_lists,
         "observed_import_graph": observed_graph,
         "reasons": reasons,

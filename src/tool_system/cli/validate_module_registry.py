@@ -9,7 +9,12 @@ from tool_system.architecture.module_registry import validate_module_registry
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Validate the durable tool-system module registry."
+        description=(
+            "Validate the single durable tool-system module registry. The "
+            "fixed config/module_registry_v1.yaml path uses the central format "
+            "as current local authority; legacy parsing is memory-only "
+            "compatibility and creates no projection or second authority."
+        )
     )
     parser.add_argument(
         "registry",
@@ -21,8 +26,9 @@ def main() -> int:
         "--require-current-authority",
         action="store_true",
         help=(
-            "Block unless the input is the unchanged current legacy registry; "
-            "central compatibility results are always non-authoritative."
+            "Block unless the input is the fixed-path central registry current "
+            "authority. Central input at any other path and all legacy input "
+            "remain non-authoritative compatibility results."
         ),
     )
     args = parser.parse_args()
