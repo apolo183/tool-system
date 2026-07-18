@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.runner.active_gate_resolver import paths_match
 
@@ -22,7 +24,12 @@ AUTHORITY_FIELDS = {
     "canonical_replay",
     "authorization_boundary",
 }
-MODULE_FIELDS = {"module_id", "module_version", "public_interface_version"}
+MODULE_FIELDS = {
+    "module_id",
+    "module_version",
+    "public_interface_id",
+    "public_interface_version",
+}
 CURRENT_INPUT_FIELDS = {
     "mode",
     "task_manifest_required",
@@ -70,6 +77,39 @@ REPLAY_FIELDS = {
     "production_deployment",
     "cleanup_execution",
 }
+
+
+class _UniqueKeyLoader(yaml.SafeLoader):
+    """Safe YAML loader that rejects duplicate mapping keys."""
+
+
+def _construct_unique_mapping(
+    loader: _UniqueKeyLoader,
+    node: yaml.MappingNode,
+    deep: bool = False,
+) -> dict[str, Any]:
+    mapping: dict[str, Any] = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if not isinstance(key, str):
+            raise ValueError("process authority mapping keys must be strings")
+        if key in mapping:
+            raise ValueError(f"duplicate process authority key: {key}")
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+_UniqueKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    _construct_unique_mapping,
+)
+
+
+def _load_process_authority(path: Path) -> dict[str, Any]:
+    value = yaml.load(path.read_text(encoding="utf-8"), Loader=_UniqueKeyLoader)
+    if not isinstance(value, dict):
+        raise ValueError("process authority top level must be a mapping")
+    return value
 
 
 def _exact_mapping(
@@ -287,8 +327,8 @@ def validate_process_authority(
             "reasons": ["process authority must not be a symlink"],
         }
     try:
-        authority = load_yaml_file(path)
-    except (OSError, ValueError) as exc:
+        authority = _load_process_authority(path)
+    except (OSError, UnicodeError, ValueError, yaml.YAMLError) as exc:
         return {
             "status": "BLOCK",
             "authority_path": str(path),
@@ -307,11 +347,15 @@ def validate_process_authority(
 
     module = _exact_mapping(authority.get("module"), MODULE_FIELDS, "module", reasons)
     if module != {
-        "module_id": "process_authority",
+        "module_id": "process-authority",
         "module_version": "2.0.0",
-        "public_interface_version": "2",
+        "public_interface_id": "process-authority-api",
+        "public_interface_version": "2.0.0",
     }:
-        reasons.append("module must identify process_authority 2.0.0 interface 2")
+        reasons.append(
+            "module must identify process-authority 2.0.0 interface "
+            "process-authority-api 2.0.0"
+        )
 
     current = _exact_mapping(
         authority.get("current_task_input"),
@@ -384,6 +428,10 @@ def validate_process_authority(
     return {
         "status": "PASS" if not reasons else "BLOCK",
         "authority_path": str(path),
+        "module_id": module.get("module_id"),
+        "module_version": module.get("module_version"),
+        "public_interface_id": module.get("public_interface_id"),
+        "public_interface_version": module.get("public_interface_version"),
         "current_task_input_mode": current.get("mode"),
         "implicit_repository_index_allowed": False,
         "legacy_authority": False,

@@ -2,9 +2,10 @@ contract_version: process_authority_v1
 authority_id: tool_system_explicit_task_pair_authority
 blueprint_objective_ref: product_objective
 module:
-  module_id: process_authority
+  module_id: process-authority
   module_version: 2.0.0
-  public_interface_version: "2"
+  public_interface_id: process-authority-api
+  public_interface_version: 2.0.0
 current_task_input:
   mode: explicit_manifest_change_plan_pair
   task_manifest_required: true

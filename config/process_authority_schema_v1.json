@@ -21,11 +21,17 @@
     "module": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["module_id", "module_version", "public_interface_version"],
+      "required": [
+        "module_id",
+        "module_version",
+        "public_interface_id",
+        "public_interface_version"
+      ],
       "properties": {
-        "module_id": {"const": "process_authority"},
+        "module_id": {"const": "process-authority"},
         "module_version": {"const": "2.0.0"},
-        "public_interface_version": {"const": "2"}
+        "public_interface_id": {"const": "process-authority-api"},
+        "public_interface_version": {"const": "2.0.0"}
       }
     },
     "current_task_input": {

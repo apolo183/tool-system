@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
+from typing import Any
+
+import pytest
 
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
+import tool_system.gate.command_runner as command_runner
 from tool_system.runner.task_runner import run_task_pipeline
 
 
@@ -49,3 +54,28 @@ def test_task_runner_change_plan_validates() -> None:
 
     assert result["status"] == "PASS"
     assert result["reasons"] == []
+
+
+def test_task_runner_delegates_execution_to_protected_revalidation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[list[str]] = []
+
+    def fake_run(args: list[str], **_: Any) -> subprocess.CompletedProcess[str]:
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 0, stdout="fixture-pass\n", stderr="")
+
+    monkeypatch.setattr(command_runner.subprocess, "run", fake_run)
+
+    result = run_task_pipeline(
+        task_manifest_path=MANIFEST_PATH,
+        change_plan_path=PLAN_PATH,
+        execute_commands=True,
+    )
+
+    protected = result["protected_execution_result"]
+    assert result["status"] == "PASS"
+    assert protected["status"] == "PASS"
+    assert protected["preflight"]["validation_to_dispatch_inputs_equal"] is True
+    assert protected["input_sha256_before"] == protected["input_sha256_after"]
+    assert protected["subprocess_call_count"] == len(calls)
