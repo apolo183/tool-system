@@ -56,26 +56,28 @@ def _current_boundaries() -> tuple[
     dict[str, list[str]],
 ]:
     registry = load_yaml_file(REGISTRY)
-    mappings = load_s0_identity_mapping(ROOT)
-    canonical_by_current = {
-        mapping["current_module_id"]: mapping["canonical_module_id"]
-        for mapping in mappings
-    }
     owner_by_path = {
-        path: canonical_by_current[current_owner]
+        path: str(mapping["canonical_module_id"])
         for path, current_owner in target_python_owner_by_path().items()
+        for mapping in load_s0_identity_mapping(ROOT)
+        if mapping["current_module_id"] == current_owner
     }
     declared: dict[str, set[str]] = {
-        mapping["canonical_module_id"]: set() for mapping in mappings
+        str(module["module_id"]): set() for module in registry["modules"]
+    }
+    provider_by_interface = {
+        (interface["interface_id"], interface["interface_version"]): interface[
+            "provider_module_id"
+        ]
+        for interface in registry["interfaces"]
     }
     for module in registry["modules"]:
-        current_id = module["module_id"]
-        canonical_id = canonical_by_current[current_id]
-        for dependency in module[
-            "upstream_dependency_module_ids_and_versions"
-        ]:
-            provider = canonical_by_current[dependency["module_id"]]
-            declared[provider].add(canonical_id)
+        canonical_id = str(module["module_id"])
+        for dependency in module["internal_dependencies"]:
+            provider = provider_by_interface[
+                (dependency["interface_id"], dependency["interface_version"])
+            ]
+            declared[str(provider)].add(canonical_id)
     return (
         owner_by_path,
         {

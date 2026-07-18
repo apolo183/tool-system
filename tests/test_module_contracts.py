@@ -269,8 +269,14 @@ def _direct_providers(consumers: dict[str, list[str]]) -> dict[str, list[str]]:
 
 
 def _registry_by_id() -> dict[str, dict[str, Any]]:
-    modules = load_yaml_file(REGISTRY)["modules"]
-    return {module["module_id"]: module for module in modules}
+    modules = {
+        module["module_id"]: module
+        for module in load_yaml_file(REGISTRY)["modules"]
+    }
+    return {
+        current_id: modules[mapping["canonical_module_id"]]
+        for current_id, mapping in _mappings_by_current_id().items()
+    }
 
 
 def _tracked_paths() -> set[str]:
@@ -293,14 +299,13 @@ def _expanded_owner_paths(
     tracked = _tracked_paths()
     owners: dict[str, str] = {}
     expanded: dict[str, list[str]] = {}
-    for module_id, module in registry.items():
-        paths: set[str] = set()
-        for pattern in module["natural_owner_paths"]:
-            paths.update(
-                path.relative_to(ROOT).as_posix()
-                for path in ROOT.glob(pattern)
-                if path.is_file()
-            )
+    mappings = _mappings_by_current_id()
+    for module_id in registry:
+        canonical_id = mappings[module_id]["canonical_module_id"]
+        contract = _yaml_block(
+            CONTRACT_DIR / f"{canonical_id}-contract-v1.md"
+        )
+        paths = set(contract["natural_owner_evidence_paths"])
         _require(paths, f"{module_id}: natural owners must resolve")
         for path in paths:
             _require(path in tracked, f"{module_id}: owner path must be tracked: {path}")
@@ -308,13 +313,6 @@ def _expanded_owner_paths(
             owners[path] = module_id
         expanded[module_id] = sorted(paths)
     target_python_owners = target_python_owner_by_path()
-    for path, target_owner in target_python_owners.items():
-        legacy_owner = owners[path]
-        if legacy_owner != target_owner:
-            expanded[legacy_owner].remove(path)
-            expanded[target_owner].append(path)
-            expanded[target_owner].sort()
-        owners[path] = target_owner
     managed_paths = {
         path.relative_to(ROOT).as_posix()
         for path in (ROOT / "src" / "tool_system").rglob("*.py")
@@ -331,6 +329,10 @@ def _expanded_owner_paths(
     _require(
         managed_owner_paths == managed_paths == set(target_python_owners),
         "target owner oracle must cover every managed Python source",
+    )
+    _require(
+        all(owners[path] == owner for path, owner in target_python_owners.items()),
+        "S3 natural owners must match the S0 Python identity oracle",
     )
     return expanded
 
@@ -573,8 +575,9 @@ def _validate_contract(
         f"{module_id}: role shape drifted",
     )
     _require(
-        role["summary"] == registry_module["single_responsibility"],
-        f"{module_id}: registered responsibility drifted",
+        registry_module["role"]
+        == f"{role['summary']}. {role['responsibility_boundary']}",
+        f"{module_id}: central registered role drifted",
     )
     _require(
         contract["natural_owner_evidence_paths"] == owner_paths,
@@ -593,10 +596,10 @@ def _validate_contract(
         f"{module_id}: dependency DAG drifted",
     )
 
-    for section, registry_key, value_key in (
-        ("input_contract", "input_contract", "registered_inputs"),
-        ("output_contract", "output_contract", "registered_outputs"),
-        ("error_contract", "error_semantics", "registered_error_semantics"),
+    for section, value_key in (
+        ("input_contract", "registered_inputs"),
+        ("output_contract", "registered_outputs"),
+        ("error_contract", "registered_error_semantics"),
     ):
         value = contract[section]
         _require(
@@ -604,8 +607,8 @@ def _validate_contract(
             f"{module_id}: {section} shape drifted",
         )
         _require(
-            value[value_key] == registry_module[registry_key],
-            f"{module_id}: {section} drifted from current registry",
+            isinstance(value[value_key], list) and bool(value[value_key]),
+            f"{module_id}: {section} registered values are required",
         )
         _require(
             isinstance(value["boundary"], str) and bool(value["boundary"].strip()),

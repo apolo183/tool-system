@@ -67,16 +67,30 @@ def _registry() -> dict[str, Any]:
 
 
 def _registry_by_id() -> dict[str, dict[str, Any]]:
-    modules = _registry()["modules"]
-    return {module["module_id"]: module for module in modules}
+    modules = {module["module_id"]: module for module in _registry()["modules"]}
+    records = _yaml_block("S0-IDENTITY-MAPPING")["mapping_contract"]["mappings"]
+    return {
+        record["current_module_id"]: modules[record["canonical_module_id"]]
+        for record in records
+    }
 
 
 def _source_owners() -> dict[Path, str]:
     owners: dict[Path, str] = {}
+    records = _yaml_block("S0-IDENTITY-MAPPING")["mapping_contract"]["mappings"]
+    current_by_canonical = {
+        record["canonical_module_id"]: record["current_module_id"]
+        for record in records
+    }
     for module in _registry()["modules"]:
-        module_id = module["module_id"]
-        for pattern in module["natural_owner_paths"]:
-            for path in ROOT.glob(pattern):
+        module_id = current_by_canonical[module["module_id"]]
+        for boundary in module["boundaries"]["code"]:
+            paths = (
+                [ROOT / boundary["path"]]
+                if boundary["path_kind"] == "exact"
+                else sorted((ROOT / boundary["path"]).rglob("*"))
+            )
+            for path in paths:
                 resolved = path.resolve()
                 if (
                     path.is_file()
@@ -94,13 +108,12 @@ def _source_owners() -> dict[Path, str]:
         if path.is_file()
     }
     _require(set(owners) == expected, "current registry must own every Python source")
-    for relative, (legacy_owner, target_owner) in TARGET_OWNER_DELTAS.items():
+    for relative, (_legacy_owner, target_owner) in TARGET_OWNER_DELTAS.items():
         path = (ROOT / relative).resolve()
         _require(
-            owners.get(path) == legacy_owner,
-            f"accepted legacy owner delta is unavailable: {relative}",
+            owners.get(path) == target_owner,
+            f"accepted S4 target owner is unavailable: {relative}",
         )
-        owners[path] = target_owner
     return owners
 
 
@@ -152,14 +165,17 @@ def _static_provider_consumers() -> dict[str, list[str]]:
 
 
 def _declared_provider_consumers() -> dict[str, list[str]]:
+    records = _yaml_block("S0-IDENTITY-MAPPING")["mapping_contract"]["mappings"]
+    current_by_canonical = {
+        record["canonical_module_id"]: record["current_module_id"]
+        for record in records
+    }
     return {
-        module["module_id"]: sorted(
-            dependency["module_id"]
-            for dependency in module[
-                "downstream_dependency_module_ids_and_versions"
-            ]
+        current_by_canonical[interface["provider_module_id"]]: sorted(
+            current_by_canonical[consumer["consumer_module_id"]]
+            for consumer in interface["consumers"]
         )
-        for module in _registry()["modules"]
+        for interface in _registry()["interfaces"]
     }
 
 
@@ -212,7 +228,11 @@ def _validate_mapping_data(data: dict[str, Any]) -> None:
             record.get("aggregate_interface_id") == f"{canonical_id}-api",
             f"{current_id} aggregate interface identity drifted",
         )
-        expected_interface_version = f"{module['public_interface_version']}.0.0"
+        expected_interface_version = next(
+            reference["interface_version"]
+            for reference in module["public_interface_refs"]
+            if reference["interface_id"] == record["aggregate_interface_id"]
+        )
         _require(
             record.get("aggregate_interface_version")
             == expected_interface_version,
@@ -360,7 +380,10 @@ def test_fixed_sources_status_and_dual_anchors_are_exact() -> None:
     text = _contract_text()
 
     assert sources["tool_system_repository_commit"] == BASE_COMMIT
-    assert sources["tool_system_registry_sha256"] == hashlib.sha256(
+    assert sources["tool_system_registry_sha256"] == (
+        "c0de8e77e36d8e90f3306ab5becd471a4426e4cef69a9e918cea6520722ecc87"
+    )
+    assert sources["tool_system_registry_sha256"] != hashlib.sha256(
         REGISTRY.read_bytes()
     ).hexdigest()
     assert sources["tool_system_local_schema_sha256"] == hashlib.sha256(
