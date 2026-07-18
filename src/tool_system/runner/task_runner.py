@@ -5,7 +5,7 @@ from typing import Any
 
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
 from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
-from tool_system.gate.command_runner import commands_from_change_plan, run_commands
+from tool_system.gate.command_runner import run_commands
 from tool_system.gate.test_gate import build_gate_decision
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.process_authority.contract import (
@@ -17,12 +17,6 @@ from tool_system.runner.active_gate_resolver import (
     paths_match,
     resolve_change_plan_from_active_gates,
 )
-
-
-def _load_optional_plan(change_plan_path: Path | None) -> dict[str, Any] | None:
-    if change_plan_path is None:
-        return None
-    return load_yaml_file(change_plan_path)
 
 
 def _status_from_reasons(reasons: list[str]) -> str:
@@ -77,6 +71,7 @@ def run_task_pipeline(
     process_authority_result = validate_process_authority(process_authority)
     plan_result: dict[str, object] | None = None
     pair_binding_result: dict[str, object] | None = None
+    protected_execution_result: dict[str, object] | None = None
     command_results: list[dict[str, Any]] = []
     preflight_reasons = list(resolution_reasons)
     if manifest_result["status"] != "PASS":
@@ -103,17 +98,30 @@ def run_task_pipeline(
         preflight_reasons.append("change plan is required")
 
     if execute_commands and not preflight_reasons and plan_path is not None:
-        plan = _load_optional_plan(plan_path)
-        if plan is not None:
-            command_results = run_commands(
-                commands_from_change_plan(plan),
-                cwd=cwd or Path.cwd(),
-            )
+        protected_execution_result = run_commands(
+            task_manifest_path=manifest_path,
+            change_plan_path=plan_path,
+            process_authority_path=process_authority,
+            policy_path=policy,
+            autonomy_policy_path=autonomy_policy,
+            cwd=cwd or Path.cwd(),
+        )
+        command_results = list(
+            protected_execution_result.get("command_results") or []
+        )
+        if protected_execution_result["status"] == "PASS":
             gate_decision = build_gate_decision(
                 plan_ok=True,
                 plan_reasons=[],
                 command_results=command_results,
             )
+        else:
+            gate_decision = {
+                "status": "BLOCK",
+                "reasons": list(
+                    protected_execution_result.get("reasons") or []
+                ),
+            }
     else:
         gate_decision = {
             "status": "PASS" if not preflight_reasons else "BLOCK",
@@ -142,6 +150,7 @@ def run_task_pipeline(
         "process_authority_result": process_authority_result,
         "pair_binding_result": pair_binding_result,
         "change_plan_result": plan_result,
+        "protected_execution_result": protected_execution_result,
         "gate_decision": gate_decision,
         "command_results": command_results,
         "writes_target_repo": False,

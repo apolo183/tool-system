@@ -120,10 +120,92 @@ def test_authority_schema_and_yaml_register_the_same_top_level_fields() -> None:
     assert set(schema["required"]) == AUTHORITY_FIELDS
     assert set(schema["properties"]) == AUTHORITY_FIELDS
     assert authority["module"] == {
-        "module_id": "process_authority",
+        "module_id": "process-authority",
         "module_version": "2.0.0",
-        "public_interface_version": "2",
+        "public_interface_id": "process-authority-api",
+        "public_interface_version": "2.0.0",
     }
+    assert schema["properties"]["module"]["properties"] == {
+        "module_id": {"const": "process-authority"},
+        "module_version": {"const": "2.0.0"},
+        "public_interface_id": {"const": "process-authority-api"},
+        "public_interface_version": {"const": "2.0.0"},
+    }
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("module_id", "process_authority"),
+        ("module_id", "unknown-module"),
+        ("module_version", "1.9.0"),
+        ("public_interface_id", "unknown-interface"),
+        ("public_interface_version", "1.0.0"),
+    ],
+)
+def test_current_authority_rejects_legacy_unknown_and_stale_identity(
+    tmp_path: Path,
+    field: str,
+    value: str,
+) -> None:
+    authority = copy.deepcopy(load_yaml_file(AUTHORITY))
+    authority["module"][field] = value
+    path = tmp_path / "process_authority_v1.yaml"
+    _write_yaml(path, authority)
+
+    result = validate_process_authority(path, ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert any("module must identify process-authority" in reason for reason in result["reasons"])
+
+
+def test_current_authority_rejects_mixed_identity(tmp_path: Path) -> None:
+    authority = copy.deepcopy(load_yaml_file(AUTHORITY))
+    authority["module"]["compatibility_module_id"] = "process_authority"
+    path = tmp_path / "process_authority_v1.yaml"
+    _write_yaml(path, authority)
+
+    result = validate_process_authority(path, ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert any("module must contain exactly" in reason for reason in result["reasons"])
+
+
+def test_current_authority_rejects_duplicate_yaml_identity_key(tmp_path: Path) -> None:
+    payload = AUTHORITY.read_text(encoding="utf-8").replace(
+        "  module_version: 2.0.0\n",
+        "  module_id: process_authority\n  module_version: 2.0.0\n",
+    )
+    path = tmp_path / "process_authority_v1.yaml"
+    path.write_text(payload, encoding="utf-8")
+
+    result = validate_process_authority(path, ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert result["reasons"] == [
+        "unable to read process authority: duplicate process authority key: module_id"
+    ]
+
+
+@pytest.mark.parametrize("payload", ["module: [", "", "[]"])
+def test_current_authority_rejects_malformed_or_nonmapping_yaml(
+    tmp_path: Path,
+    payload: str,
+) -> None:
+    path = tmp_path / "process_authority_v1.yaml"
+    path.write_text(payload, encoding="utf-8")
+
+    result = validate_process_authority(path, ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert result["reasons"]
+
+
+def test_current_authority_rejects_missing_file(tmp_path: Path) -> None:
+    result = validate_process_authority(tmp_path / "missing.yaml", ROOT)
+
+    assert result["status"] == "BLOCK"
+    assert any("unable to read process authority" in reason for reason in result["reasons"])
 
 
 def test_replay_snapshot_has_exact_non_authoritative_contract() -> None:
