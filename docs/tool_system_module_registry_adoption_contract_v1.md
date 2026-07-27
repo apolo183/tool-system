@@ -32,7 +32,7 @@ source_contract:
   finance_governance_schema_path: config/module_registry_schema_v1.json
   finance_governance_schema_sha256: fba270a7ddf8b38dda7cb21263cee8cd96c5b549f0d0b5d364395964b7ecaf67
   blueprint_path: blueprint/tool_system_v0.yaml
-  blueprint_sha256: fd5770de23dffd81591c2f268eeafc40100e5541666fa801c1f4a4f977b1628a
+  blueprint_sha256: 263a58c146f8ca421dce2c3b0b72321696658c347f3ce50157f67e61c1bb74d7
   blueprint_section: product_objective
   blueprint_product_objective_id: blueprint_driven_autonomous_software_development
 ~~~

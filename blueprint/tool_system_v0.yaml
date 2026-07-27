@@ -164,7 +164,7 @@ milestone_module_invariant:
     governs_other_repositories: false
     may_offer_tools_and_recommendations: true
     may_change_downstream_owner_authority_status_or_write_authorization: false
-    immutable_group_reference_effect: pinned_candidate_reference_pending_central_repo_check
+    immutable_group_reference_effect: pre_activation_pointer_only_not_central_authority_or_cutover_evidence
     group_reference_created_by_this_change: true
     group_cutover_completed_by_this_change: false
   applies_to:
@@ -260,15 +260,18 @@ milestone_module_invariant:
     group_process_file_compliance_claimed: false
     deletion_or_reclassification_authorized: false
   enforcement:
-    current_contract_scope: local_registry_structure_declared_dag_natural_owners_and_alignment_tests
+    current_contract_scope: central_shape_registry_identity_boundary_import_effect_reference_and_declared_dag_validation
     module_registry_path: config/module_registry_v1.yaml
     module_registry_schema_path: config/module_registry_schema_v1.json
     module_registry_structural_validation_implemented: true
     declared_dependency_dag_validation_implemented: true
     natural_owner_overlap_validation_implemented: true
     source_ownership_coverage_validation_implemented: true
-    source_import_edge_enforcement_implemented: false
+    source_import_edge_enforcement_implemented: true
+    contract_reference_hash_validation_implemented: true
+    side_effect_target_binding_validation_implemented: true
     runtime_module_enforcement_implemented: false
+    real_central_module_registry_check_passed: false
     machine_alignment_tests_required: true
     module_graph_validation_required: true
     interface_compatibility_evidence_required: true
