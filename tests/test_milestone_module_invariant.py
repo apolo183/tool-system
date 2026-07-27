@@ -184,7 +184,7 @@ def test_local_authority_does_not_govern_other_repositories() -> None:
         "may_offer_tools_and_recommendations": True,
         "may_change_downstream_owner_authority_status_or_write_authorization": False,
         "immutable_group_reference_effect": (
-            "pre_activation_pointer_only_not_central_authority_or_cutover_evidence"
+            "active_central_authority_pointer_not_central_gate_or_cutover_evidence"
         ),
         "group_reference_created_by_this_change": True,
         "group_cutover_completed_by_this_change": False,
