@@ -164,7 +164,7 @@ milestone_module_invariant:
     governs_other_repositories: false
     may_offer_tools_and_recommendations: true
     may_change_downstream_owner_authority_status_or_write_authorization: false
-    immutable_group_reference_effect: pre_activation_pointer_only_not_central_authority_or_cutover_evidence
+    immutable_group_reference_effect: active_central_authority_pointer_not_central_gate_or_cutover_evidence
     group_reference_created_by_this_change: true
     group_cutover_completed_by_this_change: false
   applies_to:
