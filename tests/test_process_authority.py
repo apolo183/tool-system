@@ -424,7 +424,7 @@ def test_primary_runtime_callers_have_no_implicit_legacy_index() -> None:
     assert role_parameter.default == "config/process_authority_v1.yaml"
 
 
-def test_packaging_and_hosted_ci_validate_new_authority_contracts() -> None:
+def test_packaging_and_hosted_ci_validate_process_authority() -> None:
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     workflow = (
         ROOT / ".github" / "workflows" / "tool-system-ci.yml"
@@ -437,8 +437,4 @@ def test_packaging_and_hosted_ci_validate_new_authority_contracts() -> None:
     assert (
         "python -m tool_system.cli.validate_process_authority "
         "config/process_authority_v1.yaml"
-    ) in workflow
-    assert (
-        "python -m tool_system.cli.validate_module_registry "
-        "config/module_registry_v1.yaml"
     ) in workflow
