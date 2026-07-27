@@ -701,14 +701,31 @@ def test_adapter_reads_one_registry_and_does_not_mutate_index(
     assert _sha256(ROOT / ".git/index") == index_sha
 
 
-def test_blueprint_and_ci_keep_local_structural_non_runtime_scope() -> None:
+def test_blueprint_and_ci_require_current_registry_authority_without_s9() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     enforcement = blueprint["milestone_module_invariant"]["enforcement"]
     workflow = (ROOT / ".github/workflows/tool-system-ci.yml").read_text(encoding="utf-8")
+    workflow_lines = {line.strip() for line in workflow.splitlines()}
+    guarded_command = (
+        "python -m tool_system.cli.validate_module_registry "
+        "config/module_registry_v1.yaml --require-current-authority"
+    )
+    unguarded_command = (
+        "python -m tool_system.cli.validate_module_registry "
+        "config/module_registry_v1.yaml"
+    )
+
     assert enforcement["module_registry_path"] == "config/module_registry_v1.yaml"
     assert enforcement["module_registry_structural_validation_implemented"] is True
+    assert enforcement["source_import_edge_enforcement_implemented"] is True
+    assert enforcement["contract_reference_hash_validation_implemented"] is True
+    assert enforcement["side_effect_target_binding_validation_implemented"] is True
     assert enforcement["runtime_module_enforcement_implemented"] is False
-    assert "python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml" in workflow
+    assert enforcement["real_central_module_registry_check_passed"] is False
+    assert f"run: {guarded_command}" in workflow_lines
+    assert f"run: {unguarded_command}" not in workflow_lines
+    assert "module-registry-check" not in workflow
+    assert "scripts/governance/check_governance.py" not in workflow
     assert json.loads(LOCAL_SCHEMA.read_text(encoding="utf-8"))["title"] == (
         "tool-system Durable Module Registry Schema v1"
     )
@@ -725,3 +742,25 @@ def test_cli_help_describes_single_central_authority() -> None:
     help_text = " ".join(result.stdout.split())
     assert "central format as current local authority" in help_text
     assert "no projection or second authority" in help_text
+
+
+def test_cli_require_current_authority_accepts_fixed_registry() -> None:
+    result = subprocess.run(
+        [
+            "python",
+            "-m",
+            "tool_system.cli.validate_module_registry",
+            "config/module_registry_v1.yaml",
+            "--require-current-authority",
+        ],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    output = json.loads(result.stdout)
+
+    assert output["status"] == "PASS"
+    assert output["current_registry_authority"] is True
+    assert output["validation_scope"] == "tool_system_current_central_registry"
+    assert output["compatibility_adapter"]["applied"] is False
