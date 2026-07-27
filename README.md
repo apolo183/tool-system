@@ -96,7 +96,7 @@ The caller and reference audit is complete. `config/process_authority_v1.yaml` i
 
 Existing reports, task manifests, change plans, and `examples/active_gates.yaml` remain present for the separately gated disposition step. Their presence is not a claim of finance-governance process-file compliance, and this migration does not delete or reclassify them.
 
-`REPO_MANIFEST.md` now registers the current formal authority/config/source/test/CI/fixture sets and separately classifies every retained legacy path as non-authority. Its validator expands only tracked regular files, rejects overlap, gaps, symlinks, empty formal files, invalid table fields, and cycles, and proves every tracked path is classified exactly once. The retained legacy sets still block a finance-governance process-file-compliance claim; this manifest authorizes neither their cleanup nor their continued use as current authority.
+`REPO_MANIFEST.md` now registers every current formal authority/config/source/test/CI/fixture path as one exact central-format `Formal Files` row and separately classifies every retained legacy path as non-authority. Its validator preserves the legacy set parser only as bounded compatibility, activates the exact-file mode for the current manifest, rejects overlap, gaps, symlinks, empty formal files, invalid table fields, and cycles, and proves every tracked path is classified exactly once. The retained legacy sets still block a finance-governance process-file-compliance claim; this manifest authorizes neither their cleanup nor their continued use as current authority.
 
 ## Repository contract
 
