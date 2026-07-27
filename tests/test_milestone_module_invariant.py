@@ -148,7 +148,7 @@ def test_replacement_cleanup_and_downstream_authority_fail_closed() -> None:
     }
     assert invariant["enforcement"] == {
         "current_contract_scope": (
-            "local_registry_structure_declared_dag_natural_owners_and_alignment_tests"
+            "central_shape_registry_identity_boundary_import_effect_reference_and_declared_dag_validation"
         ),
         "module_registry_path": "config/module_registry_v1.yaml",
         "module_registry_schema_path": "config/module_registry_schema_v1.json",
@@ -156,8 +156,11 @@ def test_replacement_cleanup_and_downstream_authority_fail_closed() -> None:
         "declared_dependency_dag_validation_implemented": True,
         "natural_owner_overlap_validation_implemented": True,
         "source_ownership_coverage_validation_implemented": True,
-        "source_import_edge_enforcement_implemented": False,
+        "source_import_edge_enforcement_implemented": True,
+        "contract_reference_hash_validation_implemented": True,
+        "side_effect_target_binding_validation_implemented": True,
         "runtime_module_enforcement_implemented": False,
+        "real_central_module_registry_check_passed": False,
         "machine_alignment_tests_required": True,
         "module_graph_validation_required": True,
         "interface_compatibility_evidence_required": True,
@@ -181,7 +184,7 @@ def test_local_authority_does_not_govern_other_repositories() -> None:
         "may_offer_tools_and_recommendations": True,
         "may_change_downstream_owner_authority_status_or_write_authorization": False,
         "immutable_group_reference_effect": (
-            "pinned_candidate_reference_pending_central_repo_check"
+            "pre_activation_pointer_only_not_central_authority_or_cutover_evidence"
         ),
         "group_reference_created_by_this_change": True,
         "group_cutover_completed_by_this_change": False,

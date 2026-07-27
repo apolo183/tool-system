@@ -28,12 +28,12 @@ def test_governance_reference_has_exact_v1_shape_and_values() -> None:
     }
 
 
-def test_reference_is_pinned_but_does_not_claim_cutover() -> None:
+def test_reference_remains_pre_activation_pointer_without_claiming_cutover() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     authority = blueprint["milestone_module_invariant"]["authority_scope"]
 
     assert authority["immutable_group_reference_effect"] == (
-        "pinned_candidate_reference_pending_central_repo_check"
+        "pre_activation_pointer_only_not_central_authority_or_cutover_evidence"
     )
     assert authority["group_reference_created_by_this_change"] is True
     assert authority["group_cutover_completed_by_this_change"] is False
@@ -42,12 +42,19 @@ def test_reference_is_pinned_but_does_not_claim_cutover() -> None:
     )
 
 
-def test_public_contracts_state_the_same_pending_activation_boundary() -> None:
+def test_public_contracts_state_active_central_authority_and_staged_binding() -> None:
     for path in (AGENTS, README, PRINCIPLES):
         text = path.read_text(encoding="utf-8")
         assert "config/governance_reference_v1.yaml" in text
         assert PINNED_SHA in text
-        assert "does not activate group governance" in text
+        assert "`finance-governance` is the active group authority" in text
+        assert (
+            "neither controls central `authority_status` nor proves tool-system cutover"
+            in text
+        )
+        assert "does not activate group governance" not in text
+        for stage in ("S8", "S9", "S10"):
+            assert stage in text
 
 
 def test_group_constitution_is_not_copied_into_tool_system() -> None:
