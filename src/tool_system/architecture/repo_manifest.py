@@ -5,7 +5,6 @@ import subprocess
 from collections import deque
 from pathlib import Path, PurePosixPath
 
-
 FORMAL_SECTION = "## Formal File Sets"
 CENTRAL_FORMAL_SECTION = "## Formal Files"
 LEGACY_SECTION = "## Retained Non-Authority Sets"
@@ -338,7 +337,7 @@ def _validate_authority_dag(
         unknown = sorted(token for token in tokens if token not in nodes)
         if unknown:
             reasons.append(
-                f"formal upstream references unknown path expression for {node}: "
+                f"formal upstream references unknown registered path for {node}: "
                 f"{', '.join(unknown)}"
             )
         if node in tokens:
@@ -362,7 +361,7 @@ def _validate_authority_dag(
             if indegree[dependent] == 0:
                 ready.append(dependent)
     if len(order) != len(nodes):
-        reasons.append("formal authority path-expression graph must be acyclic")
+        reasons.append("formal authority graph must be acyclic")
     return order
 
 
@@ -391,12 +390,7 @@ def validate_repo_manifest(
         }
 
     parser_mode, parsed_formal_rows, formal_reasons = parse_manifest_formal_rows(text)
-    formal_rows = parsed_formal_rows if parser_mode == LEGACY_FORMAL_PARSER_MODE else []
-    if parser_mode == CENTRAL_FORMAL_PARSER_MODE and not formal_reasons:
-        formal_reasons.append(
-            "central Formal Files parser mode is parse-only; "
-            "local validation requires Formal File Sets"
-        )
+    formal_rows = parsed_formal_rows
     legacy_rows, legacy_reasons = _table_rows(
         text,
         LEGACY_SECTION,
@@ -447,7 +441,12 @@ def validate_repo_manifest(
         "manifest_path": str(path),
         "parser_mode": parser_mode,
         "tracked_path_count": len(tracked),
-        "formal_set_count": len(formal_rows),
+        "formal_file_count": (
+            len(formal_rows) if parser_mode == CENTRAL_FORMAL_PARSER_MODE else 0
+        ),
+        "formal_set_count": (
+            len(formal_rows) if parser_mode == LEGACY_FORMAL_PARSER_MODE else 0
+        ),
         "formal_path_count": len(formal_paths),
         "legacy_set_count": len(legacy_rows),
         "legacy_path_count": len(legacy_paths),

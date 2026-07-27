@@ -9,10 +9,12 @@ from typing import Any
 import pytest
 import yaml
 
-from tool_system.architecture.repo_manifest import FORMAL_COLUMNS, _table_rows
 from tool_system.architecture.module_registry import extract_managed_import_graph
+from tool_system.architecture.repo_manifest import (
+    CENTRAL_FORMAL_PARSER_MODE,
+    parse_manifest_formal_rows,
+)
 from tool_system.manifest.task_manifest import load_yaml_file
-
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "docs" / "tool_system_module_registry_adoption_contract_v1.md"
@@ -512,20 +514,22 @@ def test_all_module_owned_contract_references_remain_unknown() -> None:
 
 def test_manifest_registers_mapping_owner_and_evidence_only_test() -> None:
     text = MANIFEST.read_text(encoding="utf-8")
-    formal, reasons = _table_rows(text, "## Formal File Sets", FORMAL_COLUMNS)
+    parser_mode, formal, reasons = parse_manifest_formal_rows(text)
     rows = {row["path"]: row for row in formal}
     contract_path = "docs/tool_system_module_registry_adoption_contract_v1.md"
+    test_path = "tests/test_module_registry_adoption_contract.py"
 
+    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
     assert reasons == []
-    assert text.splitlines().count("## Formal File Sets") == 1
-    assert "## Formal Files" not in text.splitlines()
+    assert text.splitlines().count("## Formal Files") == 1
+    assert "## Formal File Sets" not in text.splitlines()
     assert rows[contract_path]["role"] == "S0 formal mapping owner"
     assert rows[contract_path]["owner"] == (
         "tool-system module-registry adoption S0 owner"
     )
     assert "without adopting the registry" in rows[contract_path]["purpose"]
     assert not any(character in contract_path for character in "*?[]{}")
-    tests_row = rows["tests/**/*"]
+    tests_row = rows[test_path]
     assert "validation evidence only" in tests_row["purpose"]
     assert "no governance authority" in tests_row["purpose"]
     assert (ROOT / "tests" / "test_module_registry_adoption_contract.py").is_file()

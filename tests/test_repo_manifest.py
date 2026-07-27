@@ -10,15 +10,14 @@ from tool_system.architecture.repo_manifest import (
     CENTRAL_MODULE_REGISTRY_PATH,
     FORMAL_COLUMNS,
     FORMAL_SECTION,
-    LEGACY_FORMAL_PARSER_MODE,
     LEGACY_COLUMNS,
+    LEGACY_FORMAL_PARSER_MODE,
     _git_environment,
     _table_rows,
     parse_manifest_formal_rows,
     validate_repo_manifest,
 )
 from tool_system.manifest.task_manifest import load_yaml_file
-
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "REPO_MANIFEST.md"
@@ -63,6 +62,24 @@ def _central_manifest_text(
     )
 
 
+def _legacy_manifest_text() -> str:
+    return "\n".join(
+        [
+            "# REPO_MANIFEST.md",
+            "",
+            FORMAL_SECTION,
+            "",
+            f"| {' | '.join(FORMAL_COLUMNS)} |",
+            f"| {' | '.join('---' for _ in FORMAL_COLUMNS)} |",
+            _central_row("docs/tool_system_global_development_principles_v1.md"),
+            _central_row(
+                CENTRAL_MODULE_REGISTRY_PATH,
+                "docs/tool_system_global_development_principles_v1.md",
+            ),
+        ]
+    )
+
+
 def _manifest_text() -> str:
     return MANIFEST.read_text(encoding="utf-8")
 
@@ -75,14 +92,23 @@ def _write_manifest(tmp_path: Path, text: str) -> Path:
 
 def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     result = validate_repo_manifest(MANIFEST, ROOT)
+    parser_mode, rows, reasons = parse_manifest_formal_rows(_manifest_text())
 
     assert result["status"] == "PASS"
     assert result["reasons"] == []
-    assert result["parser_mode"] == LEGACY_FORMAL_PARSER_MODE
+    assert result["parser_mode"] == CENTRAL_FORMAL_PARSER_MODE
+    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert reasons == []
+    assert len(rows) == 202
+    assert CENTRAL_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
+    assert all(
+        not any(character in row["path"] for character in "*?[]{}") for row in rows
+    )
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_set_count"] == 28
+    assert result["formal_file_count"] == 202
+    assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == 291
     assert result["unclassified_path_count"] == 0
@@ -92,7 +118,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
 
 
 def test_both_manifest_formats_have_stable_explicit_parser_modes() -> None:
-    legacy_text = _manifest_text()
+    legacy_text = _legacy_manifest_text()
     central_text = _central_manifest_text()
 
     legacy_result = parse_manifest_formal_rows(legacy_text)
@@ -104,7 +130,7 @@ def test_both_manifest_formats_have_stable_explicit_parser_modes() -> None:
     central_mode, central_rows, central_reasons = central_result
     assert legacy_mode == LEGACY_FORMAL_PARSER_MODE
     assert legacy_reasons == []
-    assert len(legacy_rows) == 28
+    assert len(legacy_rows) == 2
     assert central_mode == CENTRAL_FORMAL_PARSER_MODE
     assert central_reasons == []
     assert [row["path"] for row in central_rows] == [
@@ -267,32 +293,24 @@ def test_central_manifest_blocks_missing_module_registry_row() -> None:
     assert any("exact module registry path" in reason for reason in reasons)
 
 
-def test_central_parser_does_not_activate_local_validator_adapter(
-    tmp_path: Path,
-) -> None:
-    result = validate_repo_manifest(
-        _write_manifest(tmp_path, _central_manifest_text()),
-        ROOT,
-    )
+def test_current_central_parser_mode_is_active_in_local_validator() -> None:
+    result = validate_repo_manifest(MANIFEST, ROOT)
 
-    assert result["status"] == "BLOCK"
+    assert result["status"] == "PASS"
     assert result["parser_mode"] == CENTRAL_FORMAL_PARSER_MODE
-    assert any("parse-only" in reason for reason in result["reasons"])
+    assert not any("parse-only" in reason for reason in result["reasons"])
 
 
 def test_manifest_tables_use_registered_columns_and_one_root() -> None:
     text = _manifest_text()
-    formal, formal_reasons = _table_rows(
-        text,
-        "## Formal File Sets",
-        FORMAL_COLUMNS,
-    )
+    parser_mode, formal, formal_reasons = parse_manifest_formal_rows(text)
     legacy, legacy_reasons = _table_rows(
         text,
         "## Retained Non-Authority Sets",
         LEGACY_COLUMNS,
     )
 
+    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
     assert formal_reasons == []
     assert legacy_reasons == []
     assert sum(row["upstream"] == "ROOT" for row in formal) == 1
@@ -302,27 +320,32 @@ def test_manifest_tables_use_registered_columns_and_one_root() -> None:
     assert all(row["runtime_default"] == "false" for row in legacy)
 
 
-def test_module_contract_set_is_registered_once_without_membership_or_cutover() -> None:
-    formal, reasons = _table_rows(
-        _manifest_text(),
-        "## Formal File Sets",
-        FORMAL_COLUMNS,
-    )
-    matches = [row for row in formal if row["path"] == "docs/modules/**/*"]
+def test_module_contract_files_are_registered_without_membership_or_cutover() -> None:
+    parser_mode, formal, reasons = parse_manifest_formal_rows(_manifest_text())
+    matches = [row for row in formal if row["path"].startswith("docs/modules/")]
 
+    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
     assert reasons == []
-    assert len(matches) == 1
-    row = matches[0]
-    assert row["role"] == "module-owned compound contracts"
-    assert row["owner"] == "respective natural module owners"
-    assert row["upstream"].split("; ") == [
-        "docs/tool_system_module_registry_adoption_contract_v1.md",
-        "blueprint/**/*",
-    ]
-    assert "without establishing registry membership" in row["purpose"]
-    assert "central gate PASS" in row["purpose"]
-    assert "cutover" in row["purpose"]
-    assert row["status"] == "REGISTERED"
+    assert len(matches) == 14
+    assert all(row["role"] == "module-owned compound contracts" for row in matches)
+    assert all(
+        row["owner"] == "respective natural module owners" for row in matches
+    )
+    assert all(
+        row["upstream"].split("; ")
+        == [
+            "docs/tool_system_module_registry_adoption_contract_v1.md",
+            "blueprint/tool_system_v0.yaml",
+        ]
+        for row in matches
+    )
+    assert all(
+        "without establishing registry membership" in row["purpose"]
+        and "central gate PASS" in row["purpose"]
+        and "cutover" in row["purpose"]
+        and row["status"] == "REGISTERED"
+        for row in matches
+    )
 
 
 def test_legacy_sets_are_exactly_the_retained_non_authority_roots() -> None:
@@ -387,7 +410,7 @@ def test_manifest_blocks_legacy_authority_claim(tmp_path: Path) -> None:
 
 
 def test_manifest_blocks_duplicate_formal_section(tmp_path: Path) -> None:
-    text = _manifest_text() + "\n## Formal File Sets\n"
+    text = _manifest_text() + "\n## Formal Files\n"
 
     result = validate_repo_manifest(_write_manifest(tmp_path, text), ROOT)
 
