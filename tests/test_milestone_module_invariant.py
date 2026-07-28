@@ -4,7 +4,6 @@ from pathlib import Path
 
 from tool_system.manifest.task_manifest import load_yaml_file
 
-
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
 ACTIVE_GATES = ROOT / "examples" / "active_gates.yaml"
@@ -183,11 +182,11 @@ def test_local_authority_does_not_govern_other_repositories() -> None:
         "governs_other_repositories": False,
         "may_offer_tools_and_recommendations": True,
         "may_change_downstream_owner_authority_status_or_write_authorization": False,
-        "immutable_group_reference_effect": (
-            "active_central_authority_pointer_not_central_gate_or_cutover_evidence"
+        "governance_reference_effect": (
+            "compatibility_and_audit_record_not_current_policy_selector_or_cutover_evidence"
         ),
-        "group_reference_created_by_this_change": True,
-        "group_cutover_completed_by_this_change": False,
+        "governance_reference_record_present": True,
+        "group_cutover_completed_by_reference": False,
     }
     assert execution["authority_effect"] == "tool_system_local_only"
     assert "authorized_scope" not in execution
