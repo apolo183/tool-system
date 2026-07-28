@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-27 UTC+09:00
+updated_at: 2026-07-28 UTC+09:00
 
 ## 1. Mission
 
@@ -22,7 +22,7 @@ docs/tool_system_global_development_principles_v1.md
 REPO_MANIFEST.md
 ```
 
-`finance-governance` is the active group authority after its independently completed central closeout. P14 S8 binds the exact five-field immutable downstream pointer at `config/governance_reference_v1.yaml` to accepted active-authority commit `a87fc305932fe52042d98b4abf545afd13f89be2`. The reference records repository identity and one immutable governance commit; it neither controls central `authority_status` nor proves tool-system cutover. S8 completes only the governance-reference binding. Until S9 passes the real central `module-registry-check` and S10 is separately accepted, do not claim tool-system cutover. Active group rules govern now; these repository-local rules may add narrower constraints but must not override them. No copied finance-governance constitution is local authority.
+`finance-governance` is the active group authority after its independently completed central closeout. Ordinary central gates consume the current verified committed finance-governance `HEAD`; the exact five-field `config/governance_reference_v1.yaml` records repository identity and a compatibility/audit SHA only. Its `governance_commit_sha` does not select or pin current rules, need not equal the current governance `HEAD`, and a central SHA change alone does not require a tool-system update or PR. The central repository registry supplies identity only; the caller supplies the target root, and no central path, status, or execution evidence is written into the registry. The reference neither controls central `authority_status` nor proves tool-system cutover. S8 completed only the compatibility/audit reference record. Until S9 passes the real central `module-registry-check` and S10 is separately accepted, do not claim tool-system cutover. Active group rules govern now; these repository-local rules may add narrower constraints but must not override them. No copied finance-governance constitution is local authority.
 
 Before provider/model selection, qualification, billing, credential-reference, or development-economics work, also read:
 

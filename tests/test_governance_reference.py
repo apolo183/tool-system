@@ -4,14 +4,13 @@ from pathlib import Path
 
 from tool_system.manifest.task_manifest import load_yaml_file
 
-
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE = ROOT / "config" / "governance_reference_v1.yaml"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
 AGENTS = ROOT / "AGENTS.md"
 README = ROOT / "README.md"
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
-PINNED_SHA = "a87fc305932fe52042d98b4abf545afd13f89be2"
+RECORDED_AUDIT_SHA = "a87fc305932fe52042d98b4abf545afd13f89be2"
 PRE_ACTIVATION_SHA = "f039a5355e1e5ea3fa865b827947b0c1153a2745"
 
 
@@ -25,36 +24,51 @@ def test_governance_reference_has_exact_v1_shape_and_values() -> None:
         "governance_canonical_remote": (
             "git@github.com:apolo183/finance-governance.git"
         ),
-        "governance_commit_sha": PINNED_SHA,
+        "governance_commit_sha": RECORDED_AUDIT_SHA,
     }
 
 
-def test_reference_binds_active_central_authority_without_claiming_cutover() -> None:
+def test_reference_records_audit_sha_without_selecting_current_rules() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     authority = blueprint["milestone_module_invariant"]["authority_scope"]
 
-    assert authority["immutable_group_reference_effect"] == (
-        "active_central_authority_pointer_not_central_gate_or_cutover_evidence"
+    assert authority["governance_reference_effect"] == (
+        "compatibility_and_audit_record_not_current_policy_selector_or_cutover_evidence"
     )
-    assert authority["group_reference_created_by_this_change"] is True
-    assert authority["group_cutover_completed_by_this_change"] is False
+    assert authority["governance_reference_record_present"] is True
+    assert authority["group_cutover_completed_by_reference"] is False
     assert blueprint["active_phase_execution"]["authority_effect"] == (
         "tool_system_local_only"
     )
 
 
-def test_public_contracts_state_completed_reference_binding_and_staged_cutover() -> None:
+def test_public_contracts_state_current_head_consumption_and_staged_cutover() -> None:
     for path in (AGENTS, README, PRINCIPLES):
         text = path.read_text(encoding="utf-8")
         assert "config/governance_reference_v1.yaml" in text
-        assert PINNED_SHA in text
+        assert RECORDED_AUDIT_SHA not in text
         assert PRE_ACTIVATION_SHA not in text
         assert "`finance-governance` is the active group authority" in text
+        assert (
+            "current verified committed finance-governance `HEAD`" in text
+        )
+        assert (
+            "`governance_commit_sha` does not select or pin current rules"
+            in text
+        )
+        assert (
+            "a central SHA change alone does not require a tool-system update or PR"
+            in text
+        )
+        assert "central repository registry supplies identity only" in text
+        assert "caller supplies the target root" in text
         assert (
             "neither controls central `authority_status` nor proves tool-system cutover"
             in text
         )
-        assert "S8 completes only the governance-reference binding" in text
+        assert "S8 completed only the compatibility/audit reference record" in text
+        assert "immutable downstream pointer" not in text
+        assert "accepted active-authority commit" not in text
         assert "does not activate group governance" not in text
         assert "pre-activation" not in text
         for stage in ("S9", "S10"):
