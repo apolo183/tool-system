@@ -4,10 +4,12 @@ from copy import deepcopy
 from pathlib import Path
 
 from tool_system.cli.validate_task_manifest import validate
-from tool_system.manifest.task_manifest import load_yaml_file, validate_manifest_structure
+from tool_system.manifest.task_manifest import (
+    load_yaml_file,
+    validate_manifest_structure,
+)
 from tool_system.policy.autonomy_policy import validate_autonomy_policy
 from tool_system.policy.repo_write_policy import validate_repo_write_policy
-
 
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
@@ -58,6 +60,16 @@ def test_cli_validate_returns_pass_for_example_manifest() -> None:
 
     assert result["status"] == "PASS"
     assert result["reasons"] == []
+
+
+def test_policy_allows_formal_repo_manifest_in_pull_request_mode() -> None:
+    manifest = deepcopy(load_yaml_file(TOOL_SYSTEM_EXAMPLE_PATH))
+    policy = load_yaml_file(POLICY_PATH)
+    manifest["allowed_files"] = ["REPO_MANIFEST.md"]
+
+    policy_ok, reasons = validate_repo_write_policy(manifest, policy)
+
+    assert policy_ok, reasons
 
 
 def test_policy_rejects_legacy_finance_os_target() -> None:
