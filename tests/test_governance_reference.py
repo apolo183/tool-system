@@ -31,6 +31,8 @@ def test_governance_reference_has_exact_v1_shape_and_values() -> None:
 def test_reference_records_audit_sha_without_selecting_current_rules() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     authority = blueprint["milestone_module_invariant"]["authority_scope"]
+    enforcement = blueprint["milestone_module_invariant"]["enforcement"]
+    evidence = enforcement["real_central_module_registry_check_evidence"]
 
     assert authority["governance_reference_effect"] == (
         "compatibility_and_audit_record_not_current_policy_selector_or_cutover_evidence"
@@ -40,6 +42,17 @@ def test_reference_records_audit_sha_without_selecting_current_rules() -> None:
     assert blueprint["active_phase_execution"]["authority_effect"] == (
         "tool_system_local_only"
     )
+    assert enforcement["real_central_module_registry_check_passed"] is True
+    assert evidence["governance_current_observed_effect"] == (
+        "audit_evidence_only_not_policy_pin"
+    )
+    assert evidence["recorded_governance_ref"] == RECORDED_AUDIT_SHA
+    assert evidence["recorded_governance_ref_effect"] == (
+        "compatibility_and_audit_record_only"
+    )
+    assert evidence["central_cutover_completed"] is False
+    assert evidence["next_stage"] == "S10_EXPLICIT_CUTOVER"
+    assert evidence["next_stage_authorized"] is False
 
 
 def test_public_contracts_state_current_head_consumption_and_staged_cutover() -> None:
@@ -67,6 +80,12 @@ def test_public_contracts_state_current_head_consumption_and_staged_cutover() ->
             in text
         )
         assert "S8 completed only the compatibility/audit reference record" in text
+        assert (
+            "S9's real central `module-registry-check` has passed and is accepted"
+            in text
+        )
+        assert "S9 does not perform cutover" in text
+        assert "until S10 is separately authorized and accepted" in text
         assert "immutable downstream pointer" not in text
         assert "accepted active-authority commit" not in text
         assert "does not activate group governance" not in text
