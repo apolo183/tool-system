@@ -40,6 +40,7 @@ allowed_target_repos:
         - docs/**
         - pyproject.toml
         - .gitignore
+        - REPO_MANIFEST.md
         - policy/**
         - blueprint/**
         - harness/**
