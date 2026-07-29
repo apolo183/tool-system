@@ -1,6 +1,6 @@
 # Target Repository Adapter Module Compound Contract v1
 
-This file materializes the S3 contract evidence owned by the current
+This file defines the module contract owned by the current
 `target_repo_adapter` module. Current target-repository outputs are dry-run,
 precheck, state, intent, packet, and audit records; they do not execute target
 mutation.
@@ -19,7 +19,7 @@ module_compound_contract:
       interface_id: target-repo-adapter-api
       interface_version: 1.0.0
     mapping_owner:
-      contract_path: docs/tool_system_module_registry_adoption_contract_v1.md
+      contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:target_repo_adapter@1.0.0
     python_import_identities:
@@ -43,7 +43,7 @@ module_compound_contract:
     - src/tool_system/target_repo/write_intent_record.py
     - src/tool_system/target_repo/write_packet.py
   dependency_contract:
-    basis: s0-static-python-import-dag
+    basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids:
       - manifest_validation
@@ -63,7 +63,7 @@ module_compound_contract:
       - missing_authority_or_stale_target_state_blocks
     boundary: Missing target evidence, policy mismatch, forbidden path, absent approval, existing branch or PR, incomplete file state, stale SHA, or missing observation blocks.
   side_effect_contract:
-    taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
+    taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
       - repository_write
       - data_write
@@ -169,20 +169,14 @@ module_compound_contract:
           - src/tool_system/target_repo/state_collector.py
         boundary: Model target branch, file, PR, SHA, and future action data without connector calls, Git writes, network writes, or target mutation.
   non_claims:
-    registry_membership: false
-    central_registry_adopted: false
-    central_schema_compliance_claimed: false
-    central_gate_pass_claimed: false
-    governance_activated: false
     provider_execution_authorized: false
     target_repo_mutation_authorized: false
     cleanup_execution_authorized: false
     production_operation_authorized: false
-    governance_cutover_completed: false
   authority_boundary:
     execution_authority: false
-    governance_authority: false
-    evidence_role: s3-contract-reference-input
-    next_stage: separately-authorized-s4
+    downstream_authority: false
+    evidence_role: tool-system-module-contract
+    change_boundary: separately-audited-module-change
 ~~~
 <!-- MODULE-COMPOUND-CONTRACT:END -->

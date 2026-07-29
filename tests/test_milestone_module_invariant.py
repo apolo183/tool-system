@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
 from tool_system.manifest.task_manifest import load_yaml_file
@@ -17,10 +16,6 @@ def _blueprint() -> dict[str, object]:
 
 def _invariant() -> dict[str, object]:
     return _blueprint()["milestone_module_invariant"]
-
-
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def test_invariant_applies_only_to_tool_system_durable_modules() -> None:
@@ -152,7 +147,8 @@ def test_replacement_cleanup_and_downstream_authority_fail_closed() -> None:
     }
     assert invariant["enforcement"] == {
         "current_contract_scope": (
-            "central_shape_registry_identity_boundary_import_effect_reference_and_declared_dag_validation"
+            "tool_system_module_registry_identity_boundary_import_effect_"
+            "contract_reference_and_declared_dag_validation"
         ),
         "module_registry_path": "config/module_registry_v1.yaml",
         "module_registry_schema_path": "config/module_registry_schema_v1.json",
@@ -164,72 +160,13 @@ def test_replacement_cleanup_and_downstream_authority_fail_closed() -> None:
         "contract_reference_hash_validation_implemented": True,
         "side_effect_target_binding_validation_implemented": True,
         "runtime_module_enforcement_implemented": False,
-        "real_central_module_registry_check_passed": True,
-        "real_central_module_registry_check_evidence": {
-            "status": "S9_REAL_CENTRAL_MODULE_REGISTRY_CHECK_ACCEPTED",
-            "gate_mode": "module-registry-check",
-            "target_head": "a9c7079af5740c468cb05e992f4bc469ba37f22f",
-            "target_worktree_state": "clean",
-            "governance_current_observed": (
-                "ad5ad497fad88190b8e3fb0773343d4981ab8fd3"
-            ),
-            "governance_current_observed_effect": (
-                "audit_evidence_only_not_policy_pin"
-            ),
-            "recorded_governance_ref": (
-                "a87fc305932fe52042d98b4abf545afd13f89be2"
-            ),
-            "recorded_governance_ref_effect": (
-                "compatibility_and_audit_record_only"
-            ),
-            "validated_target_manifest_sha256": (
-                "ca83ec3641e04e8345d1127f706ecef39880129bdca79f9e0da3603c70210d57"
-            ),
-            "validated_governance_reference_sha256": (
-                "2d68145eeb4de5eaa9709b6ef7f59c48c947f8047f60df03f299c073fc1e3eb0"
-            ),
-            "validated_module_registry_sha256": (
-                "c8277ad5469f5fde4709625e5fc5620c01f53bebbb64f39072a0f23db075d0fc"
-            ),
-            "validated_central_module_schema_sha256": (
-                "fba270a7ddf8b38dda7cb21263cee8cd96c5b549f0d0b5d364395964b7ecaf67"
-            ),
-            "validated_provider_count": 0,
-            "validated_provider_evidence_sha256": (
-                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-            ),
-            "acceptance_effect": "S9_only",
-            "central_cutover_completed": False,
-            "next_stage": "S10_EXPLICIT_CUTOVER",
-            "next_stage_authorized": False,
-        },
         "machine_alignment_tests_required": True,
         "module_graph_validation_required": True,
         "interface_compatibility_evidence_required": True,
         "fault_isolation_blast_radius_record_required": True,
         "blueprint_compiler_owner": "P14E_BLUEPRINT_COMPILER",
         "multi_project_acceptance_owner": "P15_MULTI_PROJECT_BENCHMARK",
-    }
-
-
-def test_s9_gate_evidence_binds_unchanged_local_inputs_without_cutover() -> None:
-    evidence = _invariant()["enforcement"][
-        "real_central_module_registry_check_evidence"
-    ]
-
-    assert _sha256(ROOT / "REPO_MANIFEST.md") == evidence[
-        "validated_target_manifest_sha256"
-    ]
-    assert _sha256(ROOT / "config/governance_reference_v1.yaml") == evidence[
-        "validated_governance_reference_sha256"
-    ]
-    assert _sha256(ROOT / "config/module_registry_v1.yaml") == evidence[
-        "validated_module_registry_sha256"
-    ]
-    assert evidence["validated_provider_count"] == 0
-    assert evidence["acceptance_effect"] == "S9_only"
-    assert evidence["central_cutover_completed"] is False
-    assert evidence["next_stage_authorized"] is False
+}
 
 
 def test_local_authority_does_not_govern_other_repositories() -> None:
@@ -245,11 +182,6 @@ def test_local_authority_does_not_govern_other_repositories() -> None:
         "governs_other_repositories": False,
         "may_offer_tools_and_recommendations": True,
         "may_change_downstream_owner_authority_status_or_write_authorization": False,
-        "governance_reference_effect": (
-            "compatibility_and_audit_record_not_current_policy_selector_or_cutover_evidence"
-        ),
-        "governance_reference_record_present": True,
-        "group_cutover_completed_by_reference": False,
     }
     assert execution["authority_effect"] == "tool_system_local_only"
     assert "authorized_scope" not in execution
@@ -300,11 +232,11 @@ def test_process_inputs_use_explicit_authority_and_remain_pending_cleanup() -> N
         "implicit_legacy_repository_authority_removed": True,
         "legacy_compatibility_replay_only": True,
         "legacy_execution_authorized": False,
-        "caller_and_reference_audit_complete": True,
+        "current_task_caller_audit_complete": True,
         "formal_file_set_registration_implemented": True,
         "tracked_path_coverage_validation_implemented": True,
         "legacy_non_authority_sets_registered": True,
-        "group_process_file_compliance_claimed": False,
+        "retained_inputs_are_current_authority": False,
         "deletion_or_reclassification_authorized": False,
     }
     assert isinstance(active_gates["task_manifests"], list)

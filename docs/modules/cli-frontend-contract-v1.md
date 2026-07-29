@@ -1,6 +1,6 @@
 # CLI Frontend Module Compound Contract v1
 
-This file materializes the S3 contract evidence owned by the current
+This file defines the module contract owned by the current
 `cli_frontend` module. CLI selection and argument parsing do not expand the
 authority of any delegated module.
 
@@ -18,7 +18,7 @@ module_compound_contract:
       interface_id: cli-frontend-api
       interface_version: 1.0.0
     mapping_owner:
-      contract_path: docs/tool_system_module_registry_adoption_contract_v1.md
+      contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cli_frontend@1.1.0
     python_import_identities:
@@ -81,7 +81,7 @@ module_compound_contract:
     - src/tool_system/cli/target_repo_dry_run.py
     - src/tool_system/cli/target_repo_pr_plan_preview.py
   dependency_contract:
-    basis: s0-static-python-import-dag
+    basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids:
       - cleanup_planner
@@ -105,7 +105,7 @@ module_compound_contract:
       - nonzero_exit_on_block_or_failure
     boundary: Argument errors, delegated BLOCK or failure status, or delegated exceptions do not become success and cannot be hidden by CLI routing.
   side_effect_contract:
-    taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
+    taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
       - repository_write
       - data_write
@@ -192,20 +192,14 @@ module_compound_contract:
           - src/tool_system/cli/main.py
         boundary: Select one current module interface and preserve its authorization, side-effect, error, and stop boundaries.
   non_claims:
-    registry_membership: false
-    central_registry_adopted: false
-    central_schema_compliance_claimed: false
-    central_gate_pass_claimed: false
-    governance_activated: false
     provider_execution_authorized: false
     target_repo_mutation_authorized: false
     cleanup_execution_authorized: false
     production_operation_authorized: false
-    governance_cutover_completed: false
   authority_boundary:
     execution_authority: false
-    governance_authority: false
-    evidence_role: s3-contract-reference-input
-    next_stage: separately-authorized-s4
+    downstream_authority: false
+    evidence_role: tool-system-module-contract
+    change_boundary: separately-audited-module-change
 ~~~
 <!-- MODULE-COMPOUND-CONTRACT:END -->

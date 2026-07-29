@@ -45,6 +45,6 @@ cannot authorize the protected command-dispatch API.
 
 ## Cleanup and claim boundary
 
-Existing reports, manifests, change plans, and `examples/active_gates.yaml` remain present. This contract does not delete, reclassify, move, or claim finance-governance process-file compliance for them. Cleanup requires a separate authorization and accepted disposition.
+Existing reports, manifests, change plans, and `examples/active_gates.yaml` remain present as retained non-authority inputs. This contract does not delete, reclassify, or move them. Cleanup requires a separate authorization and accepted disposition.
 
 This contract grants no finance-us or other target-repository mutation, live provider execution, branch cleanup, production deployment, or governance activation. Rollback uses a named revert PR preserving Git and audit history.

@@ -1,6 +1,6 @@
 # Architecture Registry Module Compound Contract v1
 
-This file materializes the S3 contract evidence owned by the current
+This file defines the module contract owned by the current
 `architecture_registry` module. It is not registry membership or execution
 authority.
 
@@ -13,12 +13,12 @@ module_compound_contract:
   identity:
     canonical_module_id: architecture-registry
     current_module_id: architecture_registry
-    module_version: 1.1.0
+    module_version: 2.0.0
     aggregate_interface:
       interface_id: architecture-registry-api
-      interface_version: 1.0.0
+      interface_version: 2.0.0
     mapping_owner:
-      contract_path: docs/tool_system_module_registry_adoption_contract_v1.md
+      contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:architecture_registry@1.1.0
     python_import_identities:
@@ -44,7 +44,7 @@ module_compound_contract:
     - src/tool_system/cli/validate_module_registry.py
     - src/tool_system/cli/validate_repo_manifest.py
   dependency_contract:
-    basis: s0-static-python-import-dag
+    basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids:
       - manifest_validation
@@ -56,21 +56,21 @@ module_compound_contract:
     boundary: Accept one caller-selected current registry or manifest path and a read-only repository root.
   output_contract:
     registered_outputs:
-      - module_registry_validation_result_v1
-      - repository_manifest_validation_result_v1
+      - module_registry_validation_result_v2
+      - repository_manifest_validation_result_v2
     boundary: Return deterministic structured status, mode, counts, compatibility metadata, and fail-closed reasons.
   error_contract:
     registered_error_semantics:
       - fail_closed_with_structured_reasons
     boundary: Missing, mixed, malformed, ambiguous, overlapping, unowned, or graph-inconsistent input returns BLOCK or a bounded validation error.
   side_effect_contract:
-    taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
+    taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes: []
     direct_effects: []
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve result fields, parser modes, current authority paths, natural-owner coverage, and declared DAG semantics.
+    interface_compatible_replacement: Preserve the v2 local result fields, parser modes, current authority paths, natural-owner coverage, and declared DAG semantics.
     interface_incompatible_change: Requires a new aggregate interface version and an explicitly reviewed migration.
   rollback_contract:
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:architecture_registry@1.1.0
@@ -90,7 +90,7 @@ module_compound_contract:
       contract: Inspect current tracked paths and authority documents without staging, writing, converting, or caching them.
     data:
       mode: read-only
-      contract: Registry, schema, S0 mapping, source ownership, and manifest table data remain caller-owned inputs.
+      contract: Registry, schema, module identity mapping, source ownership, and manifest table data remain caller-owned inputs.
     artifact:
       mode: result-only
       contract: Validation results exist in memory or stdout only unless an external caller separately persists them.
@@ -122,20 +122,14 @@ module_compound_contract:
           - src/tool_system/architecture/repo_manifest.py
         boundary: Invoke local Git only to enumerate tracked paths with a minimal deterministic environment and no index mutation.
   non_claims:
-    registry_membership: false
-    central_registry_adopted: false
-    central_schema_compliance_claimed: false
-    central_gate_pass_claimed: false
-    governance_activated: false
     provider_execution_authorized: false
     target_repo_mutation_authorized: false
     cleanup_execution_authorized: false
     production_operation_authorized: false
-    governance_cutover_completed: false
   authority_boundary:
     execution_authority: false
-    governance_authority: false
-    evidence_role: s3-contract-reference-input
-    next_stage: separately-authorized-s4
+    downstream_authority: false
+    evidence_role: tool-system-module-contract
+    change_boundary: separately-audited-module-change
 ~~~
 <!-- MODULE-COMPOUND-CONTRACT:END -->

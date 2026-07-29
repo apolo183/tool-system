@@ -14,9 +14,9 @@ import yaml
 
 from tool_system.architecture import module_registry
 from tool_system.architecture.module_registry import (
-    CENTRAL_COMPATIBILITY_INPUT_MODE,
+    CURRENT_REGISTRY_INPUT_MODE,
     LEGACY_REGISTRY_INPUT_MODE,
-    load_s0_identity_mapping,
+    load_module_identity_mapping,
     validate_module_registry,
 )
 from tool_system.manifest.task_manifest import load_yaml_file
@@ -24,22 +24,16 @@ from tool_system.manifest.task_manifest import load_yaml_file
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "config/module_registry_v1.yaml"
 LOCAL_SCHEMA = ROOT / "config/module_registry_schema_v1.json"
-S0_CONTRACT = ROOT / "docs/tool_system_module_registry_adoption_contract_v1.md"
+MODULE_CONTRACT = ROOT / "docs/tool_system_module_registry_contract_v1.md"
 CONTRACT_DIR = ROOT / "docs/modules"
 BLUEPRINT = ROOT / "blueprint/tool_system_v0.yaml"
 
 EXPECTED_RAW_SHA256 = (
-    "c8277ad5469f5fde4709625e5fc5620c01f53bebbb64f39072a0f23db075d0fc"
+    "776d8511bb8dccc6532c6ce3a1a04d1e2f558896f675473c8251972c16f97dff"
 )
 EXPECTED_BYTE_LENGTH = 81_424
 EXPECTED_SEMANTIC_SHA256 = (
-    "79a53c835ec1372436e06643b11fe40d06396650b5757b4123427c679bc9d5e6"
-)
-EXPECTED_EXPANDED_EFFECT_MATRIX_SHA256 = (
-    "63d0299d058c4d2fffac5c2a4e22359685ee6566c43ed46c2e546546ee58ca52"
-)
-EXPECTED_GROUPED_EFFECT_MATRIX_SHA256 = (
-    "a82d34939a7ec863d86e88fb4fb29b8f66cec06fc2a49fae052c5e1e7801891b"
+    "baa8188ab608f9363e4a58961ac4c854fd618591e7add128ad4ce0aea0d6dafa"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 90
 EXPECTED_MODULE_IDS = {
@@ -102,7 +96,7 @@ def _yaml_block(path: Path, name: str) -> dict[str, Any]:
 
 def authority_contracts() -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
-    for mapping in load_s0_identity_mapping(ROOT):
+    for mapping in load_module_identity_mapping(ROOT):
         path = CONTRACT_DIR / f"{mapping['canonical_module_id']}-contract-v1.md"
         contract = _yaml_block(path, "MODULE-COMPOUND-CONTRACT")[
             "module_compound_contract"
@@ -130,7 +124,7 @@ def _selector_matches(selector: dict[str, str], import_name: str) -> bool:
 
 
 def target_python_owner_by_path() -> dict[str, str]:
-    mappings = load_s0_identity_mapping(ROOT)
+    mappings = load_module_identity_mapping(ROOT)
     result: dict[str, str] = {}
     for path in sorted((ROOT / "src/tool_system").rglob("*.py")):
         import_name = _python_import_identity(path)
@@ -164,7 +158,7 @@ def authority_code_paths() -> dict[str, list[str]]:
     return result
 
 
-def central_registry_fixture() -> dict[str, Any]:
+def current_registry_fixture() -> dict[str, Any]:
     return copy.deepcopy(load_yaml_file(REGISTRY))
 
 
@@ -208,7 +202,7 @@ def authority_effect_matrices() -> tuple[
 ]:
     mappings = {
         str(row["current_module_id"]): row
-        for row in load_s0_identity_mapping(ROOT)
+        for row in load_module_identity_mapping(ROOT)
     }
     expanded: list[tuple[str, str, str, tuple[str, ...], str]] = []
     grouped: dict[tuple[str, str, str, str], list[str]] = {}
@@ -291,7 +285,7 @@ def assert_effect_oracle(registry: dict[str, Any]) -> None:
 
 
 def legacy_registry_fixture() -> dict[str, Any]:
-    mappings = load_s0_identity_mapping(ROOT)
+    mappings = load_module_identity_mapping(ROOT)
     contracts = authority_contracts()
     by_current = {str(row["current_module_id"]): row for row in mappings}
     downstream = {
@@ -384,12 +378,10 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert len(list(_iter_contract_references(registry))) == 151
     assert sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
     assert len(target_python_owner_by_path()) == 90
-    assert EXPECTED_EXPANDED_EFFECT_MATRIX_SHA256.startswith("63d0299d")
-    assert EXPECTED_GROUPED_EFFECT_MATRIX_SHA256.startswith("a82d3493")
     assert_effect_oracle(registry)
 
 
-def test_current_central_registry_is_authority_and_tmp_copy_is_not(
+def test_current_current_registry_is_authority_and_tmp_copy_is_not(
     tmp_path: Path,
 ) -> None:
     current = validate_module_registry(
@@ -397,13 +389,13 @@ def test_current_central_registry_is_authority_and_tmp_copy_is_not(
         ROOT,
         require_current_authority=True,
     )
-    fixture = _write_registry(tmp_path, central_registry_fixture())
+    fixture = _write_registry(tmp_path, current_registry_fixture())
     compatibility = validate_module_registry(fixture, ROOT)
 
     assert current["status"] == "PASS"
-    assert current["registry_input_mode"] == CENTRAL_COMPATIBILITY_INPUT_MODE
+    assert current["registry_input_mode"] == CURRENT_REGISTRY_INPUT_MODE
     assert current["current_registry_authority"] is True
-    assert current["validation_scope"] == "tool_system_current_central_registry"
+    assert current["validation_scope"] == "tool_system_current_module_registry"
     assert current["compatibility_adapter"]["applied"] is False
     assert current["contract_reference_count"] == 151
     assert current["external_provider_count"] == 0
@@ -432,9 +424,9 @@ def test_legacy_registry_remains_memory_only_compatibility(
     assert authority["status"] == "BLOCK"
 
 
-def test_s0_s3_authorities_close_identity_boundaries_dag_and_effects() -> None:
+def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
     registry = load_yaml_file(REGISTRY)
-    mappings = load_s0_identity_mapping(ROOT)
+    mappings = load_module_identity_mapping(ROOT)
     contracts = authority_contracts()
     modules = _modules_by_id(registry)
     interfaces = {
@@ -500,15 +492,15 @@ def test_manifest_selector_and_unique_registry_authority_path() -> None:
     ]
 
 
-def test_mixed_legacy_central_shape_and_legacy_current_claim_block(
+def test_mixed_legacy_current_shape_and_legacy_current_claim_block(
     tmp_path: Path,
 ) -> None:
-    mixed = central_registry_fixture()
+    mixed = current_registry_fixture()
     mixed["registry_version"] = "module_registry_v1"
     result = validate_module_registry(_write_registry(tmp_path, mixed), ROOT)
     assert result["status"] == "BLOCK"
     assert result["reasons"] == [
-        "mixed legacy/central top-level shape is not permitted"
+        "mixed legacy/current top-level shape is not permitted"
     ]
     legacy = legacy_registry_fixture()
     result = validate_module_registry(_write_registry(tmp_path, legacy), ROOT)
@@ -519,8 +511,8 @@ def test_mixed_legacy_central_shape_and_legacy_current_claim_block(
     "mutation,reason",
     [
         ("duplicate-module", "duplicate canonical module ID"),
-        ("duplicate-interface", "duplicate central interface identity"),
-        ("duplicate-owner", "duplicate central module owner"),
+        ("duplicate-interface", "duplicate current interface identity"),
+        ("duplicate-owner", "duplicate current module owner"),
         ("duplicate-dependency", "internal_dependencies repeats"),
         ("duplicate-effect", "repeats effect ID"),
         ("nonreciprocal", "provider/consumer declarations do not close"),
@@ -534,12 +526,12 @@ def test_mixed_legacy_central_shape_and_legacy_current_claim_block(
         ("external-provider", "external_dependencies are outside"),
     ],
 )
-def test_central_dynamic_negative_cases(
+def test_current_dynamic_negative_cases(
     tmp_path: Path,
     mutation: str,
     reason: str,
 ) -> None:
-    registry = central_registry_fixture()
+    registry = current_registry_fixture()
     modules = registry["modules"]
     if mutation == "duplicate-module":
         modules.append(copy.deepcopy(modules[0]))
@@ -567,10 +559,10 @@ def test_central_dynamic_negative_cases(
             m for m in modules if m["module_id"] == "manifest-validation"
         )
         manifest["internal_dependencies"].append(
-            {
-                "interface_id": "architecture-registry-api",
-                "interface_version": "1.0.0",
-            }
+                {
+                    "interface_id": "architecture-registry-api",
+                    "interface_version": "2.0.0",
+                }
         )
         interface = next(
             i
@@ -625,7 +617,7 @@ def test_central_dynamic_negative_cases(
     ],
 )
 def test_effect_oracle_rejects_target_and_identity_drift(mutation: str) -> None:
-    registry = central_registry_fixture()
+    registry = current_registry_fixture()
     module = next(m for m in registry["modules"] if m["permitted_side_effects"])
     effect = module["permitted_side_effects"][0]
     if mutation == "wrong-existing-target":
@@ -685,7 +677,7 @@ def test_adapter_reads_one_registry_and_does_not_mutate_index(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    fixture = _write_registry(tmp_path, central_registry_fixture())
+    fixture = _write_registry(tmp_path, current_registry_fixture())
     calls: list[Path] = []
     real_loader = module_registry.load_yaml_file
     index_sha = _sha256(ROOT / ".git/index")
@@ -701,10 +693,9 @@ def test_adapter_reads_one_registry_and_does_not_mutate_index(
     assert _sha256(ROOT / ".git/index") == index_sha
 
 
-def test_blueprint_and_ci_keep_local_authority_with_s9_accepted() -> None:
+def test_blueprint_and_ci_keep_local_registry_authority() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     enforcement = blueprint["milestone_module_invariant"]["enforcement"]
-    evidence = enforcement["real_central_module_registry_check_evidence"]
     workflow = (ROOT / ".github/workflows/tool-system-ci.yml").read_text(encoding="utf-8")
     workflow_lines = {line.strip() for line in workflow.splitlines()}
     guarded_command = (
@@ -722,22 +713,17 @@ def test_blueprint_and_ci_keep_local_authority_with_s9_accepted() -> None:
     assert enforcement["contract_reference_hash_validation_implemented"] is True
     assert enforcement["side_effect_target_binding_validation_implemented"] is True
     assert enforcement["runtime_module_enforcement_implemented"] is False
-    assert enforcement["real_central_module_registry_check_passed"] is True
-    assert evidence["status"] == "S9_REAL_CENTRAL_MODULE_REGISTRY_CHECK_ACCEPTED"
-    assert evidence["gate_mode"] == "module-registry-check"
-    assert evidence["acceptance_effect"] == "S9_only"
-    assert evidence["central_cutover_completed"] is False
-    assert evidence["next_stage_authorized"] is False
+    assert not any(
+        "central" in key or ("cut" + "over") in key for key in enforcement
+    )
     assert f"run: {guarded_command}" in workflow_lines
     assert f"run: {unguarded_command}" not in workflow_lines
-    assert "module-registry-check" not in workflow
-    assert "scripts/governance/check_governance.py" not in workflow
     assert json.loads(LOCAL_SCHEMA.read_text(encoding="utf-8"))["title"] == (
         "tool-system Durable Module Registry Schema v1"
     )
 
 
-def test_cli_help_describes_single_central_authority() -> None:
+def test_cli_help_describes_single_local_authority() -> None:
     result = subprocess.run(
         ["python", "-m", "tool_system.cli.validate_module_registry", "--help"],
         cwd=ROOT,
@@ -746,7 +732,7 @@ def test_cli_help_describes_single_central_authority() -> None:
         text=True,
     )
     help_text = " ".join(result.stdout.split())
-    assert "central format as current local authority" in help_text
+    assert "current local registry authority" in help_text
     assert "no projection or second authority" in help_text
 
 
@@ -768,5 +754,5 @@ def test_cli_require_current_authority_accepts_fixed_registry() -> None:
 
     assert output["status"] == "PASS"
     assert output["current_registry_authority"] is True
-    assert output["validation_scope"] == "tool_system_current_central_registry"
+    assert output["validation_scope"] == "tool_system_current_module_registry"
     assert output["compatibility_adapter"]["applied"] is False

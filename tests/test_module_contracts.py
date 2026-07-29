@@ -24,7 +24,7 @@ from tool_system.planner.requirement_graph import write_requirement_task_graph_f
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_DIR = ROOT / "docs" / "modules"
-S0_CONTRACT = ROOT / "docs" / "tool_system_module_registry_adoption_contract_v1.md"
+MODULE_CONTRACT = ROOT / "docs" / "tool_system_module_registry_contract_v1.md"
 REGISTRY = ROOT / "config" / "module_registry_v1.yaml"
 SOURCE_ROOT = ROOT / "src"
 
@@ -32,10 +32,9 @@ BLOCK_NAME = "MODULE-COMPOUND-CONTRACT"
 FORMAT_IDENTITY = "tool-system-module-compound-contract-v1"
 SCHEMA_IDENTITY = "tool-system-module-compound-contract-schema-v1"
 EFFECT_TAXONOMY_SOURCE = (
-    "finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:"
-    "config/module_registry_schema_v1.json"
+    "docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy"
 )
-CENTRAL_EFFECT_CLASSES = {
+TOOL_SYSTEM_EFFECT_CLASSES = {
     "repository_write",
     "data_write",
     "generated_artifact_write",
@@ -117,14 +116,14 @@ DELEGATED_EFFECT_EXPECTATIONS = {
     "ai_worker_runtime": {},
     "durable_orchestrator": {
         "caller-supplied-outbox-delivery-sink": frozenset(
-            CENTRAL_EFFECT_CLASSES
+            TOOL_SYSTEM_EFFECT_CLASSES
         )
     },
     "repository_controller": {},
     "process_authority": {},
     "task_planner": {},
     "task_runner": {
-        "configured-command-execution": frozenset(CENTRAL_EFFECT_CLASSES)
+        "configured-command-execution": frozenset(TOOL_SYSTEM_EFFECT_CLASSES)
     },
     "role_runtime": {
         "repository-controller-jsonl-persistence": frozenset(
@@ -132,28 +131,22 @@ DELEGATED_EFFECT_EXPECTATIONS = {
         )
     },
     "worker_adapter": {
-        "injected-worker-adapter": frozenset(CENTRAL_EFFECT_CLASSES)
+        "injected-worker-adapter": frozenset(TOOL_SYSTEM_EFFECT_CLASSES)
     },
     "target_repo_adapter": {},
     "cleanup_planner": {},
     "cli_frontend": {
-        "selected-module-interface": frozenset(CENTRAL_EFFECT_CLASSES)
+        "selected-module-interface": frozenset(TOOL_SYSTEM_EFFECT_CLASSES)
     },
 }
 TOKEN_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SEMVER_RE = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 PLACEHOLDERS = {"UNKNOWN", "TBD", "TODO"}
 NON_CLAIM_KEYS = {
-    "registry_membership",
-    "central_registry_adopted",
-    "central_schema_compliance_claimed",
-    "central_gate_pass_claimed",
-    "governance_activated",
     "provider_execution_authorized",
     "target_repo_mutation_authorized",
     "cleanup_execution_authorized",
     "production_operation_authorized",
-    "governance_cutover_completed",
 }
 REVALIDATION_KEYS = {
     "module_implementation",
@@ -215,8 +208,8 @@ def _yaml_block(path: Path, name: str = BLOCK_NAME) -> dict[str, Any]:
     return contract
 
 
-def _s0_block(name: str) -> dict[str, Any]:
-    text = S0_CONTRACT.read_text(encoding="utf-8")
+def _module_block(name: str) -> dict[str, Any]:
+    text = MODULE_CONTRACT.read_text(encoding="utf-8")
     start = f"<!-- {name}:BEGIN -->\n~~~yaml\n"
     end = f"\n~~~\n<!-- {name}:END -->"
     _require(text.count(start) == 1, f"{name}: one start marker required")
@@ -227,29 +220,29 @@ def _s0_block(name: str) -> dict[str, Any]:
 
 
 def _mapping_contract() -> dict[str, Any]:
-    value = _s0_block("S0-IDENTITY-MAPPING").get("mapping_contract")
-    _require(isinstance(value, dict), "S0 mapping_contract is required")
+    value = _module_block("MODULE-IDENTITY-MAPPING").get("mapping_contract")
+    _require(isinstance(value, dict), "module identity mapping_contract is required")
     return value
 
 
 def _mappings_by_current_id() -> dict[str, dict[str, Any]]:
     rows = _mapping_contract().get("mappings")
-    _require(isinstance(rows, list), "S0 mappings must be a list")
-    _require(len(rows) == 14, "S0 mappings must contain fourteen rows")
+    _require(isinstance(rows, list), "module identity mappings must be a list")
+    _require(len(rows) == 14, "module identity mappings must contain fourteen rows")
     result = {
         str(row["current_module_id"]): row
         for row in rows
         if isinstance(row, dict)
     }
-    _require(len(result) == 14, "S0 current module IDs must be unique")
+    _require(len(result) == 14, "current module IDs must be unique")
     return result
 
 
-def _s0_consumers() -> dict[str, list[str]]:
-    value = _s0_block("S0-STATIC-DAG").get("static_import_dag")
-    _require(isinstance(value, dict), "S0 static_import_dag is required")
+def _module_consumers() -> dict[str, list[str]]:
+    value = _module_block("MODULE-STATIC-DAG").get("static_import_dag")
+    _require(isinstance(value, dict), "module static_import_dag is required")
     providers = value.get("providers")
-    _require(isinstance(providers, dict), "S0 providers must be a mapping")
+    _require(isinstance(providers, dict), "module providers must be a mapping")
     return {
         str(module_id): list(consumers)
         for module_id, consumers in providers.items()
@@ -260,7 +253,7 @@ def _direct_providers(consumers: dict[str, list[str]]) -> dict[str, list[str]]:
     providers = {module_id: [] for module_id in consumers}
     for provider, direct_consumers in consumers.items():
         for consumer in direct_consumers:
-            _require(consumer in providers, f"S0 DAG has unknown consumer: {consumer}")
+            _require(consumer in providers, f"module DAG has unknown consumer: {consumer}")
             providers[consumer].append(provider)
     return {
         module_id: sorted(module_providers)
@@ -332,7 +325,7 @@ def _expanded_owner_paths(
     )
     _require(
         all(owners[path] == owner for path, owner in target_python_owners.items()),
-        "S3 natural owners must match the S0 Python identity oracle",
+        "natural owners must match the module Python identity oracle",
     )
     return expanded
 
@@ -555,10 +548,10 @@ def _validate_contract(
     _require(
         mapping_owner
         == {
-            "contract_path": S0_CONTRACT.relative_to(ROOT).as_posix(),
+            "contract_path": MODULE_CONTRACT.relative_to(ROOT).as_posix(),
             "implementation_path": _mapping_contract()["identity_mapping_owner"],
         },
-        f"{module_id}: S0 mapping owner drifted",
+        f"{module_id}: module mapping owner drifted",
     )
     _require(
         identity["rollback_identity"] == mapping["rollback_identity"],
@@ -577,7 +570,7 @@ def _validate_contract(
     _require(
         registry_module["role"]
         == f"{role['summary']}. {role['responsibility_boundary']}",
-        f"{module_id}: central registered role drifted",
+        f"{module_id}: local registered role drifted",
     )
     _require(
         contract["natural_owner_evidence_paths"] == owner_paths,
@@ -588,7 +581,7 @@ def _validate_contract(
     _require(
         dependencies
         == {
-            "basis": "s0-static-python-import-dag",
+            "basis": "tool-system-static-python-import-dag",
             "direction": "provider-to-direct-consumer",
             "direct_provider_module_ids": direct_providers,
             "direct_consumer_module_ids": direct_consumers,
@@ -633,8 +626,8 @@ def _validate_contract(
     _require(isinstance(effect_classes, list), f"{module_id}: effect classes must be a list")
     _require(len(effect_classes) == len(set(effect_classes)), f"{module_id}: duplicate effect class")
     _require(
-        set(effect_classes) <= CENTRAL_EFFECT_CLASSES,
-        f"{module_id}: non-central effect class",
+        set(effect_classes) <= TOOL_SYSTEM_EFFECT_CLASSES,
+        f"{module_id}: non-local effect class",
     )
     direct_effects = effects["direct_effects"]
     _require(isinstance(direct_effects, list), f"{module_id}: direct effects must be a list")
@@ -647,8 +640,8 @@ def _validate_contract(
         )
         effect_class = effect["effect_class"]
         _require(
-            effect_class in CENTRAL_EFFECT_CLASSES,
-            f"{module_id}: non-central direct effect class",
+            effect_class in TOOL_SYSTEM_EFFECT_CLASSES,
+            f"{module_id}: non-local direct effect class",
         )
         observed_direct_effects.add(effect_class)
         _require(
@@ -701,7 +694,7 @@ def _validate_contract(
         _require(
             isinstance(delegated_classes, list)
             and len(delegated_classes) == len(set(delegated_classes))
-            and set(delegated_classes) <= CENTRAL_EFFECT_CLASSES,
+            and set(delegated_classes) <= TOOL_SYSTEM_EFFECT_CLASSES,
             f"{module_id}: delegated effect classes are invalid",
         )
         _require(
@@ -827,9 +820,9 @@ def _validate_contract(
         authority
         == {
             "execution_authority": False,
-            "governance_authority": False,
-            "evidence_role": "s3-contract-reference-input",
-            "next_stage": "separately-authorized-s4",
+            "downstream_authority": False,
+            "evidence_role": "tool-system-module-contract",
+            "change_boundary": "separately-audited-module-change",
         },
         f"{module_id}: authority boundary drifted",
     )
@@ -868,14 +861,14 @@ def _validate_contract_set(
 def _validated_contracts() -> tuple[list[dict[str, Any]], list[str]]:
     mappings = _mappings_by_current_id()
     registry = _registry_by_id()
-    consumers = _s0_consumers()
+    consumers = _module_consumers()
     providers = _direct_providers(consumers)
     owner_paths = _expanded_owner_paths(registry)
     _require(
         set(mappings)
         == set(DIRECT_EFFECT_EXPECTATIONS)
         == set(DELEGATED_EFFECT_EXPECTATIONS),
-        "independent effect oracle must cover the dynamic S0 module set",
+        "independent effect oracle must cover the dynamic MODULE module set",
     )
     expected_paths = {
         ROOT / "docs" / "modules" / f"{mapping['canonical_module_id']}-contract-v1.md"
@@ -904,7 +897,7 @@ def _validated_contracts() -> tuple[list[dict[str, Any]], list[str]]:
     return contracts, digests
 
 
-def test_all_module_contracts_match_s0_registry_and_real_owner_evidence() -> None:
+def test_all_module_contracts_match_module_registry_and_real_owner_evidence() -> None:
     contracts, digests = _validated_contracts()
 
     assert len(contracts) == 14
@@ -915,7 +908,7 @@ def test_all_module_contracts_match_s0_registry_and_real_owner_evidence() -> Non
 def test_target_owner_oracle_rejects_both_legacy_gate_owners() -> None:
     mappings = _mappings_by_current_id()
     registry = _registry_by_id()
-    consumers = _s0_consumers()
+    consumers = _module_consumers()
     providers = _direct_providers(consumers)
     owner_paths = _expanded_owner_paths(registry)
 
@@ -1033,7 +1026,7 @@ def test_real_callers_prove_direct_and_delegated_effect_boundaries() -> None:
 def test_missing_and_misclassified_effects_fail_independent_oracle() -> None:
     mappings = _mappings_by_current_id()
     registry = _registry_by_id()
-    consumers = _s0_consumers()
+    consumers = _module_consumers()
     providers = _direct_providers(consumers)
     owner_paths = _expanded_owner_paths(registry)
 
@@ -1115,7 +1108,7 @@ def test_missing_and_misclassified_effects_fail_independent_oracle() -> None:
         ("wrong-identity", "canonical ID drifted"),
         ("wrong-owner", "natural-owner evidence drifted"),
         ("wrong-dag", "dependency DAG drifted"),
-        ("illegal-effect", "non-central effect class"),
+        ("illegal-effect", "non-local effect class"),
         ("placeholder", "placeholder value is forbidden"),
     ],
 )
@@ -1125,7 +1118,7 @@ def test_invalid_compound_contracts_fail_closed(
 ) -> None:
     mappings = _mappings_by_current_id()
     registry = _registry_by_id()
-    consumers = _s0_consumers()
+    consumers = _module_consumers()
     providers = _direct_providers(consumers)
     owner_paths = _expanded_owner_paths(registry)
     module_id = "architecture_registry"

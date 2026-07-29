@@ -6,11 +6,11 @@ from collections import deque
 from pathlib import Path, PurePosixPath
 
 FORMAL_SECTION = "## Formal File Sets"
-CENTRAL_FORMAL_SECTION = "## Formal Files"
+EXACT_FORMAL_SECTION = "## Formal Files"
 LEGACY_SECTION = "## Retained Non-Authority Sets"
 LEGACY_FORMAL_PARSER_MODE = "legacy_formal_file_sets"
-CENTRAL_FORMAL_PARSER_MODE = "central_formal_files"
-CENTRAL_MODULE_REGISTRY_PATH = "config/module_registry_v1.yaml"
+EXACT_FORMAL_PARSER_MODE = "exact_formal_files"
+EXACT_MODULE_REGISTRY_PATH = "config/module_registry_v1.yaml"
 FORMAL_COLUMNS = (
     "path",
     "role",
@@ -122,10 +122,10 @@ def _table_rows(
     return rows, reasons
 
 
-def _central_formal_rows(text: str) -> tuple[list[dict[str, str]], list[str]]:
+def _exact_formal_rows(text: str) -> tuple[list[dict[str, str]], list[str]]:
     reasons: list[str] = []
     lines = text.splitlines()
-    section_index = lines.index(CENTRAL_FORMAL_SECTION)
+    section_index = lines.index(EXACT_FORMAL_SECTION)
     table_lines: list[tuple[int, str]] = []
     for line_number, line in enumerate(
         lines[section_index + 1 :],
@@ -137,7 +137,7 @@ def _central_formal_rows(text: str) -> tuple[list[dict[str, str]], list[str]]:
             continue
         if not line.startswith("|"):
             reasons.append(
-                f"{CENTRAL_FORMAL_SECTION} contains non-table content at line "
+                f"{EXACT_FORMAL_SECTION} contains non-table content at line "
                 f"{line_number}"
             )
             continue
@@ -145,7 +145,7 @@ def _central_formal_rows(text: str) -> tuple[list[dict[str, str]], list[str]]:
     if len(table_lines) < 3:
         return [], [
             *reasons,
-            f"{CENTRAL_FORMAL_SECTION} must contain a header and at least one row",
+            f"{EXACT_FORMAL_SECTION} must contain a header and at least one row",
         ]
 
     def cells(line: str) -> list[str]:
@@ -154,13 +154,13 @@ def _central_formal_rows(text: str) -> tuple[list[dict[str, str]], list[str]]:
     header = tuple(cells(table_lines[0][1]))
     if header != FORMAL_COLUMNS:
         reasons.append(
-            f"{CENTRAL_FORMAL_SECTION} columns must be exactly {list(FORMAL_COLUMNS)}"
+            f"{EXACT_FORMAL_SECTION} columns must be exactly {list(FORMAL_COLUMNS)}"
         )
     separator = cells(table_lines[1][1])
     if len(separator) != len(FORMAL_COLUMNS) or not all(
         value and set(value) <= {"-", ":"} for value in separator
     ):
-        reasons.append(f"{CENTRAL_FORMAL_SECTION} separator row is invalid")
+        reasons.append(f"{EXACT_FORMAL_SECTION} separator row is invalid")
 
     rows: list[dict[str, str]] = []
     seen_paths: set[str] = set()
@@ -168,33 +168,33 @@ def _central_formal_rows(text: str) -> tuple[list[dict[str, str]], list[str]]:
         values = cells(line)
         if len(values) != len(FORMAL_COLUMNS):
             reasons.append(
-                f"{CENTRAL_FORMAL_SECTION} row at line {line_number} "
+                f"{EXACT_FORMAL_SECTION} row at line {line_number} "
                 "has the wrong column count"
             )
             continue
         if any(not value for value in values):
             reasons.append(
-                f"{CENTRAL_FORMAL_SECTION} row at line {line_number} has an empty field"
+                f"{EXACT_FORMAL_SECTION} row at line {line_number} has an empty field"
             )
             continue
         row = dict(zip(FORMAL_COLUMNS, values, strict=True))
         exact_path = row["path"]
         if not _safe_exact_path(exact_path):
             reasons.append(
-                f"{CENTRAL_FORMAL_SECTION} path must be an exact "
+                f"{EXACT_FORMAL_SECTION} path must be an exact "
                 f"repository-relative path: {exact_path}"
             )
             continue
         if exact_path in seen_paths:
-            reasons.append(f"duplicate central formal path: {exact_path}")
+            reasons.append(f"duplicate exact formal path: {exact_path}")
             continue
         seen_paths.add(exact_path)
         rows.append(row)
 
-    if CENTRAL_MODULE_REGISTRY_PATH not in seen_paths:
+    if EXACT_MODULE_REGISTRY_PATH not in seen_paths:
         reasons.append(
-            f"{CENTRAL_FORMAL_SECTION} must register the exact module registry path: "
-            f"{CENTRAL_MODULE_REGISTRY_PATH}"
+            f"{EXACT_FORMAL_SECTION} must register the exact module registry path: "
+            f"{EXACT_MODULE_REGISTRY_PATH}"
         )
     return rows, reasons
 
@@ -204,19 +204,19 @@ def parse_manifest_formal_rows(
 ) -> tuple[str | None, list[dict[str, str]], list[str]]:
     lines = text.splitlines()
     legacy_count = lines.count(FORMAL_SECTION)
-    central_count = lines.count(CENTRAL_FORMAL_SECTION)
+    exact_count = lines.count(EXACT_FORMAL_SECTION)
     reasons: list[str] = []
 
     if legacy_count > 1:
         reasons.append(f"manifest section must appear exactly once: {FORMAL_SECTION}")
-    if central_count > 1:
+    if exact_count > 1:
         reasons.append(
-            f"manifest section must appear exactly once: {CENTRAL_FORMAL_SECTION}"
+            f"manifest section must appear exactly once: {EXACT_FORMAL_SECTION}"
         )
-    if legacy_count and central_count:
+    if legacy_count and exact_count:
         reasons.append(
             "manifest must not contain both active formal sections: "
-            f"{FORMAL_SECTION}; {CENTRAL_FORMAL_SECTION}"
+            f"{FORMAL_SECTION}; {EXACT_FORMAL_SECTION}"
         )
     if reasons:
         return None, [], reasons
@@ -224,16 +224,16 @@ def parse_manifest_formal_rows(
     if legacy_count == 1:
         rows, row_reasons = _table_rows(text, FORMAL_SECTION, FORMAL_COLUMNS)
         return LEGACY_FORMAL_PARSER_MODE, rows, row_reasons
-    if central_count == 1:
-        rows, row_reasons = _central_formal_rows(text)
-        return CENTRAL_FORMAL_PARSER_MODE, rows, row_reasons
+    if exact_count == 1:
+        rows, row_reasons = _exact_formal_rows(text)
+        return EXACT_FORMAL_PARSER_MODE, rows, row_reasons
 
     wrong_headings = sorted(
         {
             line
             for line in lines
             if line.startswith("## Formal File")
-            and line not in {FORMAL_SECTION, CENTRAL_FORMAL_SECTION}
+            and line not in {FORMAL_SECTION, EXACT_FORMAL_SECTION}
         }
     )
     if wrong_headings:
@@ -243,7 +243,7 @@ def parse_manifest_formal_rows(
     else:
         reasons.append(
             "manifest must contain exactly one active formal section: "
-            f"{FORMAL_SECTION} or {CENTRAL_FORMAL_SECTION}"
+            f"{FORMAL_SECTION} or {EXACT_FORMAL_SECTION}"
         )
     return None, [], reasons
 
@@ -442,7 +442,7 @@ def validate_repo_manifest(
         "parser_mode": parser_mode,
         "tracked_path_count": len(tracked),
         "formal_file_count": (
-            len(formal_rows) if parser_mode == CENTRAL_FORMAL_PARSER_MODE else 0
+            len(formal_rows) if parser_mode == EXACT_FORMAL_PARSER_MODE else 0
         ),
         "formal_set_count": (
             len(formal_rows) if parser_mode == LEGACY_FORMAL_PARSER_MODE else 0
@@ -452,7 +452,7 @@ def validate_repo_manifest(
         "legacy_path_count": len(legacy_paths),
         "unclassified_path_count": len(unclassified),
         "formal_execution_order": execution_order,
-        "group_process_file_compliance_claimed": False,
+        "retained_inputs_are_current_authority": False,
         "cleanup_authorized": False,
         "writes_target_repo": False,
         "executes_target_repo_mutation": False,

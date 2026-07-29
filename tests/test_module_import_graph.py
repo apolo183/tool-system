@@ -9,13 +9,13 @@ import yaml
 from test_module_registry import (
     EXPECTED_MANAGED_PYTHON_FILE_COUNT,
     TARGET_OWNER_DELTAS,
-    central_registry_fixture,
+    current_registry_fixture,
     target_python_owner_by_path,
 )
 from tool_system.architecture.module_registry import (
     compare_managed_import_graphs,
     extract_managed_import_graph,
-    load_s0_identity_mapping,
+    load_module_identity_mapping,
     validate_module_registry,
 )
 from tool_system.manifest.task_manifest import load_yaml_file
@@ -59,7 +59,7 @@ def _current_boundaries() -> tuple[
     owner_by_path = {
         path: str(mapping["canonical_module_id"])
         for path, current_owner in target_python_owner_by_path().items()
-        for mapping in load_s0_identity_mapping(ROOT)
+        for mapping in load_module_identity_mapping(ROOT)
         if mapping["current_module_id"] == current_owner
     }
     declared: dict[str, set[str]] = {
@@ -138,8 +138,8 @@ def _independent_observed_graph(
     }
 
 
-def _s0_declared_graph() -> dict[str, list[str]]:
-    mappings = load_s0_identity_mapping(ROOT)
+def _module_declared_graph() -> dict[str, list[str]]:
+    mappings = load_module_identity_mapping(ROOT)
     canonical_by_current = {
         mapping["current_module_id"]: mapping["canonical_module_id"]
         for mapping in mappings
@@ -147,14 +147,14 @@ def _s0_declared_graph() -> dict[str, list[str]]:
     return {
         mapping["canonical_module_id"]: sorted(
             canonical_by_current[consumer]
-            for consumer in mapping["current_observed_consumers"]
+            for consumer in mapping["direct_consumer_module_ids"]
         )
         for mapping in mappings
     }
 
 
-def _write_central_fixture(tmp_path: Path, registry: object) -> Path:
-    path = tmp_path / "central_module_registry_fixture.yaml"
+def _write_current_fixture(tmp_path: Path, registry: object) -> Path:
+    path = tmp_path / "current_module_registry_fixture.yaml"
     path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
     return path
 
@@ -187,13 +187,13 @@ def _fixture_graph(
     return extract_managed_import_graph(tmp_path, owner_by_path, mappings)
 
 
-def test_real_managed_import_dag_matches_boundaries_s0_and_declarations() -> None:
+def test_real_managed_import_dag_matches_boundaries_module_and_declarations() -> None:
     owner_by_path, declared_graph = _current_boundaries()
     independent_graph = _independent_observed_graph(owner_by_path)
     production_graph, reasons = extract_managed_import_graph(
         ROOT,
         owner_by_path,
-        load_s0_identity_mapping(ROOT),
+        load_module_identity_mapping(ROOT),
     )
 
     assert reasons == []
@@ -208,7 +208,7 @@ def test_real_managed_import_dag_matches_boundaries_s0_and_declarations() -> Non
     }
     assert independent_graph == production_graph
     assert independent_graph == declared_graph
-    assert independent_graph == _s0_declared_graph()
+    assert independent_graph == _module_declared_graph()
 
 
 def test_exact_file_module_import_passes(tmp_path: Path) -> None:
@@ -425,7 +425,7 @@ def test_unknown_managed_module_owner_blocks() -> None:
     _, reasons = extract_managed_import_graph(
         ROOT,
         owner_by_path,
-        load_s0_identity_mapping(ROOT),
+        load_module_identity_mapping(ROOT),
     )
 
     assert (
@@ -434,13 +434,13 @@ def test_unknown_managed_module_owner_blocks() -> None:
     ) in reasons
 
 
-def test_duplicate_central_path_owner_blocks(tmp_path: Path) -> None:
-    registry = central_registry_fixture()
+def test_duplicate_current_path_owner_blocks(tmp_path: Path) -> None:
+    registry = current_registry_fixture()
     duplicate = copy.deepcopy(registry["modules"][0]["boundaries"]["code"][0])
     registry["modules"][1]["boundaries"]["code"].append(duplicate)
 
     result = validate_module_registry(
-        _write_central_fixture(tmp_path, registry),
+        _write_current_fixture(tmp_path, registry),
         ROOT,
     )
 
@@ -453,7 +453,7 @@ def test_duplicate_central_path_owner_blocks(tmp_path: Path) -> None:
 
 def test_import_identity_collision_blocks() -> None:
     owner_by_path, _ = _current_boundaries()
-    mappings = copy.deepcopy(load_s0_identity_mapping(ROOT))
+    mappings = copy.deepcopy(load_module_identity_mapping(ROOT))
     mappings[0]["python_import_identities"].append(
         {"kind": "exact", "name": "tool_system.ai_worker"}
     )
