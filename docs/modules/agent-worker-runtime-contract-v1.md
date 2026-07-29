@@ -1,6 +1,6 @@
 # Agent Worker Runtime Module Compound Contract v1
 
-This file materializes the S3 contract evidence owned by the current
+This file defines the module contract owned by the current
 `agent_worker_runtime` module. Its process boundary remains fixture-only and
 does not authorize provider or target-repository execution.
 
@@ -18,7 +18,7 @@ module_compound_contract:
       interface_id: agent-worker-runtime-api
       interface_version: 1.0.0
     mapping_owner:
-      contract_path: docs/tool_system_module_registry_adoption_contract_v1.md
+      contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:agent_worker_runtime@1.0.0
     python_import_identities:
@@ -32,7 +32,7 @@ module_compound_contract:
     - src/tool_system/agent_worker/interface.py
     - src/tool_system/agent_worker/process_runtime.py
   dependency_contract:
-    basis: s0-static-python-import-dag
+    basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids: []
     direct_consumer_module_ids:
@@ -51,7 +51,7 @@ module_compound_contract:
       - bounded_worker_error_codes
     boundary: Invalid paths, symlinks, hard links, network, mutation flags, guard denials, timeouts, cancellation, resource limits, or cleanup failure block.
   side_effect_contract:
-    taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
+    taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
       - data_write
       - generated_artifact_write
@@ -127,20 +127,14 @@ module_compound_contract:
           - src/tool_system/agent_worker/process_runtime.py
         boundary: Use the approved interpreter with isolated flags, scrubbed environment, disabled network, audit guard, process-group termination, and bounded resources.
   non_claims:
-    registry_membership: false
-    central_registry_adopted: false
-    central_schema_compliance_claimed: false
-    central_gate_pass_claimed: false
-    governance_activated: false
     provider_execution_authorized: false
     target_repo_mutation_authorized: false
     cleanup_execution_authorized: false
     production_operation_authorized: false
-    governance_cutover_completed: false
   authority_boundary:
     execution_authority: false
-    governance_authority: false
-    evidence_role: s3-contract-reference-input
-    next_stage: separately-authorized-s4
+    downstream_authority: false
+    evidence_role: tool-system-module-contract
+    change_boundary: separately-audited-module-change
 ~~~
 <!-- MODULE-COMPOUND-CONTRACT:END -->

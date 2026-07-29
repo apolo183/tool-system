@@ -34,6 +34,7 @@ allowed_target_repos:
       patch_only:
         - "**"
       pull_request:
+        - config/**
         - src/tool_system/**
         - tests/**
         - examples/**

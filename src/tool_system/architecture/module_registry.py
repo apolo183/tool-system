@@ -19,12 +19,12 @@ EXACT_SEMVER_RE = re.compile(
 )
 INTERFACE_VERSION_RE = re.compile(r"^[1-9][0-9]*$")
 LEGACY_REGISTRY_INPUT_MODE = "legacy_module_registry"
-CENTRAL_COMPATIBILITY_INPUT_MODE = "central_module_registry"
+CURRENT_REGISTRY_INPUT_MODE = "current_module_registry"
 CURRENT_REGISTRY_PATH = "config/module_registry_v1.yaml"
-S0_MAPPING_CONTRACT_PATH = (
-    "docs/tool_system_module_registry_adoption_contract_v1.md"
+MODULE_MAPPING_CONTRACT_PATH = (
+    "docs/tool_system_module_registry_contract_v1.md"
 )
-S0_MAPPING_OWNER = "src/tool_system/architecture/module_registry.py"
+MODULE_MAPPING_OWNER = "src/tool_system/architecture/module_registry.py"
 LIFECYCLES = {"ACTIVE", "PLANNED", "RETIRED"}
 STATUSES = {"REGISTERED", "DEGRADED", "RETIRED"}
 LEGACY_TOP_LEVEL_FIELDS = {
@@ -32,7 +32,7 @@ LEGACY_TOP_LEVEL_FIELDS = {
     "blueprint_objective_ref",
     "modules",
 }
-CENTRAL_TOP_LEVEL_FIELDS = {
+CURRENT_TOP_LEVEL_FIELDS = {
     "registry_contract_version",
     "canonical_repo_id",
     "modules",
@@ -70,7 +70,7 @@ REQUIRED_MODULE_FIELDS = {
     "rollback_evidence",
     "replacement_evidence",
 }
-CENTRAL_MODULE_FIELDS = {
+CURRENT_MODULE_FIELDS = {
     "module_id",
     "module_version",
     "role",
@@ -83,7 +83,7 @@ CENTRAL_MODULE_FIELDS = {
     "rollback_boundary",
     "replacement_boundary",
 }
-CENTRAL_INTERFACE_FIELDS = {
+CURRENT_INTERFACE_FIELDS = {
     "interface_id",
     "interface_version",
     "provider_module_id",
@@ -95,36 +95,36 @@ CENTRAL_INTERFACE_FIELDS = {
     "compatibility_policy",
     "replacement_revalidation_boundary",
 }
-CENTRAL_INTERFACE_REF_FIELDS = {"interface_id", "interface_version"}
-CENTRAL_BOUNDARY_GROUP_FIELDS = {
+CURRENT_INTERFACE_REF_FIELDS = {"interface_id", "interface_version"}
+CURRENT_BOUNDARY_GROUP_FIELDS = {
     "code",
     "data",
     "tests",
     "runtime_artifacts",
     "cleanup",
 }
-CENTRAL_CODE_BOUNDARY_FIELDS = {
+CURRENT_CODE_BOUNDARY_FIELDS = {
     "boundary_id",
     "location_kind",
     "path_kind",
     "path",
 }
-S0_MAPPING_CONTRACT_FIELDS = {
+MODULE_MAPPING_CONTRACT_FIELDS = {
     "mapping_version",
     "module_count",
     "identity_mapping_owner",
     "mappings",
 }
-S0_MAPPING_RECORD_FIELDS = {
+MODULE_MAPPING_RECORD_FIELDS = {
     "current_module_id",
     "canonical_module_id",
     "current_module_version",
     "aggregate_interface_id",
     "aggregate_interface_version",
-    "runtime_id_preserved_during_s0",
+    "runtime_id_preserved",
     "python_import_identities",
-    "current_observed_consumers",
-    "migration_risk",
+    "direct_consumer_module_ids",
+    "change_risk",
     "rollback_identity",
 }
 NON_EMPTY_LIST_FIELDS = {
@@ -177,19 +177,23 @@ def _contract_yaml_block(text: str, name: str) -> dict[str, Any]:
     return value
 
 
-def _validate_s0_mapping_records(
+def _validate_module_mapping_records(
     mapping: dict[str, Any],
 ) -> list[dict[str, Any]]:
     reasons: list[str] = []
-    if set(mapping) != S0_MAPPING_CONTRACT_FIELDS:
-        reasons.append("S0 mapping contract fields are incomplete or unrecognized")
-    if mapping.get("mapping_version") != "s0-identity-interface-mapping-v1":
-        reasons.append("S0 mapping version is not recognized")
-    if mapping.get("identity_mapping_owner") != S0_MAPPING_OWNER:
-        reasons.append("S0 identity mapping owner does not match the adapter owner")
+    if set(mapping) != MODULE_MAPPING_CONTRACT_FIELDS:
+        reasons.append(
+            "module identity mapping contract fields are incomplete or unrecognized"
+        )
+    if mapping.get("mapping_version") != "tool-system-module-identity-mapping-v1":
+        reasons.append("module identity mapping version is not recognized")
+    if mapping.get("identity_mapping_owner") != MODULE_MAPPING_OWNER:
+        reasons.append(
+            "module identity mapping owner does not match the validator owner"
+        )
     raw_records = mapping.get("mappings")
     if not isinstance(raw_records, list) or not raw_records:
-        reasons.append("S0 mappings must be a non-empty list")
+        reasons.append("module identity mappings must be a non-empty list")
         raw_records = []
 
     records: list[dict[str, Any]] = []
@@ -197,11 +201,11 @@ def _validate_s0_mapping_records(
     canonical_ids: set[str] = set()
     interface_ids: set[str] = set()
     for index, raw_record in enumerate(raw_records):
-        label = f"S0 mapping[{index}]"
+        label = f"module identity mapping[{index}]"
         if not isinstance(raw_record, dict):
             reasons.append(f"{label} must be a mapping")
             continue
-        if set(raw_record) != S0_MAPPING_RECORD_FIELDS:
+        if set(raw_record) != MODULE_MAPPING_RECORD_FIELDS:
             reasons.append(f"{label} fields are incomplete or unrecognized")
             continue
 
@@ -217,7 +221,7 @@ def _validate_s0_mapping_records(
             reasons.append(f"{label}.current_module_id is invalid")
             continue
         if current_id in current_ids:
-            reasons.append(f"duplicate S0 current module ID: {current_id}")
+            reasons.append(f"duplicate current module ID: {current_id}")
         current_ids.add(current_id)
         if (
             not isinstance(canonical_id, str)
@@ -226,10 +230,10 @@ def _validate_s0_mapping_records(
             reasons.append(f"{label}.canonical_module_id is invalid")
             continue
         if canonical_id in canonical_ids:
-            reasons.append(f"duplicate S0 canonical module ID: {canonical_id}")
+            reasons.append(f"duplicate canonical module ID: {canonical_id}")
         canonical_ids.add(canonical_id)
         if canonical_id != current_id.replace("_", "-"):
-            reasons.append(f"S0 identity mapping collision for {current_id}")
+            reasons.append(f"module identity mapping collision for {current_id}")
         if (
             not isinstance(interface_id, str)
             or CANONICAL_ID_RE.fullmatch(interface_id) is None
@@ -237,10 +241,14 @@ def _validate_s0_mapping_records(
             reasons.append(f"{label}.aggregate_interface_id is invalid")
             continue
         if interface_id in interface_ids:
-            reasons.append(f"duplicate S0 aggregate interface ID: {interface_id}")
+            reasons.append(
+                f"duplicate aggregate interface ID: {interface_id}"
+            )
         interface_ids.add(interface_id)
         if interface_id != f"{canonical_id}-api":
-            reasons.append(f"S0 aggregate interface mapping drifted for {canonical_id}")
+            reasons.append(
+                f"aggregate interface mapping drifted for {canonical_id}"
+            )
         if (
             not isinstance(module_version, str)
             or EXACT_SEMVER_RE.fullmatch(module_version) is None
@@ -251,7 +259,7 @@ def _validate_s0_mapping_records(
             or EXACT_SEMVER_RE.fullmatch(interface_version) is None
         ):
             reasons.append(f"{label}.aggregate_interface_version is invalid")
-        if raw_record.get("runtime_id_preserved_during_s0") is not True:
+        if raw_record.get("runtime_id_preserved") is not True:
             reasons.append(f"{label} must preserve the Python runtime ID")
 
         selectors = raw_record.get("python_import_identities")
@@ -279,32 +287,32 @@ def _validate_s0_mapping_records(
                 ):
                     reasons.append(f"{selector_label}.name is invalid")
 
-        consumers = raw_record.get("current_observed_consumers")
+        consumers = raw_record.get("direct_consumer_module_ids")
         if not isinstance(consumers, list) or not all(
             isinstance(consumer, str) for consumer in consumers
         ):
             reasons.append(
-                f"{label}.current_observed_consumers must be a string list"
+                f"{label}.direct_consumer_module_ids must be a string list"
             )
         elif len(consumers) != len(set(consumers)):
             reasons.append(
-                f"{label}.current_observed_consumers must be unique"
+                f"{label}.direct_consumer_module_ids must be unique"
             )
-        if not _non_empty_string(raw_record.get("migration_risk")):
-            reasons.append(f"{label}.migration_risk must be non-empty")
+        if not _non_empty_string(raw_record.get("change_risk")):
+            reasons.append(f"{label}.change_risk must be non-empty")
         if not _non_empty_string(raw_record.get("rollback_identity")):
             reasons.append(f"{label}.rollback_identity must be non-empty")
         records.append(raw_record)
 
     if mapping.get("module_count") != len(records):
-        reasons.append("S0 module_count does not match the mapping rows")
+        reasons.append("module_count does not match the mapping rows")
     for record in records:
-        consumers = record.get("current_observed_consumers")
+        consumers = record.get("direct_consumer_module_ids")
         if isinstance(consumers, list):
             unknown = sorted(set(consumers) - current_ids)
             if unknown:
                 reasons.append(
-                    "S0 mapping has unknown observed consumers for "
+                    "module identity mapping has unknown direct consumers for "
                     f"{record['current_module_id']}: {', '.join(unknown)}"
                 )
     if reasons:
@@ -312,17 +320,17 @@ def _validate_s0_mapping_records(
     return records
 
 
-def load_s0_identity_mapping(
+def load_module_identity_mapping(
     repo_root: str | Path,
 ) -> list[dict[str, Any]]:
     root = Path(repo_root).resolve()
-    contract_path = root / S0_MAPPING_CONTRACT_PATH
+    contract_path = root / MODULE_MAPPING_CONTRACT_PATH
     text = contract_path.read_text(encoding="utf-8")
-    block = _contract_yaml_block(text, "S0-IDENTITY-MAPPING")
+    block = _contract_yaml_block(text, "MODULE-IDENTITY-MAPPING")
     mapping = block.get("mapping_contract")
     if not isinstance(mapping, dict):
-        raise ValueError("S0 mapping_contract is missing")
-    return _validate_s0_mapping_records(mapping)
+        raise ValueError("module identity mapping_contract is missing")
+    return _validate_module_mapping_records(mapping)
 
 
 def _source_import_identity(source_root: Path, path: Path) -> str:
@@ -650,7 +658,7 @@ def _compatibility_metadata(
         "translation_boundary": "memory_only",
         "caller_boundary": "registry_loader_and_validator_entrypoints_only",
         "registry_files_read": [str(registry_path)],
-        "mapping_owner_path": S0_MAPPING_CONTRACT_PATH,
+        "mapping_owner_path": MODULE_MAPPING_CONTRACT_PATH,
         "generated_projection": False,
         "persistent_projection": False,
         "cache_registry": False,
@@ -658,11 +666,6 @@ def _compatibility_metadata(
         "second_registry_authority": False,
         "second_schema_authority": False,
         "current_formal_registry_owner": CURRENT_REGISTRY_PATH,
-        "removal_stage": "S11",
-        "central_schema_compliance_claimed": False,
-        "central_gate_compliance_claimed": False,
-        "registry_adoption_claimed": False,
-        "governance_activation_claimed": False,
     }
 
 
@@ -678,7 +681,7 @@ def _current_registry_authority(
     ).absolute()
     expected = (repo_root / CURRENT_REGISTRY_PATH).absolute()
     return (
-        input_mode == CENTRAL_COMPATIBILITY_INPUT_MODE
+        input_mode == CURRENT_REGISTRY_INPUT_MODE
         and candidate == expected
         and not candidate.is_symlink()
     )
@@ -700,7 +703,7 @@ def _with_compatibility_metadata(
             input_mode,
         ),
         "validation_scope": (
-            "tool_system_current_central_registry"
+            "tool_system_current_module_registry"
             if _current_registry_authority(registry_path, repo_root, input_mode)
             else "tool_system_local_compatibility_only"
         ),
@@ -714,19 +717,19 @@ def _with_compatibility_metadata(
 def _shape_mode(registry: dict[str, Any]) -> tuple[str | None, list[str]]:
     fields = set(registry)
     legacy_unique = LEGACY_TOP_LEVEL_FIELDS - {"modules"}
-    central_unique = CENTRAL_TOP_LEVEL_FIELDS - {"modules"}
+    current_unique = CURRENT_TOP_LEVEL_FIELDS - {"modules"}
     has_legacy = bool(fields & legacy_unique)
-    has_central = bool(fields & central_unique)
-    if has_legacy and has_central:
-        return None, ["mixed legacy/central top-level shape is not permitted"]
+    has_current = bool(fields & current_unique)
+    if has_legacy and has_current:
+        return None, ["mixed legacy/current top-level shape is not permitted"]
     if fields == LEGACY_TOP_LEVEL_FIELDS or has_legacy:
         return LEGACY_REGISTRY_INPUT_MODE, []
-    if fields == CENTRAL_TOP_LEVEL_FIELDS or has_central:
-        return CENTRAL_COMPATIBILITY_INPUT_MODE, []
+    if fields == CURRENT_TOP_LEVEL_FIELDS or has_current:
+        return CURRENT_REGISTRY_INPUT_MODE, []
     return None, ["module registry shape is partial or unrecognized"]
 
 
-def _central_boundary_paths(
+def _current_boundary_paths(
     repo_root: Path,
     module_id: str,
     raw_boundaries: object,
@@ -736,11 +739,11 @@ def _central_boundary_paths(
     if not isinstance(raw_boundaries, dict):
         reasons.append(f"{module_id}.boundaries must be a mapping")
         return
-    if set(raw_boundaries) != CENTRAL_BOUNDARY_GROUP_FIELDS:
+    if set(raw_boundaries) != CURRENT_BOUNDARY_GROUP_FIELDS:
         reasons.append(
             f"{module_id}.boundaries fields are incomplete or unrecognized"
         )
-    for group in CENTRAL_BOUNDARY_GROUP_FIELDS:
+    for group in CURRENT_BOUNDARY_GROUP_FIELDS:
         value = raw_boundaries.get(group)
         if not isinstance(value, list):
             reasons.append(f"{module_id}.boundaries.{group} must be a list")
@@ -755,7 +758,7 @@ def _central_boundary_paths(
         if not isinstance(raw_boundary, dict):
             reasons.append(f"{label} must be a mapping")
             continue
-        if set(raw_boundary) != CENTRAL_CODE_BOUNDARY_FIELDS:
+        if set(raw_boundary) != CURRENT_CODE_BOUNDARY_FIELDS:
             reasons.append(f"{label} fields are incomplete or unrecognized")
             continue
         boundary_id = raw_boundary.get("boundary_id")
@@ -810,7 +813,7 @@ def _central_boundary_paths(
                 owner_by_path[relative] = module_id
 
 
-def _iter_central_contract_references(
+def _iter_current_contract_references(
     registry: dict[str, Any],
 ) -> list[tuple[str, dict[str, Any]]]:
     references: list[tuple[str, dict[str, Any]]] = []
@@ -824,7 +827,7 @@ def _iter_central_contract_references(
                 references.append((f"{base}.{field}", reference))
         boundaries = module.get("boundaries")
         if isinstance(boundaries, dict):
-            for category in CENTRAL_BOUNDARY_GROUP_FIELDS:
+            for category in CURRENT_BOUNDARY_GROUP_FIELDS:
                 values = boundaries.get(category)
                 if not isinstance(values, list):
                     continue
@@ -871,7 +874,7 @@ def _iter_central_contract_references(
     return references
 
 
-def _validate_central_contract_references(
+def _validate_current_contract_references(
     registry: dict[str, Any],
     root: Path,
     reasons: list[str],
@@ -883,7 +886,7 @@ def _validate_central_contract_references(
         "schema_identity",
     }
     identities_by_path: dict[str, tuple[str, str, str]] = {}
-    references = _iter_central_contract_references(registry)
+    references = _iter_current_contract_references(registry)
     for location, reference in references:
         if set(reference) != required_fields:
             reasons.append(f"{location} fields are incomplete or unrecognized")
@@ -920,7 +923,7 @@ def _validate_central_contract_references(
     return len(references)
 
 
-def _validate_central_effect_targets(
+def _validate_current_effect_targets(
     module_id: str,
     module: dict[str, Any],
     reasons: list[str],
@@ -929,7 +932,7 @@ def _validate_central_effect_targets(
     if not isinstance(boundaries, dict):
         return
     boundary_ids: list[str] = []
-    for category in CENTRAL_BOUNDARY_GROUP_FIELDS:
+    for category in CURRENT_BOUNDARY_GROUP_FIELDS:
         values = boundaries.get(category)
         if isinstance(values, list):
             boundary_ids.extend(
@@ -972,7 +975,7 @@ def _validate_central_effect_targets(
         reasons.append(f"{module_id} repeats effect ID: {effect_id}")
 
 
-def _validate_central_boundary_overlap(
+def _validate_current_boundary_overlap(
     registry: dict[str, Any],
     root: Path,
     reasons: list[str],
@@ -985,7 +988,7 @@ def _validate_central_boundary_overlap(
         boundaries = module.get("boundaries")
         if not isinstance(boundaries, dict):
             continue
-        for category in CENTRAL_BOUNDARY_GROUP_FIELDS:
+        for category in CURRENT_BOUNDARY_GROUP_FIELDS:
             values = boundaries.get(category)
             if not isinstance(values, list):
                 continue
@@ -1023,7 +1026,7 @@ def _validate_central_boundary_overlap(
             )
 
 
-def _central_interface_reference(
+def _current_interface_reference(
     value: object,
     label: str,
     reasons: list[str],
@@ -1031,7 +1034,7 @@ def _central_interface_reference(
     if not isinstance(value, dict):
         reasons.append(f"{label} must be a mapping")
         return None
-    if set(value) != CENTRAL_INTERFACE_REF_FIELDS:
+    if set(value) != CURRENT_INTERFACE_REF_FIELDS:
         reasons.append(f"{label} fields are incomplete or unrecognized")
         return None
     interface_id = value.get("interface_id")
@@ -1051,15 +1054,15 @@ def _central_interface_reference(
     return interface_id, interface_version
 
 
-def _validate_central_registry(
+def _validate_current_registry(
     registry: dict[str, Any],
     path: Path,
     root: Path,
 ) -> dict[str, object]:
     reasons: list[str] = []
-    if set(registry) != CENTRAL_TOP_LEVEL_FIELDS:
+    if set(registry) != CURRENT_TOP_LEVEL_FIELDS:
         reasons.append(
-            "central module registry must contain exactly "
+            "current module registry must contain exactly "
             "registry_contract_version, canonical_repo_id, modules, and interfaces"
         )
     if registry.get("registry_contract_version") != "module_registry_v1":
@@ -1068,10 +1071,10 @@ def _validate_central_registry(
         reasons.append("canonical_repo_id must be tool-system")
 
     try:
-        mapping_records = load_s0_identity_mapping(root)
+        mapping_records = load_module_identity_mapping(root)
     except (OSError, ValueError, yaml.YAMLError) as exc:
         mapping_records = []
-        reasons.append(f"unable to load the S0 identity mapping owner: {exc}")
+        reasons.append(f"unable to load the module identity mapping owner: {exc}")
     mapping_by_canonical = {
         str(record["canonical_module_id"]): record
         for record in mapping_records
@@ -1104,9 +1107,9 @@ def _validate_central_registry(
             reasons.append(f"{label} must be a mapping")
             continue
         fields = set(raw_module)
-        if fields & (REQUIRED_MODULE_FIELDS - CENTRAL_MODULE_FIELDS):
+        if fields & (REQUIRED_MODULE_FIELDS - CURRENT_MODULE_FIELDS):
             reasons.append(f"{label} has mixed module field shape")
-        if fields != CENTRAL_MODULE_FIELDS:
+        if fields != CURRENT_MODULE_FIELDS:
             reasons.append(f"{label} fields are incomplete or unrecognized")
         module_id = raw_module.get("module_id")
         if (
@@ -1122,7 +1125,9 @@ def _validate_central_registry(
 
         mapping = mapping_by_canonical.get(module_id)
         if mapping is None:
-            reasons.append(f"missing or unknown S0 mapping for module: {module_id}")
+            reasons.append(
+                f"missing or unknown module identity mapping for module: {module_id}"
+            )
         else:
             current_id = str(mapping["current_module_id"])
             if current_id in current_ids:
@@ -1134,7 +1139,7 @@ def _validate_central_registry(
                 "current_module_version"
             ):
                 reasons.append(
-                    f"{module_id}.module_version does not match the S0 mapping"
+                    f"{module_id}.module_version does not match the module identity mapping"
                 )
         if not _non_empty_string(raw_module.get("role")):
             reasons.append(f"{module_id}.role must be a non-empty string")
@@ -1142,7 +1147,7 @@ def _validate_central_registry(
         if not _non_empty_string(owner):
             reasons.append(f"{module_id}.owner must be a non-empty string")
         elif owner in owners:
-            reasons.append(f"duplicate central module owner: {owner}")
+            reasons.append(f"duplicate current module owner: {owner}")
         else:
             owners.add(str(owner))
         if raw_module.get("external_dependencies") != []:
@@ -1160,10 +1165,10 @@ def _validate_central_registry(
         if not isinstance(public_refs, list) or len(public_refs) != 1:
             reasons.append(
                 f"{module_id}.public_interface_refs must contain exactly one "
-                "S0 aggregate interface"
+                "MODULE aggregate interface"
             )
         else:
-            reference = _central_interface_reference(
+            reference = _current_interface_reference(
                 public_refs[0],
                 f"{module_id}.public_interface_refs[0]",
                 reasons,
@@ -1173,7 +1178,7 @@ def _validate_central_registry(
                 mapping["aggregate_interface_version"],
             ):
                 reasons.append(
-                    f"{module_id}.public_interface_refs does not match the S0 mapping"
+                    f"{module_id}.public_interface_refs does not match the module identity mapping"
                 )
 
         dependencies = raw_module.get("internal_dependencies")
@@ -1182,7 +1187,7 @@ def _validate_central_registry(
             reasons.append(f"{module_id}.internal_dependencies must be a list")
         else:
             for dependency_index, dependency in enumerate(dependencies):
-                reference = _central_interface_reference(
+                reference = _current_interface_reference(
                     dependency,
                     (
                         f"{module_id}.internal_dependencies"
@@ -1199,20 +1204,20 @@ def _validate_central_registry(
                     )
                 parsed_dependencies.add(reference)
         module_dependencies[module_id] = parsed_dependencies
-        _central_boundary_paths(
+        _current_boundary_paths(
             root,
             module_id,
             raw_module.get("boundaries"),
             owner_by_path,
             reasons,
         )
-        _validate_central_effect_targets(module_id, raw_module, reasons)
+        _validate_current_effect_targets(module_id, raw_module, reasons)
 
     expected_canonical_ids = set(mapping_by_canonical)
     missing_modules = sorted(expected_canonical_ids - set(modules_by_id))
     if missing_modules:
         reasons.append(
-            "central registry is missing S0 mapped modules: "
+            "current registry is missing MODULE mapped modules: "
             + ", ".join(missing_modules)
         )
 
@@ -1227,7 +1232,7 @@ def _validate_central_registry(
         if not isinstance(raw_interface, dict):
             reasons.append(f"{label} must be a mapping")
             continue
-        if set(raw_interface) != CENTRAL_INTERFACE_FIELDS:
+        if set(raw_interface) != CURRENT_INTERFACE_FIELDS:
             reasons.append(f"{label} fields are incomplete or unrecognized")
         interface_id = raw_interface.get("interface_id")
         interface_version = raw_interface.get("interface_version")
@@ -1242,7 +1247,7 @@ def _validate_central_registry(
         key = (interface_id, interface_version)
         if key in interfaces:
             reasons.append(
-                f"duplicate central interface identity: "
+                f"duplicate current interface identity: "
                 f"{interface_id}@{interface_version}"
             )
             continue
@@ -1250,7 +1255,7 @@ def _validate_central_registry(
         mapping = mapping_by_interface.get(key)
         if mapping is None:
             reasons.append(
-                f"missing or unknown S0 mapping for interface: "
+                f"missing or unknown module identity mapping for interface: "
                 f"{interface_id}@{interface_version}"
             )
         provider_id = raw_interface.get("provider_module_id")
@@ -1269,7 +1274,7 @@ def _validate_central_registry(
             "canonical_module_id"
         ):
             reasons.append(
-                f"{interface_id}.provider_module_id does not match the S0 mapping"
+                f"{interface_id}.provider_module_id does not match the module identity mapping"
             )
         consumers = raw_interface.get("consumers")
         local_consumers: set[str] = set()
@@ -1312,7 +1317,7 @@ def _validate_central_registry(
     missing_interfaces = sorted(set(mapping_by_interface) - set(interfaces))
     if missing_interfaces:
         reasons.append(
-            "central registry is missing S0 mapped interfaces: "
+            "current registry is missing MODULE mapped interfaces: "
             + ", ".join(
                 f"{interface_id}@{version}"
                 for interface_id, version in missing_interfaces
@@ -1392,24 +1397,24 @@ def _validate_central_registry(
         provider = str(record["canonical_module_id"])
         expected_consumers = sorted(
             current_to_canonical[current]
-            for current in record["current_observed_consumers"]
+            for current in record["direct_consumer_module_ids"]
             if current in current_to_canonical
         )
         if observed_graph.get(provider, []) != expected_consumers:
             reasons.append(
-                f"managed import graph does not match the S0 mapping for {provider}"
+                f"managed import graph does not match the module identity mapping for {provider}"
             )
 
     execution_order = _topological_order(set(modules_by_id), upstream_ids)
     if len(execution_order) != len(modules_by_id):
         reasons.append("module dependency graph must be acyclic")
 
-    contract_reference_count = _validate_central_contract_references(
+    contract_reference_count = _validate_current_contract_references(
         registry,
         root,
         reasons,
     )
-    _validate_central_boundary_overlap(registry, root, reasons)
+    _validate_current_boundary_overlap(registry, root, reasons)
 
     return {
         "status": "PASS" if not reasons else "BLOCK",
@@ -1455,7 +1460,7 @@ def _validate_legacy_registry(
         if not isinstance(raw_module, dict):
             reasons.append(f"modules[{index}] must be a mapping")
             continue
-        if set(raw_module) & (CENTRAL_MODULE_FIELDS - REQUIRED_MODULE_FIELDS):
+        if set(raw_module) & (CURRENT_MODULE_FIELDS - REQUIRED_MODULE_FIELDS):
             reasons.append(f"modules[{index}] has mixed module field shape")
         module_id_value = raw_module.get("module_id")
         module_id = (
@@ -1651,7 +1656,7 @@ def validate_module_registry(
     if input_mode == LEGACY_REGISTRY_INPUT_MODE:
         result = _validate_legacy_registry(registry, path, root)
     else:
-        result = _validate_central_registry(registry, path, root)
+        result = _validate_current_registry(registry, path, root)
     result = _with_compatibility_metadata(
         result,
         registry_path=path,

@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-28 UTC+09:00
+updated_at: 2026-07-29 UTC+09:00
 
 ## 1. Mission
 
@@ -15,14 +15,33 @@ The permanent product objective is bounded blueprint-driven autonomous software 
 
 ## 2. Mandatory first step
 
-Before material tool-system engineering work, read:
+Before material tool-system engineering work, read the current `main` branch
+directly from the canonical central remote
+`git@github.com:apolo183/finance-governance.git`, using only these fixed formal
+paths:
+
+```text
+docs/global_development_principles_v1.md
+config/repo_registry_v1.yaml
+```
+
+Do not pin a central commit SHA, consume a local central checkout path, or read
+central pull requests or history as policy. Re-read those two paths from the
+current central `main` for every important engineering task. Central rules
+prevail on conflict; local rules may add only tool-system-specific constraints.
+
+Then read the local contracts:
 
 ```text
 docs/tool_system_global_development_principles_v1.md
 REPO_MANIFEST.md
 ```
 
-`finance-governance` is the active group authority after its independently completed central closeout. Ordinary central gates consume the current verified committed finance-governance `HEAD`; the exact five-field `config/governance_reference_v1.yaml` records repository identity and a compatibility/audit SHA only. Its `governance_commit_sha` does not select or pin current rules, need not equal the current governance `HEAD`, and a central SHA change alone does not require a tool-system update or PR. The central repository registry supplies identity only; the caller supplies the target root, and no central path, status, or execution evidence is written into the registry. The reference neither controls central `authority_status` nor proves tool-system cutover. S8 completed only the compatibility/audit reference record. S9's real central `module-registry-check` has passed and is accepted for the exact gate evidence recorded in `blueprint/tool_system_v0.yaml:milestone_module_invariant.enforcement`. S9 does not perform cutover; until S10 is separately authorized and accepted, do not claim tool-system cutover. Active group rules govern now; these repository-local rules may add narrower constraints but must not override them. No copied finance-governance constitution is local authority.
+The central principles are consumed at source and are not copied into this
+repository. The central registry is identity-only; tool-system owns its local
+implementation, data, runtime, validation, release, module-registry, and process
+authority rules, and writes none of that project state back to the central
+registry.
 
 Before provider/model selection, qualification, billing, credential-reference, or development-economics work, also read:
 
@@ -44,7 +63,7 @@ Agents must not rely on long conversation context as execution authority. Every 
 
 A stage should be short, have one natural objective, one branch, one change plan, one evidence record, and a clear stop condition. If drift is found, the next action is documentation or process correction, not feature expansion.
 
-The caller and reference audit is complete. `config/process_authority_v1.yaml` is the local current execution contract for canonical `process-authority@2.0.0` and `process-authority-api@2.0.0`. It requires one explicitly supplied manifest/change-plan pair with exact binding. The protected dispatcher revalidates the real authority, manifest, plan, policy, working-directory, and timeout inputs, requires captured input bytes to remain equal immediately before dispatch, and extracts commands from those same validated plan bytes; no caller-created PASS value, receipt, token, or unchecked command list is accepted. Repository-wide implicit task authority is disabled. `config/replay_snapshot_v1.yaml` content-addresses the retained legacy pair set; `examples/active_gates.yaml` is explicit, non-executing replay input only. Existing reports, manifests, plans, and the legacy index remain present and are not claimed finance-governance process-file compliant. Do not delete or reclassify them without separate cleanup authorization.
+The current-task caller audit is complete. `config/process_authority_v1.yaml` is the local current execution contract for canonical `process-authority@2.0.0` and `process-authority-api@2.0.0`. It requires one explicitly supplied manifest/change-plan pair with exact binding. The protected dispatcher revalidates the real authority, manifest, plan, policy, working-directory, and timeout inputs, requires captured input bytes to remain equal immediately before dispatch, and extracts commands from those same validated plan bytes; no caller-created PASS value, receipt, token, or unchecked command list is accepted. Repository-wide implicit task authority is disabled. `config/replay_snapshot_v1.yaml` content-addresses the retained legacy pair set; `examples/active_gates.yaml` is explicit, non-executing replay input only. Existing reports, manifests, plans, and the legacy index remain retained non-authority inputs. Do not delete or reclassify them without separate cleanup authorization.
 
 ## 4. Blueprint alignment invariant
 
@@ -137,7 +156,7 @@ Current phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.
 
 Status: `active`.
 
-P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract is accepted and closed. P14 remains active while the accepted P14MR evidence is retained, its durable local module rules are owned by `blueprint/tool_system_v0.yaml` and `docs/tool_system_global_development_principles_v1.md`, and its current module inventory is registered in `config/module_registry_v1.yaml`. The current registry uses the central four-field top-level shape, and its local validator enforces exact module/interface identities, tracked natural-owner and boundary coverage without overlap, ContractReference SHA-256 values, managed Python import edges against declared consumers, side-effect target bindings, dependency-version reciprocity, and DAG validity. The local validator remains structural and source-graph evidence, while S9 separately records the accepted real central `module-registry-check` PASS for its exact gate inputs. Neither result proves runtime isolation, behavioral interface compatibility, automatic replacement, or cutover. Live model/provider execution, project benchmarks, and target mutations are not authorized. P15-P16 remain roadmap-only.
+P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract is accepted and closed. P14 remains active while the accepted P14MR evidence is retained, its durable local module rules are owned by `blueprint/tool_system_v0.yaml` and `docs/tool_system_global_development_principles_v1.md`, and its current module inventory is registered in `config/module_registry_v1.yaml`. The current registry uses the tool-system-owned four-field top-level shape, and its local validator enforces exact module/interface identities, tracked natural-owner and boundary coverage without overlap, ContractReference SHA-256 values, managed Python import edges against declared consumers, side-effect target bindings, dependency-version reciprocity, and DAG validity. This structural and source-graph evidence does not prove runtime isolation, behavioral interface compatibility, or automatic replacement. Live model/provider execution, project benchmarks, and target mutations are not authorized. P15-P16 remain roadmap-only.
 
 Allowed now:
 

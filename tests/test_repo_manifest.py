@@ -5,9 +5,9 @@ from pathlib import Path
 import pytest
 
 from tool_system.architecture.repo_manifest import (
-    CENTRAL_FORMAL_PARSER_MODE,
-    CENTRAL_FORMAL_SECTION,
-    CENTRAL_MODULE_REGISTRY_PATH,
+    EXACT_FORMAL_PARSER_MODE,
+    EXACT_FORMAL_SECTION,
+    EXACT_MODULE_REGISTRY_PATH,
     FORMAL_COLUMNS,
     FORMAL_SECTION,
     LEGACY_COLUMNS,
@@ -25,24 +25,24 @@ MODULE_REGISTRY = ROOT / "config" / "module_registry_v1.yaml"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
 
 
-def _central_row(path: str, upstream: str = "ROOT") -> str:
+def _exact_row(path: str, upstream: str = "ROOT") -> str:
     return (
         f"| {path} | formal role | formal purpose | formal owner | ACTIVE | "
         f"{upstream} | formal consumer | formal validation | REGISTERED |"
     )
 
 
-def _central_manifest_text(
+def _exact_manifest_text(
     *,
     columns: tuple[str, ...] = FORMAL_COLUMNS,
     rows: list[str] | None = None,
-    section: str = CENTRAL_FORMAL_SECTION,
+    section: str = EXACT_FORMAL_SECTION,
 ) -> str:
     formal_rows = rows or [
-        _central_row("docs/global_development_principles_v1.md"),
-        _central_row(
-            CENTRAL_MODULE_REGISTRY_PATH,
-            "docs/global_development_principles_v1.md",
+        _exact_row("docs/tool_system_global_development_principles_v1.md"),
+        _exact_row(
+            EXACT_MODULE_REGISTRY_PATH,
+            "docs/tool_system_global_development_principles_v1.md",
         ),
     ]
     return "\n".join(
@@ -71,9 +71,9 @@ def _legacy_manifest_text() -> str:
             "",
             f"| {' | '.join(FORMAL_COLUMNS)} |",
             f"| {' | '.join('---' for _ in FORMAL_COLUMNS)} |",
-            _central_row("docs/tool_system_global_development_principles_v1.md"),
-            _central_row(
-                CENTRAL_MODULE_REGISTRY_PATH,
+            _exact_row("docs/tool_system_global_development_principles_v1.md"),
+            _exact_row(
+                EXACT_MODULE_REGISTRY_PATH,
                 "docs/tool_system_global_development_principles_v1.md",
             ),
         ]
@@ -96,46 +96,46 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
 
     assert result["status"] == "PASS"
     assert result["reasons"] == []
-    assert result["parser_mode"] == CENTRAL_FORMAL_PARSER_MODE
-    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert result["parser_mode"] == EXACT_FORMAL_PARSER_MODE
+    assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
-    assert len(rows) == 202
-    assert CENTRAL_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
+    assert len(rows) == 200
+    assert EXACT_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
     assert all(
         not any(character in row["path"] for character in "*?[]{}") for row in rows
     )
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_file_count"] == 202
+    assert result["formal_file_count"] == 200
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == 291
     assert result["unclassified_path_count"] == 0
-    assert result["group_process_file_compliance_claimed"] is False
+    assert result["retained_inputs_are_current_authority"] is False
     assert result["cleanup_authorized"] is False
     assert result["executes_target_repo_mutation"] is False
 
 
 def test_both_manifest_formats_have_stable_explicit_parser_modes() -> None:
     legacy_text = _legacy_manifest_text()
-    central_text = _central_manifest_text()
+    exact_text = _exact_manifest_text()
 
     legacy_result = parse_manifest_formal_rows(legacy_text)
-    central_result = parse_manifest_formal_rows(central_text)
+    exact_result = parse_manifest_formal_rows(exact_text)
 
     assert legacy_result == parse_manifest_formal_rows(legacy_text)
-    assert central_result == parse_manifest_formal_rows(central_text)
+    assert exact_result == parse_manifest_formal_rows(exact_text)
     legacy_mode, legacy_rows, legacy_reasons = legacy_result
-    central_mode, central_rows, central_reasons = central_result
+    exact_mode, exact_rows, exact_reasons = exact_result
     assert legacy_mode == LEGACY_FORMAL_PARSER_MODE
     assert legacy_reasons == []
     assert len(legacy_rows) == 2
-    assert central_mode == CENTRAL_FORMAL_PARSER_MODE
-    assert central_reasons == []
-    assert [row["path"] for row in central_rows] == [
-        "docs/global_development_principles_v1.md",
-        CENTRAL_MODULE_REGISTRY_PATH,
+    assert exact_mode == EXACT_FORMAL_PARSER_MODE
+    assert exact_reasons == []
+    assert [row["path"] for row in exact_rows] == [
+        "docs/tool_system_global_development_principles_v1.md",
+        EXACT_MODULE_REGISTRY_PATH,
     ]
 
 
@@ -143,10 +143,10 @@ def test_both_manifest_formats_have_stable_explicit_parser_modes() -> None:
     "text",
     [
         _manifest_text() + f"\n{FORMAL_SECTION}\n",
-        _central_manifest_text() + f"\n{CENTRAL_FORMAL_SECTION}\n",
-        _manifest_text() + "\n" + _central_manifest_text(),
+        _exact_manifest_text() + f"\n{EXACT_FORMAL_SECTION}\n",
+        _manifest_text() + "\n" + _exact_manifest_text(),
     ],
-    ids=["duplicate-legacy", "duplicate-central", "mixed-formats"],
+    ids=["duplicate-legacy", "duplicate-exact", "mixed-formats"],
 )
 def test_manifest_parser_blocks_duplicate_or_mixed_formal_sections(text: str) -> None:
     parser_mode, rows, reasons = parse_manifest_formal_rows(text)
@@ -167,7 +167,7 @@ def test_manifest_parser_blocks_duplicate_or_mixed_formal_sections(text: str) ->
     ],
 )
 def test_manifest_parser_blocks_missing_or_wrong_formal_heading(section: str) -> None:
-    text = _central_manifest_text(section=section)
+    text = _exact_manifest_text(section=section)
 
     parser_mode, rows, reasons = parse_manifest_formal_rows(text)
 
@@ -177,7 +177,7 @@ def test_manifest_parser_blocks_missing_or_wrong_formal_heading(section: str) ->
 
 
 @pytest.mark.parametrize("missing_index", range(len(FORMAL_COLUMNS)))
-def test_central_manifest_blocks_each_missing_header_column(
+def test_exact_manifest_blocks_each_missing_header_column(
     missing_index: int,
 ) -> None:
     columns = tuple(
@@ -185,10 +185,10 @@ def test_central_manifest_blocks_each_missing_header_column(
     )
 
     parser_mode, _, reasons = parse_manifest_formal_rows(
-        _central_manifest_text(columns=columns)
+        _exact_manifest_text(columns=columns)
     )
 
-    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert any("columns must be exactly" in reason for reason in reasons)
 
 
@@ -200,14 +200,14 @@ def test_central_manifest_blocks_each_missing_header_column(
     ],
     ids=["additional-column", "reordered-columns"],
 )
-def test_central_manifest_blocks_additional_or_reordered_header_columns(
+def test_exact_manifest_blocks_additional_or_reordered_header_columns(
     columns: tuple[str, ...],
 ) -> None:
     parser_mode, _, reasons = parse_manifest_formal_rows(
-        _central_manifest_text(columns=columns)
+        _exact_manifest_text(columns=columns)
     )
 
-    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert any("columns must be exactly" in reason for reason in reasons)
 
 
@@ -219,28 +219,28 @@ def test_central_manifest_blocks_additional_or_reordered_header_columns(
     ],
     ids=["wrong-column-count", "non-table-text"],
 )
-def test_central_manifest_blocks_malformed_rows(registry_row: str) -> None:
-    text = _central_manifest_text(
+def test_exact_manifest_blocks_malformed_rows(registry_row: str) -> None:
+    text = _exact_manifest_text(
         rows=[
-            _central_row("docs/global_development_principles_v1.md"),
+            _exact_row("docs/tool_system_global_development_principles_v1.md"),
             registry_row,
         ]
     )
 
     parser_mode, _, reasons = parse_manifest_formal_rows(text)
 
-    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons
 
 
-def test_central_manifest_blocks_duplicate_exact_path() -> None:
-    registry_row = _central_row(
-        CENTRAL_MODULE_REGISTRY_PATH,
-        "docs/global_development_principles_v1.md",
+def test_exact_manifest_blocks_duplicate_exact_path() -> None:
+    registry_row = _exact_row(
+        EXACT_MODULE_REGISTRY_PATH,
+        "docs/tool_system_global_development_principles_v1.md",
     )
-    text = _central_manifest_text(
+    text = _exact_manifest_text(
         rows=[
-            _central_row("docs/global_development_principles_v1.md"),
+            _exact_row("docs/tool_system_global_development_principles_v1.md"),
             registry_row,
             registry_row,
         ]
@@ -248,8 +248,8 @@ def test_central_manifest_blocks_duplicate_exact_path() -> None:
 
     parser_mode, _, reasons = parse_manifest_formal_rows(text)
 
-    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
-    assert any("duplicate central formal path" in reason for reason in reasons)
+    assert parser_mode == EXACT_FORMAL_PARSER_MODE
+    assert any("duplicate exact formal path" in reason for reason in reasons)
 
 
 @pytest.mark.parametrize(
@@ -261,43 +261,43 @@ def test_central_manifest_blocks_duplicate_exact_path() -> None:
         "config/module_registry_v1.yml",
     ],
 )
-def test_central_manifest_requires_literal_module_registry_row(
+def test_exact_manifest_requires_literal_module_registry_row(
     registry_path: str,
 ) -> None:
-    text = _central_manifest_text(
+    text = _exact_manifest_text(
         rows=[
-            _central_row("docs/global_development_principles_v1.md"),
-            _central_row(
+            _exact_row("docs/tool_system_global_development_principles_v1.md"),
+            _exact_row(
                 registry_path,
-                "docs/global_development_principles_v1.md",
+                "docs/tool_system_global_development_principles_v1.md",
             ),
         ]
     )
 
     parser_mode, rows, reasons = parse_manifest_formal_rows(text)
 
-    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
-    assert CENTRAL_MODULE_REGISTRY_PATH not in {row["path"] for row in rows}
+    assert parser_mode == EXACT_FORMAL_PARSER_MODE
+    assert EXACT_MODULE_REGISTRY_PATH not in {row["path"] for row in rows}
     assert any("exact module registry path" in reason for reason in reasons)
 
 
-def test_central_manifest_blocks_missing_module_registry_row() -> None:
-    text = _central_manifest_text(
-        rows=[_central_row("docs/global_development_principles_v1.md")]
+def test_exact_manifest_blocks_missing_module_registry_row() -> None:
+    text = _exact_manifest_text(
+        rows=[_exact_row("docs/tool_system_global_development_principles_v1.md")]
     )
 
     parser_mode, rows, reasons = parse_manifest_formal_rows(text)
 
-    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
-    assert [row["path"] for row in rows] == ["docs/global_development_principles_v1.md"]
+    assert parser_mode == EXACT_FORMAL_PARSER_MODE
+    assert [row["path"] for row in rows] == ["docs/tool_system_global_development_principles_v1.md"]
     assert any("exact module registry path" in reason for reason in reasons)
 
 
-def test_current_central_parser_mode_is_active_in_local_validator() -> None:
+def test_current_exact_parser_mode_is_active_in_local_validator() -> None:
     result = validate_repo_manifest(MANIFEST, ROOT)
 
     assert result["status"] == "PASS"
-    assert result["parser_mode"] == CENTRAL_FORMAL_PARSER_MODE
+    assert result["parser_mode"] == EXACT_FORMAL_PARSER_MODE
     assert not any("parse-only" in reason for reason in result["reasons"])
 
 
@@ -310,7 +310,7 @@ def test_manifest_tables_use_registered_columns_and_one_root() -> None:
         LEGACY_COLUMNS,
     )
 
-    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert formal_reasons == []
     assert legacy_reasons == []
     assert sum(row["upstream"] == "ROOT" for row in formal) == 1
@@ -320,11 +320,11 @@ def test_manifest_tables_use_registered_columns_and_one_root() -> None:
     assert all(row["runtime_default"] == "false" for row in legacy)
 
 
-def test_module_contract_files_are_registered_without_membership_or_cutover() -> None:
+def test_module_contract_files_are_registered_as_local_contracts() -> None:
     parser_mode, formal, reasons = parse_manifest_formal_rows(_manifest_text())
     matches = [row for row in formal if row["path"].startswith("docs/modules/")]
 
-    assert parser_mode == CENTRAL_FORMAL_PARSER_MODE
+    assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
     assert len(matches) == 14
     assert all(row["role"] == "module-owned compound contracts" for row in matches)
@@ -334,15 +334,15 @@ def test_module_contract_files_are_registered_without_membership_or_cutover() ->
     assert all(
         row["upstream"].split("; ")
         == [
-            "docs/tool_system_module_registry_adoption_contract_v1.md",
+            "docs/tool_system_module_registry_contract_v1.md",
             "blueprint/tool_system_v0.yaml",
         ]
         for row in matches
     )
     assert all(
-        "without establishing registry membership" in row["purpose"]
-        and "central gate PASS" in row["purpose"]
-        and "cutover" in row["purpose"]
+        "tool-system compound contract" in row["purpose"]
+        and "local identity" in row["purpose"]
+        and "rollback evidence" in row["purpose"]
         and row["status"] == "REGISTERED"
         for row in matches
     )
@@ -468,8 +468,8 @@ def test_blueprint_module_registry_packaging_and_ci_register_manifest() -> None:
     assert boundary["formal_file_set_registration_implemented"] is True
     assert boundary["tracked_path_coverage_validation_implemented"] is True
     assert boundary["legacy_non_authority_sets_registered"] is True
-    assert boundary["group_process_file_compliance_claimed"] is False
-    assert architecture["module_version"] == "1.1.0"
+    assert boundary["retained_inputs_are_current_authority"] is False
+    assert architecture["module_version"] == "2.0.0"
     architecture_paths = {
         boundary["path"] for boundary in architecture["boundaries"]["code"]
     }

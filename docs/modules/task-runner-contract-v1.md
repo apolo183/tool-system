@@ -1,6 +1,6 @@
 # Task Runner Module Compound Contract v1
 
-This file materializes the S3 contract evidence owned by the current
+This file defines the module contract owned by the current
 `task_runner` module. Configured commands and audit paths remain bounded by the
 explicit current task pair and caller authorization.
 
@@ -18,7 +18,7 @@ module_compound_contract:
       interface_id: task-runner-api
       interface_version: 1.0.0
     mapping_owner:
-      contract_path: docs/tool_system_module_registry_adoption_contract_v1.md
+      contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_runner@1.1.0
     python_import_identities:
@@ -42,7 +42,7 @@ module_compound_contract:
     - src/tool_system/runner/task_graph_runner.py
     - src/tool_system/runner/task_runner.py
   dependency_contract:
-    basis: s0-static-python-import-dag
+    basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids:
       - manifest_validation
@@ -64,7 +64,7 @@ module_compound_contract:
       - first_failed_gate_or_command_stops_pipeline
     boundary: Missing current pair, invalid replay request, failed authority, manifest, plan, policy, gate, command, graph, or batch input stops downstream execution.
   side_effect_contract:
-    taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
+    taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
       - repository_write
       - data_write
@@ -165,20 +165,14 @@ module_compound_contract:
           - src/tool_system/runner/task_runner.py
         boundary: Invoke the exact configured command only after explicit-pair, process-authority, manifest, plan, policy, gate, and caller authorization preconditions pass; classification itself grants no execution authority.
   non_claims:
-    registry_membership: false
-    central_registry_adopted: false
-    central_schema_compliance_claimed: false
-    central_gate_pass_claimed: false
-    governance_activated: false
     provider_execution_authorized: false
     target_repo_mutation_authorized: false
     cleanup_execution_authorized: false
     production_operation_authorized: false
-    governance_cutover_completed: false
   authority_boundary:
     execution_authority: false
-    governance_authority: false
-    evidence_role: s3-contract-reference-input
-    next_stage: separately-authorized-s4
+    downstream_authority: false
+    evidence_role: tool-system-module-contract
+    change_boundary: separately-audited-module-change
 ~~~
 <!-- MODULE-COMPOUND-CONTRACT:END -->

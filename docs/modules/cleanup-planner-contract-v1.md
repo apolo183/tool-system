@@ -1,6 +1,6 @@
 # Cleanup Planner Module Compound Contract v1
 
-This file materializes the S3 contract evidence owned by the current
+This file defines the module contract owned by the current
 `cleanup_planner` module. It inventories residue and emits plans; it never
 executes cleanup.
 
@@ -18,7 +18,7 @@ module_compound_contract:
       interface_id: cleanup-planner-api
       interface_version: 1.0.0
     mapping_owner:
-      contract_path: docs/tool_system_module_registry_adoption_contract_v1.md
+      contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cleanup_planner@1.0.0
     python_import_identities:
@@ -31,7 +31,7 @@ module_compound_contract:
     - src/tool_system/cleanup/__init__.py
     - src/tool_system/cleanup/residue_plan.py
   dependency_contract:
-    basis: s0-static-python-import-dag
+    basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids:
       - manifest_validation
@@ -51,7 +51,7 @@ module_compound_contract:
       - invalid_inventory_or_missing_authority_blocks
     boundary: Malformed branch or pull-request inventory entries block; protected branches and non-temporary artifacts are excluded from candidate actions.
   side_effect_contract:
-    taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
+    taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
       - repository_write
       - data_write
@@ -116,20 +116,14 @@ module_compound_contract:
     declaration: explicit-none
     systems: []
   non_claims:
-    registry_membership: false
-    central_registry_adopted: false
-    central_schema_compliance_claimed: false
-    central_gate_pass_claimed: false
-    governance_activated: false
     provider_execution_authorized: false
     target_repo_mutation_authorized: false
     cleanup_execution_authorized: false
     production_operation_authorized: false
-    governance_cutover_completed: false
   authority_boundary:
     execution_authority: false
-    governance_authority: false
-    evidence_role: s3-contract-reference-input
-    next_stage: separately-authorized-s4
+    downstream_authority: false
+    evidence_role: tool-system-module-contract
+    change_boundary: separately-audited-module-change
 ~~~
 <!-- MODULE-COMPOUND-CONTRACT:END -->

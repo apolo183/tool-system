@@ -72,6 +72,19 @@ def test_policy_allows_formal_repo_manifest_in_pull_request_mode() -> None:
     assert policy_ok, reasons
 
 
+def test_policy_allows_tool_system_config_in_pull_request_mode() -> None:
+    manifest = deepcopy(load_yaml_file(TOOL_SYSTEM_EXAMPLE_PATH))
+    policy = load_yaml_file(POLICY_PATH)
+    manifest["allowed_files"] = [
+        "config/module_registry_v1.yaml",
+        "config/process_authority_v1.yaml",
+    ]
+
+    policy_ok, reasons = validate_repo_write_policy(manifest, policy)
+
+    assert policy_ok, reasons
+
+
 def test_policy_rejects_legacy_finance_os_target() -> None:
     manifest = deepcopy(load_yaml_file(LEGACY_EXAMPLE_PATH))
     policy = load_yaml_file(POLICY_PATH)

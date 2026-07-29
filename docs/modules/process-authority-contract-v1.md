@@ -1,6 +1,6 @@
 # Process Authority Module Compound Contract v1
 
-This file materializes the S3 contract evidence owned by the current
+This file defines the module contract owned by the current
 `process_authority` module. The explicit task pair remains current authority;
 legacy inputs remain non-executing replay only.
 
@@ -18,7 +18,7 @@ module_compound_contract:
       interface_id: process-authority-api
       interface_version: 2.0.0
     mapping_owner:
-      contract_path: docs/tool_system_module_registry_adoption_contract_v1.md
+      contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:process_authority@2.0.0
     python_import_identities:
@@ -44,7 +44,7 @@ module_compound_contract:
     - src/tool_system/process_authority/contract.py
     - src/tool_system/runner/active_gate_resolver.py
   dependency_contract:
-    basis: s0-static-python-import-dag
+    basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids:
       - manifest_validation
@@ -65,7 +65,7 @@ module_compound_contract:
       - missing_mismatched_implicit_or_drifted_input_blocks
     boundary: Missing pair members, mismatched references, symlinks, escaped paths, duplicate pairs, changed hashes, implicit index use, or replay execution requests block.
   side_effect_contract:
-    taxonomy_source: finance-governance@04ca9d558f59dae17603d7976727aa29782253aa:config/module_registry_schema_v1.json
+    taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes: []
     direct_effects: []
     delegated_effects: []
@@ -118,20 +118,14 @@ module_compound_contract:
     declaration: explicit-none
     systems: []
   non_claims:
-    registry_membership: false
-    central_registry_adopted: false
-    central_schema_compliance_claimed: false
-    central_gate_pass_claimed: false
-    governance_activated: false
     provider_execution_authorized: false
     target_repo_mutation_authorized: false
     cleanup_execution_authorized: false
     production_operation_authorized: false
-    governance_cutover_completed: false
   authority_boundary:
     execution_authority: false
-    governance_authority: false
-    evidence_role: s3-contract-reference-input
-    next_stage: separately-authorized-s4
+    downstream_authority: false
+    evidence_role: tool-system-module-contract
+    change_boundary: separately-audited-module-change
 ~~~
 <!-- MODULE-COMPOUND-CONTRACT:END -->
