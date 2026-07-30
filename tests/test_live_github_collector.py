@@ -12,12 +12,27 @@ from tool_system.repo_controller.live_github_collector import (
     evaluate_live_pull_request,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
 GATE_DECISION_PATH = ROOT / "examples" / "gate_decisions" / "pass.yaml"
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p3c_live_collector.yaml"
 MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_p3c_live_collector.yaml"
+
+
+def _lifecycle_approval() -> dict[str, object]:
+    return {
+        "required": True,
+        "approved_by": "external_test_authority",
+        "approval_source": "external_authority:injected_fixture",
+        "approved_at": "2026-07-31T00:00:00+09:00",
+        "approval_record_id": "tool-system-pr-7-merge",
+        "repository_full_name": "apolo183/tool-system",
+        "pull_request_number": 7,
+        "action": "pr_merge",
+        "base_branch": "main",
+        "expected_head_sha": "abc123",
+        "approval_record_or_reason": "injected live-collector fixture",
+    }
 
 
 def fake_runner(args: list[str]) -> Any:
@@ -98,6 +113,7 @@ def test_evaluate_live_pull_request_passes_successful_state() -> None:
         runner=fake_runner,
         task_manifest=load_yaml_file(MANIFEST_PATH),
         change_plan=load_yaml_file(CHANGE_PLAN_PATH),
+        lifecycle_approval=_lifecycle_approval(),
     )
 
     assert output["decision"]["status"] == "PASS"

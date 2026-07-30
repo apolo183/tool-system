@@ -3,9 +3,20 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tool_system.repo_controller.actions import build_action_plan, execute_action_plan, run_gh
-from tool_system.repo_controller.artifact import build_controller_record, write_jsonl_record
-from tool_system.repo_controller.live_github_collector import evaluate_live_pull_request, run_gh_json
+from tool_system.repo_controller.actions import (
+    RepositoryActionCapability,
+    build_action_plan,
+    execute_action_plan,
+    run_gh,
+)
+from tool_system.repo_controller.artifact import (
+    build_controller_record,
+    write_jsonl_record,
+)
+from tool_system.repo_controller.live_github_collector import (
+    evaluate_live_pull_request,
+    run_gh_json,
+)
 
 
 def run_controller(
@@ -16,10 +27,13 @@ def run_controller(
     audit_path: str | Path,
     task_manifest: dict[str, Any],
     change_plan: dict[str, Any],
+    lifecycle_approval: dict[str, Any] | None = None,
     dry_run: bool = True,
     merge_method: str = "squash",
     collector_runner=run_gh_json,
     action_runner=run_gh,
+    action_capability: RepositoryActionCapability | None = None,
+    action_runner_kind: str = "live_gh",
 ) -> dict[str, object]:
     evaluation = evaluate_live_pull_request(
         repository_full_name=repository_full_name,
@@ -30,6 +44,7 @@ def run_controller(
         merge_method=merge_method,
         task_manifest=task_manifest,
         change_plan=change_plan,
+        lifecycle_approval=lifecycle_approval,
     )
     action_plan = build_action_plan(
         decision=evaluation["decision"],
@@ -40,6 +55,8 @@ def run_controller(
         plan=action_plan,
         runner=action_runner,
         dry_run=dry_run,
+        capability=action_capability,
+        runner_kind=action_runner_kind,
     )
     record = build_controller_record(
         repository_full_name=repository_full_name,

@@ -11,12 +11,28 @@ from tool_system.repo_controller.github_state import (
     normalize_workflow_runs,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
 INPUT_PATH = ROOT / "examples" / "github_states" / "tool_system_p3b_pass.yaml"
 MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_p3b_controller_adapter.yaml"
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p3b_controller_adapter.yaml"
+
+
+def _lifecycle_approval(value: dict[str, object]) -> dict[str, object]:
+    pull_request = value["pull_request"]
+    return {
+        "required": True,
+        "approved_by": "external_test_authority",
+        "approval_source": "external_authority:injected_fixture",
+        "approved_at": "2026-07-31T00:00:00+09:00",
+        "approval_record_id": "tool-system-pr-6-merge",
+        "repository_full_name": value["repository_full_name"],
+        "pull_request_number": pull_request["number"],
+        "action": "pr_merge",
+        "base_branch": pull_request["base"],
+        "expected_head_sha": pull_request["head_sha"],
+        "approval_record_or_reason": "injected GitHub-state fixture",
+    }
 
 
 def test_github_state_evaluation_passes_successful_workflow_run() -> None:
@@ -32,6 +48,7 @@ def test_github_state_evaluation_passes_successful_workflow_run() -> None:
         repository_full_name=value["repository_full_name"],
         task_manifest=load_yaml_file(MANIFEST_PATH),
         change_plan=load_yaml_file(CHANGE_PLAN_PATH),
+        lifecycle_approval=_lifecycle_approval(value),
     )
 
     assert output["decision"]["status"] == "PASS"
@@ -53,6 +70,7 @@ def test_github_state_evaluation_blocks_failed_workflow_run() -> None:
         repository_full_name=value["repository_full_name"],
         task_manifest=load_yaml_file(MANIFEST_PATH),
         change_plan=load_yaml_file(CHANGE_PLAN_PATH),
+        lifecycle_approval=_lifecycle_approval(value),
     )
 
     assert output["decision"]["status"] == "BLOCK"
@@ -69,6 +87,7 @@ def test_github_state_uses_workflow_jobs_when_available() -> None:
         repository_full_name=value["repository_full_name"],
         task_manifest=load_yaml_file(MANIFEST_PATH),
         change_plan=load_yaml_file(CHANGE_PLAN_PATH),
+        lifecycle_approval=_lifecycle_approval(value),
     )
 
     assert output["status_checks"] == [
@@ -76,6 +95,9 @@ def test_github_state_uses_workflow_jobs_when_available() -> None:
     ]
     assert output["task_manifest"]["task_id"] == "tool-system-p3b-controller-adapter"
     assert output["change_plan"]["plan_id"] == "tool-system-p3b-controller-adapter-plan"
+    assert output["lifecycle_approval"]["approval_record_id"] == (
+        "tool-system-pr-6-merge"
+    )
 
 
 def test_workflow_normalizers_preserve_status_and_conclusion() -> None:

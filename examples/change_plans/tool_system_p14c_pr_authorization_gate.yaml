@@ -1,0 +1,47 @@
+plan_id: tool-system-p14c-pr-authorization-gate-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p14c_pr_authorization_gate.yaml
+changed_files:
+  - config/module_registry_v1.yaml
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/modules/repository-controller-contract-v1.md
+  - docs/reports/p14c_pr_authorization_gate.md
+  - examples/task_manifests/tool_system_p14c_pr_authorization_gate.yaml
+  - examples/change_plans/tool_system_p14c_pr_authorization_gate.yaml
+  - src/tool_system/repo_controller/actions.py
+  - src/tool_system/repo_controller/controller.py
+  - src/tool_system/repo_controller/controller_run.py
+  - src/tool_system/repo_controller/github_state.py
+  - src/tool_system/repo_controller/live_github_collector.py
+  - src/tool_system/repo_controller/self_check.py
+  - tests/test_controller_actions.py
+  - tests/test_controller_run.py
+  - tests/test_controller_self_check.py
+  - tests/test_github_state_adapter.py
+  - tests/test_live_github_collector.py
+  - tests/test_module_registry.py
+  - tests/test_p10r_a_machine_policy_enforcement.py
+  - tests/test_repo_controller.py
+  - tests/test_repo_manifest.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p14c_pr_authorization_gate.yaml
+    section_or_key: scope
+    scope: Implement only the locked repository-controller authorization gate.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Keep repository publication separately authorized and auditable without advancing P14C execution or P14D.
+verification:
+  commands:
+    - git diff --check
+    - python -m compileall src/tool_system tests
+    - python -m pytest -q tests/test_repo_controller.py tests/test_controller_actions.py tests/test_controller_run.py tests/test_controller_self_check.py tests/test_github_state_adapter.py tests/test_live_github_collector.py tests/test_p10r_a_machine_policy_enforcement.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_pr_authorization_gate.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+rollback:
+  method: git_revert
+  reference: future P14C-PR-AUTH-GATE-v1 commit

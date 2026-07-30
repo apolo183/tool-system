@@ -7,7 +7,6 @@ from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.policy.autonomy_policy import validate_autonomy_policy
 from tool_system.repo_controller.controller import evaluate_repo_write
 
-
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY_PATH = ROOT / "policy" / "autonomy_policy.yaml"
@@ -54,12 +53,7 @@ def _manifest() -> dict[str, object]:
         "rollback": {"method": "git_revert", "reference": "future merge commit"},
         "approval": {
             "required": True,
-            "approved_by": "user_explicit_finance_us_p1b_merge",
-            "repository_full_name": "apolo183/finance-us",
-            "action": "pr_merge",
-            "base_branch": "main",
-            "expected_head_sha": "finance-us-head-sha",
-            "approval_record_or_reason": "named P1B merge authorization",
+            "approved_by": "implementation_milestone_authorization",
         },
     }
 
@@ -75,7 +69,26 @@ def _change_plan() -> dict[str, object]:
     }
 
 
-def _evaluate(manifest: dict[str, object] | None = None) -> dict[str, object]:
+def _lifecycle_approval() -> dict[str, object]:
+    return {
+        "required": True,
+        "approved_by": "user_explicit_finance_us_p1b_merge",
+        "approval_source": "external_authority:injected_fixture",
+        "approved_at": "2026-07-31T00:00:00+09:00",
+        "approval_record_id": "finance-us-pr-3-merge",
+        "repository_full_name": "apolo183/finance-us",
+        "pull_request_number": 3,
+        "action": "pr_merge",
+        "base_branch": "main",
+        "expected_head_sha": "finance-us-head-sha",
+        "approval_record_or_reason": "named P1B merge authorization",
+    }
+
+
+def _evaluate(
+    manifest: dict[str, object] | None = None,
+    lifecycle_approval: dict[str, object] | None = None,
+) -> dict[str, object]:
     return evaluate_repo_write(
         pull_request=_pull_request(),
         gate_decision={"status": "PASS", "reasons": []},
@@ -83,6 +96,11 @@ def _evaluate(manifest: dict[str, object] | None = None) -> dict[str, object]:
         status_checks=[{"name": "tool-system-ci", "status": "completed", "conclusion": "success"}],
         task_manifest=manifest or _manifest(),
         change_plan=_change_plan(),
+        lifecycle_approval=(
+            _lifecycle_approval()
+            if lifecycle_approval is None
+            else lifecycle_approval
+        ),
     )
 
 
@@ -94,30 +112,34 @@ def test_named_finance_us_merge_approval_passes() -> None:
 
 
 def test_packet_preparation_approval_cannot_authorize_merge() -> None:
-    manifest = _manifest()
-    manifest["approval"]["action"] = "packet_preparation"
+    approval = _lifecycle_approval()
+    approval["action"] = "packet_preparation"
 
-    decision = _evaluate(manifest)
+    decision = _evaluate(lifecycle_approval=approval)
 
     assert decision["status"] == "BLOCK"
     assert "approval.action must match current lifecycle context" in decision["reasons"]
+    assert (
+        "lifecycle approval action must match current lifecycle context"
+        in decision["reasons"]
+    )
 
 
 def test_target_implementation_approval_cannot_authorize_merge() -> None:
-    manifest = _manifest()
-    manifest["approval"]["action"] = "target_implementation"
+    approval = _lifecycle_approval()
+    approval["action"] = "target_implementation"
 
-    decision = _evaluate(manifest)
+    decision = _evaluate(lifecycle_approval=approval)
 
     assert decision["status"] == "BLOCK"
     assert "approval.action must match current lifecycle context" in decision["reasons"]
 
 
 def test_stale_approval_head_sha_blocks() -> None:
-    manifest = _manifest()
-    manifest["approval"]["expected_head_sha"] = "stale-head-sha"
+    approval = _lifecycle_approval()
+    approval["expected_head_sha"] = "stale-head-sha"
 
-    decision = _evaluate(manifest)
+    decision = _evaluate(lifecycle_approval=approval)
 
     assert decision["status"] == "BLOCK"
     assert "approval.expected_head_sha must match current lifecycle context" in decision["reasons"]
@@ -134,14 +156,15 @@ def test_repository_mismatch_blocks() -> None:
 
 
 def test_missing_named_approval_fields_block() -> None:
-    manifest = _manifest()
-    manifest["approval"] = {"required": True}
-
-    decision = _evaluate(manifest)
+    decision = _evaluate(lifecycle_approval={"required": True})
 
     assert decision["status"] == "BLOCK"
     assert "approval.approved_by is required for lifecycle action" in decision["reasons"]
     assert "approval.approval_record_or_reason is required" in decision["reasons"]
+    assert any(
+        reason.startswith("lifecycle approval missing fields:")
+        for reason in decision["reasons"]
+    )
 
 
 def test_autonomy_policy_rejects_unscoped_ready_claim() -> None:

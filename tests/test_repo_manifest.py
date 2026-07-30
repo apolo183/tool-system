@@ -110,7 +110,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["formal_file_count"] == 204
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
-    assert result["legacy_path_count"] == 292
+    assert result["legacy_path_count"] == 295
     assert result["unclassified_path_count"] == 0
     assert result["retained_inputs_are_current_authority"] is False
     assert result["cleanup_authorized"] is False

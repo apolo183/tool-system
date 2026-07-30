@@ -104,7 +104,7 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:durable_orchestrator@1.0.0
     - current_module_id: repository_controller
       canonical_module_id: repository-controller
-      current_module_version: 1.0.0
+      current_module_version: 1.1.0
       aggregate_interface_id: repository-controller-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
@@ -118,7 +118,7 @@ mapping_contract:
         - task_runner
         - worker_adapter
       change_risk: "critical: action-scoped Git and GitHub mutation boundary"
-      rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:repository_controller@1.0.0
+      rollback_identity: tool-system@632132b87d10c2cf705149fbcc6832e7d165acd9:repository_controller@1.0.0
     - current_module_id: process_authority
       canonical_module_id: process-authority
       current_module_version: 2.0.0

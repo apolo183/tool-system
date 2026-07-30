@@ -59,6 +59,7 @@ def build_repo_write_input_from_github_state(
     repository_full_name: str | None = None,
     task_manifest: dict[str, Any] | None = None,
     change_plan: dict[str, Any] | None = None,
+    lifecycle_approval: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     status_checks = normalize_workflow_jobs(workflow_jobs or [])
     if not status_checks:
@@ -72,6 +73,7 @@ def build_repo_write_input_from_github_state(
         "rollback": rollback or {},
         "task_manifest": task_manifest,
         "change_plan": change_plan,
+        "lifecycle_approval": lifecycle_approval,
     }
 
 
@@ -86,6 +88,7 @@ def evaluate_github_state(
     repository_full_name: str | None = None,
     task_manifest: dict[str, Any] | None = None,
     change_plan: dict[str, Any] | None = None,
+    lifecycle_approval: dict[str, Any] | None = None,
 ) -> dict[str, object]:
     repo_write_input = build_repo_write_input_from_github_state(
         pull_request=pull_request,
@@ -97,6 +100,7 @@ def evaluate_github_state(
         repository_full_name=repository_full_name,
         task_manifest=task_manifest,
         change_plan=change_plan,
+        lifecycle_approval=lifecycle_approval,
     )
     decision = evaluate_repo_write(
         pull_request=repo_write_input["pull_request"],
@@ -106,6 +110,7 @@ def evaluate_github_state(
         merge_method=repo_write_input["merge_method"],
         task_manifest=repo_write_input["task_manifest"],
         change_plan=repo_write_input["change_plan"],
+        lifecycle_approval=repo_write_input["lifecycle_approval"],
     )
     audit_record = build_audit_record(
         pull_request=repo_write_input["pull_request"],
