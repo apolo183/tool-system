@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from typing import Any
 
 from tool_system.gate.change_plan import (
@@ -13,6 +15,19 @@ from tool_system.policy.repo_write_policy import (
 )
 
 PASSING_CONCLUSIONS = {"success", "neutral", "skipped"}
+LIFECYCLE_APPROVAL_FIELDS = frozenset({
+    "required",
+    "approved_by",
+    "approval_source",
+    "approved_at",
+    "approval_record_id",
+    "repository_full_name",
+    "pull_request_number",
+    "action",
+    "base_branch",
+    "expected_head_sha",
+    "approval_record_or_reason",
+})
 
 
 def _all_checks_pass(status_checks: list[dict[str, Any]]) -> tuple[bool, list[str]]:
@@ -36,6 +51,88 @@ def _is_allowed_merge_method(policy: dict[str, Any], merge_method: str) -> bool:
     merge_policy = policy.get("merge_policy") or {}
     default_method = merge_policy.get("default_method", "squash")
     return merge_method == default_method
+
+
+def _validate_controller_lifecycle_approval(
+    lifecycle_approval: dict[str, Any] | None,
+    pull_request: dict[str, Any],
+) -> tuple[str | None, list[str]]:
+    if not isinstance(lifecycle_approval, dict):
+        return None, [
+            (
+                "separate lifecycle approval is required; task manifest approval "
+                "does not authorize repository mutation"
+            )
+        ]
+
+    reasons: list[str] = []
+    non_string_fields = sorted(
+        repr(field) for field in lifecycle_approval if not isinstance(field, str)
+    )
+    if non_string_fields:
+        reasons.append(
+            "lifecycle approval field names must be strings: "
+            + ", ".join(non_string_fields)
+        )
+    fields = {field for field in lifecycle_approval if isinstance(field, str)}
+    missing = sorted(LIFECYCLE_APPROVAL_FIELDS - fields)
+    unexpected = sorted(fields - LIFECYCLE_APPROVAL_FIELDS)
+    if missing:
+        reasons.append("lifecycle approval missing fields: " + ", ".join(missing))
+    if unexpected:
+        reasons.append("lifecycle approval has unexpected fields: " + ", ".join(unexpected))
+
+    if lifecycle_approval.get("required") is not True:
+        reasons.append("lifecycle approval required must be true")
+
+    for field in (
+        "approved_by",
+        "approval_source",
+        "approved_at",
+        "approval_record_id",
+        "approval_record_or_reason",
+    ):
+        if not isinstance(lifecycle_approval.get(field), str) or not lifecycle_approval.get(field):
+            reasons.append(f"lifecycle approval {field} is required")
+
+    approval_source = lifecycle_approval.get("approval_source")
+    if isinstance(approval_source, str) and not approval_source.startswith(
+        "external_authority:"
+    ):
+        reasons.append(
+            "lifecycle approval approval_source must identify an external authority"
+        )
+
+    expected = {
+        "repository_full_name": pull_request.get("repository"),
+        "pull_request_number": pull_request.get("number"),
+        "action": "pr_merge",
+        "base_branch": pull_request.get("base"),
+        "expected_head_sha": pull_request.get("head_sha"),
+    }
+    for field, value in expected.items():
+        if field == "pull_request_number":
+            context_value_valid = (
+                isinstance(value, int) and not isinstance(value, bool) and value > 0
+            )
+        else:
+            context_value_valid = isinstance(value, str) and bool(value)
+        if not context_value_valid:
+            reasons.append(f"current lifecycle context requires {field}")
+        elif lifecycle_approval.get(field) != value:
+            reasons.append(
+                f"lifecycle approval {field} must match current lifecycle context"
+            )
+
+    if reasons:
+        return None, reasons
+    canonical = json.dumps(
+        lifecycle_approval,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest(), []
 
 
 def _validate_controller_context(
@@ -79,6 +176,7 @@ def evaluate_repo_write(
     merge_method: str = "squash",
     task_manifest: dict[str, Any] | None = None,
     change_plan: dict[str, Any] | None = None,
+    lifecycle_approval: dict[str, Any] | None = None,
 ) -> dict[str, object]:
     reasons: list[str] = []
 
@@ -108,8 +206,10 @@ def evaluate_repo_write(
 
     reasons.extend(_validate_controller_context(task_manifest, change_plan, repo_policy))
     if task_manifest is not None:
+        approval_manifest = dict(task_manifest)
+        approval_manifest["approval"] = lifecycle_approval
         _, lifecycle_reasons = validate_lifecycle_approval(
-            task_manifest,
+            approval_manifest,
             repo_policy,
             action="pr_merge",
             repository_full_name=pull_request.get("repository"),
@@ -117,9 +217,15 @@ def evaluate_repo_write(
             expected_head_sha=pull_request.get("head_sha"),
         )
         reasons.extend(lifecycle_reasons)
+    approval_record_sha256, controller_approval_reasons = (
+        _validate_controller_lifecycle_approval(lifecycle_approval, pull_request)
+    )
+    reasons.extend(controller_approval_reasons)
 
     return {
         "status": "PASS" if not reasons else "BLOCK",
         "merge_method": merge_method,
+        "approval_action": "pr_merge",
+        "approval_record_sha256": approval_record_sha256,
         "reasons": reasons,
     }

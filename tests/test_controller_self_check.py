@@ -12,12 +12,27 @@ from tool_system.repo_controller.self_check import (
     run_self_check,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
 GATE_DECISION = {"status": "PASS", "reasons": []}
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p3f_controller_self_check.yaml"
 MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_p3f_controller_self_check.yaml"
+
+
+def _lifecycle_approval() -> dict[str, object]:
+    return {
+        "required": True,
+        "approved_by": "external_test_authority",
+        "approval_source": "external_authority:injected_fixture",
+        "approved_at": "2026-07-31T00:00:00+09:00",
+        "approval_record_id": "tool-system-pr-10-merge",
+        "repository_full_name": "apolo183/tool-system",
+        "pull_request_number": 10,
+        "action": "pr_merge",
+        "base_branch": "main",
+        "expected_head_sha": "abc123",
+        "approval_record_or_reason": "injected self-check fixture",
+    }
 
 
 def write_event(path: Path, number: int = 10) -> Path:
@@ -81,6 +96,7 @@ def test_run_self_check_is_dry_run_and_writes_audit(tmp_path: Path) -> None:
         repo_policy=policy,
         task_manifest=load_yaml_file(MANIFEST_PATH),
         change_plan=load_yaml_file(CHANGE_PLAN_PATH),
+        lifecycle_approval=_lifecycle_approval(),
         audit_path=audit_path,
         collector_runner=fake_collector_runner,
     )

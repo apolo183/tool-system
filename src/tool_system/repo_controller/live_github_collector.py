@@ -141,6 +141,7 @@ def evaluate_live_pull_request(
     merge_method: str = "squash",
     task_manifest: dict[str, Any] | None = None,
     change_plan: dict[str, Any] | None = None,
+    lifecycle_approval: dict[str, Any] | None = None,
 ) -> dict[str, object]:
     snapshot = collect_github_state_snapshot(
         repository_full_name=repository_full_name,
@@ -160,5 +161,6 @@ def evaluate_live_pull_request(
         repository_full_name=snapshot["repository_full_name"],
         task_manifest=task_manifest,
         change_plan=change_plan,
+        lifecycle_approval=lifecycle_approval,
     )
     return {"snapshot": snapshot, **output}

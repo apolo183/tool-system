@@ -13,20 +13,20 @@ module_compound_contract:
   identity:
     canonical_module_id: repository-controller
     current_module_id: repository_controller
-    module_version: 1.0.0
+    module_version: 1.1.0
     aggregate_interface:
       interface_id: repository-controller-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:repository_controller@1.0.0
+    rollback_identity: tool-system@632132b87d10c2cf705149fbcc6832e7d165acd9:repository_controller@1.0.0
     python_import_identities:
       - kind: prefix
         name: tool_system.repo_controller
   role:
     summary: evaluate and execute explicitly authorized repository control actions with audit records
-    responsibility_boundary: Evaluate current PR, policy, check, manifest, plan, approval, and head-SHA evidence before an optional action-scoped GitHub merge and append-only audit record.
+    responsibility_boundary: Evaluate current PR, policy, check, manifest, plan, separately supplied lifecycle approval, and head-SHA evidence; derive an approval digest; and require one exact single-use mutation capability before an optional action-scoped GitHub merge and append-only audit record.
   natural_owner_evidence_paths:
     - src/tool_system/repo_controller/__init__.py
     - src/tool_system/repo_controller/actions.py
@@ -53,15 +53,15 @@ module_compound_contract:
   input_contract:
     registered_inputs:
       - repository_state_policy_and_action_intent
-    boundary: Accept one named repository and PR, current GitHub state, passing checks, exact task scope, action approval, expected head SHA, and caller-selected audit path.
+    boundary: Accept one named repository and PR, current GitHub state, passing checks, exact task scope, a lifecycle approval supplied separately from the task manifest and bound to repository, PR, action, base, head, identity, source, and reason, an exact mutation capability for non-dry-run execution, and a caller-selected audit path.
   output_contract:
     registered_outputs:
       - action_plan_decision_and_append_only_audit_record
-    boundary: Return a deterministic repository decision, action plan or action result, and append-only JSONL audit evidence.
+    boundary: Return a deterministic repository decision carrying the canonical lifecycle-approval SHA-256, an action plan or action result carrying that same digest, and append-only JSONL audit evidence.
   error_contract:
     registered_error_semantics:
       - deny_or_block_on_missing_authority_and_stale_state
-    boundary: Draft, closed, unmergeable, stale, mismatched, failed-check, out-of-scope, unauthorized, runner, or audit validation failures block.
+    boundary: Draft, closed, unmergeable, stale, mismatched, failed-check, out-of-scope, task-manifest-only approval, missing or replayed capability, unauthorized runner, or audit validation failures block before mutation.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -87,23 +87,23 @@ module_compound_contract:
       - effect_class: git_write
         evidence_paths:
           - src/tool_system/repo_controller/actions.py
-        boundary: The guarded GitHub pull-request merge changes Git history only for the exact approved repository, PR, merge method, and head SHA.
+        boundary: The guarded GitHub pull-request merge changes Git history only after consuming one capability bound to the exact repository, PR, squash action, base, head SHA, approval-record digest, and runner kind.
       - effect_class: network_write
         evidence_paths:
           - src/tool_system/repo_controller/actions.py
           - src/tool_system/repo_controller/live_github_collector.py
-        boundary: GitHub PR and workflow reads use the network, and network mutation occurs only through the guarded gh pull-request merge command when dry-run is false.
+        boundary: GitHub PR and workflow reads use the network, and network mutation occurs only through the guarded gh pull-request merge command when dry-run is false and an exact single-use capability is consumed.
       - effect_class: external_system_write
         evidence_paths:
           - src/tool_system/repo_controller/actions.py
-        boundary: Submit only the approved pull-request merge action to the named GitHub repository after all guards pass; this classification does not authorize merge.
+        boundary: Submit only the approved pull-request merge action to the named GitHub repository after all state, approval-digest, and capability guards pass; this classification and a PASS decision do not issue the capability or authorize merge.
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve decision fields, fail-closed guards, dry-run behavior, exact head matching, action command shape, audit fields, and injected runner boundaries.
+    interface_compatible_replacement: Preserve decision and result shapes, fail-closed guards, separate lifecycle-approval input, approval digest, dry-run behavior, exact action binding, single-use capability consumption, action command shape, audit fields, and injected runner boundaries.
     interface_incompatible_change: Requires a new aggregate interface version and revalidation of every direct consumer plus repository lifecycle controls.
   rollback_contract:
-    rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:repository_controller@1.0.0
+    rollback_identity: tool-system@632132b87d10c2cf705149fbcc6832e7d165acd9:repository_controller@1.0.0
     method: Revert code through a separately audited pull request; any prior repository merge requires its own audited revert workflow.
   replacement_contract:
     activation_rule: Replace only after policy, state normalization, check evaluation, dry-run, injected action, live collector, audit, and all direct-consumer tests pass.
@@ -117,10 +117,10 @@ module_compound_contract:
   local_boundaries:
     repository:
       mode: action-scoped
-      contract: Repository mutation requires exact named action authorization, current state, expected head SHA, allowed merge method, and non-draft mergeable PR.
+      contract: Repository mutation requires a separately supplied exact named-action record, its canonical digest, current state, expected head SHA, allowed merge method, non-draft mergeable PR, and one matching single-use capability. The current source provides no live capability issuer.
     data:
       mode: state-policy-and-append-only-audit
-      contract: Pull-request, workflow, manifest, plan, policy, rollback, and approval mappings are caller-supplied evidence; controller records may persist as append-only JSONL data at the selected audit path.
+      contract: Pull-request, workflow, manifest, plan, policy, rollback, and separately supplied lifecycle-approval mappings are caller-supplied evidence; the approval digest and controller records may persist as append-only JSONL data at the selected audit path.
     artifact:
       mode: append-only-jsonl
       contract: Controller, self-check, and main-CI records append to a caller-selected path and retain structured reasons.
@@ -148,7 +148,7 @@ module_compound_contract:
         evidence_paths:
           - src/tool_system/repo_controller/actions.py
           - src/tool_system/repo_controller/live_github_collector.py
-        boundary: Read PR and workflow state or execute the one guarded merge command; no branch creation, file update, label, deployment, or unrelated action is implicit.
+        boundary: Read PR and workflow state or execute the one guarded merge command after exact capability consumption; current production entrypoints have no capability issuer, and no branch creation, file update, label, Ready transition, deployment, or unrelated action is implicit.
   non_claims:
     provider_execution_authorized: false
     target_repo_mutation_authorized: false
