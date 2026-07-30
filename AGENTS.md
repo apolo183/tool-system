@@ -156,7 +156,7 @@ Current phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.
 
 Status: `active`.
 
-P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract and P14MR Milestone Module Invariant are accepted and closed; P14MR remains the last accepted active-stage record while P14C source implementation is pending review. `P14C-IMPL-v2` authorizes only the tool-system-local bounded OpenAI Responses adapter source, explicit execution guard, public synthetic fixture, fake-transport tests, packet-only evidence, branch, commit, and Draft PR. It does not authorize credential-value access or a real provider call, and it does not accept or close P14C. The durable local module rules remain owned by `blueprint/tool_system_v0.yaml` and `docs/tool_system_global_development_principles_v1.md`, and the current module inventory is registered in `config/module_registry_v1.yaml`. Live model/provider execution, project benchmarks, downstream reads or mutations, cleanup, PR ready, main merge, and production deployment are not authorized. P15-P16 remain roadmap-only.
+P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract and P14MR Milestone Module Invariant are accepted and closed; P14MR remains the last accepted active-stage record. The corrected P14C source was reviewed and squash-merged through PR #143 at `main@352b2638bb9a1cf7504a224c0571062072b32db1`. `P14C-CORR-v1`, `P14C-CORR-READY-v1`, and `P14C-CORR-MERGE-v1` separately authorized the correction publication, Ready transition, and squash merge. Those completed source-publication actions do not authorize credential-value access or a real provider call, and they do not accept or close P14C. The durable local module rules remain owned by `blueprint/tool_system_v0.yaml` and `docs/tool_system_global_development_principles_v1.md`, and the current module inventory is registered in `config/module_registry_v1.yaml`. Live model/provider execution, P14D, project benchmarks, downstream reads or mutations, cleanup, rollback, branch deletion, and production deployment are not authorized. P15-P16 remain roadmap-only.
 
 Allowed now:
 
@@ -165,7 +165,7 @@ Allowed now:
 - explicit current-task pair validation through `config/process_authority_v1.yaml`; legacy active-gate input is replay-only and cannot authorize commands;
 - local `REPO_MANIFEST.md` validation proving every tracked path is classified exactly once as formal or retained non-authority, without claiming process-file compliance or cleanup authority;
 - read-only verification of the accepted P14A and P14B contracts and evidence;
-- P14C-IMPL-v2 source implementation, packet-only validation, and injected fake-transport tests inside tool-system without credential-value access or a real provider call;
+- read-only verification, packet-only validation, and injected fake-transport tests for the corrected P14C source now on main, without credential-value access or a real provider call;
 - read-only verification of the accepted P13 security and reliability evidence;
 - read-only verification of accepted P12 durable-orchestrator state and evidence;
 - read-only verification of the accepted P11 runtime;
@@ -179,11 +179,11 @@ Not allowed now:
 - finance-us P1B target implementation without a named, action-scoped target execution approval;
 - treating a P1B implementation approval as ready or merge approval;
 - further P14B source expansion under the accepted and closed milestone scope;
-- P14C source expansion outside P14C-IMPL-v2 or later P14 source implementation before a named authorization;
+- P14C source expansion or later P14 source implementation before a named authorization;
 - any live model/provider call before a named provider, model, credential, network, cost, and execution packet is authorized;
 - credential-value access under P14C-IMPL-v2;
-- P14C acceptance, PR ready transition, or main merge without separate approval;
-- P15 or later phase entry or implementation before a named authorization;
+- P14C acceptance, any future PR ready transition, or any future main merge without separate named approval;
+- P14D or any later P14 stage, or P15 or later phase entry or implementation, before a named authorization;
 - further P13 runtime, orchestrator, or evidence expansion under the closed milestone;
 - further P12 runtime expansion under the closed milestone;
 - P12 fixtures that call a real external side effect, remote provider, or target repository;

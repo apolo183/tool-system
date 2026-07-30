@@ -49,7 +49,7 @@ p14c_source_implementation:
   implementation_authorization_packet: P14C-IMPL-v2
   tool_system_base: 637fe60782ed9e15d58795a0113b84965d6664d2
   source_implementation_authorized: true
-  source_implementation_status: implemented_pending_review
+  source_implementation_status: corrected_source_merged_live_execution_not_run_not_accepted
   p14c_stage_accepted: false
   live_model_provider_execution_authorized: false
   credential_value_access_authorized: false

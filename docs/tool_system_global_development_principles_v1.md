@@ -194,4 +194,4 @@ Provider and economics defaults are maintained by event-driven updates, a 24-hou
 
 ## 26. Final state
 
-Status: ACTIVE. Applies only to tool-system, including its blueprint, durable modules, milestone-change planning, provider/model portfolio roadmap, development economics, docs, source, tests, examples, policies, cleanup planning, repository-control work, side-effect tool use, and target-repository adapters. P14 remains active and P14C remains unauthorized.
+Status: ACTIVE. Applies only to tool-system, including its blueprint, durable modules, milestone-change planning, provider/model portfolio roadmap, development economics, docs, source, tests, examples, policies, cleanup planning, repository-control work, side-effect tool use, and target-repository adapters. P14 remains active. The corrected P14C source is merged, but live execution and P14C stage acceptance remain unauthorized; P14MR remains the last accepted stage.

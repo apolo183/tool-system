@@ -91,7 +91,9 @@ def test_public_contracts_have_same_current_phase() -> None:
     assert p14c["record_role"] == "source_implementation_evidence_only"
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_implementation_authorized"] is True
-    assert p14c["source_implementation_status"] == "implemented_pending_review"
+    assert p14c["source_implementation_status"] == (
+        "corrected_source_merged_live_execution_not_run_not_accepted"
+    )
     assert p14c["p14c_stage_accepted"] is False
     assert p14c["live_model_provider_execution_authorized"] is False
 
