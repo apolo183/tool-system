@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-29 UTC+09:00
+updated_at: 2026-07-30 UTC+09:00
 
 ## 1. Mission
 
@@ -156,7 +156,7 @@ Current phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.
 
 Status: `active`.
 
-P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract is accepted and closed. P14 remains active while the accepted P14MR evidence is retained, its durable local module rules are owned by `blueprint/tool_system_v0.yaml` and `docs/tool_system_global_development_principles_v1.md`, and its current module inventory is registered in `config/module_registry_v1.yaml`. The current registry uses the tool-system-owned four-field top-level shape, and its local validator enforces exact module/interface identities, tracked natural-owner and boundary coverage without overlap, ContractReference SHA-256 values, managed Python import edges against declared consumers, side-effect target bindings, dependency-version reciprocity, and DAG validity. This structural and source-graph evidence does not prove runtime isolation, behavioral interface compatibility, or automatic replacement. Live model/provider execution, project benchmarks, and target mutations are not authorized. P15-P16 remain roadmap-only.
+P10, P11, P12, and P13 are accepted and closed at their recorded scopes. P14B Provider-Neutral AI Worker Contract and P14MR Milestone Module Invariant are accepted and closed; P14MR remains the last accepted active-stage record while P14C source implementation is pending review. `P14C-IMPL-v2` authorizes only the tool-system-local bounded OpenAI Responses adapter source, explicit execution guard, public synthetic fixture, fake-transport tests, packet-only evidence, branch, commit, and Draft PR. It does not authorize credential-value access or a real provider call, and it does not accept or close P14C. The durable local module rules remain owned by `blueprint/tool_system_v0.yaml` and `docs/tool_system_global_development_principles_v1.md`, and the current module inventory is registered in `config/module_registry_v1.yaml`. Live model/provider execution, project benchmarks, downstream reads or mutations, cleanup, PR ready, main merge, and production deployment are not authorized. P15-P16 remain roadmap-only.
 
 Allowed now:
 
@@ -165,6 +165,7 @@ Allowed now:
 - explicit current-task pair validation through `config/process_authority_v1.yaml`; legacy active-gate input is replay-only and cannot authorize commands;
 - local `REPO_MANIFEST.md` validation proving every tracked path is classified exactly once as formal or retained non-authority, without claiming process-file compliance or cleanup authority;
 - read-only verification of the accepted P14A and P14B contracts and evidence;
+- P14C-IMPL-v2 source implementation, packet-only validation, and injected fake-transport tests inside tool-system without credential-value access or a real provider call;
 - read-only verification of the accepted P13 security and reliability evidence;
 - read-only verification of accepted P12 durable-orchestrator state and evidence;
 - read-only verification of the accepted P11 runtime;
@@ -178,8 +179,10 @@ Not allowed now:
 - finance-us P1B target implementation without a named, action-scoped target execution approval;
 - treating a P1B implementation approval as ready or merge approval;
 - further P14B source expansion under the accepted and closed milestone scope;
-- P14C or later P14 source implementation before a named authorization;
+- P14C source expansion outside P14C-IMPL-v2 or later P14 source implementation before a named authorization;
 - any live model/provider call before a named provider, model, credential, network, cost, and execution packet is authorized;
+- credential-value access under P14C-IMPL-v2;
+- P14C acceptance, PR ready transition, or main merge without separate approval;
 - P15 or later phase entry or implementation before a named authorization;
 - further P13 runtime, orchestrator, or evidence expansion under the closed milestone;
 - further P12 runtime expansion under the closed milestone;

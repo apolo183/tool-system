@@ -29,13 +29,13 @@ CONTRACT_DIR = ROOT / "docs/modules"
 BLUEPRINT = ROOT / "blueprint/tool_system_v0.yaml"
 
 EXPECTED_RAW_SHA256 = (
-    "776d8511bb8dccc6532c6ce3a1a04d1e2f558896f675473c8251972c16f97dff"
+    "ef4a27c6af8036d09cf4c65c0726223f99728b9ad94bbef676ef02d4ac7f88cd"
 )
-EXPECTED_BYTE_LENGTH = 81_424
+EXPECTED_BYTE_LENGTH = 82_394
 EXPECTED_SEMANTIC_SHA256 = (
-    "baa8188ab608f9363e4a58961ac4c854fd618591e7add128ad4ce0aea0d6dafa"
+    "de1f009626b0f783ed48fb8298b72e655dd0b24c22d7ce590e4651dfb918977d"
 )
-EXPECTED_MANAGED_PYTHON_FILE_COUNT = 90
+EXPECTED_MANAGED_PYTHON_FILE_COUNT = 92
 EXPECTED_MODULE_IDS = {
     "architecture_registry",
     "manifest_validation",
@@ -77,6 +77,9 @@ TEST_SELECTORS = {
     "target_repo_adapter": "tests/test_target_repo_dry_run.py",
     "cleanup_planner": "tests/test_cleanup_plan.py",
     "cli_frontend": "tests/test_root_cli.py",
+}
+ADDITIONAL_TEST_SELECTORS = {
+    "ai_worker_runtime": ("tests/test_ai_worker_live_provider.py",),
 }
 
 
@@ -147,7 +150,7 @@ def authority_code_paths() -> dict[str, list[str]]:
         for current_id, contract in contracts.items()
     }
     flattened = [path for paths in result.values() for path in paths]
-    assert len(flattened) == len(set(flattened)) == 98
+    assert len(flattened) == len(set(flattened)) == 100
     python_owners = target_python_owner_by_path()
     assert {
         path: current_id
@@ -279,8 +282,8 @@ def _registry_effect_matrix(
 
 def assert_effect_oracle(registry: dict[str, Any]) -> None:
     expanded, grouped = authority_effect_matrices()
-    assert len(expanded) == 84
-    assert len(grouped) == 39
+    assert len(expanded) == 86
+    assert len(grouped) == 40
     assert _registry_effect_matrix(registry) == grouped
 
 
@@ -372,12 +375,12 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert hashlib.sha256(raw).hexdigest() == EXPECTED_RAW_SHA256
     assert hashlib.sha256(normalized).hexdigest() == EXPECTED_SEMANTIC_SHA256
     assert len(registry["modules"]) == len(registry["interfaces"]) == 14
-    assert sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 98
-    assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 14
-    assert sum(len(module["permitted_side_effects"]) for module in registry["modules"]) == 39
-    assert len(list(_iter_contract_references(registry))) == 151
+    assert sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 100
+    assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 15
+    assert sum(len(module["permitted_side_effects"]) for module in registry["modules"]) == 40
+    assert len(list(_iter_contract_references(registry))) == 152
     assert sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
-    assert len(target_python_owner_by_path()) == 90
+    assert len(target_python_owner_by_path()) == 92
     assert_effect_oracle(registry)
 
 
@@ -397,7 +400,7 @@ def test_current_current_registry_is_authority_and_tmp_copy_is_not(
     assert current["current_registry_authority"] is True
     assert current["validation_scope"] == "tool_system_current_module_registry"
     assert current["compatibility_adapter"]["applied"] is False
-    assert current["contract_reference_count"] == 151
+    assert current["contract_reference_count"] == 152
     assert current["external_provider_count"] == 0
     assert compatibility["status"] == "PASS"
     assert compatibility["current_registry_authority"] is False
@@ -444,7 +447,10 @@ def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
         assert module["module_version"] == row["current_module_version"]
         assert module["owner"] == canonical
         assert [boundary["path"] for boundary in module["boundaries"]["code"]] == code_paths[current]
-        assert [boundary["path"] for boundary in module["boundaries"]["tests"]] == [TEST_SELECTORS[current]]
+        assert [boundary["path"] for boundary in module["boundaries"]["tests"]] == [
+            TEST_SELECTORS[current],
+            *ADDITIONAL_TEST_SELECTORS.get(current, ()),
+        ]
         expected_dependencies = {
             (
                 next(

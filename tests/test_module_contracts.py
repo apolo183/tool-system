@@ -66,15 +66,19 @@ EFFECT_SOURCE_SIGNALS = {
     ),
     "git_write": ("\"pr\"", "\"merge\"", "execute_action_plan"),
     "database_write": ("sqlite3",),
-    "network_write": ("run_gh", "subprocess.run"),
-    "external_system_write": ("run_gh", "execute_action_plan"),
+    "network_write": ("run_gh", "subprocess.run", "HTTPSConnection("),
+    "external_system_write": (
+        "run_gh",
+        "execute_action_plan",
+        "self._transport.send",
+    ),
     "production_operation": ("production",),
 }
 DIRECT_EFFECT_EXPECTATIONS = {
     "architecture_registry": frozenset(),
     "manifest_validation": frozenset(),
     "agent_worker_runtime": frozenset({"generated_artifact_write"}),
-    "ai_worker_runtime": frozenset(),
+    "ai_worker_runtime": frozenset({"network_write", "external_system_write"}),
     "durable_orchestrator": frozenset({"data_write", "database_write"}),
     "repository_controller": frozenset(
         {

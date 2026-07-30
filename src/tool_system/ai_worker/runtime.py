@@ -3,8 +3,9 @@ from __future__ import annotations
 import hashlib
 import json
 import threading
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from typing import Mapping
+from typing import Protocol
 
 from tool_system.ai_worker.contract import (
     AIWorkerError,
@@ -58,16 +59,59 @@ class InMemoryReplayStore:
         return len(self._entries)
 
 
+class ExecutionGuard(Protocol):
+    def validate(
+        self,
+        request: AIWorkerRequest,
+        provider: AIWorkerProvider,
+    ) -> tuple[str, ...]:
+        ...
+
+
+class FixtureOnlyExecutionGuard:
+    """Default fail-closed guard; live execution needs an explicit scoped guard."""
+
+    def validate(
+        self,
+        request: AIWorkerRequest,
+        provider: AIWorkerProvider,
+    ) -> tuple[str, ...]:
+        expected = {
+            "provider_kind": "deterministic_fixture",
+            "execution_mode": "fixture",
+            "calls_external_provider": False,
+            "uses_credentials": False,
+            "network_access": False,
+        }
+        reasons: list[str] = []
+        if request.execution_mode != "fixture":
+            reasons.append("request execution_mode must be fixture under the default guard")
+        for name, value in expected.items():
+            actual = getattr(provider, name, None)
+            matches = actual is value if isinstance(value, bool) else actual == value
+            if not matches:
+                reasons.append(
+                    f"provider {name} must be {value!r} under the default guard"
+                )
+        return tuple(reasons)
+
+
 class AIWorkerRuntime:
     def __init__(
         self,
         provider: AIWorkerProvider,
         *,
         replay_store: InMemoryReplayStore | None = None,
+        execution_guard: ExecutionGuard | None = None,
     ) -> None:
         self.provider = provider
         self.replay_store = (
             replay_store if replay_store is not None else InMemoryReplayStore()
+        )
+        self.execution_guard = (
+            execution_guard
+            if execution_guard is not None
+            else FixtureOnlyExecutionGuard()
         )
         self._execution_lock = threading.RLock()
 
@@ -88,6 +132,22 @@ class AIWorkerRuntime:
                 message="AI worker request failed validation",
                 reasons=validation.reasons,
                 evidence=("ai_worker.request_validation.block",),
+            )
+
+        guard_reasons = _execution_guard_reasons(
+            self.execution_guard,
+            request,
+            self.provider,
+        )
+        if guard_reasons:
+            return _terminal_error(
+                request,
+                request_sha256=request_sha256,
+                status="BLOCK",
+                code=AIWorkerErrorCode.PROVIDER_MISMATCH,
+                message="runtime execution guard denied provider invocation",
+                reasons=guard_reasons,
+                evidence=("ai_worker.execution_guard.block",),
             )
 
         with self._execution_lock:
@@ -128,17 +188,6 @@ class AIWorkerRuntime:
         request_sha256: str,
         cancellation: CancellationSignal | None,
     ) -> AIWorkerResult:
-        boundary_reasons = _fixture_provider_boundary_reasons(self.provider)
-        if boundary_reasons:
-            return _terminal_error(
-                request,
-                request_sha256=request_sha256,
-                status="BLOCK",
-                code=AIWorkerErrorCode.PROVIDER_MISMATCH,
-                message="runtime provider is outside the P14B fixture boundary",
-                reasons=boundary_reasons,
-                evidence=("ai_worker.fixture_provider_boundary.block",),
-            )
         provider_id = getattr(self.provider, "provider_id", None)
         model_id = getattr(self.provider, "model_id", None)
         provider_capabilities = getattr(self.provider, "capabilities", None)
@@ -209,7 +258,7 @@ class AIWorkerRuntime:
 
         try:
             response = self.provider.invoke(request, cancellation)
-        except Exception as exc:  # provider boundary must fail closed
+        except Exception as exc:  # noqa: BLE001 - provider boundary must fail closed
             return _terminal_error(
                 request,
                 request_sha256=request_sha256,
@@ -391,7 +440,7 @@ class AIWorkerRuntime:
             output_sha256=hashlib.sha256(canonical_json_bytes(output)).hexdigest(),
             evidence=(
                 "ai_worker.request.validated",
-                "ai_worker.fixture_provider.invoked",
+                f"ai_worker.{request.execution_mode}_provider.invoked",
                 "ai_worker.response.validated",
             ),
         )
@@ -453,18 +502,17 @@ def _copy_result(result: AIWorkerResult) -> AIWorkerResult:
     return replace(result, output=output)
 
 
-def _fixture_provider_boundary_reasons(provider: object) -> tuple[str, ...]:
-    expected = {
-        "provider_kind": "deterministic_fixture",
-        "execution_mode": "fixture",
-        "calls_external_provider": False,
-        "uses_credentials": False,
-        "network_access": False,
-    }
-    reasons: list[str] = []
-    for name, value in expected.items():
-        actual = getattr(provider, name, None)
-        matches = actual is value if isinstance(value, bool) else actual == value
-        if not matches:
-            reasons.append(f"provider {name} must be {value!r} in P14B")
-    return tuple(reasons)
+def _execution_guard_reasons(
+    guard: ExecutionGuard,
+    request: AIWorkerRequest,
+    provider: AIWorkerProvider,
+) -> tuple[str, ...]:
+    try:
+        reasons = guard.validate(request, provider)
+    except Exception:  # noqa: BLE001 - injected guard must fail closed
+        return ("execution guard raised an exception",)
+    if not isinstance(reasons, tuple) or not all(
+        isinstance(reason, str) and reason for reason in reasons
+    ):
+        return ("execution guard returned an invalid decision",)
+    return reasons

@@ -395,14 +395,14 @@ def validate_ai_worker_request(request: AIWorkerRequest) -> RequestValidation:
         invalid.append("idempotency_key must be a non-empty string of at most 256 characters")
     if not _positive_int(request.attempt_number):
         invalid.append("attempt_number must be a positive integer")
-    if request.execution_mode != "fixture":
-        invalid.append("execution_mode must be fixture in P14B")
+    if request.execution_mode not in {"fixture", "live"}:
+        invalid.append("execution_mode must be fixture or live")
     if request.writes_target_repo is not False:
-        invalid.append("writes_target_repo must be false in P14B")
+        invalid.append("writes_target_repo must be false")
     if request.executes_target_repo_mutation is not False:
-        invalid.append("executes_target_repo_mutation must be false in P14B")
+        invalid.append("executes_target_repo_mutation must be false")
     if request.production_deployment is not False:
-        invalid.append("production_deployment must be false in P14B")
+        invalid.append("production_deployment must be false")
 
     if not isinstance(request.inputs, tuple) or not (
         1 <= len(request.inputs) <= MAX_INPUT_COUNT

@@ -42,6 +42,23 @@ active_phase_execution:
   remote_target_mutation_authorized: false
   production_deployment_authorized: false
 
+p14c_source_implementation:
+  record: docs/reports/p14c_bounded_real_model_provider_execution.md
+  record_role: source_implementation_evidence_only
+  module_contract_owner: docs/modules/ai-worker-runtime-contract-v1.md
+  implementation_authorization_packet: P14C-IMPL-v2
+  tool_system_base: 637fe60782ed9e15d58795a0113b84965d6664d2
+  central_governance_base: 71c89101d3e5f90adfb469f7effef8fe39ddf394
+  source_implementation_authorized: true
+  source_implementation_status: implemented_pending_review
+  p14c_stage_accepted: false
+  live_model_provider_execution_authorized: false
+  credential_value_access_authorized: false
+  downstream_repository_access_authorized: false
+  remote_target_mutation_authorized: false
+  production_deployment_authorized: false
+  cleanup_execution_authorized: false
+
 identity:
   description: Domain-agnostic agentic software factory for blueprint parsing, task planning, patch generation, test execution, and repository control.
   domain_specific: false
@@ -668,7 +685,8 @@ milestones:
         entry_requires:
           - P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT accepted
           - P14MR_MILESTONE_MODULE_INVARIANT accepted
-          - named provider-model-network-credential-cost execution packet authorized
+          - explicit P14C source-implementation authorization
+          - separately named provider-model-network-credential-cost execution packet before any live call
         execution_boundary: separately_authorized_live_provider_no_repository_mutation
       - stage: P14D_REPOSITORY_CONTEXT_NATURAL_OWNER
         objective: build bounded repository context, relevance selection, dependency and test mapping, natural-owner evidence, and stale-snapshot checks
