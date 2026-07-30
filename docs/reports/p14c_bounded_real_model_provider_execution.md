@@ -1,22 +1,25 @@
-# P14C Bounded Real Model Provider Execution — Source Implementation Evidence
+# P14C Bounded Real Model Provider Execution — Source and Correction Evidence
 
 Status: `SOURCE_IMPLEMENTED_LIVE_EXECUTION_NOT_RUN_NOT_ACCEPTED`
 
 This retained report records the narrow source implementation authorized by
-`P14C-IMPL-v2`. It is evidence, not execution authority or stage acceptance.
+`P14C-IMPL-v2` and the authorization-boundary correction authorized by
+`P14C-CORR-v1`. It is evidence, not execution authority or stage acceptance.
 
 ## Authority and preconditions
 
-- tool-system base: `637fe60782ed9e15d58795a0113b84965d6664d2`
-- central finance-governance base:
-  `71c89101d3e5f90adfb469f7effef8fe39ddf394`
-- implementation branch: `agent/p14c-openai-luna-v2`
+- correction parent: `b04fb05da9fd4cf4a291fc7dbc11a47b832a19e0`
+- packet tool-system base: `637fe60782ed9e15d58795a0113b84965d6664d2`
+- central governance consumption: canonical `finance-governance` remote,
+  current `main`, and its two fixed formal paths; no central commit pin
+- correction branch: `agent/p14c-corr-v1`
 - implementation packet: `P14C-IMPL-v2`
+- correction packet: `P14C-CORR-v1`
 - static packet SHA-256:
-  `1c5423ae2aac7af64902638e300ba375748db1d1ece0ee306108cf336df3b4c2`
+  `3883ccb31ef59ff19c45b2818ac8cc3606b63d1f2b9575bc2a9ea18edb5db9b5`
 - permitted repository: `apolo183/tool-system` only
-- permitted publication: one feature branch, one commit series, and one Draft
-  PR after all local gates pass and both main baselines are revalidated
+- permitted publication: one correction branch, one commit, and one Draft PR
+  after all local gates pass and both current main identities are revalidated
 
 The implementation packet permits source, contract, test, evidence, local Git,
 feature-branch, and Draft-PR work. It does not permit a credential-value read,
@@ -72,20 +75,28 @@ structured-output envelope uses `text.format` with `type=json_schema` and
 `src/tool_system/ai_worker/live_provider.py` owns:
 
 - the immutable P14C packet and public synthetic request;
-- an explicit `P14CLiveExecutionGuard` bound to the exact packet and request;
+- an opaque, single-use execution capability bound to the exact packet,
+  request, and transport kind;
+- an explicit `P14CLiveExecutionGuard` that verifies the provider holds that
+  same capability;
 - the OpenAI Responses request encoder and strict response parser;
-- credential-reference resolution after packet, request, guard, cancellation,
-  and budget preflight;
+- provider-entrypoint capability consumption before request-body construction,
+  credential resolution, or transport;
 - an injected transport contract used by every test;
 - an optional standard-library TLS transport that ignores proxy environment and
   does not follow redirects;
 - retry, timeout, token, cost, response-size, model, refusal, incomplete-output,
   structured-output, and redaction controls.
 
-`AIWorkerRuntime` defaults to `FixtureOnlyExecutionGuard`. A live request is
-therefore blocked before credential resolution or transport unless a caller
-separately supplies an affirmative, exact-packet P14C guard. The source
-implementation does not itself create that affirmative runtime authorization.
+`AIWorkerRuntime` defaults to `FixtureOnlyExecutionGuard`. In addition,
+`OpenAIResponsesProvider.invoke()` independently requires and consumes the exact
+capability, so bypassing the runtime cannot bypass authorization. The only
+issuer in this source is private and test-only: it creates capabilities bound to
+`injected_fake`. No issuer can authorize the `live_network` transport. A future
+live proof therefore requires a separately authorized process-authority issuer;
+no constructible affirmative boolean remains. This is a fail-closed supported
+entrypoint boundary, not a claim that Python can sandbox hostile code already
+executing inside the provider module's process.
 
 `src/tool_system/ai_worker/live_evidence.py --validate-packet-only` validates
 the packet and public fixture without constructing a provider, resolving a
@@ -99,9 +110,10 @@ transport_call_count=0
 live_provider_execution_authorized=false
 ```
 
-All provider-path tests inject fake credential resolvers, fake transports, and
-fake clocks. No test uses the standard network transport or reads a real
-credential.
+All successful provider-path tests inject fake credential resolvers, fake
+transports, and fake clocks. The live-network transport mismatch test replaces
+its `send` method with a forbidden-call sentinel and proves zero calls. No test
+reads a real credential or transmits network traffic.
 
 ## Claims and non-claims
 
@@ -109,6 +121,10 @@ This evidence supports only these claims:
 
 - the bounded adapter source exists inside the registered AI-worker module;
 - the default runtime blocks live providers before credential or transport;
+- direct provider invocation without a capability performs zero credential and
+  transport access;
+- a fake capability cannot authorize the live-network transport and cannot be
+  consumed twice;
 - an explicitly guarded fake-transport path exercises request, retry, response,
   budget, cancellation, and audit behavior;
 - packet-only validation performs zero provider, transport, and credential-value
@@ -131,8 +147,9 @@ validation, source compilation, `git diff --check`, and packet-only evidence.
 
 Local verification recorded on 2026-07-30:
 
-- focused P14C and affected-contract suite: `141 passed`;
-- full repository suite: `498 passed`;
+- task manifest and change plan: `PASS`;
+- focused P14C and affected-contract suite: `62 passed`;
+- full repository suite: `503 passed`;
 - active-gate validator: `PASS`;
 - process-authority validator: `PASS`;
 - current module-registry authority validator: `PASS`, with `100` owned paths
@@ -145,6 +162,8 @@ Local verification recorded on 2026-07-30:
 
 Any baseline drift, unapproved file, real network attempt, credential-value
 access, test failure, registry/manifest mismatch, or scope expansion blocks
-publication. Rollback identity is
-`tool-system@637fe60782ed9e15d58795a0113b84965d6664d2:ai_worker_runtime@1.0.0`;
-rollback execution itself remains separately gated.
+publication. The correction rollback reference is
+`tool-system@b04fb05da9fd4cf4a291fc7dbc11a47b832a19e0`; the underlying P14C
+module rollback boundary remains
+`tool-system@637fe60782ed9e15d58795a0113b84965d6664d2:ai_worker_runtime@1.0.0`.
+Rollback execution itself remains separately gated.

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
+from tool_system.architecture.repo_manifest import parse_manifest_formal_rows
 from tool_system.manifest.task_manifest import load_yaml_file
 
 
@@ -10,6 +12,7 @@ AGENTS = ROOT / "AGENTS.md"
 README = ROOT / "README.md"
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
+REPO_MANIFEST = ROOT / "REPO_MANIFEST.md"
 
 CENTRAL_REMOTE = "git@github.com:apolo183/finance-governance.git"
 CENTRAL_BRANCH = "main"
@@ -25,11 +28,12 @@ OBSOLETE_CENTRAL_MARKERS = {
     "S9_REAL_" + "CENTRAL_MODULE_REGISTRY_CHECK_ACCEPTED",
     "S10_EXPLICIT_" + "CUT" + "OVER",
 }
-OBSOLETE_CENTRAL_SHAS = {
-    "04ca9d558f59dae17603d79" + "76727aa29782253aa",
-    "a87fc305932fe52042d98b4" + "abf545afd13f89be2",
-    "ad5ad497fad88190b8e3fb0" + "773343d4981ab8fd3",
-}
+CENTRAL_PIN_KEY = re.compile(
+    r"\b(?:central|finance_governance)[a-z0-9_]*"
+    r"(?:sha|commit|revision|base)\b\s*[:=]",
+    re.IGNORECASE,
+)
+FULL_COMMIT_SHA = re.compile(r"\b[0-9a-f]{40}\b", re.IGNORECASE)
 
 
 def test_public_entrypoints_consume_current_central_main_by_fixed_paths() -> None:
@@ -45,7 +49,7 @@ def test_public_entrypoints_consume_current_central_main_by_fixed_paths() -> Non
         assert "tool-system-specific constraints" in normalized
 
 
-def test_obsolete_central_reference_gate_and_sha_state_is_absent() -> None:
+def test_obsolete_central_reference_gate_state_is_absent() -> None:
     obsolete_reference = ROOT / "config" / ("governance_" + "reference_v1.yaml")
     assert not obsolete_reference.exists()
     for path in ROOT.rglob("*"):
@@ -60,8 +64,32 @@ def test_obsolete_central_reference_gate_and_sha_state_is_absent() -> None:
             continue
         for marker in OBSOLETE_CENTRAL_MARKERS:
             assert marker not in text
-        for sha in OBSOLETE_CENTRAL_SHAS:
-            assert sha not in text
+
+
+def test_formal_files_cannot_pin_a_central_governance_revision() -> None:
+    parser_mode, formal_rows, reasons = parse_manifest_formal_rows(
+        REPO_MANIFEST.read_text(encoding="utf-8")
+    )
+
+    assert parser_mode is not None
+    assert reasons == []
+    for row in formal_rows:
+        relative = row["path"]
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        assert CENTRAL_PIN_KEY.search(text) is None, relative
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            normalized = line.lower()
+            has_central_context = (
+                "central" in normalized or "finance-governance" in normalized
+            )
+            has_revision_context = any(
+                token in normalized for token in ("sha", "commit", "revision")
+            )
+            assert not (
+                has_central_context
+                and has_revision_context
+                and FULL_COMMIT_SHA.search(line)
+            ), f"{relative}:{line_number}"
 
 
 def test_blueprint_keeps_only_tool_system_owned_module_enforcement() -> None:

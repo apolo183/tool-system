@@ -51,9 +51,7 @@ def test_packet_binds_exact_provider_network_secret_reference_and_budgets() -> N
     assert validate_p14c_execution_packet(packet) == ()
     assert packet.packet_id == "P14C-IMPL-v2"
     assert packet.tool_system_base == ("637fe60782ed9e15d58795a0113b84965d6664d2")
-    assert packet.central_governance_base == (
-        "71c89101d3e5f90adfb469f7effef8fe39ddf394"
-    )
+    assert "central_" + "governance_base" not in packet.canonical_record()
     assert (packet.provider_id, packet.model_id) == ("openai", "gpt-5.6-luna")
     assert (packet.method, packet.host, packet.path) == (
         "POST",
@@ -106,3 +104,6 @@ def test_live_source_uses_injected_boundary_and_no_embedded_secret() -> None:
     assert "requests." not in source
     assert "OPENAI_API_KEY=" not in source
     assert "test-key-never-log" not in source
+    assert "live_execution_" + "authorized" not in source
+    assert "_issue_p14c_fake_transport_capability" in source
+    assert 'transport_kind = "live_network"' in source

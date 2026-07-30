@@ -11,8 +11,11 @@ from tool_system.ai_worker.live_evidence import build_packet_validation_evidence
 from tool_system.ai_worker.live_provider import (
     HTTPTransportResponse,
     OpenAIResponsesProvider,
+    OpenAIResponsesTransport,
+    P14CLiveExecutionCapability,
     P14CLiveExecutionGuard,
     TransportFailure,
+    _issue_p14c_fake_transport_capability,
     build_p14c_execution_packet,
     build_p14c_synthetic_request,
     validate_p14c_execution_packet,
@@ -32,6 +35,8 @@ class _FakeCredentialResolver:
 
 
 class _FakeTransport:
+    transport_kind = "injected_fake"
+
     def __init__(
         self,
         responses: list[HTTPTransportResponse | TransportFailure],
@@ -123,7 +128,7 @@ def _success_response(
 def _runtime(
     responses: list[HTTPTransportResponse | TransportFailure],
     *,
-    authorized: bool = True,
+    capability_present: bool = True,
 ) -> tuple[
     AIWorkerRuntime,
     _FakeCredentialResolver,
@@ -131,6 +136,12 @@ def _runtime(
     _FakeClock,
 ]:
     packet = build_p14c_execution_packet()
+    request = build_p14c_synthetic_request(packet)
+    capability = (
+        _issue_p14c_fake_transport_capability(packet, request)
+        if capability_present
+        else None
+    )
     resolver = _FakeCredentialResolver()
     transport = _FakeTransport(responses)
     clock = _FakeClock()
@@ -138,12 +149,13 @@ def _runtime(
         packet=packet,
         transport=transport,
         credential_resolver=resolver,
+        execution_capability=capability,
         monotonic=clock.monotonic,
         sleep=clock.sleep,
     )
     guard = P14CLiveExecutionGuard(
         packet_sha256=packet.sha256(),
-        live_execution_authorized=authorized,
+        capability=capability,
     )
     return (
         AIWorkerRuntime(provider, execution_guard=guard),
@@ -159,7 +171,7 @@ def test_packet_is_exact_and_packet_only_evidence_performs_zero_access() -> None
     assert validate_p14c_execution_packet(packet) == ()
     assert (
         packet.sha256()
-        == "1c5423ae2aac7af64902638e300ba375748db1d1ece0ee306108cf336df3b4c2"
+        == "3883ccb31ef59ff19c45b2818ac8cc3606b63d1f2b9575bc2a9ea18edb5db9b5"
     )
     evidence = build_packet_validation_evidence()
     assert evidence["status"] == "PASS"
@@ -199,19 +211,123 @@ def test_default_runtime_guard_blocks_live_provider_before_secret_or_transport()
     assert transport.calls == []
 
 
-def test_explicit_false_live_guard_blocks_before_secret_or_transport() -> None:
+def test_missing_live_capability_blocks_before_secret_or_transport() -> None:
     runtime, resolver, transport, _ = _runtime(
         [_success_response()],
-        authorized=False,
+        capability_present=False,
     )
 
     result = runtime.run(build_p14c_synthetic_request())
 
     assert result.status == "BLOCK"
     assert result.error is not None
-    assert result.error.reasons == ("live provider execution is not authorized",)
+    assert result.error.reasons == ("live execution capability is absent",)
     assert resolver.call_count == 0
     assert transport.calls == []
+
+
+def test_provider_entrypoint_blocks_without_capability_before_access() -> None:
+    packet = build_p14c_execution_packet()
+    request = build_p14c_synthetic_request(packet)
+    resolver = _FakeCredentialResolver()
+    transport = _FakeTransport([_success_response()])
+    provider = OpenAIResponsesProvider(
+        packet=packet,
+        transport=transport,
+        credential_resolver=resolver,
+    )
+
+    response = provider.invoke(request)
+
+    assert response.error is not None
+    assert response.error.code is AIWorkerErrorCode.PROVIDER_MISMATCH
+    assert response.error.reasons == ("live execution capability is absent",)
+    assert resolver.call_count == 0
+    assert transport.calls == []
+
+
+def test_fake_capability_cannot_authorize_live_network_transport(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    packet = build_p14c_execution_packet()
+    request = build_p14c_synthetic_request(packet)
+    capability = _issue_p14c_fake_transport_capability(packet, request)
+    resolver = _FakeCredentialResolver()
+    transport = OpenAIResponsesTransport()
+    transport_calls: list[dict[str, object]] = []
+
+    def forbidden_send(**kwargs: object) -> HTTPTransportResponse:
+        transport_calls.append(dict(kwargs))
+        raise AssertionError("network transport must not be reached")
+
+    monkeypatch.setattr(transport, "send", forbidden_send)
+    provider = OpenAIResponsesProvider(
+        packet=packet,
+        transport=transport,
+        credential_resolver=resolver,
+        execution_capability=capability,
+    )
+
+    response = provider.invoke(request)
+
+    assert response.error is not None
+    assert response.error.code is AIWorkerErrorCode.PROVIDER_MISMATCH
+    assert response.error.reasons == (
+        "live execution capability transport does not match",
+    )
+    assert resolver.call_count == 0
+    assert transport_calls == []
+
+
+def test_capability_is_opaque_exact_and_single_use() -> None:
+    packet = build_p14c_execution_packet()
+    request = build_p14c_synthetic_request(packet)
+    with pytest.raises(TypeError, match="approved issuer"):
+        P14CLiveExecutionCapability(
+            authorization_id="caller-constructed",
+            packet_sha256=packet.sha256(),
+            request_sha256=request.sha256(),
+            transport_kind="injected_fake",
+            _issuer=object(),
+        )
+
+    capability = _issue_p14c_fake_transport_capability(packet, request)
+    with pytest.raises(AttributeError, match="immutable"):
+        capability._transport_kind = "live_network"  # type: ignore[misc]
+    resolver = _FakeCredentialResolver()
+    transport = _FakeTransport([_success_response()])
+    provider = OpenAIResponsesProvider(
+        packet=packet,
+        transport=transport,
+        credential_resolver=resolver,
+        execution_capability=capability,
+    )
+
+    first = provider.invoke(request)
+    second = provider.invoke(request)
+
+    assert first.error is None
+    assert second.error is not None
+    assert second.error.code is AIWorkerErrorCode.PROVIDER_MISMATCH
+    assert second.error.reasons == (
+        "live execution capability was already consumed",
+    )
+    assert resolver.call_count == 1
+    assert len(transport.calls) == 1
+
+
+def test_runtime_replay_does_not_reinvoke_consumed_capability() -> None:
+    runtime, resolver, transport, _ = _runtime([_success_response()])
+    request = build_p14c_synthetic_request()
+
+    first = runtime.run(request)
+    replay = runtime.run(request)
+
+    assert first.status == "PASS"
+    assert replay.status == "PASS"
+    assert replay.replayed is True
+    assert resolver.call_count == 1
+    assert len(transport.calls) == 1
 
 
 def test_fake_transport_success_uses_exact_bounded_responses_envelope() -> None:
