@@ -125,6 +125,9 @@ def test_capability_budget_and_authority_violations_are_classified() -> None:
             ),
         )
     )
+    live = validate_ai_worker_request(
+        replace(request, execution_mode="live")
+    )
     authority = validate_ai_worker_request(
         replace(
             request,
@@ -140,14 +143,23 @@ def test_capability_budget_and_authority_violations_are_classified() -> None:
 
     assert capability.error_code is AIWorkerErrorCode.CAPABILITY_MISMATCH
     assert budget.error_code is AIWorkerErrorCode.BUDGET_EXCEEDED
+    assert live.ok is True
     assert authority.error_code is AIWorkerErrorCode.INVALID_REQUEST
     assert set(authority.reasons) >= {
-        "execution_mode must be fixture in P14B",
-        "writes_target_repo must be false in P14B",
-        "executes_target_repo_mutation must be false in P14B",
-        "production_deployment must be false in P14B",
+        "writes_target_repo must be false",
+        "executes_target_repo_mutation must be false",
+        "production_deployment must be false",
     }
     assert non_boolean_authority.error_code is AIWorkerErrorCode.INVALID_REQUEST
+
+
+def test_execution_mode_is_an_exact_closed_set() -> None:
+    validation = validate_ai_worker_request(
+        replace(_request(), execution_mode="future-mode")
+    )
+
+    assert validation.error_code is AIWorkerErrorCode.INVALID_REQUEST
+    assert validation.reasons == ("execution_mode must be fixture or live",)
 
 
 def test_request_audit_contains_hashes_but_no_payload_or_metadata_values() -> None:

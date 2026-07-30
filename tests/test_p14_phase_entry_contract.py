@@ -61,7 +61,11 @@ def test_p14_stage_sequence_closes_each_missing_product_link() -> None:
     ] == [
         "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT accepted",
         "P14MR_MILESTONE_MODULE_INVARIANT accepted",
-        "named provider-model-network-credential-cost execution packet authorized",
+        "explicit P14C source-implementation authorization",
+        (
+            "separately named provider-model-network-credential-cost execution "
+            "packet before any live call"
+        ),
     ]
     assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["entry_requires"] == [
         "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT accepted",

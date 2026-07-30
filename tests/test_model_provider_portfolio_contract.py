@@ -30,11 +30,19 @@ def test_provider_portfolio_contract_is_product_control_not_runtime_authority() 
     assert "The names above are portfolio candidates, not enabled routes." in contract
 
     execution = blueprint["active_phase_execution"]
+    assert execution["current_stage"] == (
+        "P14MR_MILESTONE_MODULE_INVARIANT"
+    )
     assert execution["next_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
     assert execution["next_stage_authorized"] is False
     assert execution["live_model_provider_execution_authorized"] is False
     assert execution["remote_target_mutation_authorized"] is False
     assert execution["production_deployment_authorized"] is False
+    p14c = blueprint["p14c_source_implementation"]
+    assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
+    assert p14c["source_implementation_authorized"] is True
+    assert p14c["p14c_stage_accepted"] is False
+    assert p14c["live_model_provider_execution_authorized"] is False
     assert blueprint["successor_authorization"]["next_phase_entry_authorized"] is False
 
 

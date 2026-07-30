@@ -82,15 +82,15 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:agent_worker_runtime@1.0.0
     - current_module_id: ai_worker_runtime
       canonical_module_id: ai-worker-runtime
-      current_module_version: 1.0.0
+      current_module_version: 1.1.0
       aggregate_interface_id: ai-worker-runtime-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.ai_worker}
       direct_consumer_module_ids: []
-      change_risk: "medium: currently isolated provider-neutral fixture boundary"
-      rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:ai_worker_runtime@1.0.0
+      change_risk: "high: isolated bounded live-adapter source with default fixture-only execution guard"
+      rollback_identity: tool-system@637fe60782ed9e15d58795a0113b84965d6664d2:ai_worker_runtime@1.0.0
     - current_module_id: durable_orchestrator
       canonical_module_id: durable-orchestrator
       current_module_version: 1.0.0

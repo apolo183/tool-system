@@ -209,8 +209,8 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: ai-worker-runtime
-  module_version: 1.0.0
-  role: provide a provider-neutral structured AI worker contract and deterministic fixture implementation. Validate content-addressed requests and execute only deterministic in-memory fixture scenarios with redacted audit records.
+  module_version: 1.1.0
+  role: provide a provider-neutral structured AI worker contract, deterministic fixture, and bounded live-adapter implementation. Validate content-addressed requests, default to deterministic in-memory fixtures, and admit only the exact public P14C synthetic request when a separately supplied live-execution guard is affirmative.
   owner: ai-worker-runtime
   public_interface_refs:
   - interface_id: ai-worker-runtime-api
@@ -234,6 +234,14 @@ modules:
     - boundary_id: code-004
       location_kind: repository_local
       path_kind: exact
+      path: src/tool_system/ai_worker/live_evidence.py
+    - boundary_id: code-005
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/ai_worker/live_provider.py
+    - boundary_id: code-006
+      location_kind: repository_local
+      path_kind: exact
       path: src/tool_system/ai_worker/runtime.py
     data: []
     tests:
@@ -241,17 +249,31 @@ modules:
       location_kind: repository_local
       path_kind: exact
       path: tests/test_ai_worker_contract.py
+    - boundary_id: tests-002
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_ai_worker_live_provider.py
     runtime_artifacts: []
     cleanup: []
-  permitted_side_effects: []
+  permitted_side_effects:
+  - effect_id: direct-effects-code-005
+    effect_classes:
+    - network_write
+    - external_system_write
+    target_boundary_id: code-005
+    effect_contract:
+      repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
+      sha256: 6eb699edf213d5123c8e283d8c66ac6cea68c32174dc9a9cc108dd0a4d74c7be
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
   rollback_boundary:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 59106f6c6bc9ba56b1d489de76da98dd6cbd0185c1daa8b618bb04ce5a3bbea4
+    sha256: 6eb699edf213d5123c8e283d8c66ac6cea68c32174dc9a9cc108dd0a4d74c7be
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 59106f6c6bc9ba56b1d489de76da98dd6cbd0185c1daa8b618bb04ce5a3bbea4
+    sha256: 6eb699edf213d5123c8e283d8c66ac6cea68c32174dc9a9cc108dd0a4d74c7be
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: durable-orchestrator
@@ -1458,32 +1480,32 @@ interfaces:
   consumers: []
   input_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 59106f6c6bc9ba56b1d489de76da98dd6cbd0185c1daa8b618bb04ce5a3bbea4
+    sha256: 6eb699edf213d5123c8e283d8c66ac6cea68c32174dc9a9cc108dd0a4d74c7be
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 59106f6c6bc9ba56b1d489de76da98dd6cbd0185c1daa8b618bb04ce5a3bbea4
+    sha256: 6eb699edf213d5123c8e283d8c66ac6cea68c32174dc9a9cc108dd0a4d74c7be
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 59106f6c6bc9ba56b1d489de76da98dd6cbd0185c1daa8b618bb04ce5a3bbea4
+    sha256: 6eb699edf213d5123c8e283d8c66ac6cea68c32174dc9a9cc108dd0a4d74c7be
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 59106f6c6bc9ba56b1d489de76da98dd6cbd0185c1daa8b618bb04ce5a3bbea4
+    sha256: 6eb699edf213d5123c8e283d8c66ac6cea68c32174dc9a9cc108dd0a4d74c7be
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 59106f6c6bc9ba56b1d489de76da98dd6cbd0185c1daa8b618bb04ce5a3bbea4
+    sha256: 6eb699edf213d5123c8e283d8c66ac6cea68c32174dc9a9cc108dd0a4d74c7be
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 59106f6c6bc9ba56b1d489de76da98dd6cbd0185c1daa8b618bb04ce5a3bbea4
+    sha256: 6eb699edf213d5123c8e283d8c66ac6cea68c32174dc9a9cc108dd0a4d74c7be
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: durable-orchestrator-api

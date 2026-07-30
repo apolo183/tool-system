@@ -1,8 +1,9 @@
 # AI Worker Runtime Module Compound Contract v1
 
 This file defines the module contract owned by the current
-`ai_worker_runtime` module. The current implementation remains a deterministic
-in-memory fixture and does not authorize a live provider.
+`ai_worker_runtime` module. The default implementation remains a deterministic
+in-memory fixture. P14C adds a bounded live-provider adapter behind an explicit
+execution guard; this contract does not authorize a live provider call.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -13,24 +14,26 @@ module_compound_contract:
   identity:
     canonical_module_id: ai-worker-runtime
     current_module_id: ai_worker_runtime
-    module_version: 1.0.0
+    module_version: 1.1.0
     aggregate_interface:
       interface_id: ai-worker-runtime-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:ai_worker_runtime@1.0.0
+    rollback_identity: tool-system@637fe60782ed9e15d58795a0113b84965d6664d2:ai_worker_runtime@1.0.0
     python_import_identities:
       - kind: prefix
         name: tool_system.ai_worker
   role:
-    summary: provide a provider-neutral structured AI worker contract and deterministic fixture implementation
-    responsibility_boundary: Validate content-addressed requests and execute only deterministic in-memory fixture scenarios with redacted audit records.
+    summary: provide a provider-neutral structured AI worker contract, deterministic fixture, and bounded live-adapter implementation
+    responsibility_boundary: Validate content-addressed requests, default to deterministic in-memory fixtures, and admit only the exact public P14C synthetic request when a separately supplied live-execution guard is affirmative.
   natural_owner_evidence_paths:
     - src/tool_system/ai_worker/__init__.py
     - src/tool_system/ai_worker/contract.py
     - src/tool_system/ai_worker/fixture_provider.py
+    - src/tool_system/ai_worker/live_evidence.py
+    - src/tool_system/ai_worker/live_provider.py
     - src/tool_system/ai_worker/runtime.py
   dependency_contract:
     basis: tool-system-static-python-import-dag
@@ -40,29 +43,39 @@ module_compound_contract:
   input_contract:
     registered_inputs:
       - AIWorkerRequest_v1
-    boundary: Accept finite canonical structured input, content hashes, fixture model identity, capability requirements, budgets, and no-mutation flags.
+    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, and mandatory no-mutation flags.
   output_contract:
     registered_outputs:
       - AIWorkerResult_v1
-    boundary: Return deterministic structured output, stable provider-neutral errors, usage evidence, output hash, and redacted audit records.
+    boundary: Return structured output, stable provider-neutral errors, bounded usage evidence, output hash, and redacted audit records without prompt, response, or credential values.
   error_contract:
     registered_error_semantics:
       - stable_redacted_provider_neutral_errors
     boundary: Integrity, capability, provider identity, budget, cancellation, timeout, response, replay, and internal failures return stable sanitized errors.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
-    effect_classes: []
-    direct_effects: []
+    effect_classes:
+      - network_write
+      - external_system_write
+    direct_effects:
+      - effect_class: network_write
+        evidence_paths:
+          - src/tool_system/ai_worker/live_provider.py
+        boundary: The optional transport can issue one exact TLS-verified POST to api.openai.com/v1/responses per bounded attempt only after packet, request, guard, cancellation, credential-reference, and budget preflight succeed.
+      - effect_class: external_system_write
+        evidence_paths:
+          - src/tool_system/ai_worker/live_provider.py
+        boundary: The optional adapter can submit only public fixture P14C-001 to the exact OpenAI Responses endpoint through an injected transport; default runtime guards, packet-only evidence, and all tests perform no external call.
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve request validation, error taxonomy, deterministic replay, redaction, budgets, provider metadata checks, and result fields.
+    interface_compatible_replacement: Preserve request validation, error taxonomy, deterministic replay, default fixture-only execution, explicit live-guard binding, redaction, budgets, provider metadata checks, and result fields.
     interface_incompatible_change: Requires a new aggregate interface version and a separately authorized provider qualification or migration stage.
   rollback_contract:
-    rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:ai_worker_runtime@1.0.0
-    method: Revert through a separately audited pull request and rerun contract, fixture-provider, replay, budget, redaction, and no-I/O tests.
+    rollback_identity: tool-system@637fe60782ed9e15d58795a0113b84965d6664d2:ai_worker_runtime@1.0.0
+    method: Revert through a separately audited pull request and rerun contract, fixture-provider, live-adapter fake-transport, replay, budget, redaction, and packet-only no-I/O tests.
   replacement_contract:
-    activation_rule: Replace only after provider-neutral contract, deterministic fixture, replay, budget, redaction, and isolation behavior pass.
+    activation_rule: Replace only after provider-neutral contract, deterministic fixture, explicit execution guard, fake-transport live-adapter, replay, budget, redaction, and isolation behavior pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -76,7 +89,7 @@ module_compound_contract:
       contract: The current AI worker implementation does not read or write a repository.
     data:
       mode: in-memory
-      contract: Requests, replay records, fixture scenarios, results, and redacted audit data remain process memory only.
+      contract: Requests, replay records, fixture scenarios, execution packets, results, and redacted audit data remain process memory only.
     artifact:
       mode: none
       contract: The current implementation creates no persistent file, cache, projection, or generated artifact.
@@ -87,8 +100,13 @@ module_compound_contract:
     declaration: explicit-none
     roots: []
   external_system_contracts:
-    declaration: explicit-none
-    systems: []
+    declaration: declared
+    systems:
+      - system_id: openai-responses-api
+        mode: optional-explicitly-guarded-live-provider
+        evidence_paths:
+          - src/tool_system/ai_worker/live_provider.py
+        boundary: Exact POST https://api.openai.com/v1/responses for model gpt-5.6-luna, public fixture P14C-001, strict structured output, fixed budgets, no tools, no redirects, no proxy environment, no fallback, and credential reference env:OPENAI_API_KEY resolved only after all preflight checks.
   non_claims:
     provider_execution_authorized: false
     target_repo_mutation_authorized: false

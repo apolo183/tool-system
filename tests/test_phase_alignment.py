@@ -67,6 +67,9 @@ def test_public_contracts_have_same_current_phase() -> None:
     assert "authorized_scope" not in execution
     assert "authorized_scope_role" not in execution
     assert "global_milestone_module_governance_only" not in execution.values()
+    assert execution["record"] == (
+        "docs/reports/p14mr_milestone_module_invariant.md"
+    )
     assert execution["record_role"] == "existing_acceptance_evidence_only"
     assert execution["durable_rule_owners"] == [
         "blueprint/tool_system_v0.yaml:milestone_module_invariant",
@@ -81,6 +84,16 @@ def test_public_contracts_have_same_current_phase() -> None:
     assert execution["live_model_provider_execution_authorized"] is False
     assert execution["remote_target_mutation_authorized"] is False
     assert execution["production_deployment_authorized"] is False
+    p14c = blueprint["p14c_source_implementation"]
+    assert p14c["record"] == (
+        "docs/reports/p14c_bounded_real_model_provider_execution.md"
+    )
+    assert p14c["record_role"] == "source_implementation_evidence_only"
+    assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
+    assert p14c["source_implementation_authorized"] is True
+    assert p14c["source_implementation_status"] == "implemented_pending_review"
+    assert p14c["p14c_stage_accepted"] is False
+    assert p14c["live_model_provider_execution_authorized"] is False
 
 
 def test_phase_alignment_change_plan_validates() -> None:
