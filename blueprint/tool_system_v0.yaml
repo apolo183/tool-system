@@ -48,7 +48,6 @@ p14c_source_implementation:
   module_contract_owner: docs/modules/ai-worker-runtime-contract-v1.md
   implementation_authorization_packet: P14C-IMPL-v2
   tool_system_base: 637fe60782ed9e15d58795a0113b84965d6664d2
-  central_governance_base: 71c89101d3e5f90adfb469f7effef8fe39ddf394
   source_implementation_authorized: true
   source_implementation_status: implemented_pending_review
   p14c_stage_accepted: false

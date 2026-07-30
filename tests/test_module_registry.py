@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import subprocess
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -731,7 +732,12 @@ def test_blueprint_and_ci_keep_local_registry_authority() -> None:
 
 def test_cli_help_describes_single_local_authority() -> None:
     result = subprocess.run(
-        ["python", "-m", "tool_system.cli.validate_module_registry", "--help"],
+        [
+            sys.executable,
+            "-m",
+            "tool_system.cli.validate_module_registry",
+            "--help",
+        ],
         cwd=ROOT,
         check=True,
         capture_output=True,
@@ -745,7 +751,7 @@ def test_cli_help_describes_single_local_authority() -> None:
 def test_cli_require_current_authority_accepts_fixed_registry() -> None:
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "-m",
             "tool_system.cli.validate_module_registry",
             "config/module_registry_v1.yaml",
