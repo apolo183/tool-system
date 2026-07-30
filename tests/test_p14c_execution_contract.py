@@ -31,14 +31,23 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert execution["next_stage_authorized"] is False
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_implementation_authorized"] is True
-    assert p14c["source_implementation_status"] == "implemented_pending_review"
+    assert p14c["source_implementation_status"] == (
+        "corrected_source_merged_live_execution_not_run_not_accepted"
+    )
     assert p14c["p14c_stage_accepted"] is False
     assert p14c["live_model_provider_execution_authorized"] is False
     assert p14c["credential_value_access_authorized"] is False
     assert p14c["downstream_repository_access_authorized"] is False
     assert p14c["remote_target_mutation_authorized"] is False
     assert p14c["production_deployment_authorized"] is False
-    assert "SOURCE_IMPLEMENTED_LIVE_EXECUTION_NOT_RUN_NOT_ACCEPTED" in report
+    assert (
+        "CORRECTED_SOURCE_MERGED_LIVE_EXECUTION_NOT_RUN_NOT_ACCEPTED" in report
+    )
+    assert "P14C-CORR-v1" in report
+    assert "P14C-CORR-READY-v1" in report
+    assert "P14C-CORR-MERGE-v1" in report
+    assert "#143" in report
+    assert "352b2638bb9a1cf7504a224c0571062072b32db1" in report
     assert "provider_call_count=0" in report
     assert "credential_value_access_count=0" in report
     assert "transport_call_count=0" in report

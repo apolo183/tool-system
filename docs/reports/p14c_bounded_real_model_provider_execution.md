@@ -1,10 +1,11 @@
 # P14C Bounded Real Model Provider Execution — Source and Correction Evidence
 
-Status: `SOURCE_IMPLEMENTED_LIVE_EXECUTION_NOT_RUN_NOT_ACCEPTED`
+Status: `CORRECTED_SOURCE_MERGED_LIVE_EXECUTION_NOT_RUN_NOT_ACCEPTED`
 
 This retained report records the narrow source implementation authorized by
 `P14C-IMPL-v2` and the authorization-boundary correction authorized by
-`P14C-CORR-v1`. It is evidence, not execution authority or stage acceptance.
+`P14C-CORR-v1`, plus the correction's separately authorized PR lifecycle
+outcome. It is evidence, not execution authority or stage acceptance.
 
 ## Authority and preconditions
 
@@ -13,19 +14,35 @@ This retained report records the narrow source implementation authorized by
 - central governance consumption: canonical `finance-governance` remote,
   current `main`, and its two fixed formal paths; no central commit pin
 - correction branch: `agent/p14c-corr-v1`
+- correction commit: `e8fc1611c770cf4f3f8d6b8746a81c1df13503db`
+- correction PR: `#143`
+- squash-merge commit: `352b2638bb9a1cf7504a224c0571062072b32db1`
 - implementation packet: `P14C-IMPL-v2`
 - correction packet: `P14C-CORR-v1`
+- Ready packet: `P14C-CORR-READY-v1`
+- merge packet: `P14C-CORR-MERGE-v1`
+- state-sync packet: `P14C-STATE-SYNC-v1`
+- state-sync base: `352b2638bb9a1cf7504a224c0571062072b32db1`
+- state-sync branch: `agent/p14c-state-sync-v1`
 - static packet SHA-256:
   `3883ccb31ef59ff19c45b2818ac8cc3606b63d1f2b9575bc2a9ea18edb5db9b5`
 - permitted repository: `apolo183/tool-system` only
-- permitted publication: one correction branch, one commit, and one Draft PR
-  after all local gates pass and both current main identities are revalidated
+- original permitted publication: one correction branch, one commit, and one
+  Draft PR after all local gates passed and both current main identities were
+  revalidated
 
-The implementation packet permits source, contract, test, evidence, local Git,
-feature-branch, and Draft-PR work. It does not permit a credential-value read,
-real provider call, downstream repository read or write, PR ready transition,
-main merge, cleanup, branch deletion, rollback execution, or production
-deployment.
+`P14C-IMPL-v2` and `P14C-CORR-v1` permitted source, contract, test, evidence,
+local Git, feature-branch, and Draft-PR work. They did not permit a Ready
+transition or main merge. `P14C-CORR-READY-v1` later authorized only the PR #143
+Ready transition, and `P14C-CORR-MERGE-v1` separately authorized only the PR
+body synchronization and squash merge while base, head, CI, and the exact
+seven-file scope remained unchanged. Those lifecycle actions completed, with
+the successful correction tree retained at the squash-merge commit above.
+
+None of those approvals, and no state recorded here, permits a credential-value
+read, real provider call, P14C acceptance, P14D, downstream repository read or
+write, cleanup, branch deletion, rollback execution, or production deployment.
+The correction branch is retained; its deletion remains separately gated.
 
 ## Parent and global alignment
 
@@ -130,14 +147,15 @@ This evidence supports only these claims:
 - packet-only validation performs zero provider, transport, and credential-value
   access.
 
-It does not claim:
+It does not claim or authorize:
 
 - a real provider request occurred or succeeded;
 - the credential reference is populated;
 - model quality, availability, latency, or billing was observed;
 - P14C is accepted or closed;
 - any downstream repository was inspected or modified;
-- PR ready, merge, cleanup, rollback, or production authority.
+- any future PR ready or merge action, cleanup, branch deletion, rollback, or
+  production authority.
 
 ## Verification and stop condition
 
