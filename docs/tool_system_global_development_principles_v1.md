@@ -111,6 +111,23 @@ blueprint or requirement source
 
 Each level must identify its parent, identify the active blueprint or requirement source, and record why the level does not expand or redirect scope beyond either one.
 
+The blueprint is the stable target-state contract: it describes the completed
+product objective, boundaries, architecture, required capabilities, milestone
+design, and acceptance criteria. It is not a project-progress ledger. Current
+phase or stage, accepted or pending status, authorization receipts, pull request
+numbers, commit or tree SHAs, CI run identifiers, branch disposition, and other
+execution facts must not be stored in the blueprint. A blueprint change is valid
+only when the intended target state or its stable constraints change, and it
+requires explicit human review.
+
+`docs/tool_system_project_state_v1.yaml` is the single machine-readable owner for
+descriptive tool-system progress state. It may reference current evidence but has
+`authority_effect: none`; it cannot authorize implementation, provider execution,
+repository mutation, lifecycle transitions, cleanup, rollback, or production.
+Immutable or stage-specific proof remains in the applicable evidence and
+acceptance records. Tests must reject process-state keys in the blueprint rather
+than forcing status receipts back into it.
+
 ## 16. Script and automation control by documents
 
 Scripts, CLIs, agents, and repository-control tools execute documents; they do not define scope by themselves. A script may only run when the active blueprint or requirement source, milestone document, task manifest, and change plan authorize its purpose, inputs, outputs, side effects, and stop condition. Script output is evidence only after it is compared with the controlling documents and the active blueprint.

@@ -1,79 +1,5 @@
-schema_version: 0.5
+schema_version: 0.6
 system: tool-system
-phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
-status: active
-acceptance:
-  record: docs/reports/p13e_security_reliability_acceptance_closure.md
-  accepted_at: 2026-07-12 UTC+09:00
-  accepted_scope: application_guarded_local_fixture_worker_and_single_host_sqlite_hardening
-  successor_phase_authorized: true
-  prior_acceptance:
-    phase: P12_DURABLE_ORCHESTRATOR
-    record: docs/reports/p12e_durable_orchestrator_acceptance_closure.md
-    accepted_scope: single_host_local_fixture_sqlite_durable_orchestrator
-successor_authorization:
-  record: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
-  authorized_at: 2026-07-12 UTC+09:00
-  defined_roadmap:
-    - P11_REAL_WORKER_RUNTIME
-    - P12_DURABLE_ORCHESTRATOR
-    - P13_SECURITY_RELIABILITY_HARDENING
-    - P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
-    - P15_MULTI_PROJECT_BENCHMARK
-    - P16_PRODUCTION_OPERATIONS_ACCEPTANCE
-  active_phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
-  later_phase_entry_authorized: false
-  next_phase: P15_MULTI_PROJECT_BENCHMARK
-  next_phase_entry_authorized: false
-
-active_phase_execution:
-  record: docs/reports/p14mr_milestone_module_invariant.md
-  record_role: existing_acceptance_evidence_only
-  durable_rule_owners:
-    - "blueprint/tool_system_v0.yaml:milestone_module_invariant"
-    - "docs/tool_system_global_development_principles_v1.md:durable_module_and_milestone_discipline"
-  current_stage: P14MR_MILESTONE_MODULE_INVARIANT
-  phase_entry_authorized: true
-  authority_effect: tool_system_local_only
-  phase_source_implementation_authorized: false
-  next_stage: P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
-  next_stage_authorized: false
-  live_model_provider_execution_authorized: false
-  remote_target_mutation_authorized: false
-  production_deployment_authorized: false
-
-p14c_source_implementation:
-  record: docs/reports/p14c_bounded_real_model_provider_execution.md
-  record_role: source_implementation_evidence_only
-  module_contract_owner: docs/modules/ai-worker-runtime-contract-v1.md
-  implementation_authorization_packet: P14C-IMPL-v2
-  tool_system_base: 637fe60782ed9e15d58795a0113b84965d6664d2
-  source_implementation_authorized: true
-  source_implementation_status: corrected_source_and_live_issuer_merged_no_execution_not_accepted
-  live_issuer_implementation_record: docs/reports/p14c_live_issuer_implementation.md
-  live_issuer_module_contract_owner: docs/modules/process-authority-contract-v1.md
-  live_issuer_implementation_authorization_packet: P14C-LIVE-ISSUER-IMPL-v1
-  live_issuer_lifecycle_authorization_packet: P14C-LIVE-ISSUER-LIFECYCLE-v1
-  live_issuer_source_base: b6ea3c62aa668031e87abb6341f82cb1bd32a3eb
-  live_issuer_source_head: 46e66481447fd64ac9a0916b179eb652aef647ad
-  live_issuer_source_pr: 148
-  live_issuer_source_merge: 20cbb13feb934ce95f2624dafc4510efcd04f1da
-  live_issuer_source_tree: b2263ba1c8121bb7d2f30b96b88cebabfa880872
-  live_issuer_source_implementation_authorized: true
-  live_issuer_source_publication_status: merged_hosted_ci_validated
-  live_issuer_pr_ci_run_id: 30616081875
-  live_issuer_main_ci_run_id: 30616558561
-  live_issuer_branch_retained: true
-  live_issuer_trust_root: github_owner_issue_comment
-  real_live_approval_record_created: false
-  live_capability_issued: false
-  p14c_stage_accepted: false
-  live_model_provider_execution_authorized: false
-  credential_value_access_authorized: false
-  downstream_repository_access_authorized: false
-  remote_target_mutation_authorized: false
-  production_deployment_authorized: false
-  cleanup_execution_authorized: false
 
 identity:
   description: Domain-agnostic agentic software factory for blueprint parsing, task planning, patch generation, test execution, and repository control.
@@ -191,7 +117,7 @@ product_contract:
 
 milestone_module_invariant:
   id: durable_module_and_milestone_change_boundary
-  contract_active: true
+  required: true
   authority_scope:
     repository: tool-system
     governs_other_repositories: false
@@ -274,33 +200,27 @@ milestone_module_invariant:
     downstream_governance_authority: false
     may_change_downstream_owner_authority_status_or_write_authorization: false
     external_project_retroactive_mutation_automatic: false
-  process_migration_boundary:
-    reports_task_manifests_change_plans_active_gates_are_legacy_machine_inputs: true
+  process_authority_boundary:
     process_authority_contract_path: config/process_authority_v1.yaml
     canonical_replay_snapshot_path: config/replay_snapshot_v1.yaml
     repository_manifest_path: REPO_MANIFEST.md
-    current_task_authority_mode: explicit_manifest_change_plan_pair
-    implicit_legacy_repository_authority_removed: true
-    legacy_compatibility_replay_only: true
-    legacy_execution_authorized: false
-    current_task_caller_audit_complete: true
-    formal_file_set_registration_implemented: true
-    tracked_path_coverage_validation_implemented: true
-    legacy_non_authority_sets_registered: true
-    retained_inputs_are_current_authority: false
-    deletion_or_reclassification_authorized: false
+    task_authority_mode: explicit_manifest_change_plan_pair
+    implicit_repository_index_allowed: false
+    replay_inputs_grant_authority: false
+    retained_evidence_grants_authority: false
+    destructive_disposition_requires_separate_authorization: true
   enforcement:
-    current_contract_scope: tool_system_module_registry_identity_boundary_import_effect_contract_reference_and_declared_dag_validation
     module_registry_path: config/module_registry_v1.yaml
     module_registry_schema_path: config/module_registry_schema_v1.json
-    module_registry_structural_validation_implemented: true
-    declared_dependency_dag_validation_implemented: true
-    natural_owner_overlap_validation_implemented: true
-    source_ownership_coverage_validation_implemented: true
-    source_import_edge_enforcement_implemented: true
-    contract_reference_hash_validation_implemented: true
-    side_effect_target_binding_validation_implemented: true
-    runtime_module_enforcement_implemented: false
+    required_validations:
+      - module_registry_structure
+      - declared_dependency_dag
+      - natural_owner_overlap
+      - source_ownership_coverage
+      - source_import_edges
+      - contract_reference_hashes
+      - side_effect_target_bindings
+    runtime_module_enforcement_required: true
     machine_alignment_tests_required: true
     module_graph_validation_required: true
     interface_compatibility_evidence_required: true

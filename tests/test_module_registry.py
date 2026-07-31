@@ -716,11 +716,14 @@ def test_blueprint_and_ci_keep_local_registry_authority() -> None:
     )
 
     assert enforcement["module_registry_path"] == "config/module_registry_v1.yaml"
-    assert enforcement["module_registry_structural_validation_implemented"] is True
-    assert enforcement["source_import_edge_enforcement_implemented"] is True
-    assert enforcement["contract_reference_hash_validation_implemented"] is True
-    assert enforcement["side_effect_target_binding_validation_implemented"] is True
-    assert enforcement["runtime_module_enforcement_implemented"] is False
+    assert set(enforcement["required_validations"]) >= {
+        "module_registry_structure",
+        "source_import_edges",
+        "contract_reference_hashes",
+        "side_effect_target_bindings",
+    }
+    assert enforcement["runtime_module_enforcement_required"] is True
+    assert not any(key.endswith("_implemented") for key in enforcement)
     assert not any(
         "central" in key or ("cut" + "over") in key for key in enforcement
     )

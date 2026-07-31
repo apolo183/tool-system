@@ -103,7 +103,8 @@ def test_blueprint_keeps_only_tool_system_owned_module_enforcement() -> None:
     obsolete_key_fragment = "governance_" + "reference"
     assert not any(obsolete_key_fragment in key for key in authority)
     assert enforcement["module_registry_path"] == "config/module_registry_v1.yaml"
-    assert enforcement["module_registry_structural_validation_implemented"] is True
+    assert "module_registry_structure" in enforcement["required_validations"]
+    assert not any(key.endswith("_implemented") for key in enforcement)
     assert not any(
         "central" in key or ("cut" + "over") in key for key in enforcement
     )

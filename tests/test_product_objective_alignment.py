@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from tool_system.manifest.task_manifest import load_yaml_file
@@ -7,6 +8,10 @@ from tool_system.manifest.task_manifest import load_yaml_file
 
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
+BLUEPRINT_SCHEMA = (
+    ROOT / "blueprint" / "schema" / "tool_system_blueprint.schema.json"
+)
+PROJECT_STATE = ROOT / "docs" / "tool_system_project_state_v1.yaml"
 README = ROOT / "README.md"
 AGENTS = ROOT / "AGENTS.md"
 P14R_MANIFEST = (
@@ -23,7 +28,7 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
     contract = blueprint["product_contract"]
     alignment = blueprint["global_alignment"]
 
-    assert blueprint["schema_version"] == 0.5
+    assert blueprint["schema_version"] == 0.6
     assert "compatibility_identifier_semantics" not in blueprint
     assert objective["id"] == "blueprint_driven_autonomous_software_development"
     assert set(objective["required_end_to_end_flow"]) == {
@@ -93,6 +98,41 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
         "product_objective_ref": "product_objective",
         "fail_closed_on_missing_alignment": True,
     }
+
+
+def test_blueprint_is_target_state_only_and_schema_rejects_progress_keys() -> None:
+    blueprint = load_yaml_file(BLUEPRINT)
+    schema = json.loads(BLUEPRINT_SCHEMA.read_text(encoding="utf-8"))
+    project_state = load_yaml_file(PROJECT_STATE)
+    process_keys = {
+        "phase",
+        "status",
+        "acceptance",
+        "successor_authorization",
+        "active_phase_execution",
+        "p14c_source_implementation",
+    }
+
+    assert set(blueprint) == set(schema["required"])
+    assert set(schema["properties"]) == set(schema["required"])
+    assert process_keys.isdisjoint(blueprint)
+    assert schema["additionalProperties"] is False
+    assert schema["properties"]["schema_version"]["const"] == 0.6
+    assert project_state["role"] == "descriptive_project_progress_only"
+    assert project_state["authority_effect"] == "none"
+    assert project_state["blueprint"]["process_state_allowed_in_blueprint"] is False
+    assert project_state["evidence_rule"]["blueprint_is_not_a_progress_ledger"] is True
+    blueprint_text = BLUEPRINT.read_text(encoding="utf-8")
+    for process_marker in (
+        "_implemented:",
+        "current_task_caller_audit_complete:",
+        "accepted_at:",
+        "authorized_at:",
+        "pull_request_ci_run_id:",
+        "main_ci_run_id:",
+        "branch_retained:",
+    ):
+        assert process_marker not in blueprint_text
 
 
 def test_completion_and_non_goals_prevent_false_product_claims() -> None:
@@ -189,7 +229,8 @@ def test_public_contracts_and_p14r_manifest_reference_global_objective() -> None
     manifest = load_yaml_file(P14R_MANIFEST)
 
     assert "permanent product objective" in readme
-    assert "P14 Blueprint-to-Code Autonomous Development" in readme
+    assert "machine-readable target-state blueprint" in readme
+    assert "docs/tool_system_project_state_v1.yaml" in readme
     assert "permanent product objective" in agents
     assert "product_objective" in agents
     assert manifest["alignment"]["global"] == {

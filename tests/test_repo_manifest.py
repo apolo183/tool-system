@@ -99,7 +99,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["parser_mode"] == EXACT_FORMAL_PARSER_MODE
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
-    assert len(rows) == 206
+    assert len(rows) == 207
     assert EXACT_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
     assert all(
         not any(character in row["path"] for character in "*?[]{}") for row in rows
@@ -107,7 +107,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_file_count"] == 206
+    assert result["formal_file_count"] == 207
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == 302
@@ -453,7 +453,7 @@ def test_manifest_git_reads_use_minimal_deterministic_environment() -> None:
 
 def test_blueprint_module_registry_packaging_and_ci_register_manifest() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
-    boundary = blueprint["milestone_module_invariant"]["process_migration_boundary"]
+    boundary = blueprint["milestone_module_invariant"]["process_authority_boundary"]
     modules = {
         module["module_id"]: module
         for module in load_yaml_file(MODULE_REGISTRY)["modules"]
@@ -465,10 +465,10 @@ def test_blueprint_module_registry_packaging_and_ci_register_manifest() -> None:
     ).read_text(encoding="utf-8")
 
     assert boundary["repository_manifest_path"] == "REPO_MANIFEST.md"
-    assert boundary["formal_file_set_registration_implemented"] is True
-    assert boundary["tracked_path_coverage_validation_implemented"] is True
-    assert boundary["legacy_non_authority_sets_registered"] is True
-    assert boundary["retained_inputs_are_current_authority"] is False
+    assert boundary["task_authority_mode"] == "explicit_manifest_change_plan_pair"
+    assert boundary["implicit_repository_index_allowed"] is False
+    assert boundary["replay_inputs_grant_authority"] is False
+    assert boundary["retained_evidence_grants_authority"] is False
     assert architecture["module_version"] == "2.0.0"
     architecture_paths = {
         boundary["path"] for boundary in architecture["boundaries"]["code"]

@@ -1,0 +1,45 @@
+plan_id: tool-system-blueprint-process-state-separation-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_blueprint_process_state_separation_v1.yaml
+changed_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/schema/tool_system_blueprint.schema.json
+  - blueprint/tool_system_v0.yaml
+  - docs/tool_system_project_state_v1.yaml
+  - docs/reports/p14c_bounded_real_model_provider_execution.md
+  - docs/reports/p14c_live_issuer_implementation.md
+  - docs/tool_system_global_development_principles_v1.md
+  - examples/change_plans/tool_system_blueprint_process_state_separation_v1.yaml
+  - examples/task_manifests/tool_system_blueprint_process_state_separation_v1.yaml
+  - tests/test_central_governance_consumption.py
+  - tests/test_milestone_module_invariant.py
+  - tests/test_model_provider_portfolio_contract.py
+  - tests/test_module_registry.py
+  - tests/test_p14_phase_entry_contract.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_phase_alignment.py
+  - tests/test_product_objective_alignment.py
+  - tests/test_repo_manifest.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_blueprint_process_state_separation_v1.yaml
+    section_or_key: scope
+    scope: Remove process state from the blueprint and create one descriptive, non-authorizing state owner without changing the target product.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve the completed-product definition and all stable product boundaries.
+verification:
+  commands:
+    - git diff --check
+    - python -m pytest -q tests/test_product_objective_alignment.py tests/test_phase_alignment.py tests/test_p14c_execution_contract.py tests/test_p14_phase_entry_contract.py tests/test_milestone_module_invariant.py tests/test_model_provider_portfolio_contract.py tests/test_module_registry.py tests/test_repo_manifest.py tests/test_central_governance_consumption.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_blueprint_process_state_separation_v1.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+rollback:
+  method: git_revert
+  reference: tool-system@20cbb13feb934ce95f2624dafc4510efcd04f1da
