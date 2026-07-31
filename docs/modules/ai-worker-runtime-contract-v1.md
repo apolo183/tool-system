@@ -2,8 +2,9 @@
 
 This file defines the module contract owned by the current
 `ai_worker_runtime` module. The default implementation remains a deterministic
-in-memory fixture. P14C adds a bounded live-provider adapter behind an explicit
-execution guard; this contract does not authorize a live provider call.
+in-memory fixture. P14C adds a bounded live-provider adapter behind an exact
+process-authority grant and single-use execution capability; this contract
+does not create a real approval record or authorize a live provider call.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -14,20 +15,20 @@ module_compound_contract:
   identity:
     canonical_module_id: ai-worker-runtime
     current_module_id: ai_worker_runtime
-    module_version: 1.1.0
+    module_version: 1.2.0
     aggregate_interface:
       interface_id: ai-worker-runtime-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@637fe60782ed9e15d58795a0113b84965d6664d2:ai_worker_runtime@1.0.0
+    rollback_identity: tool-system@b6ea3c62aa668031e87abb6341f82cb1bd32a3eb:ai_worker_runtime@1.1.0
     python_import_identities:
       - kind: prefix
         name: tool_system.ai_worker
   role:
     summary: provide a provider-neutral structured AI worker contract, deterministic fixture, and bounded live-adapter implementation
-    responsibility_boundary: Validate content-addressed requests, default to deterministic in-memory fixtures, and admit only the exact public P14C synthetic request when a separately supplied live-execution guard is affirmative.
+    responsibility_boundary: Validate content-addressed requests, default to deterministic in-memory fixtures, and admit only the exact public P14C synthetic request when an opaque process-authority grant has minted a capability bound to the same packet, request, and exact live transport instance.
   natural_owner_evidence_paths:
     - src/tool_system/ai_worker/__init__.py
     - src/tool_system/ai_worker/contract.py
@@ -38,12 +39,14 @@ module_compound_contract:
   dependency_contract:
     basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
-    direct_provider_module_ids: []
+    direct_provider_module_ids:
+      - process_authority
     direct_consumer_module_ids: []
   input_contract:
     registered_inputs:
       - AIWorkerRequest_v1
-    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, and mandatory no-mutation flags.
+      - opaque_single_use_P14CLiveExecutionCapability
+    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, mandatory no-mutation flags, and—only for live execution—an unexpired opaque capability derived from one authenticated exact process-authority grant and bound to the same transport object.
   output_contract:
     registered_outputs:
       - AIWorkerResult_v1
@@ -51,7 +54,7 @@ module_compound_contract:
   error_contract:
     registered_error_semantics:
       - stable_redacted_provider_neutral_errors
-    boundary: Integrity, capability, provider identity, budget, cancellation, timeout, response, replay, and internal failures return stable sanitized errors.
+    boundary: Integrity, grant or capability binding, capability expiry, transport-instance identity, provider identity, budget, cancellation, timeout, response, replay, and internal failures return stable sanitized errors before credential or provider access whenever preflight fails.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -69,13 +72,13 @@ module_compound_contract:
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve request validation, error taxonomy, deterministic replay, default fixture-only execution, explicit live-guard binding, redaction, budgets, provider metadata checks, and result fields.
+    interface_compatible_replacement: Preserve request validation, error taxonomy, deterministic replay, default fixture-only execution, process-authority grant and exact live-capability binding, redaction, budgets, provider metadata checks, and result fields.
     interface_incompatible_change: Requires a new aggregate interface version and a separately authorized provider qualification or migration stage.
   rollback_contract:
-    rollback_identity: tool-system@637fe60782ed9e15d58795a0113b84965d6664d2:ai_worker_runtime@1.0.0
+    rollback_identity: tool-system@b6ea3c62aa668031e87abb6341f82cb1bd32a3eb:ai_worker_runtime@1.1.0
     method: Revert through a separately audited pull request and rerun contract, fixture-provider, live-adapter fake-transport, replay, budget, redaction, and packet-only no-I/O tests.
   replacement_contract:
-    activation_rule: Replace only after provider-neutral contract, deterministic fixture, explicit execution guard, fake-transport live-adapter, replay, budget, redaction, and isolation behavior pass.
+    activation_rule: Replace only after provider-neutral contract, deterministic fixture, process-authority grant, exact transport-bound capability, fake GitHub and provider transports, replay, budget, redaction, and isolation behavior pass with no real I/O.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true

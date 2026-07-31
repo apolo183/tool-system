@@ -99,7 +99,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["parser_mode"] == EXACT_FORMAL_PARSER_MODE
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
-    assert len(rows) == 204
+    assert len(rows) == 206
     assert EXACT_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
     assert all(
         not any(character in row["path"] for character in "*?[]{}") for row in rows
@@ -107,10 +107,10 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_file_count"] == 204
+    assert result["formal_file_count"] == 206
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
-    assert result["legacy_path_count"] == 297
+    assert result["legacy_path_count"] == 300
     assert result["unclassified_path_count"] == 0
     assert result["retained_inputs_are_current_authority"] is False
     assert result["cleanup_authorized"] is False

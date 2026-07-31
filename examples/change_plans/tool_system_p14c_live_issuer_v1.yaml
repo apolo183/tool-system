@@ -1,0 +1,54 @@
+plan_id: tool-system-p14c-live-issuer-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p14c_live_issuer_v1.yaml
+changed_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/tool_system_v0.yaml
+  - config/module_registry_v1.yaml
+  - config/process_authority_schema_v1.json
+  - config/process_authority_v1.yaml
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/modules/process-authority-contract-v1.md
+  - docs/process_authority_contract_v1.md
+  - docs/reports/p14c_bounded_real_model_provider_execution.md
+  - docs/reports/p14c_live_issuer_implementation.md
+  - docs/tool_system_global_development_principles_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - examples/change_plans/tool_system_p14c_live_issuer_v1.yaml
+  - examples/task_manifests/tool_system_p14c_live_issuer_v1.yaml
+  - src/tool_system/ai_worker/live_provider.py
+  - src/tool_system/process_authority/__init__.py
+  - src/tool_system/process_authority/contract.py
+  - src/tool_system/process_authority/live_provider_approval.py
+  - tests/test_ai_worker_live_provider.py
+  - tests/test_module_contracts.py
+  - tests/test_module_registry.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_p14c_live_issuer.py
+  - tests/test_phase_alignment.py
+  - tests/test_process_authority.py
+  - tests/test_repo_manifest.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p14c_live_issuer_v1.yaml
+    section_or_key: scope
+    scope: Implement only the GitHub owner-authenticated, exact, short-lived, single-use P14C issuer source and no-I/O evidence.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Add the missing machine authorization boundary without performing a provider call or repository mutation.
+verification:
+  commands:
+    - git diff --check
+    - python -m compileall src/tool_system tests
+    - python -m pytest -q tests/test_p14c_live_issuer.py tests/test_ai_worker_live_provider.py tests/test_process_authority.py tests/test_p14c_execution_contract.py tests/test_phase_alignment.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_live_issuer_v1.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+rollback:
+  method: git_revert
+  reference: tool-system@b6ea3c62aa668031e87abb6341f82cb1bd32a3eb

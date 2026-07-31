@@ -26,6 +26,15 @@ from tool_system.ai_worker.contract import (
     canonical_sha256,
     validate_ai_worker_request,
 )
+from tool_system.process_authority.live_provider_approval import (
+    P14C_APPROVAL_ACTION,
+    P14C_APPROVAL_REPOSITORY,
+    P14C_LIVE_EXECUTION_AUTHORIZATION_ID,
+    P14C_LIVE_TRANSPORT_KIND,
+    P14CLiveExecutionBinding,
+    build_p14c_live_execution_approval_body,
+    issue_p14c_live_execution_grant,
+)
 
 P14C_AUTHORIZATION_PACKET = "P14C-IMPL-v2"
 P14C_TOOL_SYSTEM_BASE = "637fe60782ed9e15d58795a0113b84965d6664d2"
@@ -343,12 +352,17 @@ class P14CLiveExecutionCapability:
     """Opaque, exact-action authorization consumed by the provider entrypoint."""
 
     __slots__ = (
+        "_approval_comment_id",
+        "_approval_issue_number",
+        "_approval_record_sha256",
         "_authorization_id",
         "_consumed",
+        "_expires_at_epoch_seconds",
         "_lock",
         "_packet_sha256",
         "_request_sha256",
         "_sealed",
+        "_transport",
         "_transport_kind",
     )
 
@@ -359,19 +373,60 @@ class P14CLiveExecutionCapability:
         packet_sha256: str,
         request_sha256: str,
         transport_kind: str,
+        transport: ResponsesTransport,
+        approval_record_sha256: str | None = None,
+        approval_comment_id: int | None = None,
+        approval_issue_number: int | None = None,
+        expires_at_epoch_seconds: int | None = None,
         _issuer: object,
     ) -> None:
         if _issuer is not _P14C_CAPABILITY_ISSUER:
             raise TypeError("P14C live execution capabilities require an approved issuer")
-        if (
-            authorization_id != _P14C_FAKE_AUTHORIZATION_ID
-            or transport_kind != _P14C_FAKE_TRANSPORT_KIND
-        ):
+        fake_capability = (
+            authorization_id == _P14C_FAKE_AUTHORIZATION_ID
+            and transport_kind == _P14C_FAKE_TRANSPORT_KIND
+            and getattr(transport, "transport_kind", None)
+            == _P14C_FAKE_TRANSPORT_KIND
+            and approval_record_sha256 is None
+            and approval_comment_id is None
+            and approval_issue_number is None
+            and expires_at_epoch_seconds is None
+        )
+        live_capability = (
+            authorization_id == P14C_LIVE_EXECUTION_AUTHORIZATION_ID
+            and transport_kind == P14C_LIVE_TRANSPORT_KIND
+            and type(transport) is OpenAIResponsesTransport
+            and isinstance(approval_record_sha256, str)
+            and len(approval_record_sha256) == 64
+            and isinstance(approval_comment_id, int)
+            and not isinstance(approval_comment_id, bool)
+            and approval_comment_id > 0
+            and isinstance(approval_issue_number, int)
+            and not isinstance(approval_issue_number, bool)
+            and approval_issue_number > 0
+            and isinstance(expires_at_epoch_seconds, int)
+            and not isinstance(expires_at_epoch_seconds, bool)
+            and expires_at_epoch_seconds > 0
+        )
+        if not fake_capability and not live_capability:
             raise TypeError("P14C live-network capability issuance is unavailable")
         object.__setattr__(self, "_authorization_id", authorization_id)
         object.__setattr__(self, "_packet_sha256", packet_sha256)
         object.__setattr__(self, "_request_sha256", request_sha256)
         object.__setattr__(self, "_transport_kind", transport_kind)
+        object.__setattr__(self, "_transport", transport)
+        object.__setattr__(
+            self,
+            "_approval_record_sha256",
+            approval_record_sha256,
+        )
+        object.__setattr__(self, "_approval_comment_id", approval_comment_id)
+        object.__setattr__(self, "_approval_issue_number", approval_issue_number)
+        object.__setattr__(
+            self,
+            "_expires_at_epoch_seconds",
+            expires_at_epoch_seconds,
+        )
         object.__setattr__(self, "_lock", threading.Lock())
         object.__setattr__(self, "_consumed", threading.Event())
         object.__setattr__(self, "_sealed", True)
@@ -397,12 +452,28 @@ class P14CLiveExecutionCapability:
     def transport_kind(self) -> str:
         return self._transport_kind
 
+    @property
+    def approval_record_sha256(self) -> str | None:
+        return self._approval_record_sha256
+
+    @property
+    def approval_comment_id(self) -> int | None:
+        return self._approval_comment_id
+
+    @property
+    def approval_issue_number(self) -> int | None:
+        return self._approval_issue_number
+
+    @property
+    def expires_at_epoch_seconds(self) -> int | None:
+        return self._expires_at_epoch_seconds
+
     def binding_reasons(
         self,
         *,
         packet: P14CExecutionPacket,
         request: AIWorkerRequest,
-        transport_kind: object,
+        transport: object,
     ) -> tuple[str, ...]:
         reasons: list[str] = []
         if self.packet_sha256 != packet.sha256():
@@ -413,8 +484,15 @@ class P14CLiveExecutionCapability:
             request_sha256 = ""
         if self.request_sha256 != request_sha256:
             reasons.append("live execution capability request does not match")
-        if self.transport_kind != transport_kind:
+        if self.transport_kind != getattr(transport, "transport_kind", None):
             reasons.append("live execution capability transport does not match")
+        if self._transport is not transport:
+            reasons.append("live execution capability transport instance does not match")
+        if (
+            self._expires_at_epoch_seconds is not None
+            and time.time() > self._expires_at_epoch_seconds
+        ):
+            reasons.append("live execution capability has expired")
         return tuple(reasons)
 
     def consume(
@@ -422,16 +500,21 @@ class P14CLiveExecutionCapability:
         *,
         packet: P14CExecutionPacket,
         request: AIWorkerRequest,
-        transport_kind: object,
+        transport: object,
     ) -> tuple[str, ...]:
         reasons = self.binding_reasons(
             packet=packet,
             request=request,
-            transport_kind=transport_kind,
+            transport=transport,
         )
         if reasons:
             return reasons
         with self._lock:
+            if (
+                self._expires_at_epoch_seconds is not None
+                and time.time() > self._expires_at_epoch_seconds
+            ):
+                return ("live execution capability has expired",)
             if self._consumed.is_set():
                 return ("live execution capability was already consumed",)
             self._consumed.set()
@@ -441,6 +524,7 @@ class P14CLiveExecutionCapability:
 def _issue_p14c_fake_transport_capability(
     packet: P14CExecutionPacket,
     request: AIWorkerRequest,
+    transport: ResponsesTransport,
 ) -> P14CLiveExecutionCapability:
     """Issue only a fake-transport capability for isolated contract tests."""
 
@@ -452,6 +536,8 @@ def _issue_p14c_fake_transport_capability(
     expected_request_sha256 = build_p14c_synthetic_request(packet).sha256()
     if request_sha256 != expected_request_sha256:
         reasons.append("request is not the exact P14C-001 synthetic fixture")
+    if getattr(transport, "transport_kind", None) != _P14C_FAKE_TRANSPORT_KIND:
+        reasons.append("test capability transport is not injected_fake")
     if reasons:
         raise ValueError("; ".join(reasons))
     return P14CLiveExecutionCapability(
@@ -459,6 +545,97 @@ def _issue_p14c_fake_transport_capability(
         packet_sha256=packet.sha256(),
         request_sha256=request_sha256,
         transport_kind=_P14C_FAKE_TRANSPORT_KIND,
+        transport=transport,
+        _issuer=_P14C_CAPABILITY_ISSUER,
+    )
+
+
+def build_p14c_live_execution_binding(
+    packet: P14CExecutionPacket,
+    request: AIWorkerRequest,
+) -> P14CLiveExecutionBinding:
+    reasons = list(validate_p14c_execution_packet(packet))
+    try:
+        request_sha256 = request.sha256()
+    except (AttributeError, TypeError, ValueError):
+        request_sha256 = ""
+    if request_sha256 != build_p14c_synthetic_request(packet).sha256():
+        reasons.append("request is not the exact P14C-001 synthetic fixture")
+    if reasons:
+        raise ValueError("; ".join(reasons))
+    return P14CLiveExecutionBinding(
+        authorization_id=P14C_LIVE_EXECUTION_AUTHORIZATION_ID,
+        repository=P14C_APPROVAL_REPOSITORY,
+        action=P14C_APPROVAL_ACTION,
+        tool_system_base=packet.tool_system_base,
+        packet_sha256=packet.sha256(),
+        request_sha256=request_sha256,
+        fixture_id=packet.fixture_id,
+        provider_id=packet.provider_id,
+        model_id=packet.model_id,
+        method=packet.method,
+        host=packet.host,
+        path=packet.path,
+        credential_reference=packet.credential_reference,
+        transport_kind=P14C_LIVE_TRANSPORT_KIND,
+        provider_invocation_ceiling=1,
+        max_attempts=packet.max_attempts,
+        cumulative_token_ceiling=packet.cumulative_token_ceiling,
+        request_timeout_ms=packet.request_timeout_ms,
+        total_wall_clock_ms=packet.total_wall_clock_ms,
+        cumulative_cost_microusd=packet.cumulative_cost_microusd,
+        target_repo_mutation_authorized=False,
+        production_deployment_authorized=False,
+        cleanup_execution_authorized=False,
+        p14d_authorized=False,
+    )
+
+
+def build_p14c_github_approval_body(
+    *,
+    expires_at_utc: str,
+    nonce: str,
+    packet: P14CExecutionPacket | None = None,
+    request: AIWorkerRequest | None = None,
+) -> str:
+    active_packet = packet or build_p14c_execution_packet()
+    active_request = request or build_p14c_synthetic_request(active_packet)
+    return build_p14c_live_execution_approval_body(
+        build_p14c_live_execution_binding(active_packet, active_request),
+        expires_at_utc=expires_at_utc,
+        nonce=nonce,
+    )
+
+
+def issue_p14c_live_network_capability(
+    *,
+    comment_id: int,
+    packet: P14CExecutionPacket,
+    request: AIWorkerRequest,
+    transport: OpenAIResponsesTransport,
+) -> P14CLiveExecutionCapability:
+    """Authenticate GitHub owner authority and mint one exact live capability."""
+
+    if type(transport) is not OpenAIResponsesTransport:
+        raise TypeError("live capability requires the exact OpenAI TLS transport")
+    binding = build_p14c_live_execution_binding(packet, request)
+    grant = issue_p14c_live_execution_grant(
+        comment_id=comment_id,
+        binding=binding,
+    )
+    grant_reasons = grant.consume_for_capability(binding)
+    if grant_reasons:
+        raise ValueError("; ".join(grant_reasons))
+    return P14CLiveExecutionCapability(
+        authorization_id=binding.authorization_id,
+        packet_sha256=binding.packet_sha256,
+        request_sha256=binding.request_sha256,
+        transport_kind=binding.transport_kind,
+        transport=transport,
+        approval_record_sha256=grant.approval_record_sha256,
+        approval_comment_id=grant.comment_id,
+        approval_issue_number=grant.issue_number,
+        expires_at_epoch_seconds=grant.expires_at_epoch_seconds,
         _issuer=_P14C_CAPABILITY_ISSUER,
     )
 
@@ -502,7 +679,7 @@ class P14CLiveExecutionGuard:
                 self.capability.binding_reasons(
                     packet=packet,
                     request=request,
-                    transport_kind=getattr(provider, "transport_kind", None),
+                    transport=getattr(provider, "_transport", None),
                 )
             )
         expected_provider_metadata: dict[str, object] = {
@@ -583,7 +760,7 @@ class OpenAIResponsesProvider:
             capability_reasons = self.execution_capability.consume(
                 packet=self.packet,
                 request=request,
-                transport_kind=self.transport_kind,
+                transport=self._transport,
             )
         if capability_reasons:
             return _provider_error(

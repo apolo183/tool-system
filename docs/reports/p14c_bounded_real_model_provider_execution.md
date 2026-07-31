@@ -1,6 +1,6 @@
 # P14C Bounded Real Model Provider Execution — Source and Correction Evidence
 
-Status: `CORRECTED_SOURCE_MERGED_LIVE_EXECUTION_NOT_RUN_NOT_ACCEPTED`
+Status: `CORRECTED_SOURCE_MERGED_LIVE_ISSUER_SOURCE_DRAFT_NO_EXECUTION_NOT_ACCEPTED`
 
 This retained report records the narrow source implementation authorized by
 `P14C-IMPL-v2` and the authorization-boundary correction authorized by
@@ -22,6 +22,9 @@ outcome. It is evidence, not execution authority or stage acceptance.
 - Ready packet: `P14C-CORR-READY-v1`
 - merge packet: `P14C-CORR-MERGE-v1`
 - state-sync packet: `P14C-STATE-SYNC-v1`
+- live-issuer implementation packet: `P14C-LIVE-ISSUER-IMPL-v1`
+- live-issuer source base: `b6ea3c62aa668031e87abb6341f82cb1bd32a3eb`
+- live-issuer branch: `agent/p14c-live-issuer-v1`
 - state-sync base: `352b2638bb9a1cf7504a224c0571062072b32db1`
 - state-sync branch: `agent/p14c-state-sync-v1`
 - static packet SHA-256:
@@ -62,10 +65,13 @@ The global owner is
 AI-worker path while preserving action-scoped authority, auditability, hard
 limits, redaction, and no silent scope expansion.
 
-This change is an interface-compatible `ai_worker_runtime` implementation
-revision from module `1.0.0` to `1.1.0`. The aggregate
+The merged correction was an interface-compatible `ai_worker_runtime`
+implementation revision from module `1.0.0` to `1.1.0`. The proposed issuer
+source revises it to `1.2.0` and process authority from `2.0.0` to `2.1.0`.
+The aggregate
 `ai-worker-runtime-api@1.0.0` request, result, error, replay, and default fixture
-behavior remain stable. No consumer module or downstream repository changes.
+behavior and `process-authority-api@2.0.0` remain stable. No downstream
+repository changes.
 
 ## Exact source envelope
 
@@ -101,7 +107,7 @@ structured-output envelope uses `text.format` with `type=json_schema` and
 
 - the immutable P14C packet and public synthetic request;
 - an opaque, single-use execution capability bound to the exact packet,
-  request, and transport kind;
+  request, transport kind, and transport object;
 - an explicit `P14CLiveExecutionGuard` that verifies the provider holds that
   same capability;
 - the OpenAI Responses request encoder and strict response parser;
@@ -113,15 +119,28 @@ structured-output envelope uses `text.format` with `type=json_schema` and
 - retry, timeout, token, cost, response-size, model, refusal, incomplete-output,
   structured-output, and redaction controls.
 
+`src/tool_system/process_authority/live_provider_approval.py` now contains the
+separately authorized issuer source. It performs one internally fixed,
+TLS-verified public GitHub issue-comment read and requires exact repository,
+owner, `OWNER` association, unedited timestamps, strict JSON, a maximum
+fifteen-minute lifetime, complete packet/request/provider/network/budget
+binding, and explicit denials for target mutation, production, cleanup, and
+P14D. A successful check yields one opaque in-memory grant.
+
 `AIWorkerRuntime` defaults to `FixtureOnlyExecutionGuard`. In addition,
 `OpenAIResponsesProvider.invoke()` independently requires and consumes the exact
-capability, so bypassing the runtime cannot bypass authorization. The only
-issuer in this source is private and test-only: it creates capabilities bound to
-`injected_fake`. No issuer can authorize the `live_network` transport. A future
-live proof therefore requires a separately authorized process-authority issuer;
-no constructible affirmative boolean remains. This is a fail-closed supported
-entrypoint boundary, not a claim that Python can sandbox hostile code already
-executing inside the provider module's process.
+capability, so bypassing the runtime cannot bypass authorization. The retained
+private test issuer still creates only `injected_fake` capabilities. The new
+live issuer can mint a `live_network` capability only from an internally fetched
+matching GitHub owner record and binds it to the exact
+`OpenAIResponsesTransport` instance and the approval expiry. No constructible affirmative boolean,
+caller-supplied reader, or caller-created approval mapping is accepted.
+
+No real approval record exists or was created by this implementation, so no live
+capability was issued and live execution remains blocked. Replay rejection is
+in-process only; this is not a durable cross-process replay ledger or a claim
+that Python can sandbox hostile code already executing inside the trusted
+process.
 
 `src/tool_system/ai_worker/live_evidence.py --validate-packet-only` validates
 the packet and public fixture without constructing a provider, resolving a
@@ -150,6 +169,9 @@ This evidence supports only these claims:
   transport access;
 - a fake capability cannot authorize the live-network transport and cannot be
   consumed twice;
+- the proposed issuer source rejects wrong-repository, non-owner, edited,
+  expired, malformed, mismatched, or in-process replayed GitHub comment evidence
+  before credential or provider access;
 - an explicitly guarded fake-transport path exercises request, retry, response,
   budget, cancellation, and audit behavior;
 - packet-only validation performs zero provider, transport, and credential-value
@@ -158,6 +180,8 @@ This evidence supports only these claims:
 It does not claim or authorize:
 
 - a real provider request occurred or succeeded;
+- a real GitHub approval record was created, authenticated, or consumed;
+- replay is prevented across independent processes;
 - the credential reference is populated;
 - model quality, availability, latency, or billing was observed;
 - P14C is accepted or closed;
@@ -167,7 +191,11 @@ It does not claim or authorize:
 
 ## Verification and stop condition
 
-Before publication, the implementation must pass focused AI-worker tests, the
+The correction verification below is retained historical evidence. The
+live-issuer source has its own current record in
+`docs/reports/p14c_live_issuer_implementation.md`.
+
+Before publication, each implementation must pass focused AI-worker tests, the
 full repository suite, module-registry validation, repository-manifest
 validation, source compilation, `git diff --check`, and packet-only evidence.
 

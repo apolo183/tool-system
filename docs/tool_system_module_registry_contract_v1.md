@@ -82,15 +82,15 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:agent_worker_runtime@1.0.0
     - current_module_id: ai_worker_runtime
       canonical_module_id: ai-worker-runtime
-      current_module_version: 1.1.0
+      current_module_version: 1.2.0
       aggregate_interface_id: ai-worker-runtime-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.ai_worker}
       direct_consumer_module_ids: []
-      change_risk: "high: isolated bounded live-adapter source with default fixture-only execution guard"
-      rollback_identity: tool-system@637fe60782ed9e15d58795a0113b84965d6664d2:ai_worker_runtime@1.0.0
+      change_risk: "critical: bounded live-adapter source consuming an exact process-authority grant while default execution remains fixture-only"
+      rollback_identity: tool-system@b6ea3c62aa668031e87abb6341f82cb1bd32a3eb:ai_worker_runtime@1.1.0
     - current_module_id: durable_orchestrator
       canonical_module_id: durable-orchestrator
       current_module_version: 1.0.0
@@ -121,7 +121,7 @@ mapping_contract:
       rollback_identity: tool-system@6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f:repository_controller@1.1.0
     - current_module_id: process_authority
       canonical_module_id: process-authority
-      current_module_version: 2.0.0
+      current_module_version: 2.1.0
       aggregate_interface_id: process-authority-api
       aggregate_interface_version: 2.0.0
       runtime_id_preserved: true
@@ -131,10 +131,11 @@ mapping_contract:
         - {kind: exact, name: tool_system.cli.validate_active_gates}
         - {kind: exact, name: tool_system.cli.validate_process_authority}
       direct_consumer_module_ids:
+        - ai_worker_runtime
         - task_planner
         - task_runner
-      change_risk: "critical: current task-pair authority and replay boundary"
-      rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:process_authority@2.0.0
+      change_risk: "critical: current task-pair authority, replay boundary, and GitHub-owner P14C live-grant authentication"
+      rollback_identity: tool-system@b6ea3c62aa668031e87abb6341f82cb1bd32a3eb:process_authority@2.0.0
     - current_module_id: task_planner
       canonical_module_id: task-planner
       current_module_version: 1.1.0
@@ -283,6 +284,7 @@ static_import_dag:
       - task_runner
       - worker_adapter
     process_authority:
+      - ai_worker_runtime
       - task_planner
       - task_runner
     task_planner:

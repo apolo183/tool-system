@@ -12,7 +12,7 @@ Downstream: task planner, task runner, role runtime, CLI adapters, tests, and au
 
 `config/process_authority_v1.yaml` is the single local machine contract for task-pair authority. Current execution requires one task manifest and one change plan supplied explicitly for that invocation. The change plan must name the same manifest. A repository-wide implicit task index is not current execution authority.
 
-Its machine module identity is exactly `process-authority@2.0.0`, exposing
+Its machine module identity is exactly `process-authority@2.1.0`, exposing
 `process-authority-api@2.0.0`. The historical compatibility ID
 `process_authority` is not accepted in the current authority file. The Python
 package remains `tool_system.process_authority`; that language-level underscore
@@ -27,6 +27,45 @@ receipt, token, or unchecked command list. It captures the validated file bytes,
 compares them again immediately before dispatch, and extracts commands from the
 same captured plan bytes. Any validation failure or byte drift blocks before
 `subprocess.run`.
+
+## P14C GitHub approval boundary
+
+`process-authority@2.1.0` also implements the separately authorized source for
+one P14C live-provider approval trust root. Given a positive comment ID and an
+exact typed action binding, the issuer performs one TLS-verified public `GET`
+to
+`https://api.github.com/repos/apolo183/tool-system/issues/comments/{comment_id}`.
+The host, repository, owner login, endpoint, API version, timeout, response-size
+limit, and request headers are fixed internally. The caller cannot substitute a
+reader, identity mapping, approval boolean, or prevalidated record.
+
+The response must identify the same comment in `apolo183/tool-system`, with
+author login `apolo183`, `author_association: OWNER`, and identical
+`created_at` and `updated_at` timestamps. The comment body must be strict JSON
+with no duplicate or extra keys and must bind exactly:
+
+- authorization ID, repository, action, source base, packet and request hashes;
+- public fixture, provider, exact model, method, host, path, credential
+  reference, and `live_network` transport;
+- one provider invocation, attempt/token/time/cost ceilings, a 64-character
+  lowercase hexadecimal nonce, and an expiry no more than fifteen minutes
+  after comment creation;
+- `false` for target-repository mutation, production deployment, cleanup, and
+  P14D.
+
+Authentication failures, API failures, edits, expiry, malformed data, binding
+drift, or reuse of the same comment in the same process block issuance. A valid
+record yields one opaque in-memory grant; that grant can mint one immutable
+capability bound to the exact packet, request, and live transport object, and
+the capability can be consumed once and only before the approval expiry.
+
+This is source capability, not live-execution evidence. This implementation
+creates or edits no GitHub comment, reads no credential value, calls no model
+provider, and leaves `live_model_provider_execution_authorized: false`. It does
+not claim durable replay prevention across independent processes or protection
+against hostile code already executing inside the trusted Python process.
+Those require a separately authorized durable authority owner and threat-model
+expansion.
 
 ## Canonical replay boundary
 
