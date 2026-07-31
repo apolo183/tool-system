@@ -94,13 +94,25 @@ def test_public_contracts_have_same_current_phase() -> None:
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_implementation_authorized"] is True
     assert p14c["source_implementation_status"] == (
-        "corrected_source_merged_live_issuer_source_draft_no_execution_not_accepted"
+        "corrected_source_and_live_issuer_merged_no_execution_not_accepted"
     )
     assert (
         p14c["live_issuer_implementation_authorization_packet"]
         == "P14C-LIVE-ISSUER-IMPL-v1"
     )
     assert p14c["live_issuer_source_implementation_authorized"] is True
+    assert (
+        p14c["live_issuer_lifecycle_authorization_packet"]
+        == "P14C-LIVE-ISSUER-LIFECYCLE-v1"
+    )
+    assert p14c["live_issuer_source_pr"] == 148
+    assert p14c["live_issuer_source_merge"] == (
+        "20cbb13feb934ce95f2624dafc4510efcd04f1da"
+    )
+    assert p14c["live_issuer_source_publication_status"] == (
+        "merged_hosted_ci_validated"
+    )
+    assert p14c["live_issuer_branch_retained"] is True
     assert p14c["real_live_approval_record_created"] is False
     assert p14c["live_capability_issued"] is False
     assert p14c["p14c_stage_accepted"] is False

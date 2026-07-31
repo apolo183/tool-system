@@ -35,13 +35,33 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_implementation_authorized"] is True
     assert p14c["source_implementation_status"] == (
-        "corrected_source_merged_live_issuer_source_draft_no_execution_not_accepted"
+        "corrected_source_and_live_issuer_merged_no_execution_not_accepted"
     )
     assert (
         p14c["live_issuer_implementation_authorization_packet"]
         == "P14C-LIVE-ISSUER-IMPL-v1"
     )
     assert p14c["live_issuer_source_implementation_authorized"] is True
+    assert (
+        p14c["live_issuer_lifecycle_authorization_packet"]
+        == "P14C-LIVE-ISSUER-LIFECYCLE-v1"
+    )
+    assert p14c["live_issuer_source_head"] == (
+        "46e66481447fd64ac9a0916b179eb652aef647ad"
+    )
+    assert p14c["live_issuer_source_pr"] == 148
+    assert p14c["live_issuer_source_merge"] == (
+        "20cbb13feb934ce95f2624dafc4510efcd04f1da"
+    )
+    assert p14c["live_issuer_source_tree"] == (
+        "b2263ba1c8121bb7d2f30b96b88cebabfa880872"
+    )
+    assert p14c["live_issuer_source_publication_status"] == (
+        "merged_hosted_ci_validated"
+    )
+    assert p14c["live_issuer_pr_ci_run_id"] == 30_616_081_875
+    assert p14c["live_issuer_main_ci_run_id"] == 30_616_558_561
+    assert p14c["live_issuer_branch_retained"] is True
     assert p14c["live_issuer_trust_root"] == "github_owner_issue_comment"
     assert p14c["real_live_approval_record_created"] is False
     assert p14c["live_capability_issued"] is False
@@ -52,7 +72,7 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert p14c["remote_target_mutation_authorized"] is False
     assert p14c["production_deployment_authorized"] is False
     assert (
-        "CORRECTED_SOURCE_MERGED_LIVE_ISSUER_SOURCE_DRAFT_NO_EXECUTION_NOT_ACCEPTED"
+        "CORRECTED_SOURCE_AND_LIVE_ISSUER_MERGED_NO_EXECUTION_NOT_ACCEPTED"
         in report
     )
     assert "P14C-CORR-v1" in report
@@ -63,7 +83,13 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert "provider_call_count=0" in report
     assert "credential_value_access_count=0" in report
     assert "transport_call_count=0" in report
-    assert "DRAFT_PR_PENDING_NO_LIVE_EXECUTION" in live_issuer_report
+    assert (
+        "SOURCE_MERGED_HOSTED_CI_VALIDATED_NO_LIVE_EXECUTION_NOT_ACCEPTED"
+        in live_issuer_report
+    )
+    assert "pull request: `#148`" in " ".join(live_issuer_report.split())
+    assert "30616081875" in live_issuer_report
+    assert "30616558561" in live_issuer_report
     assert "real approval records created or edited by this change: `0`" in (
         live_issuer_report
     )

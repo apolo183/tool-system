@@ -1,6 +1,6 @@
 # P14C Live Issuer Implementation Evidence
 
-Status: `DRAFT_PR_PENDING_NO_LIVE_EXECUTION`
+Status: `SOURCE_MERGED_HOSTED_CI_VALIDATED_NO_LIVE_EXECUTION_NOT_ACCEPTED`
 
 This report records source work authorized by
 `P14C-LIVE-ISSUER-IMPL-v1`. It is not a GitHub approval record, live execution
@@ -11,7 +11,15 @@ authority, P14C acceptance, or permission for any later stage.
 - repository: `apolo183/tool-system`
 - source base: `b6ea3c62aa668031e87abb6341f82cb1bd32a3eb`
 - branch: `agent/p14c-live-issuer-v1`
-- publication ceiling: one commit and one Draft PR
+- reviewed head: `46e66481447fd64ac9a0916b179eb652aef647ad`
+- pull request: `#148`
+- squash-merge commit: `20cbb13feb934ce95f2624dafc4510efcd04f1da`
+- reviewed and merged tree: `b2263ba1c8121bb7d2f30b96b88cebabfa880872`
+- implementation authorization: `P14C-LIVE-ISSUER-IMPL-v1`
+- lifecycle authorization: `P14C-LIVE-ISSUER-LIFECYCLE-v1`
+- pull-request CI: run `#1018` (`30616081875`), `success`
+- main push CI: run `#1019` (`30616558561`), `success`
+- branch disposition: retained at the reviewed head
 - trust root: one public GitHub issue comment in `apolo183/tool-system`
   authored by login `apolo183` with `author_association: OWNER`
 - future live-execution authorization ID: `P14C-LIVE-EXEC-v1`
@@ -20,9 +28,13 @@ authority, P14C acceptance, or permission for any later stage.
 - real provider calls: `0`
 - downstream repository reads or writes: `0`
 
-Ready transition, main merge, a real approval record, credential-value access,
-live execution, P14C acceptance, P14D, downstream access, cleanup, rollback,
-branch deletion, and production remain unauthorized.
+The original implementation packet authorized at most one commit and one Draft
+PR. The later lifecycle authorization separately permitted the Ready transition
+and squash merge while base, head, CI, file scope, and review state remained
+unchanged. Those lifecycle actions are complete. A real approval record,
+credential-value access, live capability issuance, live execution, P14C
+acceptance, P14D, downstream access, cleanup, rollback, branch deletion, and
+production remain unauthorized.
 
 ## Trust-root and one-shot design
 
@@ -87,12 +99,15 @@ Local verification recorded on 2026-07-31:
 - real GitHub reads, approval-record writes, credential-value reads, provider
   calls, and downstream operations: `0`.
 
-Hosted CI remains pending until the Draft PR exists. Hosted success would prove
-the committed source and tests on GitHub, not a live provider execution.
+Hosted pull-request CI run `#1018` and main-push CI run `#1019` completed with
+`success`. The squash merge and reviewed head have the same tree. This proves
+the committed source and tests were validated on GitHub; it does not prove a
+live provider execution.
 
 ## Stop condition
 
-Publication must stop on base drift, an unapproved file, any real GitHub
-approval-record write, real credential or provider access, downstream access,
-test failure, registry/manifest mismatch, or scope expansion. Passing source and
-fake-I/O tests permits only a Draft PR.
+Source publication is complete. Any next action must stop on an absent or
+mismatched separately named `P14C-LIVE-EXEC-v1` provider-model-network-
+credential-cost packet, an absent exact owner approval record, any unapproved
+file or repository action, test failure, registry/manifest mismatch, or scope
+expansion. This record grants no live execution or stage acceptance.

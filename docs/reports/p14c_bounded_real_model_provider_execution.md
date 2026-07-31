@@ -1,6 +1,6 @@
 # P14C Bounded Real Model Provider Execution — Source and Correction Evidence
 
-Status: `CORRECTED_SOURCE_MERGED_LIVE_ISSUER_SOURCE_DRAFT_NO_EXECUTION_NOT_ACCEPTED`
+Status: `CORRECTED_SOURCE_AND_LIVE_ISSUER_MERGED_NO_EXECUTION_NOT_ACCEPTED`
 
 This retained report records the narrow source implementation authorized by
 `P14C-IMPL-v2` and the authorization-boundary correction authorized by
@@ -23,16 +23,24 @@ outcome. It is evidence, not execution authority or stage acceptance.
 - merge packet: `P14C-CORR-MERGE-v1`
 - state-sync packet: `P14C-STATE-SYNC-v1`
 - live-issuer implementation packet: `P14C-LIVE-ISSUER-IMPL-v1`
+- live-issuer lifecycle packet: `P14C-LIVE-ISSUER-LIFECYCLE-v1`
 - live-issuer source base: `b6ea3c62aa668031e87abb6341f82cb1bd32a3eb`
 - live-issuer branch: `agent/p14c-live-issuer-v1`
+- live-issuer reviewed head: `46e66481447fd64ac9a0916b179eb652aef647ad`
+- live-issuer PR: `#148`
+- live-issuer squash-merge commit:
+  `20cbb13feb934ce95f2624dafc4510efcd04f1da`
+- reviewed and merged tree: `b2263ba1c8121bb7d2f30b96b88cebabfa880872`
+- pull-request CI: run `#1018` (`30616081875`), `success`
+- main push CI: run `#1019` (`30616558561`), `success`
 - state-sync base: `352b2638bb9a1cf7504a224c0571062072b32db1`
 - state-sync branch: `agent/p14c-state-sync-v1`
 - static packet SHA-256:
   `3883ccb31ef59ff19c45b2818ac8cc3606b63d1f2b9575bc2a9ea18edb5db9b5`
 - permitted repository: `apolo183/tool-system` only
-- original permitted publication: one correction branch, one commit, and one
-  Draft PR after all local gates passed and both current main identities were
-  revalidated
+- original live-issuer publication ceiling: one branch, one commit, and one
+  Draft PR after all local gates passed; the later lifecycle packet separately
+  authorized its Ready transition and squash merge
 
 `P14C-IMPL-v2` and `P14C-CORR-v1` permitted source, contract, test, evidence,
 local Git, feature-branch, and Draft-PR work. They did not permit a Ready
@@ -51,8 +59,11 @@ Subsequent repository lifecycle authorization and exact required-check
 provenance hardening merged through PRs `#145` and `#146` at
 `main@3256e17c416394ac7d209f9cafc529a3fb72504d`. That
 `repository-controller@1.2.0` control-plane evidence has no live
-mutation-capability issuer and does not change this report's status: no
-credential value was read, no real provider call occurred, and P14C remains
+mutation-capability issuer. The live-issuer source then passed pull-request CI,
+was separately moved to Ready and squash-merged through PR `#148`, and passed
+main push CI. Those source-publication events do not change the execution
+boundary: no real approval record exists, no credential value was read, no live
+capability was issued, no real provider call occurred, and P14C remains
 unaccepted.
 
 ## Parent and global alignment
@@ -66,7 +77,7 @@ AI-worker path while preserving action-scoped authority, auditability, hard
 limits, redaction, and no silent scope expansion.
 
 The merged correction was an interface-compatible `ai_worker_runtime`
-implementation revision from module `1.0.0` to `1.1.0`. The proposed issuer
+implementation revision from module `1.0.0` to `1.1.0`. The merged issuer
 source revises it to `1.2.0` and process authority from `2.0.0` to `2.1.0`.
 The aggregate
 `ai-worker-runtime-api@1.0.0` request, result, error, replay, and default fixture
@@ -169,7 +180,7 @@ This evidence supports only these claims:
   transport access;
 - a fake capability cannot authorize the live-network transport and cannot be
   consumed twice;
-- the proposed issuer source rejects wrong-repository, non-owner, edited,
+- the merged issuer source rejects wrong-repository, non-owner, edited,
   expired, malformed, mismatched, or in-process replayed GitHub comment evidence
   before credential or provider access;
 - an explicitly guarded fake-transport path exercises request, retry, response,
@@ -198,6 +209,13 @@ live-issuer source has its own current record in
 Before publication, each implementation must pass focused AI-worker tests, the
 full repository suite, module-registry validation, repository-manifest
 validation, source compilation, `git diff --check`, and packet-only evidence.
+
+The live-issuer publication completed with the exact reviewed and merged tree
+above. Pull-request workflow run `#1018` and main-push workflow run `#1019`
+completed with `success`. Current post-merge local verification on 2026-07-31
+reproduced `69 passed` for the focused issuer and affected-contract suite and
+`536 passed` for the full repository suite; process-authority,
+module-registry, repository-manifest, and whitespace validation also passed.
 
 Local verification recorded on 2026-07-30:
 

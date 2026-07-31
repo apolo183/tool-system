@@ -1,0 +1,102 @@
+task_id: tool-system-p14c-live-issuer-state-sync-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/p14c-live-issuer-state-sync-v1
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stage_plan.P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+alignment:
+  parent:
+    document: docs/reports/p14c_live_issuer_implementation.md
+    section_or_key: Stop condition
+    scope: Synchronize the completed PR #148 source-publication lifecycle without creating live execution authority.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Keep the bounded provider path auditable while preserving every real-provider, repository, P14D, cleanup, and production gate.
+scope:
+  summary: Replace stale Draft-only P14C live-issuer state with exact merged and hosted-CI evidence while retaining no-live-execution and no-acceptance boundaries.
+  in_scope:
+    - AGENTS.md
+    - README.md
+    - blueprint/tool_system_v0.yaml
+    - docs/reports/p14c_bounded_real_model_provider_execution.md
+    - docs/reports/p14c_live_issuer_implementation.md
+    - docs/tool_system_global_development_principles_v1.md
+    - examples/change_plans/tool_system_p14c_live_issuer_state_sync_v1.yaml
+    - examples/task_manifests/tool_system_p14c_live_issuer_state_sync_v1.yaml
+    - tests/test_p14c_execution_contract.py
+    - tests/test_phase_alignment.py
+    - tests/test_repo_manifest.py
+  out_of_scope:
+    - modifying provider, process-authority, repository-controller, or downstream source
+    - creating or editing a real GitHub approval record
+    - credential-value access, live capability issuance, or a real provider call
+    - P14C execution, acceptance, or closure
+    - P14D or later-stage work
+    - downstream repository access or mutation
+    - PR Ready, main merge, cleanup, branch deletion, rollback, or production
+evidence:
+  - repo: apolo183/tool-system
+    path: https://github.com/apolo183/tool-system/pull/148
+    commit_sha: 46e66481447fd64ac9a0916b179eb652aef647ad
+    why_relevant: PR #148 merged the exact live-issuer source after successful pull-request CI.
+  - repo: apolo183/tool-system
+    path: https://github.com/apolo183/tool-system/commit/20cbb13feb934ce95f2624dafc4510efcd04f1da
+    commit_sha: 20cbb13feb934ce95f2624dafc4510efcd04f1da
+    why_relevant: The squash merge has the same tree as the reviewed head and passed main push CI.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: 20cbb13feb934ce95f2624dafc4510efcd04f1da
+    why_relevant: The current blueprint still records the live-issuer source as Draft and therefore requires state-only correction.
+allowed_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/tool_system_v0.yaml
+  - docs/reports/p14c_bounded_real_model_provider_execution.md
+  - docs/reports/p14c_live_issuer_implementation.md
+  - docs/tool_system_global_development_principles_v1.md
+  - examples/change_plans/tool_system_p14c_live_issuer_state_sync_v1.yaml
+  - examples/task_manifests/tool_system_p14c_live_issuer_state_sync_v1.yaml
+  - tests/test_p14c_execution_contract.py
+  - tests/test_phase_alignment.py
+  - tests/test_repo_manifest.py
+forbidden_files:
+  - src/**
+  - config/**
+  - policy/**
+  - harness/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - python -m pytest -q tests/test_p14c_execution_contract.py tests/test_phase_alignment.py tests/test_p14c_live_issuer.py tests/test_ai_worker_live_provider.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_live_issuer_state_sync_v1.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - every active state owner records PR #148 and main merge 20cbb13feb934ce95f2624dafc4510efcd04f1da as completed source publication
+    - the reviewed head and squash merge retain tree b2263ba1c8121bb7d2f30b96b88cebabfa880872
+    - pull-request CI 30616081875 and main push CI 30616558561 remain successful evidence
+    - every real approval, capability, credential, provider, acceptance, P14D, downstream, cleanup, and production flag remains false or unauthorized
+    - no source, config, policy, harness, or downstream file changes
+    - focused tests, full tests, process authority, module registry, and repository manifest pass
+rollback:
+  method: git_revert
+  reference: tool-system@20cbb13feb934ce95f2624dafc4510efcd04f1da
+approval:
+  required: true
+  approved_by: user_explicit_github_app_state_sync_publication
+  approval_source: chat_user_message:use_github_app_directly_to_publish_state_sync
+  approved_at: 2026-07-31 UTC+09:00
