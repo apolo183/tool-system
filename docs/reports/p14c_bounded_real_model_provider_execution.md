@@ -44,6 +44,14 @@ read, real provider call, P14C acceptance, P14D, downstream repository read or
 write, cleanup, branch deletion, rollback execution, or production deployment.
 The correction branch is retained; its deletion remains separately gated.
 
+Subsequent repository lifecycle authorization and exact required-check
+provenance hardening merged through PRs `#145` and `#146` at
+`main@3256e17c416394ac7d209f9cafc529a3fb72504d`. That
+`repository-controller@1.2.0` control-plane evidence has no live
+mutation-capability issuer and does not change this report's status: no
+credential value was read, no real provider call occurred, and P14C remains
+unaccepted.
+
 ## Parent and global alignment
 
 The direct parent is

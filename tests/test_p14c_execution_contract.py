@@ -14,6 +14,7 @@ from tool_system.manifest.task_manifest import load_yaml_file
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
 REPORT = ROOT / "docs" / "reports" / "p14c_bounded_real_model_provider_execution.md"
+GATE_REPORT = ROOT / "docs" / "reports" / "p14c_pr_authorization_gate.md"
 LIVE_PROVIDER = ROOT / "src" / "tool_system" / "ai_worker" / "live_provider.py"
 LIVE_EVIDENCE = ROOT / "src" / "tool_system" / "ai_worker" / "live_evidence.py"
 
@@ -51,6 +52,25 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert "provider_call_count=0" in report
     assert "credential_value_access_count=0" in report
     assert "transport_call_count=0" in report
+
+
+def test_merged_pr_gate_evidence_keeps_p14c_and_live_mutation_blocked() -> None:
+    report = GATE_REPORT.read_text(encoding="utf-8")
+    normalized_report = " ".join(report.split())
+
+    assert "MERGED_AND_HOSTED_CI_VALIDATED_P14C_STILL_BLOCKED" in report
+    assert "PR `#145`" in report
+    assert "PR `#146`" in report
+    assert "0a8ec193b5e8945703f2f6ca7bbce323ee127645" in report
+    assert "3256e17c416394ac7d209f9cafc529a3fb72504d" in report
+    assert (
+        "Hosted CI run `#1014` (`30602453765`) completed with `success`"
+        in normalized_report
+    )
+    assert "does not create a live capability issuer" in normalized_report
+    assert "does not accept or close P14C" in normalized_report
+    assert "MERGED_GATE_HARDENING_DRAFT_PR_PENDING" not in report
+    assert "Hosted CI remains required after Draft PR publication" not in report
 
 
 def test_packet_binds_exact_provider_network_secret_reference_and_budgets() -> None:

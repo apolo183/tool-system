@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ROOT / "AGENTS.md"
 README = ROOT / "README.md"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
+PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 CHANGE_PLAN = (
     ROOT
     / "examples"
@@ -22,6 +23,7 @@ EXPECTED_PHASE = "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
 def test_public_contracts_have_same_current_phase() -> None:
     agents_text = AGENTS.read_text(encoding="utf-8")
     readme_text = README.read_text(encoding="utf-8")
+    principles_text = PRINCIPLES.read_text(encoding="utf-8")
     blueprint = load_yaml_file(BLUEPRINT)
 
     assert f"Current phase: {EXPECTED_PHASE}" in agents_text
@@ -96,6 +98,9 @@ def test_public_contracts_have_same_current_phase() -> None:
     )
     assert p14c["p14c_stage_accepted"] is False
     assert p14c["live_model_provider_execution_authorized"] is False
+    for public_contract in (agents_text, readme_text, principles_text):
+        assert "repository-controller@1.2.0" in public_contract
+        assert "no live mutation-capability issuer" in public_contract
 
 
 def test_phase_alignment_change_plan_validates() -> None:
