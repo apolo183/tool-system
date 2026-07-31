@@ -3,6 +3,8 @@ from __future__ import annotations
 from copy import deepcopy
 from pathlib import Path
 
+import pytest
+
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.repo_controller.audit_log import (
     build_audit_record,
@@ -77,12 +79,102 @@ def test_repo_write_controller_blocks_draft_pr() -> None:
 
 def test_repo_write_controller_blocks_failed_check() -> None:
     value = _load_input()
-    value["status_checks"] = [{"name": "ci", "status": "completed", "conclusion": "failure"}]
+    value["status_checks"][0]["conclusion"] = "failure"
 
     decision = _evaluate(value)
 
     assert decision["status"] == "BLOCK"
-    assert decision["reasons"] == ["ci conclusion is failure"]
+    assert decision["reasons"] == ["verify conclusion is failure"]
+
+
+@pytest.mark.parametrize("conclusion", ["success", "neutral", "skipped"])
+def test_repo_write_controller_preserves_github_passing_conclusions(
+    conclusion: str,
+) -> None:
+    value = _load_input()
+    value["status_checks"][0]["conclusion"] = conclusion
+
+    decision = _evaluate(value)
+
+    assert decision["status"] == "PASS"
+    assert decision["reasons"] == []
+
+
+def test_repo_write_controller_requires_exact_check_name() -> None:
+    value = _load_input()
+    value["status_checks"][0]["name"] = "unrelated-check"
+
+    decision = _evaluate(value)
+
+    assert decision["status"] == "BLOCK"
+    assert decision["reasons"] == [
+        "required status check missing: verify from github-actions"
+    ]
+
+
+def test_repo_write_controller_requires_exact_check_source() -> None:
+    value = _load_input()
+    value["status_checks"][0]["source_app"] = "untrusted-app"
+
+    decision = _evaluate(value)
+
+    assert decision["status"] == "BLOCK"
+    assert decision["reasons"] == [
+        "required status check verify must come from github-actions"
+    ]
+
+
+def test_repo_write_controller_requires_current_head_check() -> None:
+    value = _load_input()
+    value["status_checks"][0]["head_sha"] = "stale-head"
+
+    decision = _evaluate(value)
+
+    assert decision["status"] == "BLOCK"
+    assert decision["reasons"] == [
+        "verify head_sha must match current pull request head"
+    ]
+
+
+def test_repo_write_controller_blocks_duplicate_required_check() -> None:
+    value = _load_input()
+    value["status_checks"].append(deepcopy(value["status_checks"][0]))
+
+    decision = _evaluate(value)
+
+    assert decision["status"] == "BLOCK"
+    assert decision["reasons"] == [
+        "status check has duplicate binding: verify from github-actions"
+    ]
+
+
+def test_repo_write_controller_blocks_malformed_required_check_policy() -> None:
+    value = _load_input()
+    policy = load_yaml_file(POLICY_PATH)
+    policy["allowed_target_repos"]["apolo183/tool-system"][
+        "required_status_checks"
+    ] = [{"name": "verify"}]
+
+    decision = _evaluate(value, policy=policy)
+
+    assert decision["status"] == "BLOCK"
+    assert decision["reasons"] == [
+        "required status check 0 missing fields: source_app",
+        "required status check 0 source_app is required",
+    ]
+
+
+def test_repo_write_controller_blocks_non_mapping_check() -> None:
+    value = _load_input()
+    value["status_checks"] = ["not-a-mapping"]
+
+    decision = _evaluate(value)
+
+    assert decision["status"] == "BLOCK"
+    assert decision["reasons"] == [
+        "status check 0 must be a mapping",
+        "required status check missing: verify from github-actions",
+    ]
 
 
 def test_repo_write_controller_blocks_inactive_policy() -> None:

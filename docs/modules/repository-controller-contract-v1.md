@@ -13,20 +13,20 @@ module_compound_contract:
   identity:
     canonical_module_id: repository-controller
     current_module_id: repository_controller
-    module_version: 1.1.0
+    module_version: 1.2.0
     aggregate_interface:
       interface_id: repository-controller-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@632132b87d10c2cf705149fbcc6832e7d165acd9:repository_controller@1.0.0
+    rollback_identity: tool-system@6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f:repository_controller@1.1.0
     python_import_identities:
       - kind: prefix
         name: tool_system.repo_controller
   role:
     summary: evaluate and execute explicitly authorized repository control actions with audit records
-    responsibility_boundary: Evaluate current PR, policy, check, manifest, plan, separately supplied lifecycle approval, and head-SHA evidence; derive an approval digest; and require one exact single-use mutation capability before an optional action-scoped GitHub merge and append-only audit record.
+    responsibility_boundary: Evaluate current PR, policy-declared exact check name and source application, check-run head SHA, manifest, plan, separately supplied lifecycle approval, and current PR head evidence; derive an approval digest; and require one exact single-use mutation capability before an optional action-scoped GitHub merge and append-only audit record.
   natural_owner_evidence_paths:
     - src/tool_system/repo_controller/__init__.py
     - src/tool_system/repo_controller/actions.py
@@ -53,7 +53,7 @@ module_compound_contract:
   input_contract:
     registered_inputs:
       - repository_state_policy_and_action_intent
-    boundary: Accept one named repository and PR, current GitHub state, passing checks, exact task scope, a lifecycle approval supplied separately from the task manifest and bound to repository, PR, action, base, head, identity, source, and reason, an exact mutation capability for non-dry-run execution, and a caller-selected audit path.
+    boundary: Accept one named repository and PR, current GitHub state, a non-empty policy-declared set of required check name and source-application bindings, complete check-run records bound to the current PR head, exact task scope, a lifecycle approval supplied separately from the task manifest and bound to repository, PR, action, base, head, identity, source, and reason, an exact mutation capability for non-dry-run execution, and a caller-selected audit path.
   output_contract:
     registered_outputs:
       - action_plan_decision_and_append_only_audit_record
@@ -61,7 +61,7 @@ module_compound_contract:
   error_contract:
     registered_error_semantics:
       - deny_or_block_on_missing_authority_and_stale_state
-    boundary: Draft, closed, unmergeable, stale, mismatched, failed-check, out-of-scope, task-manifest-only approval, missing or replayed capability, unauthorized runner, or audit validation failures block before mutation.
+    boundary: Draft, closed, unmergeable, stale, mismatched, unconfigured, incomplete, duplicate, wrong-source, wrong-head, pending, failed-check, out-of-scope, task-manifest-only approval, missing or replayed capability, unauthorized runner, or audit validation failures block before mutation. GitHub-compatible success, neutral, and skipped conclusions are passing only after exact check provenance and completeness validation.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -100,13 +100,13 @@ module_compound_contract:
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve decision and result shapes, fail-closed guards, separate lifecycle-approval input, approval digest, dry-run behavior, exact action binding, single-use capability consumption, action command shape, audit fields, and injected runner boundaries.
+    interface_compatible_replacement: Preserve decision and result shapes, GitHub-compatible passing conclusions, fail-closed guards, separate lifecycle-approval input, approval digest, dry-run behavior, exact action binding, single-use capability consumption, action command shape, audit fields, and injected runner boundaries; require exact policy-declared check provenance for a PASS decision.
     interface_incompatible_change: Requires a new aggregate interface version and revalidation of every direct consumer plus repository lifecycle controls.
   rollback_contract:
-    rollback_identity: tool-system@632132b87d10c2cf705149fbcc6832e7d165acd9:repository_controller@1.0.0
+    rollback_identity: tool-system@6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f:repository_controller@1.1.0
     method: Revert code through a separately audited pull request; any prior repository merge requires its own audited revert workflow.
   replacement_contract:
-    activation_rule: Replace only after policy, state normalization, check evaluation, dry-run, injected action, live collector, audit, and all direct-consumer tests pass.
+    activation_rule: Replace only after exact required-check policy, check-run provenance normalization, completeness and head binding, dry-run, injected action, live collector, audit, and all direct-consumer tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -117,10 +117,10 @@ module_compound_contract:
   local_boundaries:
     repository:
       mode: action-scoped
-      contract: Repository mutation requires a separately supplied exact named-action record, its canonical digest, current state, expected head SHA, allowed merge method, non-draft mergeable PR, and one matching single-use capability. The current source provides no live capability issuer.
+      contract: Repository mutation requires a separately supplied exact named-action record, its canonical digest, current state, a complete non-duplicate set containing every policy-declared check name and source application at the current PR head, allowed passing conclusions, an allowed merge method, a non-draft mergeable PR, and one matching single-use capability. An unconfigured repository fails closed. The current source provides no live capability issuer.
     data:
       mode: state-policy-and-append-only-audit
-      contract: Pull-request, workflow, manifest, plan, policy, rollback, and separately supplied lifecycle-approval mappings are caller-supplied evidence; the approval digest and controller records may persist as append-only JSONL data at the selected audit path.
+      contract: Pull-request, check-run, workflow-observation, manifest, plan, policy, rollback, and separately supplied lifecycle-approval mappings are caller-supplied evidence; the approval digest and controller records may persist as append-only JSONL data at the selected audit path.
     artifact:
       mode: append-only-jsonl
       contract: Controller, self-check, and main-CI records append to a caller-selected path and retain structured reasons.
@@ -148,7 +148,7 @@ module_compound_contract:
         evidence_paths:
           - src/tool_system/repo_controller/actions.py
           - src/tool_system/repo_controller/live_github_collector.py
-        boundary: Read PR and workflow state or execute the one guarded merge command after exact capability consumption; current production entrypoints have no capability issuer, and no branch creation, file update, label, Ready transition, deployment, or unrelated action is implicit.
+        boundary: Read PR state, provenance-bearing GitHub check runs, and post-merge workflow observations, or execute the one guarded merge command after exact capability consumption; current production entrypoints have no capability issuer, and no branch creation, file update, label, Ready transition, deployment, or unrelated action is implicit.
   non_claims:
     provider_execution_authorized: false
     target_repo_mutation_authorized: false

@@ -24,6 +24,7 @@ def main() -> int:
         pull_request=value["pull_request"],
         gate_decision=value["gate_decision"],
         repo_policy=policy,
+        check_runs=value.get("check_runs"),
         workflow_runs=value.get("workflow_runs"),
         workflow_jobs=value.get("workflow_jobs"),
         rollback=value.get("rollback", {}),

@@ -104,6 +104,51 @@ def collect_workflow_runs_for_commit(
     ]
 
 
+def collect_check_runs_for_commit(
+    repository_full_name: str,
+    commit_sha: str,
+    runner: GhJsonRunner = run_gh_json,
+) -> list[dict[str, Any]]:
+    value = runner([
+        "api",
+        (
+            f"repos/{repository_full_name}/commits/{commit_sha}/check-runs"
+            "?filter=latest&per_page=100"
+        ),
+    ])
+    if not isinstance(value, dict):
+        raise GitHubCollectorError("GitHub check-runs JSON root must be a mapping")
+    check_runs = value.get("check_runs")
+    total_count = value.get("total_count")
+    if not isinstance(check_runs, list) or not isinstance(total_count, int):
+        raise GitHubCollectorError(
+            "GitHub check-runs response requires total_count and check_runs"
+        )
+    if total_count != len(check_runs):
+        raise GitHubCollectorError(
+            "GitHub check-runs response is incomplete for commit"
+        )
+
+    normalized: list[dict[str, Any]] = []
+    for check_run in check_runs:
+        if not isinstance(check_run, dict):
+            raise GitHubCollectorError("GitHub check-runs entries must be mappings")
+        app = check_run.get("app")
+        normalized.append(
+            {
+                "id": check_run.get("id"),
+                "name": check_run.get("name"),
+                "status": _normal_state(check_run.get("status")),
+                "conclusion": _normal_state(check_run.get("conclusion")),
+                "head_sha": check_run.get("head_sha"),
+                "source_app": (
+                    app.get("slug") if isinstance(app, dict) else None
+                ),
+            }
+        )
+    return normalized
+
+
 def collect_github_state_snapshot(
     repository_full_name: str,
     pr_number: int,
@@ -116,7 +161,7 @@ def collect_github_state_snapshot(
     head_sha = pull_request.get("head_sha")
     if not isinstance(head_sha, str) or not head_sha:
         raise GitHubCollectorError("pull request head_sha is required")
-    workflow_runs = collect_workflow_runs_for_commit(
+    check_runs = collect_check_runs_for_commit(
         repository_full_name,
         head_sha,
         runner=runner,
@@ -125,7 +170,7 @@ def collect_github_state_snapshot(
         "repository_full_name": repository_full_name,
         "pull_request": pull_request,
         "gate_decision": gate_decision,
-        "workflow_runs": workflow_runs,
+        "check_runs": check_runs,
         "merge_method": merge_method,
         "rollback": rollback or {"method": "git_revert", "reference": head_sha},
     }
@@ -155,7 +200,7 @@ def evaluate_live_pull_request(
         pull_request=snapshot["pull_request"],
         gate_decision=snapshot["gate_decision"],
         repo_policy=repo_policy,
-        workflow_runs=snapshot["workflow_runs"],
+        check_runs=snapshot["check_runs"],
         rollback=snapshot["rollback"],
         merge_method=snapshot["merge_method"],
         repository_full_name=snapshot["repository_full_name"],

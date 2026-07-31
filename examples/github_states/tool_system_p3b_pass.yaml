@@ -9,9 +9,11 @@ pull_request:
 gate_decision:
   status: PASS
   reasons: []
-workflow_runs:
+check_runs:
   - id: 1001
-    name: tool-system-ci
+    name: verify
+    source_app: github-actions
+    head_sha: example-head-sha
     status: completed
     conclusion: success
 merge_method: squash

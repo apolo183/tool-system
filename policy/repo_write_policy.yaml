@@ -1,8 +1,8 @@
-schema_version: 0.3
+schema_version: 0.4
 policy: repo_write_policy
 status: active
-approved_by: milestone_authorization
-approved_at: 2026-07-06 01:25 UTC+08:00
+approved_by: user_explicit_p14c_check_provenance_authority
+approved_at: 2026-07-31 UTC+09:00
 
 defaults:
   direct_main_write: false
@@ -56,6 +56,9 @@ allowed_target_repos:
         - harness/**
     lifecycle_approval:
       pr_merge: manifest
+    required_status_checks:
+      - name: verify
+        source_app: github-actions
     forbidden_paths:
       - finance/**
       - trading/**

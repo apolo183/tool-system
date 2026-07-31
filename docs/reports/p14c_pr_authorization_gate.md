@@ -1,11 +1,16 @@
 # P14C PR Authorization Gate
 
-Status: `IMPLEMENTED_LOCAL_VALIDATION_PASS_DRAFT_PR_PENDING`
+Status: `MERGED_GATE_HARDENING_DRAFT_PR_PENDING`
 
 This record controls the narrow `P14C-PR-AUTH-GATE-v1` correction. It is an
 implementation and evidence record, not lifecycle authority, P14C acceptance,
 or authority for a provider, credential, downstream repository, cleanup,
 rollback, or production action.
+
+The original gate was merged as PR `#145` at
+`6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f`. The current
+`P14C-CHECK-PROVENANCE-v1` follow-up keeps that authority boundary and closes a
+separate check-evidence ambiguity. It does not create a live capability issuer.
 
 ## Parent and global alignment
 
@@ -67,7 +72,49 @@ mutation.
 PR Ready remains unsupported. A Draft-creation approval cannot be interpreted
 as Ready or merge authority.
 
-## Verification and evidence
+## Independent follow-up audit
+
+The read-only audit against main
+`6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f` found:
+
+- the merge-SHA GitHub Actions run `#1013` (`30561476423`) completed with
+  `success`, and its `verify` check was emitted by the `github-actions`
+  application for that exact SHA;
+- GitHub's passing required-check conclusions remain `success`, `neutral`, and
+  `skipped`; the correction therefore does not reinterpret those conclusions;
+- the controller accepted any non-empty set of passing workflow records and
+  discarded source-application and head-SHA provenance while normalizing them;
+- the public repository-ruleset response was empty; traditional branch
+  protection could not be authenticated from the available read path and
+  remains unknown, so the correction is intentionally self-contained and does
+  not depend on a paid plan, ruleset, branch-protection configuration, or MRCI;
+- PR `#48` is superseded by the accepted P8 role runtime, task graph, and
+  transition gate on current main; its global role-coexistence exclusion is not
+  a safe scheduler invariant;
+- Draft PR `#119` is superseded by the corrected P14C source merged through PRs
+  `#142`, `#143`, and `#144`.
+
+Neither stale PR is changed or closed by this task because cleanup and
+repository lifecycle actions are outside scope.
+
+## Locked follow-up implementation
+
+Repository-controller `1.2.0`:
+
+1. reads the exact required check name and source application from the
+   repository's local write policy;
+2. collects GitHub check runs for the exact PR head, retaining check identity,
+   name, status, conclusion, head SHA, and source-application slug;
+3. fails closed on an absent or malformed repository check policy, an empty or
+   incomplete response, missing required binding, source mismatch, stale head,
+   duplicate binding, pending state, or non-passing conclusion;
+4. retains `success`, `neutral`, and `skipped` as passing only after provenance
+   and completeness validation;
+5. keeps workflow-run collection solely for post-merge main-CI observation;
+6. keeps the existing no-live-issuer boundary, so a passing dry-run decision
+   still cannot mutate GitHub.
+
+## Original gate verification and evidence
 
 The implementation base is tool-system
 `632132b87d10c2cf705149fbcc6832e7d165acd9`; the single planned branch is
@@ -97,6 +144,31 @@ Local validation recorded on 2026-07-31:
   access, cleanup, rollback, and production action counts: all `0`.
 
 Hosted CI remains required after Draft PR publication.
+
+## Follow-up verification and evidence
+
+The implementation base is tool-system
+`6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f`; the single planned branch is
+`agent/p14c-check-provenance-v1`. Local validation recorded on 2026-07-31:
+
+- task manifest and exact change-plan binding: `PASS`;
+- focused controller and machine-policy suite: `51 passed`;
+- full repository suite: `524 passed`;
+- source and test compilation plus `git diff --check`: `PASS`;
+- process-authority validation: `PASS`, including `108` replay-only pairs and
+  no target mutation, cleanup, or production authority;
+- current module-registry validation: `PASS`, with `14` modules, `100` owned
+  paths, and `152` contract references;
+- repository-manifest validation: `PASS`, with `204` formal paths, `297`
+  retained non-authority paths, `501` tracked paths, and zero unclassified
+  paths;
+- exact scope comparison: only the `21` paths in the current change plan differ
+  from the implementation base;
+- live repository mutation, provider call, credential-value access, downstream
+  access, cleanup, rollback, and production action counts: all `0`.
+
+Hosted CI remains required after Draft PR publication. This section grants no
+Ready or merge authority.
 
 ## Stop condition and non-claims
 

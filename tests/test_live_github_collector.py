@@ -3,9 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.repo_controller.live_github_collector import (
+    GitHubCollectorError,
+    collect_check_runs_for_commit,
     collect_github_state_snapshot,
     collect_pull_request_state,
     collect_workflow_runs_for_commit,
@@ -55,6 +59,20 @@ def fake_runner(args: list[str]) -> Any:
                 "headSha": "abc123",
             }
         ]
+    if args[0] == "api":
+        return {
+            "total_count": 1,
+            "check_runs": [
+                {
+                    "id": 2001,
+                    "name": "verify",
+                    "status": "COMPLETED",
+                    "conclusion": "SUCCESS",
+                    "head_sha": "abc123",
+                    "app": {"slug": "github-actions"},
+                }
+            ],
+        }
     raise AssertionError(f"unexpected gh args: {args}")
 
 
@@ -86,6 +104,41 @@ def test_collect_workflow_runs_for_commit_normalizes_runs() -> None:
     ]
 
 
+def test_collect_check_runs_for_commit_preserves_exact_provenance() -> None:
+    checks = collect_check_runs_for_commit(
+        "apolo183/tool-system",
+        "abc123",
+        runner=fake_runner,
+    )
+
+    assert checks == [
+        {
+            "id": 2001,
+            "name": "verify",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "abc123",
+            "source_app": "github-actions",
+        }
+    ]
+
+
+def test_collect_check_runs_blocks_incomplete_response() -> None:
+    def incomplete_runner(args: list[str]) -> Any:
+        assert args[0] == "api"
+        return {"total_count": 2, "check_runs": [{"id": 2001}]}
+
+    with pytest.raises(
+        GitHubCollectorError,
+        match="check-runs response is incomplete",
+    ):
+        collect_check_runs_for_commit(
+            "apolo183/tool-system",
+            "abc123",
+            runner=incomplete_runner,
+        )
+
+
 def test_collect_github_state_snapshot_builds_controller_input() -> None:
     gate_decision = load_yaml_file(GATE_DECISION_PATH)
     snapshot = collect_github_state_snapshot(
@@ -98,7 +151,7 @@ def test_collect_github_state_snapshot_builds_controller_input() -> None:
     assert snapshot["repository_full_name"] == "apolo183/tool-system"
     assert snapshot["pull_request"]["head_sha"] == "abc123"
     assert snapshot["gate_decision"] == {"status": "PASS", "reasons": []}
-    assert snapshot["workflow_runs"][0]["conclusion"] == "success"
+    assert snapshot["check_runs"][0]["conclusion"] == "success"
 
 
 def test_evaluate_live_pull_request_passes_successful_state() -> None:

@@ -1,0 +1,125 @@
+task_id: tool-system-p14c-check-provenance-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/p14c-check-provenance-v1
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective.required_end_to_end_flow.prepare_separately_authorized_repository_publish_action
+alignment:
+  parent:
+    document: docs/reports/p14c_pr_authorization_gate.md
+    section_or_key: Stop condition and non-claims
+    scope: Harden the merged lifecycle gate without adding a live mutation capability issuer.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Require content-bound and fail-closed evidence before any separately authorized repository publication.
+scope:
+  summary: Bind repository-controller check evidence to an exact policy-declared check name, source application, and current PR head.
+  in_scope:
+    - config/module_registry_v1.yaml
+    - docs/modules/repository-controller-contract-v1.md
+    - docs/reports/p14c_pr_authorization_gate.md
+    - docs/tool_system_module_registry_contract_v1.md
+    - examples/change_plans/tool_system_p14c_check_provenance_v1.yaml
+    - examples/github_states/tool_system_p3b_pass.yaml
+    - examples/repo_write_decisions/tool_system_p3_pass.yaml
+    - examples/task_manifests/tool_system_p14c_check_provenance_v1.yaml
+    - policy/repo_write_policy.yaml
+    - src/tool_system/cli/evaluate_github_state.py
+    - src/tool_system/repo_controller/controller.py
+    - src/tool_system/repo_controller/github_state.py
+    - src/tool_system/repo_controller/live_github_collector.py
+    - tests/test_controller_run.py
+    - tests/test_controller_self_check.py
+    - tests/test_github_state_adapter.py
+    - tests/test_live_github_collector.py
+    - tests/test_module_registry.py
+    - tests/test_p10r_a_machine_policy_enforcement.py
+    - tests/test_repo_controller.py
+    - tests/test_repo_manifest.py
+  out_of_scope:
+    - changing GitHub's success, neutral, or skipped required-check conclusion semantics
+    - relying on a paid GitHub plan, repository ruleset, branch protection, or MRCI
+    - a live repository-action capability issuer or real GitHub mutation
+    - PR Ready, merge, branch deletion, or stale-PR cleanup
+    - a real provider call or credential-value access
+    - P14C live proof, acceptance, or closure
+    - P14D or later-stage work
+    - downstream repository access or mutation
+    - cleanup, rollback execution, or production deployment
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/repo_controller/controller.py
+    commit_sha: 6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f
+    why_relevant: The current evaluator accepts any non-empty set of passing conclusions without expected-name, source-app, or head binding.
+  - repo: apolo183/tool-system
+    path: src/tool_system/repo_controller/live_github_collector.py
+    commit_sha: 6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f
+    why_relevant: The current live path collects workflow runs rather than provenance-bearing check runs.
+  - repo: apolo183/tool-system
+    path: policy/repo_write_policy.yaml
+    commit_sha: 6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f
+    why_relevant: The current repository policy declares no exact required-check set.
+allowed_files:
+  - config/module_registry_v1.yaml
+  - docs/modules/repository-controller-contract-v1.md
+  - docs/reports/p14c_pr_authorization_gate.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - examples/change_plans/tool_system_p14c_check_provenance_v1.yaml
+  - examples/github_states/tool_system_p3b_pass.yaml
+  - examples/repo_write_decisions/tool_system_p3_pass.yaml
+  - examples/task_manifests/tool_system_p14c_check_provenance_v1.yaml
+  - policy/repo_write_policy.yaml
+  - src/tool_system/cli/evaluate_github_state.py
+  - src/tool_system/repo_controller/controller.py
+  - src/tool_system/repo_controller/github_state.py
+  - src/tool_system/repo_controller/live_github_collector.py
+  - tests/test_controller_run.py
+  - tests/test_controller_self_check.py
+  - tests/test_github_state_adapter.py
+  - tests/test_live_github_collector.py
+  - tests/test_module_registry.py
+  - tests/test_p10r_a_machine_policy_enforcement.py
+  - tests/test_repo_controller.py
+  - tests/test_repo_manifest.py
+forbidden_files:
+  - src/tool_system/ai_worker/**
+  - src/tool_system/target_repo/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - python -m compileall src/tool_system tests
+    - python -m pytest -q tests/test_repo_controller.py tests/test_controller_run.py tests/test_controller_self_check.py tests/test_github_state_adapter.py tests/test_live_github_collector.py tests/test_p10r_a_machine_policy_enforcement.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_check_provenance_v1.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - the exact policy-declared required check name and source application are present
+    - every admitted check is bound to the current pull-request head SHA
+    - missing, duplicate, source-mismatched, stale-head, pending, or failed evidence blocks deterministically
+    - success, neutral, and skipped retain GitHub-compatible passing semantics only after provenance and completeness checks pass
+    - an unconfigured target repository fails closed
+    - the source contains no live repository-action capability issuer
+    - focused tests, full tests, process authority, module registry, and repository manifest pass
+    - no provider, credential, downstream, cleanup, rollback, or production action occurs
+rollback:
+  method: git_revert
+  reference: tool-system@6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f:repository_controller@1.1.0
+approval:
+  required: true
+  approved_by: user_explicit_p14c_check_provenance_authority
+  approval_source: chat_user_message:agree_with_recommended_next_step
+  approved_at: 2026-07-31 UTC+09:00
