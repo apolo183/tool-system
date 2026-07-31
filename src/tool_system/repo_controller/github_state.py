@@ -49,6 +49,32 @@ def normalize_workflow_jobs(jobs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return checks
 
 
+def normalize_check_runs(check_runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    checks: list[dict[str, Any]] = []
+    for check_run in check_runs:
+        app = check_run.get("app")
+        checks.append(
+            {
+                "id": check_run.get("id"),
+                "name": str(
+                    check_run.get("name")
+                    or f"check-run-{check_run.get('id', 'unknown')}"
+                ),
+                "status": check_run.get("status"),
+                "conclusion": check_run.get("conclusion"),
+                "head_sha": (
+                    check_run.get("head_sha") or check_run.get("headSha")
+                ),
+                "source_app": (
+                    check_run.get("source_app")
+                    or check_run.get("app_slug")
+                    or (app.get("slug") if isinstance(app, dict) else None)
+                ),
+            }
+        )
+    return checks
+
+
 def build_repo_write_input_from_github_state(
     pull_request: dict[str, Any],
     gate_decision: dict[str, Any],
@@ -60,10 +86,14 @@ def build_repo_write_input_from_github_state(
     task_manifest: dict[str, Any] | None = None,
     change_plan: dict[str, Any] | None = None,
     lifecycle_approval: dict[str, Any] | None = None,
+    check_runs: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    status_checks = normalize_workflow_jobs(workflow_jobs or [])
-    if not status_checks:
-        status_checks = normalize_workflow_runs(workflow_runs or [])
+    if check_runs is not None:
+        status_checks = normalize_check_runs(check_runs)
+    else:
+        status_checks = normalize_workflow_jobs(workflow_jobs or [])
+        if not status_checks:
+            status_checks = normalize_workflow_runs(workflow_runs or [])
 
     return {
         "pull_request": normalize_pull_request(pull_request, repository_full_name),
@@ -89,10 +119,12 @@ def evaluate_github_state(
     task_manifest: dict[str, Any] | None = None,
     change_plan: dict[str, Any] | None = None,
     lifecycle_approval: dict[str, Any] | None = None,
+    check_runs: list[dict[str, Any]] | None = None,
 ) -> dict[str, object]:
     repo_write_input = build_repo_write_input_from_github_state(
         pull_request=pull_request,
         gate_decision=gate_decision,
+        check_runs=check_runs,
         workflow_runs=workflow_runs,
         workflow_jobs=workflow_jobs,
         rollback=rollback,

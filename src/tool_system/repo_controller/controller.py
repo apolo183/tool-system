@@ -15,6 +15,7 @@ from tool_system.policy.repo_write_policy import (
 )
 
 PASSING_CONCLUSIONS = {"success", "neutral", "skipped"}
+REQUIRED_STATUS_CHECK_FIELDS = frozenset({"name", "source_app"})
 LIFECYCLE_APPROVAL_FIELDS = frozenset({
     "required",
     "approved_by",
@@ -30,20 +31,151 @@ LIFECYCLE_APPROVAL_FIELDS = frozenset({
 })
 
 
-def _all_checks_pass(status_checks: list[dict[str, Any]]) -> tuple[bool, list[str]]:
+def _required_status_check_bindings(
+    repo_policy: dict[str, Any],
+    repository_full_name: object,
+) -> tuple[list[tuple[str, str]], list[str]]:
+    if not isinstance(repository_full_name, str) or not repository_full_name:
+        return [], ["pull request repository is required for status check policy"]
+
+    repositories = repo_policy.get("allowed_target_repos")
+    repository_rules = (
+        repositories.get(repository_full_name)
+        if isinstance(repositories, dict)
+        else None
+    )
+    if not isinstance(repository_rules, dict):
+        return [], [
+            f"status check policy repository is not configured: {repository_full_name}"
+        ]
+
+    configured_checks = repository_rules.get("required_status_checks")
+    if not isinstance(configured_checks, list) or not configured_checks:
+        return [], [
+            (
+                "required status checks are not configured for repository: "
+                f"{repository_full_name}"
+            )
+        ]
+
+    bindings: list[tuple[str, str]] = []
+    reasons: list[str] = []
+    for index, configured_check in enumerate(configured_checks):
+        if not isinstance(configured_check, dict):
+            reasons.append(f"required status check {index} must be a mapping")
+            continue
+        non_string_fields = sorted(
+            repr(field)
+            for field in configured_check
+            if not isinstance(field, str)
+        )
+        if non_string_fields:
+            reasons.append(
+                f"required status check {index} field names must be strings: "
+                + ", ".join(non_string_fields)
+            )
+        fields = {
+            field for field in configured_check if isinstance(field, str)
+        }
+        missing = sorted(REQUIRED_STATUS_CHECK_FIELDS - fields)
+        unexpected = sorted(fields - REQUIRED_STATUS_CHECK_FIELDS)
+        if missing:
+            reasons.append(
+                f"required status check {index} missing fields: "
+                + ", ".join(missing)
+            )
+        if unexpected:
+            reasons.append(
+                f"required status check {index} has unexpected fields: "
+                + ", ".join(unexpected)
+            )
+
+        name = configured_check.get("name")
+        source_app = configured_check.get("source_app")
+        if not isinstance(name, str) or not name:
+            reasons.append(f"required status check {index} name is required")
+        if not isinstance(source_app, str) or not source_app:
+            reasons.append(
+                f"required status check {index} source_app is required"
+            )
+        if (
+            isinstance(name, str)
+            and name
+            and isinstance(source_app, str)
+            and source_app
+        ):
+            binding = (name, source_app)
+            if binding in bindings:
+                reasons.append(
+                    "required status check policy has duplicate binding: "
+                    f"{name} from {source_app}"
+                )
+            else:
+                bindings.append(binding)
+    return bindings, reasons
+
+
+def _all_checks_pass(
+    status_checks: list[dict[str, Any]],
+    *,
+    required_bindings: list[tuple[str, str]],
+    expected_head_sha: object,
+) -> tuple[bool, list[str]]:
     reasons: list[str] = []
     if not status_checks:
         return False, ["status checks must be non-empty"]
 
-    for check in status_checks:
-        name = str(check.get("name") or check.get("context") or "unnamed-check")
+    observed_bindings: set[tuple[str, str]] = set()
+    for index, check in enumerate(status_checks):
+        if not isinstance(check, dict):
+            reasons.append(f"status check {index} must be a mapping")
+            continue
+        raw_name = check.get("name") or check.get("context")
+        name = raw_name if isinstance(raw_name, str) and raw_name else "unnamed-check"
+        source_app = check.get("source_app")
+        head_sha = check.get("head_sha")
         status = check.get("status")
         conclusion = check.get("conclusion")
+
+        if name == "unnamed-check":
+            reasons.append("status check name is required")
+        if not isinstance(source_app, str) or not source_app:
+            reasons.append(f"{name} source_app is required")
+        if not isinstance(expected_head_sha, str) or not expected_head_sha:
+            reasons.append("pull request head_sha is required for status checks")
+        elif head_sha != expected_head_sha:
+            reasons.append(f"{name} head_sha must match current pull request head")
+
+        if name != "unnamed-check" and isinstance(source_app, str) and source_app:
+            binding = (name, source_app)
+            if binding in observed_bindings:
+                reasons.append(
+                    f"status check has duplicate binding: {name} from {source_app}"
+                )
+            observed_bindings.add(binding)
+
         if status != "completed":
             reasons.append(f"{name} status is {status}")
             continue
         if conclusion not in PASSING_CONCLUSIONS:
             reasons.append(f"{name} conclusion is {conclusion}")
+
+    for name, source_app in required_bindings:
+        if (name, source_app) in observed_bindings:
+            continue
+        observed_sources = sorted(
+            observed_source
+            for observed_name, observed_source in observed_bindings
+            if observed_name == name
+        )
+        if observed_sources:
+            reasons.append(
+                f"required status check {name} must come from {source_app}"
+            )
+        else:
+            reasons.append(
+                f"required status check missing: {name} from {source_app}"
+            )
     return not reasons, reasons
 
 
@@ -190,7 +322,16 @@ def evaluate_repo_write(
         reasons.append("gate decision must be PASS")
         reasons.extend(str(reason) for reason in gate_decision.get("reasons", []))
 
-    checks_ok, check_reasons = _all_checks_pass(status_checks)
+    required_bindings, check_policy_reasons = _required_status_check_bindings(
+        repo_policy,
+        pull_request.get("repository"),
+    )
+    reasons.extend(check_policy_reasons)
+    checks_ok, check_reasons = _all_checks_pass(
+        status_checks,
+        required_bindings=required_bindings,
+        expected_head_sha=pull_request.get("head_sha"),
+    )
     if not checks_ok:
         reasons.extend(check_reasons)
 

@@ -341,8 +341,8 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: repository-controller
-  module_version: 1.1.0
-  role: evaluate and execute explicitly authorized repository control actions with audit records. Evaluate current PR, policy, check, manifest, plan, separately supplied lifecycle approval, and head-SHA evidence; derive an approval digest; and require one exact single-use mutation capability before an optional action-scoped GitHub merge and append-only audit record.
+  module_version: 1.2.0
+  role: evaluate and execute explicitly authorized repository control actions with audit records. Evaluate current PR, policy-declared exact check name and source application, check-run head SHA, manifest, plan, separately supplied lifecycle approval, and current PR head evidence; derive an approval digest; and require one exact single-use mutation capability before an optional action-scoped GitHub merge and append-only audit record.
   owner: repository-controller
   public_interface_refs:
   - interface_id: repository-controller-api
@@ -410,7 +410,7 @@ modules:
     target_boundary_id: code-003
     effect_contract:
       repo_relative_path: docs/modules/repository-controller-contract-v1.md
-      sha256: 56eb3ab09695acd3919b3645141f2c20673050666c361b5f7f731b0371735003
+      sha256: fde72e44b5d78dee1ee9daa3b09a5b1c94f11a629aeb1e574edab2f00e36d6fe
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: direct-effects-code-002
@@ -421,7 +421,7 @@ modules:
     target_boundary_id: code-002
     effect_contract:
       repo_relative_path: docs/modules/repository-controller-contract-v1.md
-      sha256: 56eb3ab09695acd3919b3645141f2c20673050666c361b5f7f731b0371735003
+      sha256: fde72e44b5d78dee1ee9daa3b09a5b1c94f11a629aeb1e574edab2f00e36d6fe
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: direct-effects-code-008
@@ -430,17 +430,17 @@ modules:
     target_boundary_id: code-008
     effect_contract:
       repo_relative_path: docs/modules/repository-controller-contract-v1.md
-      sha256: 56eb3ab09695acd3919b3645141f2c20673050666c361b5f7f731b0371735003
+      sha256: fde72e44b5d78dee1ee9daa3b09a5b1c94f11a629aeb1e574edab2f00e36d6fe
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   rollback_boundary:
     repo_relative_path: docs/modules/repository-controller-contract-v1.md
-    sha256: 56eb3ab09695acd3919b3645141f2c20673050666c361b5f7f731b0371735003
+    sha256: fde72e44b5d78dee1ee9daa3b09a5b1c94f11a629aeb1e574edab2f00e36d6fe
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/repository-controller-contract-v1.md
-    sha256: 56eb3ab09695acd3919b3645141f2c20673050666c361b5f7f731b0371735003
+    sha256: fde72e44b5d78dee1ee9daa3b09a5b1c94f11a629aeb1e574edab2f00e36d6fe
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: process-authority
@@ -1554,32 +1554,32 @@ interfaces:
   - consumer_module_id: worker-adapter
   input_contract:
     repo_relative_path: docs/modules/repository-controller-contract-v1.md
-    sha256: 56eb3ab09695acd3919b3645141f2c20673050666c361b5f7f731b0371735003
+    sha256: fde72e44b5d78dee1ee9daa3b09a5b1c94f11a629aeb1e574edab2f00e36d6fe
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/repository-controller-contract-v1.md
-    sha256: 56eb3ab09695acd3919b3645141f2c20673050666c361b5f7f731b0371735003
+    sha256: fde72e44b5d78dee1ee9daa3b09a5b1c94f11a629aeb1e574edab2f00e36d6fe
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/repository-controller-contract-v1.md
-    sha256: 56eb3ab09695acd3919b3645141f2c20673050666c361b5f7f731b0371735003
+    sha256: fde72e44b5d78dee1ee9daa3b09a5b1c94f11a629aeb1e574edab2f00e36d6fe
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/repository-controller-contract-v1.md
-    sha256: 56eb3ab09695acd3919b3645141f2c20673050666c361b5f7f731b0371735003
+    sha256: fde72e44b5d78dee1ee9daa3b09a5b1c94f11a629aeb1e574edab2f00e36d6fe
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/repository-controller-contract-v1.md
-    sha256: 56eb3ab09695acd3919b3645141f2c20673050666c361b5f7f731b0371735003
+    sha256: fde72e44b5d78dee1ee9daa3b09a5b1c94f11a629aeb1e574edab2f00e36d6fe
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/repository-controller-contract-v1.md
-    sha256: 56eb3ab09695acd3919b3645141f2c20673050666c361b5f7f731b0371735003
+    sha256: fde72e44b5d78dee1ee9daa3b09a5b1c94f11a629aeb1e574edab2f00e36d6fe
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: process-authority-api

@@ -29,16 +29,20 @@ def fake_collector_runner(args: list[str]) -> Any:
             "headRefOid": "abc123",
             "baseRefName": "main",
         }
-    if args[:2] == ["run", "list"]:
-        return [
-            {
-                "databaseId": 1001,
-                "name": "tool-system-ci",
-                "status": "completed",
-                "conclusion": "success",
-                "headSha": "abc123",
-            }
-        ]
+    if args[0] == "api":
+        return {
+            "total_count": 1,
+            "check_runs": [
+                {
+                    "id": 1001,
+                    "name": "verify",
+                    "status": "completed",
+                    "conclusion": "success",
+                    "head_sha": "abc123",
+                    "app": {"slug": "github-actions"},
+                }
+            ],
+        }
     raise AssertionError(f"unexpected collector args: {args}")
 
 

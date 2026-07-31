@@ -93,7 +93,15 @@ def _evaluate(
         pull_request=_pull_request(),
         gate_decision={"status": "PASS", "reasons": []},
         repo_policy=load_yaml_file(POLICY_PATH),
-        status_checks=[{"name": "tool-system-ci", "status": "completed", "conclusion": "success"}],
+        status_checks=[
+            {
+                "name": "finance-us-ci",
+                "source_app": "github-actions",
+                "head_sha": "finance-us-head-sha",
+                "status": "completed",
+                "conclusion": "success",
+            }
+        ],
         task_manifest=manifest or _manifest(),
         change_plan=_change_plan(),
         lifecycle_approval=(
@@ -104,11 +112,16 @@ def _evaluate(
     )
 
 
-def test_named_finance_us_merge_approval_passes() -> None:
+def test_named_finance_us_merge_approval_blocks_without_check_policy() -> None:
     decision = _evaluate()
 
-    assert decision["status"] == "PASS"
-    assert decision["reasons"] == []
+    assert decision["status"] == "BLOCK"
+    assert decision["reasons"] == [
+        (
+            "required status checks are not configured for repository: "
+            "apolo183/finance-us"
+        )
+    ]
 
 
 def test_packet_preparation_approval_cannot_authorize_merge() -> None:

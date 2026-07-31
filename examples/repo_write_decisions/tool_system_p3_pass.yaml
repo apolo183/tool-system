@@ -10,7 +10,10 @@ gate_decision:
   status: PASS
   reasons: []
 status_checks:
-  - name: tool-system-ci / verify
+  - id: 1001
+    name: verify
+    source_app: github-actions
+    head_sha: example-head-sha
     status: completed
     conclusion: success
 merge_method: squash
