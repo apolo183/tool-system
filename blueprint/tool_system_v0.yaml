@@ -49,7 +49,15 @@ p14c_source_implementation:
   implementation_authorization_packet: P14C-IMPL-v2
   tool_system_base: 637fe60782ed9e15d58795a0113b84965d6664d2
   source_implementation_authorized: true
-  source_implementation_status: corrected_source_merged_live_execution_not_run_not_accepted
+  source_implementation_status: corrected_source_merged_live_issuer_source_draft_no_execution_not_accepted
+  live_issuer_implementation_record: docs/reports/p14c_live_issuer_implementation.md
+  live_issuer_module_contract_owner: docs/modules/process-authority-contract-v1.md
+  live_issuer_implementation_authorization_packet: P14C-LIVE-ISSUER-IMPL-v1
+  live_issuer_source_base: b6ea3c62aa668031e87abb6341f82cb1bd32a3eb
+  live_issuer_source_implementation_authorized: true
+  live_issuer_trust_root: github_owner_issue_comment
+  real_live_approval_record_created: false
+  live_capability_issued: false
   p14c_stage_accepted: false
   live_model_provider_execution_authorized: false
   credential_value_access_authorized: false

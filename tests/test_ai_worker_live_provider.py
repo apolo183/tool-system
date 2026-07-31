@@ -137,13 +137,13 @@ def _runtime(
 ]:
     packet = build_p14c_execution_packet()
     request = build_p14c_synthetic_request(packet)
+    transport = _FakeTransport(responses)
     capability = (
-        _issue_p14c_fake_transport_capability(packet, request)
+        _issue_p14c_fake_transport_capability(packet, request, transport)
         if capability_present
         else None
     )
     resolver = _FakeCredentialResolver()
-    transport = _FakeTransport(responses)
     clock = _FakeClock()
     provider = OpenAIResponsesProvider(
         packet=packet,
@@ -251,7 +251,12 @@ def test_fake_capability_cannot_authorize_live_network_transport(
 ) -> None:
     packet = build_p14c_execution_packet()
     request = build_p14c_synthetic_request(packet)
-    capability = _issue_p14c_fake_transport_capability(packet, request)
+    fake_transport = _FakeTransport([_success_response()])
+    capability = _issue_p14c_fake_transport_capability(
+        packet,
+        request,
+        fake_transport,
+    )
     resolver = _FakeCredentialResolver()
     transport = OpenAIResponsesTransport()
     transport_calls: list[dict[str, object]] = []
@@ -274,6 +279,7 @@ def test_fake_capability_cannot_authorize_live_network_transport(
     assert response.error.code is AIWorkerErrorCode.PROVIDER_MISMATCH
     assert response.error.reasons == (
         "live execution capability transport does not match",
+        "live execution capability transport instance does not match",
     )
     assert resolver.call_count == 0
     assert transport_calls == []
@@ -283,19 +289,25 @@ def test_capability_is_opaque_exact_and_single_use() -> None:
     packet = build_p14c_execution_packet()
     request = build_p14c_synthetic_request(packet)
     with pytest.raises(TypeError, match="approved issuer"):
+        transport = _FakeTransport([_success_response()])
         P14CLiveExecutionCapability(
             authorization_id="caller-constructed",
             packet_sha256=packet.sha256(),
             request_sha256=request.sha256(),
             transport_kind="injected_fake",
+            transport=transport,
             _issuer=object(),
         )
 
-    capability = _issue_p14c_fake_transport_capability(packet, request)
+    transport = _FakeTransport([_success_response()])
+    capability = _issue_p14c_fake_transport_capability(
+        packet,
+        request,
+        transport,
+    )
     with pytest.raises(AttributeError, match="immutable"):
         capability._transport_kind = "live_network"  # type: ignore[misc]
     resolver = _FakeCredentialResolver()
-    transport = _FakeTransport([_success_response()])
     provider = OpenAIResponsesProvider(
         packet=packet,
         transport=transport,

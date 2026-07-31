@@ -30,13 +30,13 @@ CONTRACT_DIR = ROOT / "docs/modules"
 BLUEPRINT = ROOT / "blueprint/tool_system_v0.yaml"
 
 EXPECTED_RAW_SHA256 = (
-    "796d04a1a88695d492c6efa0e2ef4c641668e3a3090c9a406463f5696813a116"
+    "971cf952562b24b0baadcd3d8f5b6ffb0bbd40ad5c8af310dfe227775cccb6e5"
 )
-EXPECTED_BYTE_LENGTH = 82_574
+EXPECTED_BYTE_LENGTH = 83_194
 EXPECTED_SEMANTIC_SHA256 = (
-    "92ddf94de9cb6b04a7cca360f557a209ad20b53a24d5f960a20161a17ae9f834"
+    "7d1d96be4a5a115e719a3a54b483b26f00bc5bf82c5a8dda635ecb9474b87e62"
 )
-EXPECTED_MANAGED_PYTHON_FILE_COUNT = 92
+EXPECTED_MANAGED_PYTHON_FILE_COUNT = 93
 EXPECTED_MODULE_IDS = {
     "architecture_registry",
     "manifest_validation",
@@ -81,6 +81,7 @@ TEST_SELECTORS = {
 }
 ADDITIONAL_TEST_SELECTORS = {
     "ai_worker_runtime": ("tests/test_ai_worker_live_provider.py",),
+    "process_authority": ("tests/test_p14c_live_issuer.py",),
 }
 
 
@@ -151,7 +152,7 @@ def authority_code_paths() -> dict[str, list[str]]:
         for current_id, contract in contracts.items()
     }
     flattened = [path for paths in result.values() for path in paths]
-    assert len(flattened) == len(set(flattened)) == 100
+    assert len(flattened) == len(set(flattened)) == 101
     python_owners = target_python_owner_by_path()
     assert {
         path: current_id
@@ -376,12 +377,12 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert hashlib.sha256(raw).hexdigest() == EXPECTED_RAW_SHA256
     assert hashlib.sha256(normalized).hexdigest() == EXPECTED_SEMANTIC_SHA256
     assert len(registry["modules"]) == len(registry["interfaces"]) == 14
-    assert sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 100
-    assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 15
+    assert sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 101
+    assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 16
     assert sum(len(module["permitted_side_effects"]) for module in registry["modules"]) == 40
     assert len(list(_iter_contract_references(registry))) == 152
     assert sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
-    assert len(target_python_owner_by_path()) == 92
+    assert len(target_python_owner_by_path()) == 93
     assert_effect_oracle(registry)
 
 
@@ -474,7 +475,7 @@ def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
         edge_count += len(expected_dependencies)
         key = (row["aggregate_interface_id"], row["aggregate_interface_version"])
         assert interfaces[key]["provider_module_id"] == canonical
-    assert edge_count == 26
+    assert edge_count == 27
     assert_effect_oracle(registry)
 
 

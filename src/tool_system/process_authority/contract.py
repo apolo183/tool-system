@@ -348,12 +348,12 @@ def validate_process_authority(
     module = _exact_mapping(authority.get("module"), MODULE_FIELDS, "module", reasons)
     if module != {
         "module_id": "process-authority",
-        "module_version": "2.0.0",
+        "module_version": "2.1.0",
         "public_interface_id": "process-authority-api",
         "public_interface_version": "2.0.0",
     }:
         reasons.append(
-            "module must identify process-authority 2.0.0 interface "
+            "module must identify process-authority 2.1.0 interface "
             "process-authority-api 2.0.0"
         )
 
