@@ -1,6 +1,6 @@
 # P14C PR Authorization Gate
 
-Status: `MERGED_GATE_HARDENING_DRAFT_PR_PENDING`
+Status: `MERGED_AND_HOSTED_CI_VALIDATED_P14C_STILL_BLOCKED`
 
 This record controls the narrow `P14C-PR-AUTH-GATE-v1` correction. It is an
 implementation and evidence record, not lifecycle authority, P14C acceptance,
@@ -8,9 +8,11 @@ or authority for a provider, credential, downstream repository, cleanup,
 rollback, or production action.
 
 The original gate was merged as PR `#145` at
-`6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f`. The current
-`P14C-CHECK-PROVENANCE-v1` follow-up keeps that authority boundary and closes a
-separate check-evidence ambiguity. It does not create a live capability issuer.
+`6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f`. The
+`P14C-CHECK-PROVENANCE-v1` follow-up was merged as PR `#146` at
+`3256e17c416394ac7d209f9cafc529a3fb72504d`. It keeps that authority boundary
+and closes a separate check-evidence ambiguity. It does not create a live
+capability issuer.
 
 ## Parent and global alignment
 
@@ -21,12 +23,13 @@ global owner is `blueprint/tool_system_v0.yaml:product_objective`, which
 requires repository publication to remain separately authorized and every
 change to be traceable to exact authority.
 
-The natural owner is `repository-controller`. This is an
-interface-compatible fail-closed hardening from module `1.0.0` to `1.1.0`; the
-aggregate `repository-controller-api@1.0.0` decision and result shapes remain
-stable. Direct consumers are revalidated without changing their unrelated
+The natural owner is `repository-controller`. The original gate is an
+interface-compatible fail-closed hardening from module `1.0.0` to `1.1.0`, and
+the check-provenance follow-up advances the same owner to `1.2.0`; the aggregate
+`repository-controller-api@1.0.0` decision and result shapes remain stable.
+Direct consumers are revalidated without changing their unrelated
 responsibilities. Fresh dependency tracing also requires the canonical module
-mapping in `docs/tool_system_module_registry_contract_v1.md` to record the
+mapping in `docs/tool_system_module_registry_contract_v1.md` to record each
 module-version and rollback-identity change; this is registry metadata for the
 same natural-owner change, not a second module implementation.
 The registry's exact byte and semantic seals in
@@ -143,13 +146,18 @@ Local validation recorded on 2026-07-31:
 - real GitHub mutation, provider call, credential-value access, downstream
   access, cleanup, rollback, and production action counts: all `0`.
 
-Hosted CI remains required after Draft PR publication.
+The original gate's merge-SHA GitHub Actions run `#1013` (`30561476423`)
+completed with `success`, as recorded in the independent audit above. That
+observation does not create lifecycle authority or a live capability issuer.
 
 ## Follow-up verification and evidence
 
 The implementation base is tool-system
 `6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f`; the single planned branch is
-`agent/p14c-check-provenance-v1`. Local validation recorded on 2026-07-31:
+`agent/p14c-check-provenance-v1`. Its exact head
+`0a8ec193b5e8945703f2f6ca7bbce323ee127645` was merged through PR `#146` as
+`3256e17c416394ac7d209f9cafc529a3fb72504d`. Local validation recorded on
+2026-07-31:
 
 - task manifest and exact change-plan binding: `PASS`;
 - focused controller and machine-policy suite: `51 passed`;
@@ -167,8 +175,12 @@ The implementation base is tool-system
 - live repository mutation, provider call, credential-value access, downstream
   access, cleanup, rollback, and production action counts: all `0`.
 
-Hosted CI remains required after Draft PR publication. This section grants no
-Ready or merge authority.
+Hosted CI run `#1014` (`30602453765`) completed with `success` for the exact
+follow-up head above and reproduced the full `524 passed` result. A clean
+post-merge baseline at `3256e17c416394ac7d209f9cafc529a3fb72504d` independently
+reproduced `524 passed` plus process-authority, current module-registry, and
+repository-manifest validation. These observations grant no future Ready or
+merge authority and do not create a live capability issuer.
 
 ## Stop condition and non-claims
 
