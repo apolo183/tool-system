@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
+from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
 from tool_system.manifest.task_manifest import load_yaml_file
 
 
@@ -13,12 +14,35 @@ README = ROOT / "README.md"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
 PROJECT_STATE = ROOT / "docs" / "tool_system_project_state_v1.yaml"
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
+REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
+AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
 CHANGE_PLAN = (
     ROOT
     / "examples"
     / "change_plans"
     / "tool_system_p14mr_milestone_module_invariant.yaml"
 )
+BOUNDED_CLOSURE_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_bounded_closure_no_progress_contract_v1.yaml"
+)
+BOUNDED_CLOSURE_CHANGE_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_bounded_closure_no_progress_contract_v1.yaml"
+)
+BOUNDED_CLOSURE_FILES = {
+    "docs/tool_system_global_development_principles_v1.md",
+    "blueprint/tool_system_v0.yaml",
+    "tests/test_phase_alignment.py",
+    "tests/test_product_objective_alignment.py",
+    "tests/test_repo_manifest.py",
+    "examples/task_manifests/tool_system_bounded_closure_no_progress_contract_v1.yaml",
+    "examples/change_plans/tool_system_bounded_closure_no_progress_contract_v1.yaml",
+}
 EXPECTED_PHASE = "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
 TRANSIENT_RULE_OWNER_PATTERNS = {
     "pull-request receipt": r"\bPR\s+#\d+\b",
@@ -114,6 +138,41 @@ def test_phase_alignment_change_plan_validates() -> None:
 
     assert result["status"] == "PASS"
     assert result["reasons"] == []
+
+
+def test_bounded_closure_manifest_and_change_plan_validate_exact_scope() -> None:
+    manifest_result = validate_task_manifest(
+        BOUNDED_CLOSURE_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(BOUNDED_CLOSURE_CHANGE_PLAN)
+    manifest = load_yaml_file(BOUNDED_CLOSURE_MANIFEST)
+    plan = load_yaml_file(BOUNDED_CLOSURE_CHANGE_PLAN)
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == BOUNDED_CLOSURE_FILES
+    assert set(plan["changed_files"]) == BOUNDED_CLOSURE_FILES
+    assert all(not path.startswith("src/") for path in plan["changed_files"])
+    assert "docs/tool_system_project_state_v1.yaml" not in plan["changed_files"]
+
+
+def test_stable_principles_define_finite_non_reopening_closure() -> None:
+    text = " ".join(PRINCIPLES.read_text(encoding="utf-8").split())
+
+    assert "baseline tree" in text
+    assert "candidate tree is deliberately not" in text
+    assert "finite repair, review, time, and cost budgets" in text
+    assert "satisfied acceptance items" in text
+    assert "recurrence fingerprint uses only the task digest" in text
+    assert "excludes the attempt number" in text
+    assert "two consecutive completed cycles make no progress" in text
+    assert "cannot reopen a successfully sealed candidate" in text
+    assert "Reopening requires explicit user authorization" in text
+    assert "may not invent a new milestone" in text
 
 
 def test_stable_rule_owners_delegate_transient_progress_to_project_state() -> None:

@@ -105,6 +105,46 @@ No document means no execution. No evidence means no acceptance. Detected drift 
 
 A stage should be short, single-objective, and auditable. The default stage unit is one natural objective, one branch, one task manifest, one change plan, one evidence record, one CI result, and one explicit stop condition. If more than one objective appears necessary, split the work into multiple stages unless an active document explains why bundling is safer.
 
+### Bounded closure and no-progress
+
+Before execution begins, each task freezes one task digest, baseline tree,
+allowed scope, acceptance set, validation set, terminal predicate, and finite
+repair, review, time, and cost budgets. The candidate tree is deliberately not
+part of that frozen contract because an authorized repair may change it.
+Executors, reviewers, evidence records, pull-request metadata, and status text
+may not add acceptance obligations after execution begins.
+
+Each completed cycle persists the task digest, candidate tree, frozen acceptance
+digest, blocker set, satisfied acceptance items, validation results, material
+evidence, and attempt number. The recurrence fingerprint uses only the task
+digest, candidate tree, frozen acceptance digest, blocker set, and validation
+results. It excludes the attempt number, timestamps, receipts, pull-request
+metadata, and status text. Bookkeeping changes therefore cannot disguise a
+repeated state.
+
+New findings have exactly three dispositions: a violation of the frozen
+acceptance set is repaired within this task; a contradiction among the
+blueprint, contract, or authorization stops for explicit user adjudication; an
+optimization, wording preference, or additional hardening outside the frozen
+set is recorded as non-blocking follow-up. The system may not invent a new
+milestone, acceptance condition, authorization, endpoint, task variant, branch,
+commit, or pull request to continue work.
+
+A cycle makes progress only by strictly reducing acceptance blockers,
+increasing satisfied acceptance items, or producing material evidence that
+changes a result against the frozen acceptance or validation set. The task stops
+as `STOPPED_NO_PROGRESS` when any finite budget is exhausted, the same recurrence
+fingerprint appears again, or two consecutive completed cycles make no progress.
+Success occurs only when the terminal predicate is satisfied; only then is the
+terminal candidate tree sealed.
+
+Receipts, review text, pull-request metadata, CI metadata, and descriptive state
+record results but cannot reopen a successfully sealed candidate. Reopening
+requires explicit user authorization or material evidence proving a violation
+of the original frozen acceptance set. Crash recovery resumes the same task
+identity and persisted cycle history and must not duplicate the task, branch,
+commit, or pull request.
+
 ## 15. Blueprint alignment invariant
 
 Every milestone, sub-milestone, task manifest, change plan, evidence record, and acceptance record must prove two alignments:

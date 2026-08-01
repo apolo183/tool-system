@@ -15,12 +15,14 @@ product_objective:
     interface, profiles task complexity, risk, and critical-path impact, selects
     an eligible worker route from benchmark evidence and expected total economic
     cost, decomposes the change into tasks, prepares controlled implementation
-    plans, modifies code in an isolated workspace, runs tests, diagnoses and
-    repairs failures, reviews blueprint alignment, isolates and replaces failed
-    or drifted modules without disturbing unaffected modules, produces auditable
-    evidence, and completes a bounded local Git development workflow; an external
-    draft pull request is published only under separate action-scoped repository
-    authorization.
+    plans, freezes a bounded closure contract, modifies code in an isolated
+    workspace, runs tests, diagnoses and repairs failures within finite budgets,
+    reviews blueprint alignment, stops repeated or non-progressing cycles,
+    isolates and replaces failed or drifted modules without disturbing
+    unaffected modules, produces auditable evidence without reopening satisfied
+    acceptance, and completes a bounded local Git development workflow; an
+    external draft pull request is published only under separate action-scoped
+    repository authorization.
   required_end_to_end_flow:
     - ingest_approved_blueprint
     - inspect_repository_state
@@ -33,6 +35,7 @@ product_objective:
     - generate_task_manifests
     - generate_change_plans
     - identify_natural_owners
+    - freeze_bounded_closure_contract
     - profile_task_complexity_risk_and_critical_path
     - resolve_authorized_provider_model_portfolio
     - select_route_by_expected_total_economic_cost
@@ -44,6 +47,7 @@ product_objective:
     - run_tests
     - diagnose_failures
     - repair_with_bounded_retry
+    - persist_cycle_state_and_detect_no_progress
     - review_parent_alignment
     - review_global_product_objective_alignment
     - isolate_and_replace_failed_or_drifted_modules
@@ -53,6 +57,7 @@ product_objective:
     - prepare_separately_authorized_repository_publish_action
     - record_provider_model_outcomes_and_economics
     - produce_acceptance_evidence
+    - seal_terminal_candidate_and_restrict_evidence_reopening
     - close_completed_milestones
   completion_definition:
     - approved_blueprint_converts_to_executable_task_graph
@@ -66,6 +71,13 @@ product_objective:
     - hidden_cross_module_dependencies_are_rejected
     - interrupted_runs_resume_without_duplicate_side_effects
     - failed_runs_stop_or_rollback_without_silent_scope_expansion
+    - closure_contract_is_frozen_before_execution_while_candidate_tree_remains_per_cycle_state
+    - repeated_or_non_progress_cycles_stop_within_finite_budgets
+    - recurrence_fingerprint_excludes_attempt_and_bookkeeping_metadata
+    - evidence_and_pr_metadata_cannot_create_new_acceptance_obligations
+    - sealed_candidate_reopens_only_by_user_authorization_or_original_acceptance_violation
+    - crash_recovery_does_not_duplicate_task_branch_commit_or_pull_request
+    - system_never_invents_milestones_acceptance_conditions_authority_or_endpoints
     - isolated_multi_project_fixtures_pass_acceptance
     - remote_side_effects_remain_action_scoped_and_separately_authorized
     - task_profile_and_routing_decisions_are_auditable_and_reproducible
@@ -591,6 +603,7 @@ milestones:
       - blueprint-to-milestone and executable task-DAG compiler
       - autonomous patch-test-diagnose-repair-review loop
       - bounded retries, no-progress detection, checkpoint, resume, and rollback
+      - frozen closure contract, per-cycle state fingerprint, finite termination, and evidence non-reopening semantics
       - isolated local Git branch, commit, conflict, and draft-PR-plan workflow
       - multi-stack end-to-end fixture-project acceptance evidence
       - blueprint-to-code autonomous development acceptance record
@@ -635,10 +648,46 @@ milestones:
           - P14D_REPOSITORY_CONTEXT_NATURAL_OWNER accepted
         execution_boundary: isolated_fixture_repositories
       - stage: P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW
-        objective: implement structured patching, verification, diagnosis, bounded repair, no-progress detection, and independent review
+        objective: implement structured patching, verification, diagnosis, bounded repair, frozen-acceptance review, persistent cycle fingerprints, finite no-progress termination, and evidence non-reopening
         entry_requires:
           - P14E_BLUEPRINT_COMPILER accepted
         execution_boundary: isolated_fixture_repositories
+        closure_contract:
+          frozen_before_execution:
+            - task_digest
+            - baseline_tree
+            - allowed_scope
+            - acceptance_set
+            - validation_set
+            - terminal_predicate
+            - finite_repair_review_time_and_cost_budgets
+          excluded_from_frozen_contract:
+            - candidate_tree
+          per_cycle_state:
+            - candidate_tree
+            - acceptance_digest
+            - blocker_set
+            - satisfied_acceptance_items
+            - validation_results
+            - material_evidence
+            - attempt_number
+          recurrence_fingerprint:
+            - task_digest
+            - candidate_tree
+            - acceptance_digest
+            - blocker_set
+            - validation_results
+          recurrence_fingerprint_excludes:
+            - attempt_number
+            - timestamps
+            - receipts
+            - pull_request_metadata
+            - status_text
+          no_progress_window_completed_cycles: 2
+          terminal_candidate_sealed_only_after_predicate: true
+          explicit_user_authorization_may_reopen_sealed_candidate: true
+          evidence_may_reopen_only_on_original_acceptance_violation: true
+          system_may_invent_milestones_acceptance_authority_or_endpoints: false
       - stage: P14G_DURABLE_LOCAL_GIT_ORCHESTRATION
         objective: integrate durable state, resume, side-effect markers, local branches, commits, conflicts, rollback, and cleanup
         entry_requires:
@@ -649,6 +698,14 @@ milestones:
         entry_requires:
           - P14G_DURABLE_LOCAL_GIT_ORCHESTRATION accepted
         execution_boundary: isolated_fixture_repositories
+        required_acceptance_scenarios:
+          - stale_status_text_converges_within_finite_cycles_after_source_passes
+          - stale_pull_request_metadata_does_not_reopen_accepted_source
+          - repeated_recurrence_fingerprint_stops_automatically
+          - suggestion_outside_frozen_acceptance_is_non_blocking
+          - receipt_cannot_generate_a_new_acceptance_obligation
+          - crash_recovery_does_not_duplicate_task_branch_commit_or_pull_request
+          - system_does_not_invent_a_milestone
       - stage: P14I_ACCEPTANCE_CLOSURE
         objective: accept the bounded blueprint-to-code product and stop at P15 authorization
         entry_requires:
