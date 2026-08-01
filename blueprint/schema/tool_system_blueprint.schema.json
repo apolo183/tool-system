@@ -1,48 +1,123 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/apolo183/tool-system/blueprint/schema/tool_system_blueprint.schema.json",
-  "$comment": "repo_rel_path: blueprint/schema/tool_system_blueprint.schema.json; role: schema contract; purpose: validate tool-system blueprint files; author: ChatGPT / apolo183; created_at: 2026-07-05 20:20 UTC+08:00; updated_at: 2026-07-05 20:20 UTC+08:00",
-  "title": "tool-system blueprint schema",
+  "$comment": "repo_rel_path: blueprint/schema/tool_system_blueprint.schema.json; role: schema contract; purpose: validate the stable target-state tool-system blueprint and reject project-progress state; author: ChatGPT / apolo183; created_at: 2026-07-05 20:20 UTC+08:00; updated_at: 2026-07-31 UTC+09:00",
+  "title": "tool-system target-state blueprint schema",
   "type": "object",
   "required": [
     "schema_version",
     "system",
-    "phase",
-    "status",
     "identity",
+    "product_objective",
+    "product_contract",
+    "milestone_module_invariant",
+    "global_alignment",
     "boundaries",
+    "agents",
+    "role_control_rules",
     "milestones",
     "default_policy"
   ],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "type": ["number", "string"]
+      "const": 0.6
     },
     "system": {
       "const": "tool-system"
     },
-    "phase": {
-      "type": "string",
-      "pattern": "^P[0-9]+[A-Z0-9_]*$"
-    },
-    "status": {
-      "type": "string",
-      "enum": ["bootstrap", "draft", "active", "frozen", "deprecated"]
-    },
     "identity": {
       "type": "object",
-      "required": ["description", "domain_specific", "forbidden_domains"],
+      "required": ["description", "domain_specific"],
       "additionalProperties": false,
       "properties": {
         "description": {"type": "string", "minLength": 20},
-        "domain_specific": {"const": false},
-        "forbidden_domains": {
+        "domain_specific": {"const": false}
+      }
+    },
+    "product_objective": {
+      "type": "object",
+      "required": [
+        "id",
+        "statement",
+        "required_end_to_end_flow",
+        "completion_definition",
+        "non_goals"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 10},
+        "statement": {"type": "string", "minLength": 40},
+        "required_end_to_end_flow": {
           "type": "array",
           "minItems": 1,
-          "items": {"type": "string"},
-          "contains": {"const": "trading_decisions"}
+          "items": {"type": "string"}
+        },
+        "completion_definition": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "non_goals": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
         }
+      }
+    },
+    "product_contract": {
+      "type": "object",
+      "required": ["inputs", "outputs"],
+      "additionalProperties": false,
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "milestone_module_invariant": {
+      "type": "object",
+      "required": [
+        "id",
+        "required",
+        "authority_scope",
+        "module_definition",
+        "milestone_definition",
+        "project_architecture",
+        "process_authority_boundary",
+        "enforcement"
+      ],
+      "additionalProperties": true
+    },
+    "global_alignment": {
+      "type": "object",
+      "required": [
+        "required_for_every_milestone",
+        "required_for_every_task_manifest",
+        "required_for_every_change_plan",
+        "required_for_every_acceptance_record",
+        "require_direct_parent_alignment",
+        "require_global_product_objective_alignment",
+        "product_objective_ref",
+        "fail_closed_on_missing_alignment"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "required_for_every_milestone": {"const": true},
+        "required_for_every_task_manifest": {"const": true},
+        "required_for_every_change_plan": {"const": true},
+        "required_for_every_acceptance_record": {"const": true},
+        "require_direct_parent_alignment": {"const": true},
+        "require_global_product_objective_alignment": {"const": true},
+        "product_objective_ref": {"const": "product_objective"},
+        "fail_closed_on_missing_alignment": {"const": true}
       }
     },
     "boundaries": {
@@ -65,31 +140,26 @@
     },
     "agents": {
       "type": "object",
+      "minProperties": 1,
       "additionalProperties": {
         "type": "object",
-        "required": ["role", "permissions", "forbidden"],
+        "required": ["group", "role", "permissions"],
         "additionalProperties": false,
         "properties": {
-          "role": {"type": "string", "minLength": 5},
+          "group": {"type": "string", "minLength": 3},
+          "role": {"type": "string", "minLength": 10},
           "permissions": {
             "type": "array",
-            "items": {"type": "string"}
-          },
-          "forbidden": {
-            "type": "array",
+            "minItems": 1,
             "items": {"type": "string"}
           }
         }
       }
     },
-    "phase_0_allowed_outputs": {
-      "type": "array",
-      "items": {"type": "string"}
-    },
-    "phase_0_forbidden_outputs": {
-      "type": "array",
-      "items": {"type": "string"},
-      "contains": {"const": "finance_domain_modules"}
+    "role_control_rules": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"type": "boolean"}
     },
     "milestones": {
       "type": "object",

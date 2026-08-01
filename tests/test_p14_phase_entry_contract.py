@@ -7,6 +7,7 @@ from tool_system.manifest.task_manifest import load_yaml_file
 
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
+PROJECT_STATE = ROOT / "docs" / "tool_system_project_state_v1.yaml"
 REPORT = ROOT / "docs" / "reports" / "p14a_blueprint_to_code_phase_entry_and_contract.md"
 MANIFEST = (
     ROOT
@@ -105,11 +106,13 @@ def test_p14_acceptance_fixtures_and_claim_are_bounded() -> None:
 
 def test_p14a_manifest_authorized_specification_but_not_implementation() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
+    project_state = load_yaml_file(PROJECT_STATE)
     manifest = load_yaml_file(MANIFEST)
 
-    assert blueprint["active_phase_execution"]["current_stage"] == (
+    assert project_state["current_phase"]["last_accepted_stage"] == (
         "P14MR_MILESTONE_MODULE_INVARIANT"
     )
+    assert "active_phase_execution" not in blueprint
     assert manifest["task_type"] == "docs_update"
     assert manifest["alignment"]["global"]["section_or_key"] == (
         "product_objective"

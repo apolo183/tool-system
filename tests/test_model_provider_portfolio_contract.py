@@ -7,6 +7,7 @@ from tool_system.manifest.task_manifest import load_yaml_file
 
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
+PROJECT_STATE = ROOT / "docs" / "tool_system_project_state_v1.yaml"
 MODEL_CONTRACT = ROOT / "docs" / "model_provider_portfolio_and_economics_contract_v1.md"
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 README = ROOT / "README.md"
@@ -15,6 +16,7 @@ AGENTS = ROOT / "AGENTS.md"
 
 def test_provider_portfolio_contract_is_product_control_not_runtime_authority() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
+    project_state = load_yaml_file(PROJECT_STATE)
     contract = MODEL_CONTRACT.read_text(encoding="utf-8")
 
     assert "status: `ROADMAP_CONTRACT_ACTIVE_NO_RUNTIME_CLAIM`" in contract
@@ -29,21 +31,22 @@ def test_provider_portfolio_contract_is_product_control_not_runtime_authority() 
     assert "LocalModelProvider" in contract
     assert "The names above are portfolio candidates, not enabled routes." in contract
 
-    execution = blueprint["active_phase_execution"]
-    assert execution["current_stage"] == (
+    current_phase = project_state["current_phase"]
+    assert current_phase["last_accepted_stage"] == (
         "P14MR_MILESTONE_MODULE_INVARIANT"
     )
-    assert execution["next_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
-    assert execution["next_stage_authorized"] is False
-    assert execution["live_model_provider_execution_authorized"] is False
-    assert execution["remote_target_mutation_authorized"] is False
-    assert execution["production_deployment_authorized"] is False
-    p14c = blueprint["p14c_source_implementation"]
+    assert current_phase["next_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
+    assert current_phase["next_stage_authorized"] is False
+    boundaries = project_state["authorization_boundaries"]
+    assert boundaries["live_model_provider_execution_authorized"] is False
+    assert boundaries["remote_target_mutation_authorized"] is False
+    assert boundaries["production_deployment_authorized"] is False
+    p14c = project_state["p14c"]
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
-    assert p14c["source_implementation_authorized"] is True
-    assert p14c["p14c_stage_accepted"] is False
-    assert p14c["live_model_provider_execution_authorized"] is False
-    assert blueprint["successor_authorization"]["next_phase_entry_authorized"] is False
+    assert p14c["stage_accepted"] is False
+    assert current_phase["next_phase_entry_authorized"] is False
+    assert "active_phase_execution" not in blueprint
+    assert "p14c_source_implementation" not in blueprint
 
 
 def test_credentials_and_private_economics_stay_out_of_public_contracts() -> None:

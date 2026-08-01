@@ -111,6 +111,23 @@ blueprint or requirement source
 
 Each level must identify its parent, identify the active blueprint or requirement source, and record why the level does not expand or redirect scope beyond either one.
 
+The blueprint is the stable target-state contract: it describes the completed
+product objective, boundaries, architecture, required capabilities, milestone
+design, and acceptance criteria. It is not a project-progress ledger. Current
+phase or stage, accepted or pending status, authorization receipts, pull request
+numbers, commit or tree SHAs, CI run identifiers, branch disposition, and other
+execution facts must not be stored in the blueprint. A blueprint change is valid
+only when the intended target state or its stable constraints change, and it
+requires explicit human review.
+
+`docs/tool_system_project_state_v1.yaml` is the single machine-readable owner for
+descriptive tool-system progress state. It may reference current evidence but has
+`authority_effect: none`; it cannot authorize implementation, provider execution,
+repository mutation, lifecycle transitions, cleanup, rollback, or production.
+Immutable or stage-specific proof remains in the applicable evidence and
+acceptance records. Tests must reject process-state keys in the blueprint rather
+than forcing status receipts back into it.
+
 ## 16. Script and automation control by documents
 
 Scripts, CLIs, agents, and repository-control tools execute documents; they do not define scope by themselves. A script may only run when the active blueprint or requirement source, milestone document, task manifest, and change plan authorize its purpose, inputs, outputs, side effects, and stop condition. Script output is evidence only after it is compared with the controlling documents and the active blueprint.
@@ -194,4 +211,4 @@ Provider and economics defaults are maintained by event-driven updates, a 24-hou
 
 ## 26. Final state
 
-Status: ACTIVE. Applies only to tool-system, including its blueprint, durable modules, milestone-change planning, provider/model portfolio roadmap, development economics, docs, source, tests, examples, policies, cleanup planning, repository-control work, side-effect tool use, and target-repository adapters. P14 remains active. The corrected P14C adapter source is merged; the separately authorized GitHub-owner live-issuer source remains a no-real-I/O Draft change, while `repository-controller@1.2.0` exact lifecycle-approval and required-check provenance hardening is merged but still has no live mutation-capability issuer. No real P14C approval record exists. Live provider execution, real repository mutation, and P14C stage acceptance remain unauthorized; P14MR remains the last accepted stage.
+Status: ACTIVE. Applies only to tool-system, including its blueprint, durable modules, milestone-change planning, provider/model portfolio roadmap, development economics, docs, source, tests, examples, policies, cleanup planning, repository-control work, side-effect tool use, and target-repository adapters. P14 remains active. The corrected P14C adapter source and the separately authorized GitHub-owner live-issuer source are merged; PR #148 produced `main@20cbb13feb934ce95f2624dafc4510efcd04f1da`, whose tree matches the reviewed head and whose pull-request and main-push CI both succeeded. That source publication created no real P14C approval record, issued no live capability, accessed no credential value, and made no provider call. `repository-controller@1.2.0` exact lifecycle-approval and required-check provenance hardening is also merged but still has no live mutation-capability issuer. Live provider execution, real repository mutation, and P14C stage acceptance remain unauthorized; P14MR remains the last accepted stage.

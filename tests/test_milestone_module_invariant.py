@@ -6,7 +6,7 @@ from tool_system.manifest.task_manifest import load_yaml_file
 
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
-ACTIVE_GATES = ROOT / "examples" / "active_gates.yaml"
+PROJECT_STATE = ROOT / "docs" / "tool_system_project_state_v1.yaml"
 REPORT = ROOT / "docs" / "reports" / "p14mr_milestone_module_invariant.md"
 
 
@@ -22,7 +22,7 @@ def test_invariant_applies_only_to_tool_system_durable_modules() -> None:
     invariant = _invariant()
 
     assert invariant["id"] == "durable_module_and_milestone_change_boundary"
-    assert invariant["contract_active"] is True
+    assert invariant["required"] is True
     assert "status" not in invariant
     assert set(invariant["applies_to"]) == {
         "tool_system_durable_modules",
@@ -146,20 +146,18 @@ def test_replacement_cleanup_and_downstream_authority_fail_closed() -> None:
         "external_project_retroactive_mutation_automatic": False,
     }
     assert invariant["enforcement"] == {
-        "current_contract_scope": (
-            "tool_system_module_registry_identity_boundary_import_effect_"
-            "contract_reference_and_declared_dag_validation"
-        ),
         "module_registry_path": "config/module_registry_v1.yaml",
         "module_registry_schema_path": "config/module_registry_schema_v1.json",
-        "module_registry_structural_validation_implemented": True,
-        "declared_dependency_dag_validation_implemented": True,
-        "natural_owner_overlap_validation_implemented": True,
-        "source_ownership_coverage_validation_implemented": True,
-        "source_import_edge_enforcement_implemented": True,
-        "contract_reference_hash_validation_implemented": True,
-        "side_effect_target_binding_validation_implemented": True,
-        "runtime_module_enforcement_implemented": False,
+        "required_validations": [
+            "module_registry_structure",
+            "declared_dependency_dag",
+            "natural_owner_overlap",
+            "source_ownership_coverage",
+            "source_import_edges",
+            "contract_reference_hashes",
+            "side_effect_target_bindings",
+        ],
+        "runtime_module_enforcement_required": True,
         "machine_alignment_tests_required": True,
         "module_graph_validation_required": True,
         "interface_compatibility_evidence_required": True,
@@ -173,7 +171,6 @@ def test_local_authority_does_not_govern_other_repositories() -> None:
     blueprint = _blueprint()
     invariant = blueprint["milestone_module_invariant"]
     authority = invariant["authority_scope"]
-    execution = blueprint["active_phase_execution"]
     p14 = blueprint["milestones"]["P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"]
     stages = {stage["stage"]: stage for stage in p14["stage_plan"]}
 
@@ -183,10 +180,7 @@ def test_local_authority_does_not_govern_other_repositories() -> None:
         "may_offer_tools_and_recommendations": True,
         "may_change_downstream_owner_authority_status_or_write_authorization": False,
     }
-    assert execution["authority_effect"] == "tool_system_local_only"
-    assert "authorized_scope" not in execution
-    assert "authorized_scope_role" not in execution
-    assert "global_milestone_module_governance_only" not in execution.values()
+    assert "active_phase_execution" not in blueprint
     assert "compatibility_identifier_semantics" not in blueprint
     assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["entry_requires"] == [
         "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT accepted",
@@ -201,62 +195,45 @@ def test_local_authority_does_not_govern_other_repositories() -> None:
 
 
 def test_p14mr_report_is_acceptance_evidence_not_durable_rule_owner() -> None:
-    blueprint = load_yaml_file(BLUEPRINT)
-    execution = blueprint["active_phase_execution"]
+    project_state = load_yaml_file(PROJECT_STATE)
+    current_phase = project_state["current_phase"]
 
     assert REPORT.is_file()
-    assert execution["record"] == (
+    assert current_phase["last_accepted_stage_record"] == (
         "docs/reports/p14mr_milestone_module_invariant.md"
     )
-    assert execution["record_role"] == "existing_acceptance_evidence_only"
-    assert execution["durable_rule_owners"] == [
-        "blueprint/tool_system_v0.yaml:milestone_module_invariant",
-        (
-            "docs/tool_system_global_development_principles_v1.md:"
-            "durable_module_and_milestone_discipline"
-        ),
-    ]
-    assert execution["authority_effect"] == "tool_system_local_only"
+    assert current_phase["last_accepted_stage"] == (
+        "P14MR_MILESTONE_MODULE_INVARIANT"
+    )
+    assert project_state["authority_effect"] == "none"
 
 
-def test_process_inputs_use_explicit_authority_and_remain_pending_cleanup() -> None:
-    boundary = _invariant()["process_migration_boundary"]
-    active_gates = load_yaml_file(ACTIVE_GATES)
+def test_process_authority_boundary_is_stable_and_non_authorizing() -> None:
+    boundary = _invariant()["process_authority_boundary"]
 
     assert boundary == {
-        "reports_task_manifests_change_plans_active_gates_are_legacy_machine_inputs": True,
         "process_authority_contract_path": "config/process_authority_v1.yaml",
         "canonical_replay_snapshot_path": "config/replay_snapshot_v1.yaml",
         "repository_manifest_path": "REPO_MANIFEST.md",
-        "current_task_authority_mode": "explicit_manifest_change_plan_pair",
-        "implicit_legacy_repository_authority_removed": True,
-        "legacy_compatibility_replay_only": True,
-        "legacy_execution_authorized": False,
-        "current_task_caller_audit_complete": True,
-        "formal_file_set_registration_implemented": True,
-        "tracked_path_coverage_validation_implemented": True,
-        "legacy_non_authority_sets_registered": True,
-        "retained_inputs_are_current_authority": False,
-        "deletion_or_reclassification_authorized": False,
+        "task_authority_mode": "explicit_manifest_change_plan_pair",
+        "implicit_repository_index_allowed": False,
+        "replay_inputs_grant_authority": False,
+        "retained_evidence_grants_authority": False,
+        "destructive_disposition_requires_separate_authorization": True,
     }
-    assert isinstance(active_gates["task_manifests"], list)
-    assert active_gates["task_manifests"]
-    assert all(isinstance(path, str) for path in active_gates["task_manifests"])
-    assert isinstance(active_gates["change_plans"], list)
-    assert active_gates["change_plans"]
-    assert all(isinstance(path, str) for path in active_gates["change_plans"])
 
 
 def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     blueprint = _blueprint()
+    project_state = load_yaml_file(PROJECT_STATE)
     p14 = blueprint["milestones"]["P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"]
     stages = {stage["stage"]: stage for stage in p14["stage_plan"]}
-    execution = blueprint["active_phase_execution"]
+    current_phase = project_state["current_phase"]
 
-    assert blueprint["phase"] == "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
-    assert blueprint["status"] == "active"
-    assert execution["current_stage"] == "P14MR_MILESTONE_MODULE_INVARIANT"
-    assert execution["record_role"] == "existing_acceptance_evidence_only"
+    assert "phase" not in blueprint
+    assert "status" not in blueprint
+    assert current_phase["id"] == "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
+    assert current_phase["last_accepted_stage"] == "P14MR_MILESTONE_MODULE_INVARIANT"
     assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["execution_boundary"] == (
         "governance_only"
     )
@@ -280,6 +257,10 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     assert "durable_module_and_milestone_change_governance" in blueprint[
         "boundaries"
     ]["owns"]
-    assert execution["next_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
-    assert execution["next_stage_authorized"] is False
-    assert execution["live_model_provider_execution_authorized"] is False
+    assert current_phase["next_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
+    assert current_phase["next_stage_authorized"] is False
+    assert (
+        project_state["authorization_boundaries"]
+        ["live_model_provider_execution_authorized"]
+        is False
+    )
