@@ -43,6 +43,7 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
         "generate_task_manifests",
         "generate_change_plans",
         "identify_natural_owners",
+        "freeze_bounded_closure_contract",
         "profile_task_complexity_risk_and_critical_path",
         "resolve_authorized_provider_model_portfolio",
         "select_route_by_expected_total_economic_cost",
@@ -54,6 +55,7 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
         "run_tests",
         "diagnose_failures",
         "repair_with_bounded_retry",
+        "persist_cycle_state_and_detect_no_progress",
         "review_parent_alignment",
         "review_global_product_objective_alignment",
         "isolate_and_replace_failed_or_drifted_modules",
@@ -63,6 +65,7 @@ def test_product_objective_controls_the_end_to_end_flow() -> None:
         "prepare_separately_authorized_repository_publish_action",
         "record_provider_model_outcomes_and_economics",
         "produce_acceptance_evidence",
+        "seal_terminal_candidate_and_restrict_evidence_reopening",
         "close_completed_milestones",
     }
     assert "approved_project_blueprint" in contract["inputs"]
@@ -148,6 +151,13 @@ def test_completion_and_non_goals_prevent_false_product_claims() -> None:
         "failed_or_drifted_modules_pause_dependents_until_revalidation",
         "hidden_cross_module_dependencies_are_rejected",
         "failed_runs_stop_or_rollback_without_silent_scope_expansion",
+        "closure_contract_is_frozen_before_execution_while_candidate_tree_remains_per_cycle_state",
+        "repeated_or_non_progress_cycles_stop_within_finite_budgets",
+        "recurrence_fingerprint_excludes_attempt_and_bookkeeping_metadata",
+        "evidence_and_pr_metadata_cannot_create_new_acceptance_obligations",
+        "sealed_candidate_reopens_only_by_user_authorization_or_original_acceptance_violation",
+        "crash_recovery_does_not_duplicate_task_branch_commit_or_pull_request",
+        "system_never_invents_milestones_acceptance_conditions_authority_or_endpoints",
         "task_profile_and_routing_decisions_are_auditable_and_reproducible",
         "provider_unavailability_and_quality_failure_have_distinct_bounded_controls",
         "model_selection_uses_task_class_evidence_and_expected_total_economic_cost",
@@ -221,6 +231,62 @@ def test_successor_chain_builds_product_before_benchmark_and_operations() -> Non
     assert "changed-model incremental benchmark at a default 72-hour cadence" in (
         p16["outputs"]
     )
+
+
+def test_p14f_and_p14h_freeze_bounded_terminal_semantics_without_new_stage() -> None:
+    p14 = load_yaml_file(BLUEPRINT)["milestones"][
+        "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
+    ]
+    stages = {stage["stage"]: stage for stage in p14["stage_plan"]}
+
+    assert list(stages) == [
+        "P14A_PHASE_ENTRY_END_TO_END_SPECIFICATION",
+        "P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT",
+        "P14MR_MILESTONE_MODULE_INVARIANT",
+        "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION",
+        "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER",
+        "P14E_BLUEPRINT_COMPILER",
+        "P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW",
+        "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION",
+        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE",
+        "P14I_ACCEPTANCE_CLOSURE",
+    ]
+    closure = stages["P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW"][
+        "closure_contract"
+    ]
+    assert set(closure["frozen_before_execution"]) == {
+        "task_digest",
+        "baseline_tree",
+        "allowed_scope",
+        "acceptance_set",
+        "validation_set",
+        "terminal_predicate",
+        "finite_repair_review_time_and_cost_budgets",
+    }
+    assert closure["excluded_from_frozen_contract"] == ["candidate_tree"]
+    assert "candidate_tree" in closure["per_cycle_state"]
+    assert "satisfied_acceptance_items" in closure["per_cycle_state"]
+    assert "attempt_number" in closure["per_cycle_state"]
+    assert "attempt_number" not in closure["recurrence_fingerprint"]
+    assert "attempt_number" in closure["recurrence_fingerprint_excludes"]
+    assert closure["no_progress_window_completed_cycles"] == 2
+    assert closure["terminal_candidate_sealed_only_after_predicate"] is True
+    assert closure["explicit_user_authorization_may_reopen_sealed_candidate"] is True
+    assert closure["evidence_may_reopen_only_on_original_acceptance_violation"] is True
+    assert closure["system_may_invent_milestones_acceptance_authority_or_endpoints"] is False
+    assert set(
+        stages["P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"][
+            "required_acceptance_scenarios"
+        ]
+    ) >= {
+        "stale_status_text_converges_within_finite_cycles_after_source_passes",
+        "stale_pull_request_metadata_does_not_reopen_accepted_source",
+        "repeated_recurrence_fingerprint_stops_automatically",
+        "suggestion_outside_frozen_acceptance_is_non_blocking",
+        "receipt_cannot_generate_a_new_acceptance_obligation",
+        "crash_recovery_does_not_duplicate_task_branch_commit_or_pull_request",
+        "system_does_not_invent_a_milestone",
+    }
 
 
 def test_public_contracts_and_p14r_manifest_reference_global_objective() -> None:

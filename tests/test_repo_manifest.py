@@ -12,8 +12,11 @@ from tool_system.architecture.repo_manifest import (
     FORMAL_SECTION,
     LEGACY_COLUMNS,
     LEGACY_FORMAL_PARSER_MODE,
+    LEGACY_SECTION,
     _git_environment,
+    _expand_tracked_pattern,
     _table_rows,
+    _tracked_paths,
     parse_manifest_formal_rows,
     validate_repo_manifest,
 )
@@ -23,6 +26,10 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "REPO_MANIFEST.md"
 MODULE_REGISTRY = ROOT / "config" / "module_registry_v1.yaml"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
+BOUNDED_CLOSURE_PAIR = {
+    "examples/task_manifests/tool_system_bounded_closure_no_progress_contract_v1.yaml",
+    "examples/change_plans/tool_system_bounded_closure_no_progress_contract_v1.yaml",
+}
 
 
 def _exact_row(path: str, upstream: str = "ROOT") -> str:
@@ -93,12 +100,25 @@ def _write_manifest(tmp_path: Path, text: str) -> Path:
 def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     result = validate_repo_manifest(MANIFEST, ROOT)
     parser_mode, rows, reasons = parse_manifest_formal_rows(_manifest_text())
+    legacy_rows, legacy_reasons = _table_rows(
+        _manifest_text(),
+        LEGACY_SECTION,
+        LEGACY_COLUMNS,
+    )
+    tracked = _tracked_paths(ROOT)
+    retained_paths = set().union(
+        *(
+            _expand_tracked_pattern(ROOT, row["path"], tracked)
+            for row in legacy_rows
+        )
+    )
 
     assert result["status"] == "PASS"
     assert result["reasons"] == []
     assert result["parser_mode"] == EXACT_FORMAL_PARSER_MODE
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
+    assert legacy_reasons == []
     assert len(rows) == 207
     assert EXACT_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
     assert all(
@@ -110,7 +130,8 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["formal_file_count"] == 207
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
-    assert result["legacy_path_count"] == 307
+    assert result["legacy_path_count"] == len(retained_paths)
+    assert BOUNDED_CLOSURE_PAIR <= retained_paths
     assert result["unclassified_path_count"] == 0
     assert result["retained_inputs_are_current_authority"] is False
     assert result["cleanup_authorized"] is False
