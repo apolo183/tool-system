@@ -1,0 +1,47 @@
+plan_id: tool-system-p14c-live-execution-entry-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p14c_live_execution_entry_v1.yaml
+changed_files:
+  - README.md
+  - pyproject.toml
+  - config/module_registry_v1.yaml
+  - config/process_authority_schema_v1.json
+  - config/process_authority_v1.yaml
+  - docs/process_authority_contract_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/modules/process-authority-contract-v1.md
+  - docs/reports/p14c_bounded_real_model_provider_execution.md
+  - src/tool_system/ai_worker/live_evidence.py
+  - src/tool_system/process_authority/contract.py
+  - src/tool_system/process_authority/live_provider_approval.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_p14c_live_issuer.py
+  - tests/test_module_registry.py
+  - tests/test_process_authority.py
+  - examples/task_manifests/tool_system_p14c_live_execution_entry_v1.yaml
+  - examples/change_plans/tool_system_p14c_live_execution_entry_v1.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p14c_live_execution_entry_v1.yaml
+    section_or_key: scope
+    scope: Implement only the committed source-sealed P14C prepare/execute operator entry and redacted receipt around the existing bounded provider path.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Close the missing operator-entry link for one bounded real AI-worker proof without executing it or expanding repository, stage, cleanup, or production authority.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_p14c_execution_contract.py tests/test_p14c_live_issuer.py tests/test_module_registry.py tests/test_process_authority.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14c_live_execution_entry_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_live_execution_entry_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -B -m tool_system.ai_worker.live_evidence --validate-packet-only
+rollback:
+  method: git_revert
+  reference: tool-system@999cb60d20a15730dbf0096ad20a598f3bf0fa5c

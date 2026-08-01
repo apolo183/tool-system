@@ -10,11 +10,22 @@ from typing import Any
 
 import pytest
 
+import tool_system.ai_worker.live_evidence as live_evidence_module
 import tool_system.ai_worker.live_provider as live_provider_module
 import tool_system.orchestrator as orchestrator_package
 import tool_system.orchestrator.durable as durable_module
 import tool_system.process_authority as process_authority_package
 import tool_system.process_authority.live_provider_approval as approval_module
+from tool_system.ai_worker.contract import (
+    AIWorkerErrorCode,
+    AIWorkerUsage,
+    ProviderResponse,
+    canonical_sha256,
+)
+from tool_system.ai_worker.live_evidence import (
+    build_prepare_approval_evidence,
+    execute_p14c_live_entry,
+)
 from tool_system.ai_worker.live_provider import (
     OpenAIResponsesProvider,
     OpenAIResponsesTransport,
@@ -24,7 +35,6 @@ from tool_system.ai_worker.live_provider import (
     build_p14c_synthetic_request,
     issue_p14c_live_network_capability,
 )
-from tool_system.ai_worker.contract import AIWorkerErrorCode
 from tool_system.process_authority.live_provider_approval import (
     GitHubApprovalReadError,
     P14C_APPROVAL_VERSION,
@@ -224,6 +234,11 @@ def execution_context(
         "__file__",
         str(repository_root / P14C_CRITICAL_SOURCE_PATHS[4]),
     )
+    monkeypatch.setattr(
+        live_evidence_module,
+        "__file__",
+        str(repository_root / P14C_CRITICAL_SOURCE_PATHS[5]),
+    )
     return repository_root, replay_ledger
 
 
@@ -235,6 +250,163 @@ def _live_capability_arguments(
         "repository_root": repository_root,
         "replay_ledger": replay_ledger,
     }
+
+
+def test_prepare_entry_builds_exact_source_bound_body_with_zero_external_io(
+    monkeypatch: pytest.MonkeyPatch,
+    execution_context: ExecutionContext,
+) -> None:
+    repository_root, replay_ledger = execution_context
+    github_reads = 0
+
+    def forbidden_github(*args: object, **kwargs: object) -> object:
+        nonlocal github_reads
+        github_reads += 1
+        raise AssertionError("prepare must not read GitHub")
+
+    monkeypatch.setattr(
+        approval_module.http.client,
+        "HTTPSConnection",
+        forbidden_github,
+    )
+    now = datetime(2026, 8, 1, 1, 2, 3, tzinfo=timezone.utc)
+    evidence = build_prepare_approval_evidence(
+        repository_root=repository_root,
+        ledger_path=replay_ledger.database_path,
+        ttl_seconds=600,
+        _now=now,
+        _nonce="b" * 64,
+    )
+    approval = json.loads(str(evidence["approval_body"]))
+
+    assert evidence["status"] == "PASS"
+    assert evidence["mode"] == "prepare-approval"
+    assert evidence["approval_expires_at_utc"] == "2026-08-01T01:12:03Z"
+    assert approval["approval_version"] == "p14c-live-execution-approval-v2"
+    assert approval["execution_commit_sha"] == evidence["source_seal"][
+        "execution_commit_sha"
+    ]
+    assert approval["source_manifest_sha256"] == evidence["source_seal"][
+        "source_manifest_sha256"
+    ]
+    assert approval["replay_ledger_instance_id"] == (
+        replay_ledger.authorization_ledger_instance_id
+    )
+    assert approval["nonce"] == "b" * 64
+    assert evidence["github_approval_read_count"] == 0
+    assert evidence["github_approval_write_count"] == 0
+    assert evidence["credential_value_access_count"] == 0
+    assert evidence["provider_invocation_count"] == 0
+    assert evidence["transport_attempt_count"] == 0
+    assert github_reads == 0
+
+
+def test_execute_entry_emits_only_redacted_receipt_with_injected_io(
+    monkeypatch: pytest.MonkeyPatch,
+    execution_context: ExecutionContext,
+) -> None:
+    repository_root, replay_ledger = execution_context
+    source_seal = build_p14c_execution_source_seal(
+        repository_root, replay_ledger
+    )
+    output = {
+        "summary": "sensitive-model-output-must-not-appear",
+        "control_status": "PASS",
+    }
+
+    class FakeCapability:
+        def __init__(self) -> None:
+            self.authorization_id = "P14C-LIVE-EXEC-v2"
+            self.approval_record_sha256 = "a" * 64
+            self.approval_issue_number = 148
+            self.source_seal = source_seal
+
+    class FakeCredentialResolver:
+        def resolve(self, reference: str) -> str:
+            assert reference == "env:OPENAI_API_KEY"
+            return "sensitive-credential-must-not-appear"
+
+    class FakeGuard:
+        def __init__(self, **kwargs: object) -> None:
+            self.values = kwargs
+
+        def validate(self, request: object, provider: object) -> tuple[str, ...]:
+            return ()
+
+    class FakeProvider:
+        def __init__(
+            self,
+            *,
+            packet: object,
+            transport: object,
+            credential_resolver: object,
+            execution_capability: object,
+        ) -> None:
+            self.packet = packet
+            self.transport = transport
+            self.credential_resolver = credential_resolver
+            self.execution_capability = execution_capability
+
+        def invoke(self, request: object) -> ProviderResponse:
+            self.credential_resolver.resolve("env:OPENAI_API_KEY")
+            return ProviderResponse(
+                output=output,
+                usage=AIWorkerUsage(
+                    input_tokens=12,
+                    output_tokens=7,
+                    duration_ms=25,
+                    cost_microunits=54,
+                ),
+            )
+
+    transport = object()
+    monkeypatch.setattr(
+        live_evidence_module,
+        "open_p14c_live_execution_ledger",
+        lambda *args, **kwargs: replay_ledger,
+    )
+    monkeypatch.setattr(
+        live_evidence_module,
+        "OpenAIResponsesTransport",
+        lambda: transport,
+    )
+    monkeypatch.setattr(
+        live_evidence_module,
+        "issue_p14c_live_network_capability",
+        lambda **kwargs: FakeCapability(),
+    )
+    monkeypatch.setattr(
+        live_evidence_module,
+        "EnvironmentCredentialResolver",
+        FakeCredentialResolver,
+    )
+    monkeypatch.setattr(
+        live_evidence_module,
+        "P14CLiveExecutionGuard",
+        FakeGuard,
+    )
+    monkeypatch.setattr(
+        live_evidence_module,
+        "OpenAIResponsesProvider",
+        FakeProvider,
+    )
+
+    evidence = execute_p14c_live_entry(
+        repository_root=repository_root,
+        ledger_path=replay_ledger.database_path,
+        comment_id=91_999,
+    )
+    rendered = json.dumps(evidence, sort_keys=True)
+
+    assert evidence["status"] == "PASS"
+    assert evidence["mode"] == "execute"
+    assert evidence["approval_durably_consumed"] is True
+    assert evidence["credential_resolution_attempt_count"] == 1
+    assert evidence["provider_invocation_count"] == 1
+    assert evidence["output_sha256"] == canonical_sha256(output)
+    assert evidence["raw_provider_output_included"] is False
+    assert "sensitive-model-output-must-not-appear" not in rendered
+    assert "sensitive-credential-must-not-appear" not in rendered
 
 
 def test_owner_comment_issues_one_exact_capability_without_real_io(

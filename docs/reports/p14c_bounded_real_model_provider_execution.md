@@ -1,6 +1,6 @@
 # P14C Bounded Real Model Provider Execution — Source and Correction Evidence
 
-Status: `CORRECTED_SOURCE_AND_LIVE_ISSUER_MERGED_NO_EXECUTION_NOT_ACCEPTED`
+Status: `P14C_SOURCE_ONLY_NO_EXECUTION_NOT_ACCEPTED`
 
 This retained report records the narrow source implementation authorized by
 `P14C-IMPL-v2` and the authorization-boundary correction authorized by
@@ -138,6 +138,16 @@ fifteen-minute lifetime, complete packet/request/provider/network/budget
 binding, and explicit denials for target mutation, production, cleanup, and
 P14D. A successful check yields one opaque in-memory grant.
 
+`P14C-LIVE-ENTRY-IMPL-v1` adds the committed `tool-system-p14c-live` operator
+entry without performing a live action. `prepare-approval` opens the hardened
+single-host ledger, seals the exact clean commit, tree, critical source including
+the entry itself, host, and ledger identity, and emits exact public approval JSON
+with a fresh nonce and bounded expiry. `execute` accepts only that same source
+context and one positive owner-comment ID, then reuses the existing issuer and
+provider implementation and emits only a redacted receipt containing digests,
+usage, output hash, and audit-safe error data. The entry creates or edits no
+GitHub comment and does not persist a receipt file.
+
 `AIWorkerRuntime` defaults to `FixtureOnlyExecutionGuard`. In addition,
 `OpenAIResponsesProvider.invoke()` independently requires and consumes the exact
 capability, so bypassing the runtime cannot bypass authorization. The retained
@@ -148,14 +158,16 @@ matching GitHub owner record and binds it to the exact
 caller-supplied reader, or caller-created approval mapping is accepted.
 
 No real approval record exists or was created by this implementation, so no live
-capability was issued and live execution remains blocked. Replay rejection is
-in-process only; this is not a durable cross-process replay ledger or a claim
-that Python can sandbox hostile code already executing inside the trusted
-process.
+capability was issued and live execution remains blocked. Approval consumption
+is durably burn-on-claim and at-most-once for processes sharing one hardened
+single-host SQLite ledger; this is not a multi-host exactly-once completion
+claim or a claim that Python can sandbox hostile code already executing inside
+the trusted process.
 
-`src/tool_system/ai_worker/live_evidence.py --validate-packet-only` validates
-the packet and public fixture without constructing a provider, resolving a
-credential, or sending transport. Its source evidence is:
+`src/tool_system/ai_worker/live_evidence.py --validate-packet-only` remains the
+zero-I/O packet check. The packaged console entry additionally exposes separate
+`prepare-approval` and `execute` commands; their source tests replace GitHub,
+credential, and provider I/O with fakes. Packet-only evidence remains:
 
 ```text
 status=PASS
@@ -165,10 +177,11 @@ transport_call_count=0
 live_provider_execution_authorized=false
 ```
 
-All successful provider-path tests inject fake credential resolvers, fake
-transports, and fake clocks. The live-network transport mismatch test replaces
-its `send` method with a forbidden-call sentinel and proves zero calls. No test
-reads a real credential or transmits network traffic.
+All successful provider-path and operator-entry tests inject fake credential
+resolvers, fake transports, fake GitHub reads, and fake clocks, with SQLite only
+under temporary test directories. The live-network transport mismatch test
+replaces its `send` method with a forbidden-call sentinel and proves zero calls.
+No test reads a real credential or transmits network traffic.
 
 ## Claims and non-claims
 
@@ -181,8 +194,10 @@ This evidence supports only these claims:
 - a fake capability cannot authorize the live-network transport and cannot be
   consumed twice;
 - the merged issuer source rejects wrong-repository, non-owner, edited,
-  expired, malformed, mismatched, or in-process replayed GitHub comment evidence
+  expired, malformed, mismatched, or durably replayed GitHub comment evidence
   before credential or provider access;
+- the committed operator entry prepares source-bound approval JSON separately
+  from execution and redacts credentials and raw provider output from receipts;
 - an explicitly guarded fake-transport path exercises request, retry, response,
   budget, cancellation, and audit behavior;
 - packet-only validation performs zero provider, transport, and credential-value

@@ -4,8 +4,9 @@ This file defines the module contract owned by the current
 `process_authority` module. The explicit task pair remains current authority;
 legacy inputs remain non-executing replay only. The P14C live-provider issuer
 can authenticate one exact, short-lived GitHub owner comment only after binding
-the exact clean executable source, host, and single-host durable ledger. This
-source change creates no approval record and performs no provider call.
+the exact clean executable source including the committed operator entry, host,
+and single-host durable ledger. Preparation creates only exact public approval
+JSON; this source change creates no comment and performs no provider call.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -16,14 +17,14 @@ module_compound_contract:
   identity:
     canonical_module_id: process-authority
     current_module_id: process_authority
-    module_version: 2.2.0
+    module_version: 2.3.0
     aggregate_interface:
       interface_id: process-authority-api
       interface_version: 2.1.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:process_authority@2.1.0
+    rollback_identity: tool-system@999cb60d20a15730dbf0096ad20a598f3bf0fa5c:process_authority@2.2.0
     python_import_identities:
       - kind: prefix
         name: tool_system.process_authority
@@ -34,8 +35,8 @@ module_compound_contract:
       - kind: exact
         name: tool_system.cli.validate_process_authority
   role:
-    summary: require one explicit current task pair, validate non-authoritative replay, and authenticate one exact P14C GitHub owner approval record
-    responsibility_boundary: Validate the current process-authority contract, one exact manifest/change-plan pair, the pinned non-executing legacy replay snapshot, and one unedited short-lived GitHub issue comment whose owner identity, clean execution commit/tree/critical-source seal, actual host, durable ledger identity, and complete P14C action binding match exactly before burning the comment once.
+    summary: require one explicit current task pair, validate non-authoritative replay, seal the committed P14C operator entry, and authenticate one exact GitHub owner approval record
+    responsibility_boundary: Validate the current process-authority contract, one exact manifest/change-plan pair, the pinned non-executing legacy replay snapshot, and one unedited short-lived GitHub issue comment whose owner identity, clean execution commit/tree/critical-source seal including the operator entry, actual host, durable ledger identity, and complete P14C action binding match exactly before burning the comment once.
   natural_owner_evidence_paths:
     - config/process_authority_schema_v1.json
     - config/process_authority_v1.yaml
@@ -62,13 +63,13 @@ module_compound_contract:
       - explicit_manifest_change_plan_pair
       - explicit_non_authoritative_legacy_replay_request
       - pinned_p14c_github_issue_comment_id_and_exact_action_binding
-      - exact_execution_repository_and_single_host_replay_ledger
-    boundary: Accept one explicit current pair, one explicit request to validate canonical content-addressed replay inputs, or one positive GitHub issue-comment ID plus an internally measured clean repository source seal and caller-selected hardened durable ledger. The GitHub path is fixed internally and accepts no caller-provided reader, actor mapping, source PASS, or affirmative flag.
+      - exact_execution_repository_and_single_host_replay_ledger_path
+    boundary: Accept one explicit current pair, one explicit request to validate canonical content-addressed replay inputs, or one caller-selected ledger path outside the exact repository plus a positive GitHub issue-comment ID and internally measured clean repository source seal. The GitHub path is fixed internally and accepts no caller-provided reader, actor mapping, source PASS, or affirmative flag.
   output_contract:
     registered_outputs:
       - validated_explicit_pair_or_content_addressed_replay_result
       - opaque_single_use_p14c_live_execution_grant
-    boundary: Return exact binding mode, replay status, hashes, counts, no-mutation flags, structured fail-closed reasons, or one opaque grant after durable burn, bound to the authenticated P14C approval digest, issue, comment, packet, request, clean commit/tree/source manifest, host, ledger identity, limits, and denied authorities.
+    boundary: Return exact binding mode, replay status, hashes, counts, no-mutation flags, structured fail-closed reasons, an exact source binding for approval preparation, or one opaque grant after durable burn, bound to the authenticated P14C approval digest, issue, comment, packet, request, clean commit/tree/source manifest including the operator entry, host, ledger identity, limits, and denied authorities.
   error_contract:
     registered_error_semantics:
       - missing_mismatched_implicit_or_drifted_input_blocks
@@ -86,18 +87,18 @@ module_compound_contract:
           - database_write
         evidence_paths:
           - src/tool_system/process_authority/live_provider_approval.py
-        activation_condition: A caller explicitly invokes the P14C issuer with one validated GitHub comment ID, exact clean source context, and a caller-selected DurableOrchestratorStore.
-        boundary: Call durable-orchestrator-api once to burn the exact approval before grant issuance; a committed record is never released after later failure and grants no provider execution authority by itself.
+        activation_condition: The committed operator entry explicitly prepares against or executes with one exact repository and caller-selected hardened ledger path; execution also supplies one GitHub comment ID.
+        boundary: Ask durable-orchestrator-api to initialize or reopen the exact single-host ledger during preparation, and on execute burn the exact approval before grant issuance; a committed record is never released after later failure and grants no provider execution authority by itself.
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
     interface_compatible_replacement: Preserve explicit-pair default, exact binding, canonical replay hashes, replay-only non-authority, result fields, and caller defaults.
     interface_incompatible_change: Requires a new aggregate interface version and explicit migration of every current caller.
   rollback_contract:
-    rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:process_authority@2.1.0
+    rollback_identity: tool-system@999cb60d20a15730dbf0096ad20a598f3bf0fa5c:process_authority@2.2.0
     method: Revert through a separately audited pull request while retaining legacy inputs and replay evidence until separate cleanup authorization.
   replacement_contract:
-    activation_rule: Replace only after schema, current-pair, replay snapshot, active-gate adapter, planner, runner, no-command-on-failure, GitHub approval v2 authentication, exact source/host/ledger binding, expiry, cross-process replay, crash-burn, source-drift, and no-real-I/O tests pass.
+    activation_rule: Replace only after schema, current-pair, replay snapshot, active-gate adapter, planner, runner, no-command-on-failure, committed-entry source sealing, GitHub approval v2 authentication, exact source/host/ledger binding, expiry, cross-process replay, crash-burn, source-drift, and no-real-I/O tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -117,7 +118,7 @@ module_compound_contract:
       contract: Validation returns structured in-memory results and does not create a process packet, projection, or cache.
     database:
       mode: delegated-single-host-write
-      contract: This module owns no connection or schema; it invokes durable-orchestrator-api to atomically burn one approval in the caller-selected ledger before issuing a grant.
+      contract: This module owns no schema; its P14C helper opens the caller-selected hardened ledger through durable-orchestrator-api for source binding and invokes that API to atomically burn one approval before issuing a grant.
   external_root_contracts:
     declaration: declared
     roots:
@@ -143,7 +144,7 @@ module_compound_contract:
           - validate_p14c_execution_source_seal
         boundary_parameters:
           - repository_root
-        constraint: Require the exact canonical tool-system Git top level, canonical origin, clean worktree, 40-character current commit and tree, and regular non-symlink fixed critical-source paths.
+        constraint: Require the exact canonical tool-system Git top level, canonical origin, clean worktree, 40-character current commit and tree, loaded canonical committed operator entry, and regular non-symlink fixed critical-source paths.
   external_system_contracts:
     declaration: declared
     systems:

@@ -209,8 +209,8 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: ai-worker-runtime
-  module_version: 1.3.0
-  role: provide a provider-neutral structured AI worker contract, deterministic fixture, and bounded live-adapter implementation. Validate content-addressed requests, default to deterministic in-memory fixtures, and admit only the exact public P14C synthetic request when a durably consumed process-authority grant has minted a capability bound to the same packet, request, exact live transport instance, clean execution commit/tree/critical-source manifest, host, and ledger identity.
+  module_version: 1.4.0
+  role: provide a provider-neutral structured AI worker contract, deterministic fixture, bounded live adapter, and committed source-sealed P14C operator entry. Validate content-addressed requests, default to deterministic in-memory fixtures, prepare exact source-bound approval JSON without external reads, and admit only the exact public P14C synthetic request when a durably consumed process-authority grant has minted a capability bound to the same packet, request, exact live transport instance, clean execution commit/tree/critical-source manifest including the operator entry, host, and ledger identity.
   owner: ai-worker-runtime
   public_interface_refs:
   - interface_id: ai-worker-runtime-api
@@ -265,17 +265,17 @@ modules:
     target_boundary_id: code-005
     effect_contract:
       repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-      sha256: 88df895b937714a52775ba300abc7c1e8a85c37ee8b8dce3dfdfd993b065720e
+      sha256: 9666384fa92486c1a951d0bf9e40993ab9097055a416e1c04acbba54a95f687e
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   rollback_boundary:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 88df895b937714a52775ba300abc7c1e8a85c37ee8b8dce3dfdfd993b065720e
+    sha256: 9666384fa92486c1a951d0bf9e40993ab9097055a416e1c04acbba54a95f687e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 88df895b937714a52775ba300abc7c1e8a85c37ee8b8dce3dfdfd993b065720e
+    sha256: 9666384fa92486c1a951d0bf9e40993ab9097055a416e1c04acbba54a95f687e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: durable-orchestrator
@@ -446,8 +446,8 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: process-authority
-  module_version: 2.2.0
-  role: require one explicit current task pair, validate non-authoritative replay, and authenticate one exact P14C GitHub owner approval record. Validate the current process-authority contract, one exact manifest/change-plan pair, the pinned non-executing legacy replay snapshot, and one unedited short-lived GitHub issue comment whose owner identity, clean execution commit/tree/critical-source seal, actual host, durable ledger identity, and complete P14C action binding match exactly before burning the comment once.
+  module_version: 2.3.0
+  role: require one explicit current task pair, validate non-authoritative replay, seal the committed P14C operator entry, and authenticate one exact GitHub owner approval record. Validate the current process-authority contract, one exact manifest/change-plan pair, the pinned non-executing legacy replay snapshot, and one unedited short-lived GitHub issue comment whose owner identity, clean execution commit/tree/critical-source seal including the operator entry, actual host, durable ledger identity, and complete P14C action binding match exactly before burning the comment once.
   owner: process-authority
   public_interface_refs:
   - interface_id: process-authority-api
@@ -519,17 +519,17 @@ modules:
     target_boundary_id: code-009
     effect_contract:
       repo_relative_path: docs/modules/process-authority-contract-v1.md
-      sha256: a05e162bb788ecd6b0fe6029c8ea4668e17e2800489d3c3381b5e33f8df56985
+      sha256: b672575342e60dc9df93390bce1f009f30250e9a12208a49b6b22085c86e22e8
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   rollback_boundary:
     repo_relative_path: docs/modules/process-authority-contract-v1.md
-    sha256: a05e162bb788ecd6b0fe6029c8ea4668e17e2800489d3c3381b5e33f8df56985
+    sha256: b672575342e60dc9df93390bce1f009f30250e9a12208a49b6b22085c86e22e8
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/process-authority-contract-v1.md
-    sha256: a05e162bb788ecd6b0fe6029c8ea4668e17e2800489d3c3381b5e33f8df56985
+    sha256: b672575342e60dc9df93390bce1f009f30250e9a12208a49b6b22085c86e22e8
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: task-planner
@@ -1501,32 +1501,32 @@ interfaces:
   consumers: []
   input_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 88df895b937714a52775ba300abc7c1e8a85c37ee8b8dce3dfdfd993b065720e
+    sha256: 9666384fa92486c1a951d0bf9e40993ab9097055a416e1c04acbba54a95f687e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 88df895b937714a52775ba300abc7c1e8a85c37ee8b8dce3dfdfd993b065720e
+    sha256: 9666384fa92486c1a951d0bf9e40993ab9097055a416e1c04acbba54a95f687e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 88df895b937714a52775ba300abc7c1e8a85c37ee8b8dce3dfdfd993b065720e
+    sha256: 9666384fa92486c1a951d0bf9e40993ab9097055a416e1c04acbba54a95f687e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 88df895b937714a52775ba300abc7c1e8a85c37ee8b8dce3dfdfd993b065720e
+    sha256: 9666384fa92486c1a951d0bf9e40993ab9097055a416e1c04acbba54a95f687e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 88df895b937714a52775ba300abc7c1e8a85c37ee8b8dce3dfdfd993b065720e
+    sha256: 9666384fa92486c1a951d0bf9e40993ab9097055a416e1c04acbba54a95f687e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: 88df895b937714a52775ba300abc7c1e8a85c37ee8b8dce3dfdfd993b065720e
+    sha256: 9666384fa92486c1a951d0bf9e40993ab9097055a416e1c04acbba54a95f687e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: durable-orchestrator-api
@@ -1613,32 +1613,32 @@ interfaces:
   - consumer_module_id: task-runner
   input_contract:
     repo_relative_path: docs/modules/process-authority-contract-v1.md
-    sha256: a05e162bb788ecd6b0fe6029c8ea4668e17e2800489d3c3381b5e33f8df56985
+    sha256: b672575342e60dc9df93390bce1f009f30250e9a12208a49b6b22085c86e22e8
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/process-authority-contract-v1.md
-    sha256: a05e162bb788ecd6b0fe6029c8ea4668e17e2800489d3c3381b5e33f8df56985
+    sha256: b672575342e60dc9df93390bce1f009f30250e9a12208a49b6b22085c86e22e8
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/process-authority-contract-v1.md
-    sha256: a05e162bb788ecd6b0fe6029c8ea4668e17e2800489d3c3381b5e33f8df56985
+    sha256: b672575342e60dc9df93390bce1f009f30250e9a12208a49b6b22085c86e22e8
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/process-authority-contract-v1.md
-    sha256: a05e162bb788ecd6b0fe6029c8ea4668e17e2800489d3c3381b5e33f8df56985
+    sha256: b672575342e60dc9df93390bce1f009f30250e9a12208a49b6b22085c86e22e8
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/process-authority-contract-v1.md
-    sha256: a05e162bb788ecd6b0fe6029c8ea4668e17e2800489d3c3381b5e33f8df56985
+    sha256: b672575342e60dc9df93390bce1f009f30250e9a12208a49b6b22085c86e22e8
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/process-authority-contract-v1.md
-    sha256: a05e162bb788ecd6b0fe6029c8ea4668e17e2800489d3c3381b5e33f8df56985
+    sha256: b672575342e60dc9df93390bce1f009f30250e9a12208a49b6b22085c86e22e8
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: task-planner-api
