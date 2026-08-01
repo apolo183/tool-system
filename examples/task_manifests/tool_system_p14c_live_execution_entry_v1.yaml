@@ -1,0 +1,185 @@
+task_id: tool-system-p14c-live-execution-entry-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/p14c-live-execution-entry-v1
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stage_plan.P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+alignment:
+  parent:
+    document: docs/reports/p14c_bounded_real_model_provider_execution.md
+    section_or_key: Implementation boundary
+    scope: Add the missing committed operator entry for the already bounded P14C issuer and provider path without executing it.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve one bounded, auditable, source-sealed real AI-worker path while keeping repository mutation and later-stage authority false.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P14C-LIVE-ENTRY-IMPL-v1
+    baseline_commit: 999cb60d20a15730dbf0096ad20a598f3bf0fa5c
+    baseline_tree: 43e8790a3d4df3cc58985237599ac1a2b3aaff7e
+    allowed_scope: exact_19_paths_listed_below
+    acceptance_set:
+      - prepare-approval emits an exact short-lived owner-comment body bound to the clean current commit, tree, critical-source manifest, host, and durable ledger without GitHub, credential, or provider access
+      - execute accepts only a positive comment ID, revalidates the same source and ledger, authenticates and durably burns the exact owner comment, then invokes only the existing bounded public synthetic provider path
+      - the committed operator entry is part of the critical-source seal and cannot be bypassed by an unsealed one-off script
+      - execution emits only a redacted receipt with approval and source digests, bounded usage, output hash, and audit-safe error data
+      - tests inject GitHub, credential, and provider I/O and perform zero real external access
+      - module identities, contracts, ContractReference hashes, process authority, and packaging remain coherent
+      - blueprint and descriptive project state remain unchanged and P14C remains unaccepted
+    validation_set:
+      - focused P14C entry, issuer, and process-authority tests
+      - full pytest suite
+      - task-manifest, change-plan, process-authority, module-registry, and repository-manifest validators
+      - source compilation, packet-only evidence, whitespace, exact scope, and forbidden-diff checks
+    terminal_predicate: all frozen acceptance and validation items pass, one commit is published on the named branch, and one Draft PR targets main without any prohibited real execution
+    finite_budgets:
+      implementation_cycles: 2
+      review_cycles: 1
+      wall_clock_hours: 6
+      real_github_approval_reads: 0
+      credential_value_accesses: 0
+      provider_invocations: 0
+      transport_attempts: 0
+  per_cycle_state:
+    - candidate_tree
+    - acceptance_digest
+    - blocker_set
+    - satisfied_acceptance_items
+    - validation_results
+    - material_evidence
+    - attempt_number
+  recurrence_fingerprint:
+    - task_identity
+    - candidate_tree
+    - acceptance_digest
+    - blocker_set
+    - validation_results
+  recurrence_fingerprint_excludes:
+    - attempt_number
+    - timestamps
+    - receipts
+    - pull_request_metadata
+    - status_text
+scope:
+  summary: Add a committed prepare/execute operator CLI around the accepted P14C source, include that entry in the current-source seal, and emit only redacted execution receipts.
+  in_scope:
+    - README.md
+    - pyproject.toml
+    - config/module_registry_v1.yaml
+    - config/process_authority_schema_v1.json
+    - config/process_authority_v1.yaml
+    - docs/process_authority_contract_v1.md
+    - docs/tool_system_module_registry_contract_v1.md
+    - docs/modules/ai-worker-runtime-contract-v1.md
+    - docs/modules/process-authority-contract-v1.md
+    - docs/reports/p14c_bounded_real_model_provider_execution.md
+    - src/tool_system/ai_worker/live_evidence.py
+    - src/tool_system/process_authority/contract.py
+    - src/tool_system/process_authority/live_provider_approval.py
+    - tests/test_p14c_execution_contract.py
+    - tests/test_p14c_live_issuer.py
+    - tests/test_module_registry.py
+    - tests/test_process_authority.py
+    - examples/task_manifests/tool_system_p14c_live_execution_entry_v1.yaml
+    - examples/change_plans/tool_system_p14c_live_execution_entry_v1.yaml
+  out_of_scope:
+    - PR Ready, Review, or main merge
+    - creating or editing a real GitHub approval comment
+    - reading a real GitHub approval during implementation or tests
+    - credential-value access or a real model-provider call
+    - P14C execution evidence, acceptance, or closure
+    - P14D or later-stage work
+    - downstream repository access or mutation
+    - production deployment
+    - cleanup, rollback execution, or branch deletion
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/ai_worker/live_evidence.py
+    commit_sha: 999cb60d20a15730dbf0096ad20a598f3bf0fa5c
+    why_relevant: The only committed P14C evidence entry validates the static packet and intentionally exposes no prepare or execute path.
+  - repo: apolo183/tool-system
+    path: src/tool_system/process_authority/live_provider_approval.py
+    commit_sha: 999cb60d20a15730dbf0096ad20a598f3bf0fa5c
+    why_relevant: The current source seal authenticates clean source, host, and ledger but does not include the missing operator entry module.
+  - repo: apolo183/tool-system
+    path: src/tool_system/ai_worker/live_provider.py
+    commit_sha: 999cb60d20a15730dbf0096ad20a598f3bf0fa5c
+    why_relevant: The bounded provider and issuer integration already exists and must be reused without changing its provider, model, network, credential, retry, token, time, or cost envelope.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_project_state_v1.yaml
+    commit_sha: 999cb60d20a15730dbf0096ad20a598f3bf0fa5c
+    why_relevant: The descriptive state proves no real approval, capability, provider call, or P14C acceptance exists and must remain unchanged by this source-only PR.
+allowed_files:
+  - README.md
+  - pyproject.toml
+  - config/module_registry_v1.yaml
+  - config/process_authority_schema_v1.json
+  - config/process_authority_v1.yaml
+  - docs/process_authority_contract_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/modules/process-authority-contract-v1.md
+  - docs/reports/p14c_bounded_real_model_provider_execution.md
+  - src/tool_system/ai_worker/live_evidence.py
+  - src/tool_system/process_authority/contract.py
+  - src/tool_system/process_authority/live_provider_approval.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_p14c_live_issuer.py
+  - tests/test_module_registry.py
+  - tests/test_process_authority.py
+  - examples/task_manifests/tool_system_p14c_live_execution_entry_v1.yaml
+  - examples/change_plans/tool_system_p14c_live_execution_entry_v1.yaml
+forbidden_files:
+  - AGENTS.md
+  - blueprint/**
+  - docs/tool_system_project_state_v1.yaml
+  - policy/**
+  - harness/**
+  - src/tool_system/ai_worker/live_provider.py
+  - src/tool_system/orchestrator/**
+  - src/tool_system/repo_controller/**
+  - src/tool_system/target_repo/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_p14c_execution_contract.py tests/test_p14c_live_issuer.py tests/test_module_registry.py tests/test_process_authority.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14c_live_execution_entry_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_live_execution_entry_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -B -m tool_system.ai_worker.live_evidence --validate-packet-only
+  pass_conditions:
+    - exact 19-file scope and no blueprint, project-state, live-provider implementation, durable-orchestrator, repository-controller, target-repository, or downstream diff
+    - prepare and execute entry behavior is fully covered through injected temporary-ledger and fake-I/O tests
+    - packet-only mode still performs zero credential, provider, transport, GitHub, and database access
+    - focused tests, full tests, all current validators, source compilation, and diff checks pass
+    - Draft PR is the only remote publication side effect
+publication:
+  draft_pr_required: true
+  ready_authorized: false
+  review_authorized: false
+  merge_authorized: false
+  retain_feature_branch: true
+rollback:
+  method: git_revert
+  reference: tool-system@999cb60d20a15730dbf0096ad20a598f3bf0fa5c
+approval:
+  required: true
+  approved_by: user_explicit_p14c_live_entry_impl_and_scope_corr_v1
+  approval_source: chat_user_messages:P14C-LIVE-ENTRY-IMPL-v1+P14C-LIVE-ENTRY-SCOPE-CORR-v1
+  approved_at: 2026-08-01 UTC+09:00

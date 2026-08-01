@@ -3,9 +3,10 @@
 This file defines the module contract owned by the current
 `ai_worker_runtime` module. The default implementation remains a deterministic
 in-memory fixture. P14C adds a bounded live-provider adapter behind an exact
-process-authority grant and single-use execution capability; this contract
-revalidates the exact source seal immediately before each credential access,
-but does not create a real approval record or authorize a live provider call.
+process-authority grant and single-use execution capability. The committed
+operator entry prepares exact approval JSON separately from execution, is
+included in the source seal, and emits only redacted receipts. This source does
+not create a real approval comment or authorize a live provider call.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -16,20 +17,20 @@ module_compound_contract:
   identity:
     canonical_module_id: ai-worker-runtime
     current_module_id: ai_worker_runtime
-    module_version: 1.3.0
+    module_version: 1.4.0
     aggregate_interface:
       interface_id: ai-worker-runtime-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:ai_worker_runtime@1.2.0
+    rollback_identity: tool-system@999cb60d20a15730dbf0096ad20a598f3bf0fa5c:ai_worker_runtime@1.3.0
     python_import_identities:
       - kind: prefix
         name: tool_system.ai_worker
   role:
-    summary: provide a provider-neutral structured AI worker contract, deterministic fixture, and bounded live-adapter implementation
-    responsibility_boundary: Validate content-addressed requests, default to deterministic in-memory fixtures, and admit only the exact public P14C synthetic request when a durably consumed process-authority grant has minted a capability bound to the same packet, request, exact live transport instance, clean execution commit/tree/critical-source manifest, host, and ledger identity.
+    summary: provide a provider-neutral structured AI worker contract, deterministic fixture, bounded live adapter, and committed source-sealed P14C operator entry
+    responsibility_boundary: Validate content-addressed requests, default to deterministic in-memory fixtures, prepare exact source-bound approval JSON without external reads, and admit only the exact public P14C synthetic request when a durably consumed process-authority grant has minted a capability bound to the same packet, request, exact live transport instance, clean execution commit/tree/critical-source manifest including the operator entry, host, and ledger identity.
   natural_owner_evidence_paths:
     - src/tool_system/ai_worker/__init__.py
     - src/tool_system/ai_worker/contract.py
@@ -47,11 +48,13 @@ module_compound_contract:
     registered_inputs:
       - AIWorkerRequest_v1
       - opaque_single_use_P14CLiveExecutionCapability
-    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, mandatory no-mutation flags, and—only for live execution—an unexpired opaque capability derived from one authenticated durably consumed process-authority grant and bound to the same transport object and current execution source seal.
+      - explicit_P14C_repository_ledger_and_positive_owner_comment_id
+    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, mandatory no-mutation flags, and—only through the committed operator entry—an exact repository root, hardened ledger path, positive owner-comment ID, and unexpired opaque capability derived from one authenticated durably consumed process-authority grant bound to the same transport object and current execution source seal.
   output_contract:
     registered_outputs:
       - AIWorkerResult_v1
-    boundary: Return structured output, stable provider-neutral errors, bounded usage evidence, output hash, and redacted audit records without prompt, response, or credential values.
+      - P14C_exact_approval_body_and_redacted_execution_receipt
+    boundary: Return structured output, stable provider-neutral errors, bounded usage evidence, output hash, an exact public approval body during preparation, and redacted execution receipts without credential values or raw provider output.
   error_contract:
     registered_error_semantics:
       - stable_redacted_provider_neutral_errors
@@ -65,21 +68,21 @@ module_compound_contract:
       - effect_class: network_write
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
-        boundary: The optional transport can issue one exact TLS-verified POST to api.openai.com/v1/responses per bounded attempt only after packet, request, guard, cancellation, credential-reference, and budget preflight succeed.
+        boundary: The committed execute entry can reach the optional transport, which may issue one exact TLS-verified POST to api.openai.com/v1/responses per bounded attempt only after source, ledger, owner approval, packet, request, guard, cancellation, credential-reference, and budget preflight succeed.
       - effect_class: external_system_write
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
-        boundary: The optional adapter can submit only public fixture P14C-001 to the exact OpenAI Responses endpoint through an injected transport; default runtime guards, packet-only evidence, and all tests perform no external call.
+        boundary: The execute entry can submit only public fixture P14C-001 to the exact OpenAI Responses endpoint; prepare, packet-only evidence, default runtime guards, and all tests perform no external provider call.
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve request validation, error taxonomy, deterministic replay, default fixture-only execution, process-authority durable grant, exact live-capability and source-seal binding, immediate pre-credential revalidation, redaction, budgets, provider metadata checks, and result fields.
+    interface_compatible_replacement: Preserve request validation, error taxonomy, deterministic replay, default fixture-only execution, separate prepare and execute commands, process-authority durable grant, exact live-capability and operator-entry source-seal binding, immediate pre-credential revalidation, redaction, budgets, provider metadata checks, and result fields.
     interface_incompatible_change: Requires a new aggregate interface version and a separately authorized provider qualification or migration stage.
   rollback_contract:
-    rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:ai_worker_runtime@1.2.0
-    method: Revert through a separately audited pull request and rerun contract, fixture-provider, live-adapter fake-transport, replay, budget, redaction, and packet-only no-I/O tests.
+    rollback_identity: tool-system@999cb60d20a15730dbf0096ad20a598f3bf0fa5c:ai_worker_runtime@1.3.0
+    method: Revert through a separately audited pull request and rerun contract, fixture-provider, operator-entry, live-adapter fake-transport, replay, budget, redaction, and packet-only no-I/O tests.
   replacement_contract:
-    activation_rule: Replace only after provider-neutral contract, deterministic fixture, process-authority durable grant, exact transport/source-bound capability, fake GitHub and provider transports, source-drift-before-credential, replay, budget, redaction, and isolation behavior pass with no real I/O.
+    activation_rule: Replace only after provider-neutral contract, deterministic fixture, committed prepare/execute entry, process-authority durable grant, exact transport/operator-source-bound capability, fake GitHub and provider transports, source-drift-before-credential, replay, receipt redaction, budget, and isolation behavior pass with no real I/O.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -95,24 +98,27 @@ module_compound_contract:
       mode: in-memory
       contract: Requests, fixture scenarios, execution packets, source seals, capabilities, results, and redacted audit data remain process memory only; durable replay records remain owned by durable-orchestrator.
     artifact:
-      mode: none
-      contract: The current implementation creates no persistent file, cache, projection, or generated artifact.
+      mode: stdout-only-redacted-json
+      contract: The operator entry emits exact public approval JSON during preparation or a redacted execution receipt; it creates no receipt file, cache, projection, or other generated artifact.
     database:
-      mode: delegated-read-only-ledger-identity
-      contract: The current implementation owns no database connection, schema, migration, or write; source revalidation reads the immutable ledger identity through process-authority and durable-orchestrator.
+      mode: delegated-single-host-ledger
+      contract: The operator entry asks process-authority to open the caller-selected hardened ledger; durable-orchestrator owns initialization and burn-on-claim writes, while AI-worker owns no schema or migration.
   external_root_contracts:
     declaration: declared
     roots:
       - root_id: p14c-execution-source-root
         access: read-only
         evidence_paths:
+          - src/tool_system/ai_worker/live_evidence.py
           - src/tool_system/ai_worker/live_provider.py
         evidence_symbols:
+          - build_prepare_approval_evidence
+          - execute_p14c_live_entry
           - issue_p14c_live_network_capability
           - OpenAIResponsesProvider
         boundary_parameters:
           - repository_root
-        constraint: Use only the exact clean source seal returned and revalidated by process-authority; drift blocks before credential access.
+        constraint: Load the canonical committed operator module and use only the exact clean source seal returned and revalidated by process-authority; missing entry source or any drift blocks before approval read or credential access.
   external_system_contracts:
     declaration: declared
     systems:
@@ -120,7 +126,7 @@ module_compound_contract:
         mode: optional-explicitly-guarded-live-provider
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
-        boundary: Exact POST https://api.openai.com/v1/responses for model gpt-5.6-luna, public fixture P14C-001, strict structured output, fixed budgets, no tools, no redirects, no proxy environment, no fallback, and credential reference env:OPENAI_API_KEY resolved only after all preflight checks.
+        boundary: Only the execute command may reach exact POST https://api.openai.com/v1/responses for model gpt-5.6-luna, public fixture P14C-001, strict structured output, fixed budgets, no tools, no redirects, no proxy environment, no fallback, and credential reference env:OPENAI_API_KEY resolved only after all preflight checks; prepare performs no provider access.
   non_claims:
     provider_execution_authorized: false
     target_repo_mutation_authorized: false

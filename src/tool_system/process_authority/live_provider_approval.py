@@ -34,13 +34,14 @@ GITHUB_RESPONSE_LIMIT_BYTES = 65_536
 P14C_APPROVAL_BODY_LIMIT_BYTES = 16_384
 P14C_APPROVAL_MAX_TTL_SECONDS = 900
 P14C_APPROVAL_CLOCK_SKEW_SECONDS = 30
-P14C_SOURCE_MANIFEST_VERSION = "p14c-critical-runtime-source-v1"
+P14C_SOURCE_MANIFEST_VERSION = "p14c-critical-runtime-source-v2"
 P14C_CRITICAL_SOURCE_PATHS = (
     "src/tool_system/ai_worker/live_provider.py",
     "src/tool_system/orchestrator/__init__.py",
     "src/tool_system/orchestrator/durable.py",
     "src/tool_system/process_authority/__init__.py",
     "src/tool_system/process_authority/live_provider_approval.py",
+    "src/tool_system/ai_worker/live_evidence.py",
 )
 _P14C_CRITICAL_SOURCE_MODULES = {
     "src/tool_system/ai_worker/live_provider.py": (
@@ -52,6 +53,9 @@ _P14C_CRITICAL_SOURCE_MODULES = {
         "tool_system.process_authority"
     ),
     "src/tool_system/process_authority/live_provider_approval.py": __name__,
+    "src/tool_system/ai_worker/live_evidence.py": (
+        "tool_system.ai_worker.live_evidence"
+    ),
 }
 
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -75,6 +79,20 @@ class P14CLiveExecutionAuthorizationError(RuntimeError):
 
 class GitHubApprovalReadError(P14CLiveExecutionAuthorizationError):
     """Raised when the pinned public GitHub approval record cannot be read."""
+
+
+def open_p14c_live_execution_ledger(
+    database_path: str | Path,
+    *,
+    repository_root: str | Path,
+) -> DurableOrchestratorStore:
+    """Open the hardened single-host ledger outside the execution checkout."""
+
+    root = Path(repository_root).resolve(strict=True)
+    return DurableOrchestratorStore(
+        database_path,
+        forbidden_roots=(root,),
+    )
 
 
 @dataclass(frozen=True)

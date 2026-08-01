@@ -3,13 +3,20 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from tool_system.ai_worker.live_evidence import build_packet_validation_evidence
+from tool_system.ai_worker.live_evidence import (
+    build_packet_validation_evidence,
+    build_parser,
+)
 from tool_system.ai_worker.live_provider import (
     build_p14c_execution_packet,
     build_p14c_synthetic_request,
     validate_p14c_execution_packet,
 )
 from tool_system.manifest.task_manifest import load_yaml_file
+from tool_system.process_authority.live_provider_approval import (
+    P14C_CRITICAL_SOURCE_PATHS,
+    P14C_SOURCE_MANIFEST_VERSION,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT_STATE = ROOT / "docs" / "tool_system_project_state_v1.yaml"
@@ -21,6 +28,39 @@ SOURCE_HARDENING_REPORT = (
 GATE_REPORT = ROOT / "docs" / "reports" / "p14c_pr_authorization_gate.md"
 LIVE_PROVIDER = ROOT / "src" / "tool_system" / "ai_worker" / "live_provider.py"
 LIVE_EVIDENCE = ROOT / "src" / "tool_system" / "ai_worker" / "live_evidence.py"
+ENTRY_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p14c_live_execution_entry_v1.yaml"
+)
+ENTRY_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p14c_live_execution_entry_v1.yaml"
+)
+ENTRY_FILES = {
+    "README.md",
+    "pyproject.toml",
+    "config/module_registry_v1.yaml",
+    "config/process_authority_schema_v1.json",
+    "config/process_authority_v1.yaml",
+    "docs/process_authority_contract_v1.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/modules/ai-worker-runtime-contract-v1.md",
+    "docs/modules/process-authority-contract-v1.md",
+    "docs/reports/p14c_bounded_real_model_provider_execution.md",
+    "src/tool_system/ai_worker/live_evidence.py",
+    "src/tool_system/process_authority/contract.py",
+    "src/tool_system/process_authority/live_provider_approval.py",
+    "tests/test_p14c_execution_contract.py",
+    "tests/test_p14c_live_issuer.py",
+    "tests/test_module_registry.py",
+    "tests/test_process_authority.py",
+    "examples/task_manifests/tool_system_p14c_live_execution_entry_v1.yaml",
+    "examples/change_plans/tool_system_p14c_live_execution_entry_v1.yaml",
+}
 
 
 def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance() -> (
@@ -90,7 +130,7 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert boundaries["remote_target_mutation_authorized"] is False
     assert boundaries["production_deployment_authorized"] is False
     assert (
-        "CORRECTED_SOURCE_AND_LIVE_ISSUER_MERGED_NO_EXECUTION_NOT_ACCEPTED"
+        "P14C_SOURCE_ONLY_NO_EXECUTION_NOT_ACCEPTED"
         in report
     )
     assert "P14C-CORR-v1" in report
@@ -184,10 +224,11 @@ def test_packet_binds_exact_provider_network_secret_reference_and_budgets() -> N
     assert request.inputs[0].sensitivity == "public"
 
 
-def test_packet_only_evidence_is_redacted_and_has_no_execution_path() -> None:
+def test_packet_only_evidence_is_redacted_and_operator_entry_is_explicit() -> None:
     evidence = build_packet_validation_evidence()
     rendered = json.dumps(evidence, sort_keys=True)
     source = LIVE_EVIDENCE.read_text(encoding="utf-8")
+    parser = build_parser()
 
     assert evidence["status"] == "PASS"
     assert evidence["credential_value_access_count"] == 0
@@ -196,7 +237,66 @@ def test_packet_only_evidence_is_redacted_and_has_no_execution_path() -> None:
     assert evidence["live_provider_execution_authorized"] is False
     assert "OPENAI_API_KEY=" not in rendered
     assert "--validate-packet-only" in source
-    assert "--execute" not in source
+    assert "prepare-approval" in source
+    assert '"execute"' in source
+    assert parser.parse_args(["--validate-packet-only"]).validate_packet_only is True
+    assert parser.parse_args(
+        [
+            "prepare-approval",
+            "--repository-root",
+            ".",
+            "--ledger",
+            "/var/lib/tool-system/p14c.sqlite3",
+        ]
+    ).command == "prepare-approval"
+    assert parser.parse_args(
+        [
+            "execute",
+            "--repository-root",
+            ".",
+            "--ledger",
+            "/var/lib/tool-system/p14c.sqlite3",
+            "--comment-id",
+            "1",
+        ]
+    ).command == "execute"
+
+
+def test_operator_entry_pair_freezes_exact_source_only_scope() -> None:
+    manifest = load_yaml_file(ENTRY_MANIFEST)
+    plan = load_yaml_file(ENTRY_PLAN)
+    closure = manifest["bounded_closure"]["frozen_before_execution"]
+
+    assert set(manifest["allowed_files"]) == ENTRY_FILES
+    assert set(manifest["scope"]["in_scope"]) == ENTRY_FILES
+    assert set(plan["changed_files"]) == ENTRY_FILES
+    assert closure["baseline_commit"] == (
+        "999cb60d20a15730dbf0096ad20a598f3bf0fa5c"
+    )
+    assert closure["baseline_tree"] == (
+        "43e8790a3d4df3cc58985237599ac1a2b3aaff7e"
+    )
+    assert closure["finite_budgets"]["real_github_approval_reads"] == 0
+    assert closure["finite_budgets"]["credential_value_accesses"] == 0
+    assert closure["finite_budgets"]["provider_invocations"] == 0
+    assert closure["finite_budgets"]["transport_attempts"] == 0
+    assert closure["allowed_scope"] == "exact_19_paths_listed_below"
+    assert "P14C-LIVE-ENTRY-SCOPE-CORR-v1" in manifest["approval"][
+        "approval_source"
+    ]
+    assert "attempt_number" not in manifest["bounded_closure"][
+        "recurrence_fingerprint"
+    ]
+    assert "blueprint/tool_system_v0.yaml" not in ENTRY_FILES
+    assert "docs/tool_system_project_state_v1.yaml" not in ENTRY_FILES
+    assert "src/tool_system/ai_worker/live_provider.py" not in ENTRY_FILES
+
+
+def test_operator_entry_is_part_of_critical_source_manifest_v2() -> None:
+    assert P14C_SOURCE_MANIFEST_VERSION == "p14c-critical-runtime-source-v2"
+    assert "src/tool_system/ai_worker/live_evidence.py" in (
+        P14C_CRITICAL_SOURCE_PATHS
+    )
 
 
 def test_live_source_uses_injected_boundary_and_no_embedded_secret() -> None:

@@ -82,15 +82,15 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:agent_worker_runtime@1.0.0
     - current_module_id: ai_worker_runtime
       canonical_module_id: ai-worker-runtime
-      current_module_version: 1.3.0
+      current_module_version: 1.4.0
       aggregate_interface_id: ai-worker-runtime-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.ai_worker}
       direct_consumer_module_ids: []
-      change_risk: "critical: bounded live-adapter source consuming a durably burned exact-source process-authority grant while default execution remains fixture-only"
-      rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:ai_worker_runtime@1.2.0
+      change_risk: "critical: committed source-sealed operator entry can consume a durably burned process-authority grant and invoke the bounded live adapter while default execution remains fixture-only"
+      rollback_identity: tool-system@999cb60d20a15730dbf0096ad20a598f3bf0fa5c:ai_worker_runtime@1.3.0
     - current_module_id: durable_orchestrator
       canonical_module_id: durable-orchestrator
       current_module_version: 1.1.0
@@ -122,7 +122,7 @@ mapping_contract:
       rollback_identity: tool-system@6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f:repository_controller@1.1.0
     - current_module_id: process_authority
       canonical_module_id: process-authority
-      current_module_version: 2.2.0
+      current_module_version: 2.3.0
       aggregate_interface_id: process-authority-api
       aggregate_interface_version: 2.1.0
       runtime_id_preserved: true
@@ -135,8 +135,8 @@ mapping_contract:
         - ai_worker_runtime
         - task_planner
         - task_runner
-      change_risk: "critical: current task-pair authority, exact execution-source binding, and durable single-host GitHub-owner approval consumption"
-      rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:process_authority@2.1.0
+      change_risk: "critical: current task-pair authority, operator-entry source binding, and durable single-host GitHub-owner approval consumption"
+      rollback_identity: tool-system@999cb60d20a15730dbf0096ad20a598f3bf0fa5c:process_authority@2.2.0
     - current_module_id: task_planner
       canonical_module_id: task-planner
       current_module_version: 1.1.0

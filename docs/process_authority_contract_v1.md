@@ -12,7 +12,7 @@ Downstream: task planner, task runner, role runtime, CLI adapters, tests, and au
 
 `config/process_authority_v1.yaml` is the single local machine contract for task-pair authority. Current execution requires one task manifest and one change plan supplied explicitly for that invocation. The change plan must name the same manifest. A repository-wide implicit task index is not current execution authority.
 
-Its machine module identity is exactly `process-authority@2.2.0`, exposing
+Its machine module identity is exactly `process-authority@2.3.0`, exposing
 `process-authority-api@2.1.0`. The historical compatibility ID
 `process_authority` is not accepted in the current authority file. The Python
 package remains `tool_system.process_authority`; that language-level underscore
@@ -30,7 +30,7 @@ same captured plan bytes. Any validation failure or byte drift blocks before
 
 ## P14C GitHub approval boundary
 
-`process-authority@2.2.0` also implements the separately authorized source for
+`process-authority@2.3.0` also implements the separately authorized source for
 one P14C live-provider approval trust root. Given a positive comment ID and an
 exact typed action binding, the issuer performs one TLS-verified public `GET`
 to
@@ -41,10 +41,11 @@ reader, identity mapping, approval boolean, or prevalidated record.
 
 Before the GitHub read, the issuer measures the caller-selected canonical
 tool-system checkout and requires its canonical origin, exact Git top level,
-current commit and tree, clean status, and fixed critical runtime source files.
-It hashes a canonical manifest of those bytes and binds the result to the actual
-host name and the immutable identity of one caller-selected hardened
-`DurableOrchestratorStore`. No caller-created source PASS value is accepted.
+current commit and tree, clean status, loaded canonical committed operator
+entry, and fixed critical runtime source files. It hashes a canonical manifest
+of those bytes and binds the result to the actual host name and the immutable
+identity of one caller-selected hardened `DurableOrchestratorStore`. No
+caller-created source PASS value is accepted.
 
 The response must identify the same comment in `apolo183/tool-system`, with
 author login `apolo183`, `author_association: OWNER`, and identical
@@ -78,11 +79,32 @@ transport object, source seal, host, and ledger identity. The capability can be
 consumed once and revalidates the same source seal immediately before each
 credential access and before approval expiry.
 
-This is source capability, not live-execution evidence. This implementation
-creates or edits no GitHub comment, reads no credential value, calls no model
-provider, and leaves `live_model_provider_execution_authorized: false`. It does
-not claim multi-host replay prevention, guaranteed provider completion, or
-protection against hostile code already executing inside the trusted Python
+## P14C committed operator entry
+
+The packaged command `tool-system-p14c-live` is the only committed operator
+entry for this path. `prepare-approval` requires an exact repository root and a
+ledger path outside that checkout. It initializes or reopens the hardened
+single-host ledger, measures the clean current source including its own
+canonical module bytes, generates a cryptographic nonce and expiry of at most
+fifteen minutes, and prints the exact public JSON body the repository owner may
+publish. Preparation performs no GitHub read or write, credential access, or
+provider call.
+
+`execute` requires the same repository and ledger plus one positive GitHub
+comment ID. It recomputes the seal, uses the internally fixed public GitHub
+reader, burns a matching approval before capability construction, invokes only
+the existing P14C public synthetic request through the exact OpenAI transport,
+and prints a redacted receipt. The receipt contains approval and source digests,
+bounded usage, an output hash, and audit-safe error fields; it contains neither
+the credential value nor raw provider output. The command creates or edits no
+GitHub comment. Calling the module through an unsealed one-off script cannot
+satisfy the canonical loaded-module source check.
+
+This is source capability, not live-execution evidence. The implementation and
+its tests create or edit no real GitHub comment, read no credential value, call
+no model provider, and leave `live_model_provider_execution_authorized: false`.
+It does not claim multi-host replay prevention, guaranteed provider completion,
+or protection against hostile code already executing inside the trusted Python
 process. A first real approval, credential read, or provider call remains
 separately prohibited until explicitly authorized.
 
