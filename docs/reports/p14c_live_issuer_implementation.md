@@ -78,7 +78,8 @@ construction, capability replay, and comment replay.
 The code does not provide durable cross-process replay storage. It also does not
 claim to defend against hostile monkeypatching or arbitrary code already
 executing inside the trusted process. Those are explicit future authority and
-threat-model boundaries, not evidence gaps filled by this Draft PR.
+threat-model boundaries; the source-publication evidence recorded here does not
+close them.
 
 ## Verification
 
