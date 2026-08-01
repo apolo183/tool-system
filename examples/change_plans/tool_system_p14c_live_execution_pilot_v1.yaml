@@ -1,0 +1,35 @@
+plan_id: tool-system-p14c-live-execution-pilot-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p14c_live_execution_pilot_v1.yaml
+changed_files:
+  - examples/task_manifests/tool_system_p14c_live_execution_pilot_v1.yaml
+  - examples/change_plans/tool_system_p14c_live_execution_pilot_v1.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p14c_live_execution_pilot_v1.yaml
+    section_or_key: future_live_execution_envelope
+    scope: Publish only the exact non-authorizing two-file pair that freezes one future DGX provider pilot envelope.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve the bounded, auditable, source-sealed real AI-worker target without performing a live call or expanding repository authority.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14c_live_execution_pilot_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_live_execution_pilot_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -B -m tool_system.ai_worker.live_evidence --validate-packet-only
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p14c-live-execution-packet-v1
+  retain_feature_branch: true
+  exact_base: 10ac2bbbe394793bb981323148078aa48cfd21d6
+  exact_base_tree: 28edf0dea1fcfe8f092e07a19fd63b84114a3ac9
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@10ac2bbbe394793bb981323148078aa48cfd21d6

@@ -1,0 +1,255 @@
+task_id: tool-system-p14c-live-execution-pilot-v1
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: agent/p14c-live-execution-packet-v1
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stage_plan.P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+alignment:
+  parent:
+    document: docs/reports/p14c_bounded_real_model_provider_execution.md
+    section_or_key: Exact source envelope
+    scope: Freeze the separately authorized operator envelope for one future P14C public-synthetic provider proof without performing that proof in this publication task.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve exact authority, source sealing, durable replay, bounded cost, redaction, and no downstream mutation for the one bounded real-provider proof.
+authority_effect: none_until_separately_activated_for_live_execution
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P14C-LIVE-EXECUTION-PACKET-v1
+    baseline_commit: 10ac2bbbe394793bb981323148078aa48cfd21d6
+    baseline_tree: 28edf0dea1fcfe8f092e07a19fd63b84114a3ac9
+    allowed_scope: exact_two_paths_listed_below
+    acceptance_set:
+      - exactly one task manifest and its bound change plan are added under the two approved paths
+      - the pair separates this zero-live-I/O publication task from the future one-shot execution envelope
+      - the future envelope freezes the DGX host, repository root, external single-host SQLite ledger, GitHub owner-comment trust root, provider, model, endpoint, credential reference, and all invocation limits
+      - the pair changes no blueprint, project state, runtime, provider, credential handling, downstream behavior, production state, cleanup state, or rollback state
+      - the pair grants no live execution authority and records no live execution evidence or P14C acceptance
+    validation_set:
+      - task-manifest and change-plan validators
+      - full pytest suite
+      - process-authority, module-registry, and repository-manifest validators
+      - packet-only zero-I/O validation
+      - whitespace, exact two-file scope, and forbidden-diff checks
+    terminal_predicate: all frozen acceptance and validation items pass, one commit is published on the named branch, one Draft PR passes hosted CI, and that unchanged exact two-file PR is moved to Ready and squash-merged while its feature branch remains retained
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 1
+      review_cycles: 1
+      wall_clock_hours: 4
+      github_approval_comment_creations: 0
+      github_approval_reads: 0
+      credential_value_accesses: 0
+      provider_invocations: 0
+      transport_attempts: 0
+  per_cycle_state:
+    - candidate_tree
+    - acceptance_digest
+    - blocker_set
+    - satisfied_acceptance_items
+    - validation_results
+    - material_evidence
+    - attempt_number
+  recurrence_fingerprint:
+    - task_identity
+    - candidate_tree
+    - acceptance_digest
+    - blocker_set
+    - validation_results
+  recurrence_fingerprint_excludes:
+    - attempt_number
+    - timestamps
+    - receipts
+    - pull_request_metadata
+    - status_text
+future_live_execution_envelope:
+  status: frozen_not_executed_not_accepted
+  separate_activation_required: true
+  operator_entry:
+    command: tool-system-p14c-live
+    prepare_mode: prepare-approval
+    execute_mode: execute
+    approval_ttl_seconds: 600
+  execution_source:
+    repository: apolo183/tool-system
+    branch: main
+    publication_baseline_commit: 10ac2bbbe394793bb981323148078aa48cfd21d6
+    commit_and_tree: captured_from_clean_canonical_main_by_prepare_and_bound_in_owner_comment
+    critical_source_manifest_version: p14c-critical-runtime-source-v2
+    clean_worktree_required: true
+    local_main_origin_main_and_github_main_must_match: true
+  execution_host:
+    hostname: apolo-9004
+    repository_root: /home/rich/projects/tool-system
+  replay_ledger:
+    implementation: sqlite
+    path: /home/rich/.local/state/tool-system/p14c-live-execution.sqlite3
+    scope: single_host
+    outside_repository_root_required: true
+    parent_must_preexist: true
+    parent_must_be_non_symlink_directory: true
+    parent_group_or_world_writable: false
+    database_and_sidecars_must_be_regular_single_link_files: true
+    consumption: durable_burn_on_claim_at_most_once
+    multi_host_exactly_once_claimed: false
+  github_owner_comment_approval:
+    repository: apolo183/tool-system
+    conversation_type: pull_request
+    conversation_number: 153
+    conversation_url: https://github.com/apolo183/tool-system/pull/153
+    approval_version: p14c-live-execution-approval-v2
+    authorization_id: P14C-LIVE-EXEC-v2
+    action: p14c_live_provider_execution
+    owner_login: apolo183
+    author_association: OWNER
+    comment_id: one_positive_runtime_value_from_the_named_conversation
+    comment_must_be_unedited: true
+    maximum_ttl_seconds: 900
+    creation_authorized_by_this_pair: false
+    read_authorized_by_this_pair: false
+  provider:
+    provider_id: openai
+    model_id: gpt-5.6-luna
+    method: POST
+    endpoint: https://api.openai.com/v1/responses
+    credential_reference: env:OPENAI_API_KEY
+    fixture_id: P14C-001
+    fixture_classification: public_synthetic_only
+    reasoning_effort: none
+    store: false
+    tools_allowed: false
+    tls_verification_required: true
+    redirects_allowed: false
+    proxy_environment_allowed: false
+    fallback_allowed: false
+  execution_budgets:
+    overall_execution_attempts: 1
+    github_approval_comment_creations: 1
+    github_approval_reads: 1
+    durable_approval_consumptions: 1
+    credential_value_accesses: 1
+    provider_invocations: 1
+    transport_attempts: 2
+    request_timeout_ms: 20000
+    total_wall_clock_ms: 45000
+    per_attempt_input_tokens: 4096
+    per_attempt_output_tokens: 512
+    per_attempt_total_tokens: 4608
+    cumulative_token_ceiling: 9216
+    cumulative_cost_microusd: 20000
+    retry_after_cap_ms: 2000
+    default_backoff_ms: 250
+  retryable_conditions:
+    http_statuses:
+      - 408
+      - 429
+      - 500
+      - 502
+      - 503
+      - 504
+    transport_failures:
+      - connection
+      - timeout
+  receipt:
+    destination: standard_output_only
+    redacted: true
+    raw_credential_included: false
+    raw_provider_output_included: false
+  hard_denials:
+    target_repository_mutation: false
+    production_deployment: false
+    cleanup_execution: false
+    rollback_execution: false
+    p14c_acceptance: false
+    p14d: false
+scope:
+  summary: Add the exact non-authorizing task-manifest and change-plan pair that freezes one future DGX P14C live-provider pilot envelope without executing it.
+  in_scope:
+    - examples/task_manifests/tool_system_p14c_live_execution_pilot_v1.yaml
+    - examples/change_plans/tool_system_p14c_live_execution_pilot_v1.yaml
+  out_of_scope:
+    - creating, editing, or reading a real GitHub approval comment
+    - credential-value access or a real provider invocation
+    - P14C execution evidence, acceptance, or closure
+    - P14D or later-stage work
+    - blueprint or descriptive project-state modification
+    - runtime, source, provider, policy, registry, or repository-manifest modification
+    - downstream repository access or mutation
+    - production deployment
+    - cleanup, rollback execution, or branch deletion
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/ai_worker/live_evidence.py
+    commit_sha: 10ac2bbbe394793bb981323148078aa48cfd21d6
+    why_relevant: The committed operator entry defines separate prepare and execute modes, a 600-second default approval TTL, exact repository and ledger arguments, and redacted receipt behavior.
+  - repo: apolo183/tool-system
+    path: src/tool_system/process_authority/live_provider_approval.py
+    commit_sha: 10ac2bbbe394793bb981323148078aa48cfd21d6
+    why_relevant: The issuer binds the clean execution commit, tree, critical source, host, external durable ledger, and one unedited owner comment before capability issuance.
+  - repo: apolo183/tool-system
+    path: src/tool_system/ai_worker/live_provider.py
+    commit_sha: 10ac2bbbe394793bb981323148078aa48cfd21d6
+    why_relevant: The source freezes the exact public synthetic OpenAI provider, model, route, credential reference, retry, token, time, and cost envelope reused here without modification.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_project_state_v1.yaml
+    commit_sha: 10ac2bbbe394793bb981323148078aa48cfd21d6
+    why_relevant: The descriptive state records that no real approval, credential access, provider call, or P14C acceptance exists; this pair must not change that state.
+allowed_files:
+  - examples/task_manifests/tool_system_p14c_live_execution_pilot_v1.yaml
+  - examples/change_plans/tool_system_p14c_live_execution_pilot_v1.yaml
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/**
+  - config/**
+  - docs/**
+  - harness/**
+  - policy/**
+  - pyproject.toml
+  - src/**
+  - tests/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14c_live_execution_pilot_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_live_execution_pilot_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -B -m tool_system.ai_worker.live_evidence --validate-packet-only
+  pass_conditions:
+    - exact two-file add-only scope and zero diff under every forbidden path
+    - the task manifest and its exact change plan validate with no reasons
+    - full tests and all current machine validators pass
+    - packet-only validation reports zero GitHub, credential, provider, transport, and database access
+    - hosted CI succeeds before Ready and squash merge
+    - comment and Review state remain empty and base, head, and exact file scope do not drift
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+rollback:
+  method: git_revert
+  reference: tool-system@10ac2bbbe394793bb981323148078aa48cfd21d6
+approval:
+  required: true
+  approved_by: user_explicit_p14c_live_execution_packet_v1
+  approval_source: chat_user_message:P14C-LIVE-EXECUTION-PACKET-v1
+  approved_at: 2026-08-02 UTC+09:00
