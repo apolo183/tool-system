@@ -1,0 +1,105 @@
+task_id: tool-system-project-state-single-owner-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/project-state-single-owner-v1
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+alignment:
+  parent:
+    document: docs/tool_system_global_development_principles_v1.md
+    section_or_key: blueprint_alignment_invariant
+    scope: Keep stable rule owners free of transient project progress and route those facts to the single descriptive project-state owner.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve the completed-product objective and all runtime behavior while correcting documentation ownership only.
+scope:
+  summary: Remove concrete phase, authorization, PR, commit, and CI progress from stable rule owners, correct stale Draft wording in P14C evidence, and add regression coverage.
+  in_scope:
+    - AGENTS.md
+    - docs/tool_system_global_development_principles_v1.md
+    - docs/reports/p14c_live_issuer_implementation.md
+    - examples/change_plans/tool_system_project_state_single_owner_v1.yaml
+    - examples/task_manifests/tool_system_project_state_single_owner_v1.yaml
+    - tests/test_p14c_execution_contract.py
+    - tests/test_phase_alignment.py
+    - tests/test_repo_manifest.py
+  out_of_scope:
+    - changing blueprint target state, architecture, milestone sequence, or acceptance criteria
+    - changing docs/tool_system_project_state_v1.yaml values or authority effect
+    - modifying runtime, provider, process-authority, repository-controller, policy, harness, or downstream source
+    - creating or editing a real GitHub approval record
+    - credential-value access, live capability issuance, or a real provider call
+    - P14C execution, acceptance, or closure
+    - P14D or later-stage work
+    - downstream repository access or mutation
+    - PR Ready, main merge, branch deletion, destructive cleanup, rollback, or production
+evidence:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    commit_sha: bcd2595139584f68bcd7be71b64c80f5b96bcbea
+    why_relevant: The stable agent contract duplicates completed caller-audit and P14C issuer progress that belongs to descriptive state and evidence.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    commit_sha: bcd2595139584f68bcd7be71b64c80f5b96bcbea
+    why_relevant: The stable principles duplicate exact current phase, PR, commit, CI, publication, and last-accepted-stage facts despite naming one project-state owner.
+  - repo: apolo183/tool-system
+    path: docs/reports/p14c_live_issuer_implementation.md
+    commit_sha: bcd2595139584f68bcd7be71b64c80f5b96bcbea
+    why_relevant: The merged evidence report retains one stale reference to this Draft PR even though its status and hosted CI evidence are complete.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_project_state_v1.yaml
+    commit_sha: bcd2595139584f68bcd7be71b64c80f5b96bcbea
+    why_relevant: This file is already the single non-authorizing machine-readable owner for descriptive tool-system progress.
+allowed_files:
+  - AGENTS.md
+  - docs/tool_system_global_development_principles_v1.md
+  - docs/reports/p14c_live_issuer_implementation.md
+  - examples/change_plans/tool_system_project_state_single_owner_v1.yaml
+  - examples/task_manifests/tool_system_project_state_single_owner_v1.yaml
+  - tests/test_p14c_execution_contract.py
+  - tests/test_phase_alignment.py
+  - tests/test_repo_manifest.py
+forbidden_files:
+  - blueprint/**
+  - config/**
+  - policy/**
+  - harness/**
+  - src/**
+  - docs/tool_system_project_state_v1.yaml
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_phase_alignment.py tests/test_p14c_execution_contract.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_project_state_single_owner_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_project_state_single_owner_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - AGENTS.md and local global principles route concrete project progress to docs/tool_system_project_state_v1.yaml and immutable evidence
+    - stable rule owners contain no concrete PR, commit, authorization-receipt, current-phase, or last-accepted-stage receipt
+    - P14C live-issuer evidence no longer describes the completed source publication as this Draft PR
+    - docs/tool_system_project_state_v1.yaml remains the single descriptive progress owner with authority_effect none
+    - the target-state blueprint and all runtime, provider, credential, downstream, and production behavior remain unchanged
+    - focused tests, full tests, process authority, module registry, and repository manifest pass
+rollback:
+  method: git_revert
+  reference: tool-system@bcd2595139584f68bcd7be71b64c80f5b96bcbea
+approval:
+  required: true
+  approved_by: user_explicit_project_state_single_owner_correction
+  approval_source: chat_user_message:agreed_to_project_state_single_owner_correction
+  approved_at: 2026-08-01 UTC+09:00

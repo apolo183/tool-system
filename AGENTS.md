@@ -63,7 +63,22 @@ Agents must not rely on long conversation context as execution authority. Every 
 
 A stage should be short, have one natural objective, one branch, one change plan, one evidence record, and a clear stop condition. If drift is found, the next action is documentation or process correction, not feature expansion.
 
-The current-task caller audit is complete. `config/process_authority_v1.yaml` is the local current execution contract for canonical `process-authority@2.1.0` and `process-authority-api@2.0.0`. It requires one explicitly supplied manifest/change-plan pair with exact binding. The protected dispatcher revalidates the real authority, manifest, plan, policy, working-directory, and timeout inputs, requires captured input bytes to remain equal immediately before dispatch, and extracts commands from those same validated plan bytes; no caller-created PASS value, receipt, token, or unchecked command list is accepted. Repository-wide implicit task authority is disabled. The same natural owner now contains the `P14C-LIVE-ISSUER-IMPL-v1` source for authenticating one exact, unedited, short-lived GitHub owner issue comment and issuing one in-memory grant; no real approval record exists, no live capability has been issued, and live execution remains unauthorized. `config/replay_snapshot_v1.yaml` content-addresses the retained legacy pair set; `examples/active_gates.yaml` is explicit, non-executing replay input only. Existing reports, manifests, plans, and the legacy index remain retained non-authority inputs. Do not delete or reclassify them without separate cleanup authorization.
+`config/process_authority_v1.yaml` is the sole local current-task execution
+authority contract. It requires one explicitly supplied manifest/change-plan
+pair with exact binding. The protected dispatcher revalidates the real
+authority, manifest, plan, policy, working-directory, and timeout inputs,
+requires captured input bytes to remain equal immediately before dispatch, and
+extracts commands from those same validated plan bytes; no caller-created PASS
+value, receipt, token, or unchecked command list is accepted. Repository-wide
+implicit task authority is disabled. `config/replay_snapshot_v1.yaml`
+content-addresses the retained legacy pair set, and
+`examples/active_gates.yaml` is explicit, non-executing replay input only.
+Existing reports, manifests, plans, and the legacy index remain retained
+non-authority inputs. Current phase, implementation, publication, acceptance,
+authorization-receipt, pull-request, commit, tree, and CI facts belong only in
+`docs/tool_system_project_state_v1.yaml` and applicable immutable evidence; they
+do not grant execution authority. Do not delete or reclassify retained inputs
+without separate cleanup authorization.
 
 ## 4. Blueprint alignment invariant
 

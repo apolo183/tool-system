@@ -43,7 +43,23 @@ A document, PR, green test, audit, or dry-run authorizes only its explicit scope
 
 Formal files are active contracts, source, configs, tests, runbooks, docs, examples, and audit interfaces required to run, validate, operate, audit, or roll back tool-system. Process files are notes, temporary scripts, dry-run outputs, proposal drafts, patch plans, debug logs, and intermediate evidence. Process files must use the narrowest project-local task root such as `tmp/<task_id>/`, `reports/<task_id>/`, or `artifacts/<task_id>/`, unless an explicit exception names path, reason, retention, side effects, and cleanup responsibility.
 
-The current-task caller audit is complete. `config/process_authority_v1.yaml` is the local current execution contract for canonical `process-authority@2.1.0` and `process-authority-api@2.0.0`. It requires one explicitly supplied manifest/change-plan pair with exact binding. The protected dispatcher revalidates the real authority, manifest, plan, policy, working-directory, and timeout inputs, requires captured input bytes to remain equal immediately before dispatch, and extracts commands from those same validated plan bytes; no caller-created PASS value, receipt, token, or unchecked command list is accepted. Repository-wide implicit task authority is disabled. The same owner now implements only the source boundary for authenticating one exact, unedited, short-lived GitHub owner comment and issuing one in-memory P14C grant. No real approval record, credential access, or provider call is authorized by that implementation. `config/replay_snapshot_v1.yaml` content-addresses the retained legacy pair set; `examples/active_gates.yaml` is explicit, non-executing replay input only. Existing reports, manifests, plans, and the legacy index remain retained non-authority inputs. Do not delete or reclassify them without separate cleanup authorization.
+`config/process_authority_v1.yaml` is the sole local current-task execution
+authority contract. It requires one explicitly supplied manifest/change-plan
+pair with exact binding. The protected dispatcher revalidates the real
+authority, manifest, plan, policy, working-directory, and timeout inputs,
+requires captured input bytes to remain equal immediately before dispatch, and
+extracts commands from those same validated plan bytes; no caller-created PASS
+value, receipt, token, or unchecked command list is accepted. Repository-wide
+implicit task authority is disabled. `config/replay_snapshot_v1.yaml`
+content-addresses the retained legacy pair set, and
+`examples/active_gates.yaml` is explicit, non-executing replay input only.
+Existing reports, manifests, plans, and the legacy index remain retained
+non-authority inputs. Current implementation, publication, phase, acceptance,
+authorization-receipt, pull-request, commit, tree, and CI facts are descriptive
+state owned by `docs/tool_system_project_state_v1.yaml` and applicable immutable
+evidence, not by this stable rule owner. They do not grant execution authority.
+Do not delete or reclassify retained inputs without separate cleanup
+authorization.
 
 `REPO_MANIFEST.md` is the local tracked-path registry. It must classify every tracked path exactly once as a formal file-set member or a retained non-authority member, maintain one acyclic formal upstream graph with one root, and fail closed on gaps or overlap. Registering a retained set does not make it formal or authorize cleanup.
 
@@ -209,6 +225,16 @@ Provider and economics defaults are maintained by event-driven updates, a 24-hou
 
 `docs/model_provider_portfolio_and_economics_contract_v1.md` owns the detailed roadmap contract. P14 remains the provider-neutral blueprint-to-code core plus one separately authorized bounded real-provider proof. P15 owns multi-provider qualification and benchmark acceptance. P16 owns continuous portfolio operations. This principle grants no live provider, credential, target-repository, phase-entry, or production authority.
 
-## 26. Final state
+## 26. Final rule
 
-Status: ACTIVE. Applies only to tool-system, including its blueprint, durable modules, milestone-change planning, provider/model portfolio roadmap, development economics, docs, source, tests, examples, policies, cleanup planning, repository-control work, side-effect tool use, and target-repository adapters. P14 remains active. The corrected P14C adapter source and the separately authorized GitHub-owner live-issuer source are merged; PR #148 produced `main@20cbb13feb934ce95f2624dafc4510efcd04f1da`, whose tree matches the reviewed head and whose pull-request and main-push CI both succeeded. That source publication created no real P14C approval record, issued no live capability, accessed no credential value, and made no provider call. `repository-controller@1.2.0` exact lifecycle-approval and required-check provenance hardening is also merged but still has no live mutation-capability issuer. Live provider execution, real repository mutation, and P14C stage acceptance remain unauthorized; P14MR remains the last accepted stage.
+This contract applies only to tool-system, including its blueprint, durable
+modules, milestone-change planning, provider/model portfolio roadmap,
+development economics, docs, source, tests, examples, policies, cleanup
+planning, repository-control work, side-effect tool use, and target-repository
+adapters. Current phase, last accepted stage, implementation publication,
+authorization receipt, pull-request, commit, tree, CI, and branch-disposition
+facts are not maintained here; read them from
+`docs/tool_system_project_state_v1.yaml` and applicable immutable evidence. That
+descriptive state grants no live provider, credential, repository mutation,
+milestone acceptance, phase entry, cleanup, rollback, branch deletion, or
+production authority.

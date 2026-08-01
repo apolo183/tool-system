@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
@@ -19,6 +20,14 @@ CHANGE_PLAN = (
     / "tool_system_p14mr_milestone_module_invariant.yaml"
 )
 EXPECTED_PHASE = "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
+TRANSIENT_RULE_OWNER_PATTERNS = {
+    "pull-request receipt": r"\bPR\s+#\d+\b",
+    "main commit receipt": r"\bmain@[0-9a-f]{40}\b",
+    "P14C authorization receipt": r"\bP14C-[A-Z0-9-]+-v\d+\b",
+    "completed caller audit": r"\bcurrent-task caller audit is complete\b",
+    "current P14 status": r"\bP14 remains active\b",
+    "last accepted stage": r"\bP14MR remains the last accepted stage\b",
+}
 
 
 def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
@@ -97,3 +106,14 @@ def test_phase_alignment_change_plan_validates() -> None:
 
     assert result["status"] == "PASS"
     assert result["reasons"] == []
+
+
+def test_stable_rule_owners_delegate_transient_progress_to_project_state() -> None:
+    for owner in (AGENTS, PRINCIPLES):
+        text = owner.read_text(encoding="utf-8")
+
+        assert "docs/tool_system_project_state_v1.yaml" in text
+        for label, pattern in TRANSIENT_RULE_OWNER_PATTERNS.items():
+            assert re.search(pattern, text, flags=re.IGNORECASE) is None, (
+                f"{owner.relative_to(ROOT)} contains {label}"
+            )

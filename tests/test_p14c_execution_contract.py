@@ -97,6 +97,13 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
         live_issuer_report
     )
     assert "real provider calls: `0`" in live_issuer_report
+    assert "not evidence gaps filled by this Draft PR" not in live_issuer_report
+    assert "DRAFT_PR_PENDING" not in live_issuer_report
+    assert "Hosted CI remains pending" not in live_issuer_report
+    assert (
+        "the source-publication evidence recorded here does not close them"
+        in " ".join(live_issuer_report.split())
+    )
 
 
 def test_merged_pr_gate_evidence_keeps_p14c_and_live_mutation_blocked() -> None:
