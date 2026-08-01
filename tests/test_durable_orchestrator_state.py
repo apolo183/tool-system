@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from tool_system.orchestrator import (
+    AuthorizationReplay,
     DurableOrchestratorStore,
     LeaseConflict,
     StateConflict,
@@ -53,7 +54,8 @@ def test_store_enables_required_sqlite_controls(tmp_path: Path) -> None:
     assert str(pragmas["journal_mode"]).lower() == "wal"
     assert pragmas["synchronous"] == 2
     assert pragmas["busy_timeout"] == 5_000
-    assert pragmas["schema_version"] == 2
+    assert pragmas["schema_version"] == 3
+    assert len(str(pragmas["authorization_ledger_instance_id"])) == 64
 
 
 def test_run_and_task_survive_store_reopen(tmp_path: Path) -> None:
@@ -69,6 +71,76 @@ def test_run_and_task_survive_store_reopen(tmp_path: Path) -> None:
     assert task["attempt"] == 0
     assert task["checkpoint"] == {"step": 0}
     assert task["expected_precondition_sha"] == SHA
+
+
+def test_authorization_consumption_survives_reopen_and_burns_on_claim(
+    tmp_path: Path,
+) -> None:
+    clock = Clock()
+    first = _store(tmp_path, clock)
+    ledger_id = first.authorization_ledger_instance_id
+
+    consumed = first.consume_authorization_once(
+        approval_source="github_issue_comment",
+        repository="apolo183/tool-system",
+        approval_record_id="91001",
+        authorization_id="P14C-LIVE-EXEC-v2",
+        approval_record_sha256="b" * 64,
+        binding_sha256="c" * 64,
+        executor_host_id="test-host",
+        ledger_instance_id=ledger_id,
+        expires_at_epoch_seconds=clock.value + 60,
+    )
+    reopened = _store(tmp_path, clock)
+
+    assert reopened.authorization_ledger_instance_id == ledger_id
+    assert consumed["approval_record_id"] == "91001"
+    assert reopened.get_authorization_consumption(
+        approval_source="github_issue_comment",
+        repository="apolo183/tool-system",
+        approval_record_id="91001",
+    ) == consumed
+    with pytest.raises(AuthorizationReplay, match="already consumed"):
+        reopened.consume_authorization_once(
+            approval_source="github_issue_comment",
+            repository="apolo183/tool-system",
+            approval_record_id="91001",
+            authorization_id="P14C-LIVE-EXEC-v2",
+            approval_record_sha256="b" * 64,
+            binding_sha256="c" * 64,
+            executor_host_id="test-host",
+            ledger_instance_id=ledger_id,
+            expires_at_epoch_seconds=clock.value + 60,
+        )
+
+
+def test_authorization_wrong_ledger_or_expiry_blocks_before_insert(
+    tmp_path: Path,
+) -> None:
+    clock = Clock()
+    store = _store(tmp_path, clock)
+    values: dict[str, object] = {
+        "approval_source": "github_issue_comment",
+        "repository": "apolo183/tool-system",
+        "approval_record_id": "91002",
+        "authorization_id": "P14C-LIVE-EXEC-v2",
+        "approval_record_sha256": "b" * 64,
+        "binding_sha256": "c" * 64,
+        "executor_host_id": "test-host",
+        "ledger_instance_id": "d" * 64,
+        "expires_at_epoch_seconds": clock.value + 60,
+    }
+    with pytest.raises(StateConflict, match="ledger instance identity"):
+        store.consume_authorization_once(**values)  # type: ignore[arg-type]
+    values["ledger_instance_id"] = store.authorization_ledger_instance_id
+    values["expires_at_epoch_seconds"] = clock.value - 1
+    with pytest.raises(StateConflict, match="expired"):
+        store.consume_authorization_once(**values)  # type: ignore[arg-type]
+    assert store.get_authorization_consumption(
+        approval_source="github_issue_comment",
+        repository="apolo183/tool-system",
+        approval_record_id="91002",
+    ) is None
 
 
 def test_claim_checkpoint_complete_and_run_completion(tmp_path: Path) -> None:

@@ -171,7 +171,7 @@ def test_packet_is_exact_and_packet_only_evidence_performs_zero_access() -> None
     assert validate_p14c_execution_packet(packet) == ()
     assert (
         packet.sha256()
-        == "3883ccb31ef59ff19c45b2818ac8cc3606b63d1f2b9575bc2a9ea18edb5db9b5"
+        == "a4a4efecf35b8a1a49b79c7d1e0000925c1a737b32588f463dec6db7bc1f21a7"
     )
     evidence = build_packet_validation_evidence()
     assert evidence["status"] == "PASS"

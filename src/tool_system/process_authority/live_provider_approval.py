@@ -3,16 +3,27 @@ from __future__ import annotations
 import hashlib
 import http.client
 import json
+import os
 import re
+import socket
 import ssl
+import stat
+import subprocess
+import sys
 import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
+from tool_system.orchestrator import (
+    AuthorizationReplay,
+    DurableOrchestratorStore,
+    StateConflict,
+)
 
-P14C_APPROVAL_VERSION = "p14c-live-execution-approval-v1"
-P14C_LIVE_EXECUTION_AUTHORIZATION_ID = "P14C-LIVE-EXEC-v1"
+P14C_APPROVAL_VERSION = "p14c-live-execution-approval-v2"
+P14C_LIVE_EXECUTION_AUTHORIZATION_ID = "P14C-LIVE-EXEC-v2"
 P14C_APPROVAL_REPOSITORY = "apolo183/tool-system"
 P14C_APPROVAL_OWNER = "apolo183"
 P14C_APPROVAL_ACTION = "p14c_live_provider_execution"
@@ -23,16 +34,39 @@ GITHUB_RESPONSE_LIMIT_BYTES = 65_536
 P14C_APPROVAL_BODY_LIMIT_BYTES = 16_384
 P14C_APPROVAL_MAX_TTL_SECONDS = 900
 P14C_APPROVAL_CLOCK_SKEW_SECONDS = 30
+P14C_SOURCE_MANIFEST_VERSION = "p14c-critical-runtime-source-v1"
+P14C_CRITICAL_SOURCE_PATHS = (
+    "src/tool_system/ai_worker/live_provider.py",
+    "src/tool_system/orchestrator/__init__.py",
+    "src/tool_system/orchestrator/durable.py",
+    "src/tool_system/process_authority/__init__.py",
+    "src/tool_system/process_authority/live_provider_approval.py",
+)
+_P14C_CRITICAL_SOURCE_MODULES = {
+    "src/tool_system/ai_worker/live_provider.py": (
+        "tool_system.ai_worker.live_provider"
+    ),
+    "src/tool_system/orchestrator/__init__.py": "tool_system.orchestrator",
+    "src/tool_system/orchestrator/durable.py": "tool_system.orchestrator.durable",
+    "src/tool_system/process_authority/__init__.py": (
+        "tool_system.process_authority"
+    ),
+    "src/tool_system/process_authority/live_provider_approval.py": __name__,
+}
 
+_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _NONCE_RE = re.compile(r"^[0-9a-f]{64}$")
+_HOST_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$")
 _UTC_TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 _ISSUE_URL_RE = re.compile(
     r"^https://api\.github\.com/repos/apolo183/tool-system/issues/([1-9][0-9]*)$"
 )
 _GRANT_ISSUER = object()
-_ISSUED_COMMENT_IDS: set[int] = set()
-_ISSUED_COMMENT_IDS_LOCK = threading.Lock()
+_CANONICAL_TOOL_SYSTEM_REMOTES = {
+    "git@github.com:apolo183/tool-system.git",
+    "https://github.com/apolo183/tool-system.git",
+}
 
 
 class P14CLiveExecutionAuthorizationError(RuntimeError):
@@ -44,11 +78,42 @@ class GitHubApprovalReadError(P14CLiveExecutionAuthorizationError):
 
 
 @dataclass(frozen=True)
+class P14CExecutionSourceSeal:
+    repository: str
+    execution_commit_sha: str
+    execution_tree_sha: str
+    source_manifest_sha256: str
+    clean_worktree: bool
+    execution_host_id: str
+    replay_ledger_instance_id: str
+
+    def canonical_record(self) -> dict[str, object]:
+        return {
+            "repository": self.repository,
+            "execution_commit_sha": self.execution_commit_sha,
+            "execution_tree_sha": self.execution_tree_sha,
+            "source_manifest_sha256": self.source_manifest_sha256,
+            "clean_worktree": self.clean_worktree,
+            "execution_host_id": self.execution_host_id,
+            "replay_ledger_instance_id": self.replay_ledger_instance_id,
+        }
+
+    def sha256(self) -> str:
+        return hashlib.sha256(_canonical_json_bytes(self.canonical_record())).hexdigest()
+
+
+@dataclass(frozen=True)
 class P14CLiveExecutionBinding:
     authorization_id: str
     repository: str
     action: str
-    tool_system_base: str
+    implementation_authorization_base_sha: str
+    execution_commit_sha: str
+    execution_tree_sha: str
+    source_manifest_sha256: str
+    clean_worktree: bool
+    execution_host_id: str
+    replay_ledger_instance_id: str
     packet_sha256: str
     request_sha256: str
     fixture_id: str
@@ -75,7 +140,15 @@ class P14CLiveExecutionBinding:
             "authorization_id": self.authorization_id,
             "repository": self.repository,
             "action": self.action,
-            "tool_system_base": self.tool_system_base,
+            "implementation_authorization_base_sha": (
+                self.implementation_authorization_base_sha
+            ),
+            "execution_commit_sha": self.execution_commit_sha,
+            "execution_tree_sha": self.execution_tree_sha,
+            "source_manifest_sha256": self.source_manifest_sha256,
+            "clean_worktree": self.clean_worktree,
+            "execution_host_id": self.execution_host_id,
+            "replay_ledger_instance_id": self.replay_ledger_instance_id,
             "packet_sha256": self.packet_sha256,
             "request_sha256": self.request_sha256,
             "fixture_id": self.fixture_id,
@@ -102,6 +175,20 @@ class P14CLiveExecutionBinding:
             "p14d_authorized": self.p14d_authorized,
         }
 
+    def source_seal(self) -> P14CExecutionSourceSeal:
+        return P14CExecutionSourceSeal(
+            repository=self.repository,
+            execution_commit_sha=self.execution_commit_sha,
+            execution_tree_sha=self.execution_tree_sha,
+            source_manifest_sha256=self.source_manifest_sha256,
+            clean_worktree=self.clean_worktree,
+            execution_host_id=self.execution_host_id,
+            replay_ledger_instance_id=self.replay_ledger_instance_id,
+        )
+
+    def sha256(self) -> str:
+        return hashlib.sha256(_canonical_json_bytes(self.canonical_record())).hexdigest()
+
 
 @dataclass(frozen=True)
 class P14CLiveExecutionApproval:
@@ -109,7 +196,13 @@ class P14CLiveExecutionApproval:
     authorization_id: str
     repository: str
     action: str
-    tool_system_base: str
+    implementation_authorization_base_sha: str
+    execution_commit_sha: str
+    execution_tree_sha: str
+    source_manifest_sha256: str
+    clean_worktree: bool
+    execution_host_id: str
+    replay_ledger_instance_id: str
     packet_sha256: str
     request_sha256: str
     fixture_id: str
@@ -146,7 +239,15 @@ class P14CLiveExecutionApproval:
             authorization_id=self.authorization_id,
             repository=self.repository,
             action=self.action,
-            tool_system_base=self.tool_system_base,
+            implementation_authorization_base_sha=(
+                self.implementation_authorization_base_sha
+            ),
+            execution_commit_sha=self.execution_commit_sha,
+            execution_tree_sha=self.execution_tree_sha,
+            source_manifest_sha256=self.source_manifest_sha256,
+            clean_worktree=self.clean_worktree,
+            execution_host_id=self.execution_host_id,
+            replay_ledger_instance_id=self.replay_ledger_instance_id,
             packet_sha256=self.packet_sha256,
             request_sha256=self.request_sha256,
             fixture_id=self.fixture_id,
@@ -270,6 +371,214 @@ class P14CLiveExecutionGrant:
         return ()
 
 
+def build_p14c_execution_source_seal(
+    repository_root: str | Path,
+    replay_ledger: DurableOrchestratorStore,
+) -> P14CExecutionSourceSeal:
+    """Measure the exact clean checkout, critical source, host, and ledger."""
+
+    if not isinstance(replay_ledger, DurableOrchestratorStore):
+        raise TypeError("replay_ledger must be DurableOrchestratorStore")
+    root = _canonical_repository_root(repository_root)
+    if _git_output(root, "remote", "get-url", "origin") not in (
+        _CANONICAL_TOOL_SYSTEM_REMOTES
+    ):
+        raise P14CLiveExecutionAuthorizationError(
+            "execution checkout origin is not apolo183/tool-system"
+        )
+    commit_sha = _git_output(root, "rev-parse", "HEAD")
+    tree_sha = _git_output(root, "rev-parse", "HEAD^{tree}")
+    if _SHA_RE.fullmatch(commit_sha) is None:
+        raise P14CLiveExecutionAuthorizationError(
+            "execution commit SHA is invalid"
+        )
+    if _SHA_RE.fullmatch(tree_sha) is None:
+        raise P14CLiveExecutionAuthorizationError("execution tree SHA is invalid")
+    if _git_output(root, "status", "--porcelain=v1", "--untracked-files=all"):
+        raise P14CLiveExecutionAuthorizationError(
+            "execution worktree must be exactly clean"
+        )
+
+    source_entries: list[dict[str, str]] = []
+    for relative_path in P14C_CRITICAL_SOURCE_PATHS:
+        path = root / relative_path
+        try:
+            metadata = path.lstat()
+            resolved = path.resolve(strict=True)
+        except OSError as exc:
+            raise P14CLiveExecutionAuthorizationError(
+                f"critical runtime source is unavailable: {relative_path}"
+            ) from exc
+        if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISREG(metadata.st_mode):
+            raise P14CLiveExecutionAuthorizationError(
+                f"critical runtime source must be a regular non-symlink file: {relative_path}"
+            )
+        if resolved != path or not resolved.is_relative_to(root):
+            raise P14CLiveExecutionAuthorizationError(
+                f"critical runtime source escapes its exact path: {relative_path}"
+            )
+        loaded_module = sys.modules.get(
+            _P14C_CRITICAL_SOURCE_MODULES[relative_path]
+        )
+        loaded_file = getattr(loaded_module, "__file__", None)
+        try:
+            loaded_path = Path(loaded_file).resolve(strict=True)
+        except (OSError, TypeError):
+            raise P14CLiveExecutionAuthorizationError(
+                f"critical runtime module is not loaded from source: {relative_path}"
+            ) from None
+        if loaded_path != resolved:
+            raise P14CLiveExecutionAuthorizationError(
+                f"critical runtime module source does not match execution checkout: {relative_path}"
+            )
+        try:
+            source_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
+            after = path.lstat()
+        except OSError as exc:
+            raise P14CLiveExecutionAuthorizationError(
+                f"critical runtime source could not be read: {relative_path}"
+            ) from exc
+        if (
+            metadata.st_dev,
+            metadata.st_ino,
+            metadata.st_size,
+            metadata.st_mtime_ns,
+        ) != (
+            after.st_dev,
+            after.st_ino,
+            after.st_size,
+            after.st_mtime_ns,
+        ):
+            raise P14CLiveExecutionAuthorizationError(
+                f"critical runtime source changed while sealing: {relative_path}"
+            )
+        source_entries.append(
+            {"path": relative_path, "sha256": source_sha256}
+        )
+    source_manifest_sha256 = hashlib.sha256(
+        _canonical_json_bytes(
+            {
+                "manifest_version": P14C_SOURCE_MANIFEST_VERSION,
+                "files": source_entries,
+            }
+        )
+    ).hexdigest()
+    execution_host_id = socket.gethostname()
+    if not isinstance(execution_host_id, str) or _HOST_ID_RE.fullmatch(
+        execution_host_id
+    ) is None:
+        raise P14CLiveExecutionAuthorizationError(
+            "execution host identity is unavailable or invalid"
+        )
+    ledger_instance_id = replay_ledger.authorization_ledger_instance_id
+    if _SHA256_RE.fullmatch(ledger_instance_id) is None:
+        raise P14CLiveExecutionAuthorizationError(
+            "replay ledger instance identity is invalid"
+        )
+    return P14CExecutionSourceSeal(
+        repository=P14C_APPROVAL_REPOSITORY,
+        execution_commit_sha=commit_sha,
+        execution_tree_sha=tree_sha,
+        source_manifest_sha256=source_manifest_sha256,
+        clean_worktree=True,
+        execution_host_id=execution_host_id,
+        replay_ledger_instance_id=ledger_instance_id,
+    )
+
+
+def validate_p14c_execution_source_seal(
+    source_seal: P14CExecutionSourceSeal,
+    *,
+    repository_root: str | Path,
+    replay_ledger: DurableOrchestratorStore,
+) -> tuple[str, ...]:
+    if not isinstance(source_seal, P14CExecutionSourceSeal):
+        return ("P14C execution source seal is invalid",)
+    try:
+        actual = build_p14c_execution_source_seal(
+            repository_root, replay_ledger
+        )
+    except (P14CLiveExecutionAuthorizationError, StateConflict, ValueError) as exc:
+        return (str(exc),)
+    reasons: list[str] = []
+    for field_name in P14CExecutionSourceSeal.__dataclass_fields__:
+        if getattr(source_seal, field_name) != getattr(actual, field_name):
+            reasons.append(
+                f"P14C execution source seal {field_name} does not match"
+            )
+    return tuple(reasons)
+
+
+def _canonical_repository_root(repository_root: str | Path) -> Path:
+    raw_root = Path(repository_root)
+    if raw_root.is_symlink():
+        raise P14CLiveExecutionAuthorizationError(
+            "execution repository root must not be a symlink"
+        )
+    try:
+        root = raw_root.resolve(strict=True)
+        metadata = root.lstat()
+    except OSError as exc:
+        raise P14CLiveExecutionAuthorizationError(
+            "execution repository root is unavailable"
+        ) from exc
+    if not stat.S_ISDIR(metadata.st_mode):
+        raise P14CLiveExecutionAuthorizationError(
+            "execution repository root must be a directory"
+        )
+    top_level = _git_output(root, "rev-parse", "--show-toplevel")
+    if Path(top_level).resolve(strict=True) != root:
+        raise P14CLiveExecutionAuthorizationError(
+            "execution repository root is not the exact Git top level"
+        )
+    return root
+
+
+def _git_output(root: Path, *arguments: str) -> str:
+    try:
+        result = subprocess.run(
+            (
+                "git",
+                "-c",
+                "core.quotepath=false",
+                "-c",
+                "core.fsmonitor=false",
+                "-c",
+                "core.hooksPath=/dev/null",
+                *arguments,
+            ),
+            cwd=root,
+            env={
+                "PATH": os.defpath,
+                "LANG": "C",
+                "LC_ALL": "C",
+                "GIT_CONFIG_NOSYSTEM": "1",
+                "GIT_CONFIG_GLOBAL": "/dev/null",
+                "GIT_OPTIONAL_LOCKS": "0",
+                "GIT_TERMINAL_PROMPT": "0",
+            },
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=5.0,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise P14CLiveExecutionAuthorizationError(
+            "execution repository Git evidence is unavailable"
+        ) from exc
+    if result.returncode != 0:
+        raise P14CLiveExecutionAuthorizationError(
+            "execution repository Git evidence is invalid"
+        )
+    try:
+        return result.stdout.decode("utf-8", errors="strict").strip()
+    except UnicodeDecodeError as exc:
+        raise P14CLiveExecutionAuthorizationError(
+            "execution repository Git evidence is not UTF-8"
+        ) from exc
+
+
 def build_p14c_live_execution_approval_body(
     binding: P14CLiveExecutionBinding,
     *,
@@ -298,11 +607,20 @@ def issue_p14c_live_execution_grant(
     *,
     comment_id: int,
     binding: P14CLiveExecutionBinding,
+    repository_root: str | Path,
+    replay_ledger: DurableOrchestratorStore,
 ) -> P14CLiveExecutionGrant:
     """Authenticate one pinned GitHub owner comment and issue one exact grant."""
 
     if not isinstance(binding, P14CLiveExecutionBinding):
         raise TypeError("binding must be P14CLiveExecutionBinding")
+    source_reasons = validate_p14c_execution_source_seal(
+        binding.source_seal(),
+        repository_root=repository_root,
+        replay_ledger=replay_ledger,
+    )
+    if source_reasons:
+        raise P14CLiveExecutionAuthorizationError("; ".join(source_reasons))
     evidence = _fetch_github_issue_comment(comment_id)
     reasons: list[str] = []
     if evidence.author_login != P14C_APPROVAL_OWNER:
@@ -352,12 +670,20 @@ def issue_p14c_live_execution_grant(
     expires_at = _parse_utc(approval.expires_at_utc)
     assert expires_at is not None
     approval_sha256 = approval.sha256()
-    with _ISSUED_COMMENT_IDS_LOCK:
-        if evidence.comment_id in _ISSUED_COMMENT_IDS:
-            raise P14CLiveExecutionAuthorizationError(
-                "GitHub approval comment was already used by this process"
-            )
-        _ISSUED_COMMENT_IDS.add(evidence.comment_id)
+    try:
+        replay_ledger.consume_authorization_once(
+            approval_source="github_issue_comment",
+            repository=binding.repository,
+            approval_record_id=str(evidence.comment_id),
+            authorization_id=binding.authorization_id,
+            approval_record_sha256=approval_sha256,
+            binding_sha256=binding.sha256(),
+            executor_host_id=binding.execution_host_id,
+            ledger_instance_id=binding.replay_ledger_instance_id,
+            expires_at_epoch_seconds=expires_at.timestamp(),
+        )
+    except (AuthorizationReplay, StateConflict, ValueError) as exc:
+        raise P14CLiveExecutionAuthorizationError(str(exc)) from None
     return P14CLiveExecutionGrant(
         binding=binding,
         approval_record_sha256=approval_sha256,
@@ -481,6 +807,7 @@ def _parse_approval(body: str) -> P14CLiveExecutionApproval:
         "request_timeout_ms",
         "total_wall_clock_ms",
         "cumulative_cost_microusd",
+        "clean_worktree",
         "target_repo_mutation_authorized",
         "production_deployment_authorized",
         "cleanup_execution_authorized",
@@ -499,6 +826,7 @@ def _parse_approval(body: str) -> P14CLiveExecutionApproval:
     if any(type(value[field]) is not int for field in integer_fields):
         raise ValueError("P14C approval integer fields must be integers")
     boolean_fields = {
+        "clean_worktree",
         "target_repo_mutation_authorized",
         "production_deployment_authorized",
         "cleanup_execution_authorized",
@@ -510,6 +838,22 @@ def _parse_approval(body: str) -> P14CLiveExecutionApproval:
         raise ValueError("P14C approval packet_sha256 is invalid")
     if _SHA256_RE.fullmatch(value["request_sha256"]) is None:
         raise ValueError("P14C approval request_sha256 is invalid")
+    if _SHA_RE.fullmatch(value["implementation_authorization_base_sha"]) is None:
+        raise ValueError(
+            "P14C approval implementation_authorization_base_sha is invalid"
+        )
+    if _SHA_RE.fullmatch(value["execution_commit_sha"]) is None:
+        raise ValueError("P14C approval execution_commit_sha is invalid")
+    if _SHA_RE.fullmatch(value["execution_tree_sha"]) is None:
+        raise ValueError("P14C approval execution_tree_sha is invalid")
+    if _SHA256_RE.fullmatch(value["source_manifest_sha256"]) is None:
+        raise ValueError("P14C approval source_manifest_sha256 is invalid")
+    if _SHA256_RE.fullmatch(value["replay_ledger_instance_id"]) is None:
+        raise ValueError("P14C approval replay_ledger_instance_id is invalid")
+    if _HOST_ID_RE.fullmatch(value["execution_host_id"]) is None:
+        raise ValueError("P14C approval execution_host_id is invalid")
+    if value["clean_worktree"] is not True:
+        raise ValueError("P14C approval clean_worktree must be true")
     return P14CLiveExecutionApproval(**value)
 
 

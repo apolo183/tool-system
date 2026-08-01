@@ -1,0 +1,158 @@
+task_id: tool-system-p14c-source-seal-replay-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/p14c-source-seal-replay-v1
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: development_plan.stage_plan.P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+alignment:
+  parent:
+    document: docs/reports/p14c_live_issuer_implementation.md
+    section_or_key: Residual blockers before a real call
+    scope: Close the current-source binding and durable cross-process replay gaps without creating or consuming real external authority.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve the bounded provider-worker authorization envelope, auditability, secret controls, and no-repository-mutation boundary.
+scope:
+  summary: Bind P14C approval to the exact clean executable commit, tree, critical-source manifest, execution host, and durable ledger instance, then burn each validated approval exactly once in a single-host SQLite ledger before issuing a capability.
+  in_scope:
+    - README.md
+    - REPO_MANIFEST.md
+    - config/module_registry_v1.yaml
+    - config/process_authority_schema_v1.json
+    - config/process_authority_v1.yaml
+    - docs/modules/ai-worker-runtime-contract-v1.md
+    - docs/modules/durable-orchestrator-contract-v1.md
+    - docs/modules/process-authority-contract-v1.md
+    - docs/process_authority_contract_v1.md
+    - docs/tool_system_module_registry_contract_v1.md
+    - docs/tool_system_project_state_v1.yaml
+    - docs/reports/p14c_source_seal_replay_hardening.md
+    - examples/change_plans/tool_system_p14c_source_seal_replay_v1.yaml
+    - examples/task_manifests/tool_system_p14c_source_seal_replay_v1.yaml
+    - src/tool_system/ai_worker/live_provider.py
+    - src/tool_system/orchestrator/__init__.py
+    - src/tool_system/orchestrator/durable.py
+    - src/tool_system/process_authority/__init__.py
+    - src/tool_system/process_authority/contract.py
+    - src/tool_system/process_authority/live_provider_approval.py
+    - tests/test_ai_worker_live_provider.py
+    - tests/test_durable_orchestrator_reliability.py
+    - tests/test_durable_orchestrator_side_effects.py
+    - tests/test_durable_orchestrator_state.py
+    - tests/test_module_contracts.py
+    - tests/test_module_registry.py
+    - tests/test_p14c_execution_contract.py
+    - tests/test_p14c_live_issuer.py
+    - tests/test_phase_alignment.py
+    - tests/test_process_authority.py
+    - tests/test_repo_manifest.py
+  out_of_scope:
+    - creating, editing, or reading a real GitHub approval comment
+    - credential-value access or a real model-provider call
+    - P14C live execution, acceptance, or closure
+    - P14D or later-stage work
+    - downstream repository access or mutation
+    - production deployment
+    - cleanup, rollback execution, or branch deletion
+    - changing the target-state blueprint
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/process_authority/live_provider_approval.py
+    commit_sha: 2c325f20f4c7a2b531725463b98572dee5f70967
+    why_relevant: The current issuer tracks used comments only in process memory and approval v1 does not bind the executing source, host, or durable ledger.
+  - repo: apolo183/tool-system
+    path: src/tool_system/ai_worker/live_provider.py
+    commit_sha: 2c325f20f4c7a2b531725463b98572dee5f70967
+    why_relevant: The live capability is bound to packet, request, and transport but does not revalidate exact current source immediately before credential access.
+  - repo: apolo183/tool-system
+    path: src/tool_system/orchestrator/durable.py
+    commit_sha: 2c325f20f4c7a2b531725463b98572dee5f70967
+    why_relevant: The accepted single-host SQLite owner already provides hardened paths, BEGIN IMMEDIATE transactions, and durable uniqueness but no generic authorization-consumption ledger.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_project_state_v1.yaml
+    commit_sha: 2c325f20f4c7a2b531725463b98572dee5f70967
+    why_relevant: This remains the sole descriptive progress owner and records that no real approval, capability, provider execution, or P14C acceptance exists.
+allowed_files:
+  - README.md
+  - REPO_MANIFEST.md
+  - config/module_registry_v1.yaml
+  - config/process_authority_schema_v1.json
+  - config/process_authority_v1.yaml
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/modules/durable-orchestrator-contract-v1.md
+  - docs/modules/process-authority-contract-v1.md
+  - docs/process_authority_contract_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - docs/reports/p14c_source_seal_replay_hardening.md
+  - examples/change_plans/tool_system_p14c_source_seal_replay_v1.yaml
+  - examples/task_manifests/tool_system_p14c_source_seal_replay_v1.yaml
+  - src/tool_system/ai_worker/live_provider.py
+  - src/tool_system/orchestrator/__init__.py
+  - src/tool_system/orchestrator/durable.py
+  - src/tool_system/process_authority/__init__.py
+  - src/tool_system/process_authority/contract.py
+  - src/tool_system/process_authority/live_provider_approval.py
+  - tests/test_ai_worker_live_provider.py
+  - tests/test_durable_orchestrator_reliability.py
+  - tests/test_durable_orchestrator_side_effects.py
+  - tests/test_durable_orchestrator_state.py
+  - tests/test_module_contracts.py
+  - tests/test_module_registry.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_p14c_live_issuer.py
+  - tests/test_phase_alignment.py
+  - tests/test_process_authority.py
+  - tests/test_repo_manifest.py
+forbidden_files:
+  - AGENTS.md
+  - blueprint/**
+  - policy/**
+  - harness/**
+  - src/tool_system/repo_controller/**
+  - src/tool_system/target_repo/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_p14c_live_issuer.py tests/test_ai_worker_live_provider.py tests/test_durable_orchestrator_state.py tests/test_durable_orchestrator_reliability.py tests/test_durable_orchestrator_side_effects.py tests/test_process_authority.py tests/test_p14c_execution_contract.py tests/test_phase_alignment.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14c_source_seal_replay_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_source_seal_replay_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - approval v2 binds the exact clean execution commit, tree, fixed critical-source manifest, actual host, and durable ledger instance
+    - missing, symlinked, dirty, mismatched, or drifted source fails before approval read, credential resolution, or provider transport
+    - durable authorization consumption uses one BEGIN IMMEDIATE transaction and an immutable single-host ledger identity
+    - two independent processes racing or reopening the same SQLite ledger produce exactly one durable approval-consumption winner
+    - a crash after durable claim burns the approval and requires a fresh approval record rather than release or retry
+    - the live capability revalidates the exact source seal immediately before every credential access
+    - all tests use temporary SQLite and injected GitHub, credential, and provider I/O with zero real external access
+    - P14C remains unaccepted and every later-stage, downstream, production, cleanup, rollback, and branch-deletion boundary remains false
+    - focused tests, full tests, process authority, module registry, and repository manifest pass
+publication:
+  draft_pr_required: true
+  ready_and_squash_merge_authorized_after_no_drift_gates: true
+  retain_feature_branch_at_original_head: true
+rollback:
+  method: git_revert
+  reference: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967
+approval:
+  required: true
+  approved_by: user_explicit_p14c_source_seal_replay_lifecycle_v1
+  approval_source: chat_user_message:P14C-SOURCE-SEAL-REPLAY-LIFECYCLE-v1
+  approved_at: 2026-08-01 UTC+09:00

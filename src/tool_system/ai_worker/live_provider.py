@@ -8,6 +8,7 @@ import threading
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Protocol
 
 from tool_system.ai_worker.contract import (
@@ -31,13 +32,18 @@ from tool_system.process_authority.live_provider_approval import (
     P14C_APPROVAL_REPOSITORY,
     P14C_LIVE_EXECUTION_AUTHORIZATION_ID,
     P14C_LIVE_TRANSPORT_KIND,
+    P14CExecutionSourceSeal,
     P14CLiveExecutionBinding,
+    build_p14c_execution_source_seal,
     build_p14c_live_execution_approval_body,
     issue_p14c_live_execution_grant,
+    validate_p14c_execution_source_seal,
 )
 
 P14C_AUTHORIZATION_PACKET = "P14C-IMPL-v2"
-P14C_TOOL_SYSTEM_BASE = "637fe60782ed9e15d58795a0113b84965d6664d2"
+P14C_IMPLEMENTATION_AUTHORIZATION_BASE_SHA = (
+    "637fe60782ed9e15d58795a0113b84965d6664d2"
+)
 P14C_FIXTURE_ID = "P14C-001"
 OPENAI_PROVIDER_ID = "openai"
 OPENAI_MODEL_ID = "gpt-5.6-luna"
@@ -53,7 +59,7 @@ RETRYABLE_HTTP_STATUSES = frozenset({408, 429, 500, 502, 503, 504})
 @dataclass(frozen=True)
 class P14CExecutionPacket:
     packet_id: str
-    tool_system_base: str
+    implementation_authorization_base_sha: str
     fixture_id: str
     provider_id: str
     model_id: str
@@ -88,7 +94,9 @@ class P14CExecutionPacket:
     def canonical_record(self) -> dict[str, object]:
         return {
             "packet_id": self.packet_id,
-            "tool_system_base": self.tool_system_base,
+            "implementation_authorization_base_sha": (
+                self.implementation_authorization_base_sha
+            ),
             "fixture_id": self.fixture_id,
             "provider_id": self.provider_id,
             "model_id": self.model_id,
@@ -137,7 +145,9 @@ class P14CExecutionPacket:
 def build_p14c_execution_packet() -> P14CExecutionPacket:
     return P14CExecutionPacket(
         packet_id=P14C_AUTHORIZATION_PACKET,
-        tool_system_base=P14C_TOOL_SYSTEM_BASE,
+        implementation_authorization_base_sha=(
+            P14C_IMPLEMENTATION_AUTHORIZATION_BASE_SHA
+        ),
         fixture_id=P14C_FIXTURE_ID,
         provider_id=OPENAI_PROVIDER_ID,
         model_id=OPENAI_MODEL_ID,
@@ -361,7 +371,10 @@ class P14CLiveExecutionCapability:
         "_lock",
         "_packet_sha256",
         "_request_sha256",
+        "_repository_root",
+        "_replay_ledger",
         "_sealed",
+        "_source_seal",
         "_transport",
         "_transport_kind",
     )
@@ -378,6 +391,9 @@ class P14CLiveExecutionCapability:
         approval_comment_id: int | None = None,
         approval_issue_number: int | None = None,
         expires_at_epoch_seconds: int | None = None,
+        source_seal: P14CExecutionSourceSeal | None = None,
+        repository_root: Path | None = None,
+        replay_ledger: object | None = None,
         _issuer: object,
     ) -> None:
         if _issuer is not _P14C_CAPABILITY_ISSUER:
@@ -391,6 +407,9 @@ class P14CLiveExecutionCapability:
             and approval_comment_id is None
             and approval_issue_number is None
             and expires_at_epoch_seconds is None
+            and source_seal is None
+            and repository_root is None
+            and replay_ledger is None
         )
         live_capability = (
             authorization_id == P14C_LIVE_EXECUTION_AUTHORIZATION_ID
@@ -407,6 +426,9 @@ class P14CLiveExecutionCapability:
             and isinstance(expires_at_epoch_seconds, int)
             and not isinstance(expires_at_epoch_seconds, bool)
             and expires_at_epoch_seconds > 0
+            and isinstance(source_seal, P14CExecutionSourceSeal)
+            and isinstance(repository_root, Path)
+            and replay_ledger is not None
         )
         if not fake_capability and not live_capability:
             raise TypeError("P14C live-network capability issuance is unavailable")
@@ -415,6 +437,9 @@ class P14CLiveExecutionCapability:
         object.__setattr__(self, "_request_sha256", request_sha256)
         object.__setattr__(self, "_transport_kind", transport_kind)
         object.__setattr__(self, "_transport", transport)
+        object.__setattr__(self, "_source_seal", source_seal)
+        object.__setattr__(self, "_repository_root", repository_root)
+        object.__setattr__(self, "_replay_ledger", replay_ledger)
         object.__setattr__(
             self,
             "_approval_record_sha256",
@@ -468,6 +493,21 @@ class P14CLiveExecutionCapability:
     def expires_at_epoch_seconds(self) -> int | None:
         return self._expires_at_epoch_seconds
 
+    @property
+    def source_seal(self) -> P14CExecutionSourceSeal | None:
+        return self._source_seal
+
+    def execution_source_reasons(self) -> tuple[str, ...]:
+        if self._source_seal is None:
+            return ()
+        assert self._repository_root is not None
+        assert self._replay_ledger is not None
+        return validate_p14c_execution_source_seal(
+            self._source_seal,
+            repository_root=self._repository_root,
+            replay_ledger=self._replay_ledger,  # type: ignore[arg-type]
+        )
+
     def binding_reasons(
         self,
         *,
@@ -493,6 +533,7 @@ class P14CLiveExecutionCapability:
             and time.time() > self._expires_at_epoch_seconds
         ):
             reasons.append("live execution capability has expired")
+        reasons.extend(self.execution_source_reasons())
         return tuple(reasons)
 
     def consume(
@@ -553,6 +594,7 @@ def _issue_p14c_fake_transport_capability(
 def build_p14c_live_execution_binding(
     packet: P14CExecutionPacket,
     request: AIWorkerRequest,
+    source_seal: P14CExecutionSourceSeal,
 ) -> P14CLiveExecutionBinding:
     reasons = list(validate_p14c_execution_packet(packet))
     try:
@@ -561,13 +603,23 @@ def build_p14c_live_execution_binding(
         request_sha256 = ""
     if request_sha256 != build_p14c_synthetic_request(packet).sha256():
         reasons.append("request is not the exact P14C-001 synthetic fixture")
+    if not isinstance(source_seal, P14CExecutionSourceSeal):
+        reasons.append("execution source seal is invalid")
     if reasons:
         raise ValueError("; ".join(reasons))
     return P14CLiveExecutionBinding(
         authorization_id=P14C_LIVE_EXECUTION_AUTHORIZATION_ID,
         repository=P14C_APPROVAL_REPOSITORY,
         action=P14C_APPROVAL_ACTION,
-        tool_system_base=packet.tool_system_base,
+        implementation_authorization_base_sha=(
+            packet.implementation_authorization_base_sha
+        ),
+        execution_commit_sha=source_seal.execution_commit_sha,
+        execution_tree_sha=source_seal.execution_tree_sha,
+        source_manifest_sha256=source_seal.source_manifest_sha256,
+        clean_worktree=source_seal.clean_worktree,
+        execution_host_id=source_seal.execution_host_id,
+        replay_ledger_instance_id=source_seal.replay_ledger_instance_id,
         packet_sha256=packet.sha256(),
         request_sha256=request_sha256,
         fixture_id=packet.fixture_id,
@@ -595,13 +647,21 @@ def build_p14c_github_approval_body(
     *,
     expires_at_utc: str,
     nonce: str,
+    repository_root: str | Path,
+    replay_ledger: object,
     packet: P14CExecutionPacket | None = None,
     request: AIWorkerRequest | None = None,
 ) -> str:
     active_packet = packet or build_p14c_execution_packet()
     active_request = request or build_p14c_synthetic_request(active_packet)
+    source_seal = build_p14c_execution_source_seal(
+        repository_root,
+        replay_ledger,  # type: ignore[arg-type]
+    )
     return build_p14c_live_execution_approval_body(
-        build_p14c_live_execution_binding(active_packet, active_request),
+        build_p14c_live_execution_binding(
+            active_packet, active_request, source_seal
+        ),
         expires_at_utc=expires_at_utc,
         nonce=nonce,
     )
@@ -613,15 +673,25 @@ def issue_p14c_live_network_capability(
     packet: P14CExecutionPacket,
     request: AIWorkerRequest,
     transport: OpenAIResponsesTransport,
+    repository_root: str | Path,
+    replay_ledger: object,
 ) -> P14CLiveExecutionCapability:
     """Authenticate GitHub owner authority and mint one exact live capability."""
 
     if type(transport) is not OpenAIResponsesTransport:
         raise TypeError("live capability requires the exact OpenAI TLS transport")
-    binding = build_p14c_live_execution_binding(packet, request)
+    source_seal = build_p14c_execution_source_seal(
+        repository_root,
+        replay_ledger,  # type: ignore[arg-type]
+    )
+    binding = build_p14c_live_execution_binding(
+        packet, request, source_seal
+    )
     grant = issue_p14c_live_execution_grant(
         comment_id=comment_id,
         binding=binding,
+        repository_root=repository_root,
+        replay_ledger=replay_ledger,  # type: ignore[arg-type]
     )
     grant_reasons = grant.consume_for_capability(binding)
     if grant_reasons:
@@ -636,6 +706,9 @@ def issue_p14c_live_network_capability(
         approval_comment_id=grant.comment_id,
         approval_issue_number=grant.issue_number,
         expires_at_epoch_seconds=grant.expires_at_epoch_seconds,
+        source_seal=source_seal,
+        repository_root=Path(repository_root).resolve(strict=True),
+        replay_ledger=replay_ledger,
         _issuer=_P14C_CAPABILITY_ISSUER,
     )
 
@@ -789,6 +862,17 @@ class OpenAIResponsesProvider:
                     duration_ms=elapsed_ms,
                 )
 
+            assert isinstance(
+                self.execution_capability, P14CLiveExecutionCapability
+            )
+            source_reasons = self.execution_capability.execution_source_reasons()
+            if source_reasons:
+                return _provider_error(
+                    AIWorkerErrorCode.PROVIDER_MISMATCH,
+                    "P14C execution source seal changed before credential access",
+                    reasons=source_reasons,
+                    duration_ms=elapsed_ms,
+                )
             try:
                 credential = self._credential_resolver.resolve(
                     self.packet.credential_reference

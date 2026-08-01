@@ -45,6 +45,13 @@ p14c:
     main_ci_run_id: 30616558561
     branch_retained: true
   trust_root: github_owner_issue_comment
+  source_hardening_record: docs/reports/p14c_source_seal_replay_hardening.md
+  source_hardening_authorization_packet: P14C-SOURCE-SEAL-REPLAY-LIFECYCLE-v1
+  source_hardening_status: exact_source_host_and_single_host_replay_source_implemented_fake_io_only_no_execution_not_accepted
+  approval_contract_version: p14c-live-execution-approval-v2
+  execution_source_seal_required: true
+  durable_replay_boundary: single_host_sqlite_burn_on_claim_at_most_once
+  multi_host_exactly_once_claimed: false
   real_live_approval_record_created: false
   live_capability_issued: false
   stage_accepted: false

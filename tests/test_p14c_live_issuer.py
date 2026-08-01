@@ -1,15 +1,22 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
 import pytest
 
 import tool_system.ai_worker.live_provider as live_provider_module
+import tool_system.orchestrator as orchestrator_package
+import tool_system.orchestrator.durable as durable_module
+import tool_system.process_authority as process_authority_package
 import tool_system.process_authority.live_provider_approval as approval_module
 from tool_system.ai_worker.live_provider import (
+    OpenAIResponsesProvider,
     OpenAIResponsesTransport,
     build_p14c_execution_packet,
     build_p14c_github_approval_body,
@@ -17,12 +24,23 @@ from tool_system.ai_worker.live_provider import (
     build_p14c_synthetic_request,
     issue_p14c_live_network_capability,
 )
+from tool_system.ai_worker.contract import AIWorkerErrorCode
 from tool_system.process_authority.live_provider_approval import (
     GitHubApprovalReadError,
+    P14C_APPROVAL_VERSION,
+    P14C_CRITICAL_SOURCE_PATHS,
+    P14CExecutionSourceSeal,
     P14CLiveExecutionAuthorizationError,
     P14CLiveExecutionBinding,
     P14CLiveExecutionGrant,
+    build_p14c_execution_source_seal,
+    validate_p14c_execution_source_seal,
 )
+from tool_system.orchestrator import DurableOrchestratorStore
+
+
+ROOT = Path(__file__).resolve().parents[1]
+ExecutionContext = tuple[Path, DurableOrchestratorStore]
 
 
 class _FakeGitHubResponse:
@@ -68,18 +86,23 @@ def _utc(value: datetime) -> str:
 
 def _approval_body(
     *,
+    execution_context: ExecutionContext,
     created_at: datetime,
     expires_at: datetime | None = None,
     nonce_digit: str = "a",
 ) -> str:
+    repository_root, replay_ledger = execution_context
     return build_p14c_github_approval_body(
         expires_at_utc=_utc(expires_at or created_at + timedelta(minutes=10)),
         nonce=nonce_digit * 64,
+        repository_root=repository_root,
+        replay_ledger=replay_ledger,
     )
 
 
 def _comment_payload(
     *,
+    execution_context: ExecutionContext,
     comment_id: int,
     created_at: datetime,
     body: str | None = None,
@@ -98,7 +121,11 @@ def _comment_payload(
             "author_association": author_association,
             "created_at": _utc(created_at),
             "updated_at": _utc(updated_at or created_at),
-            "body": body or _approval_body(created_at=created_at),
+            "body": body
+            or _approval_body(
+                execution_context=execution_context,
+                created_at=created_at,
+            ),
         }
     ).encode("utf-8")
 
@@ -132,14 +159,94 @@ def _install_fake_github(
     return connections
 
 
+def _run_git(repository_root: Path, *arguments: str) -> None:
+    subprocess.run(
+        ("git", *arguments),
+        cwd=repository_root,
+        check=True,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+    )
+
+
+@pytest.fixture
+def execution_context(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> ExecutionContext:
+    repository_root = tmp_path / "source"
+    repository_root.mkdir(mode=0o700)
+    for relative_path in P14C_CRITICAL_SOURCE_PATHS:
+        target = repository_root / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / relative_path, target)
+    _run_git(repository_root, "init", "-q")
+    _run_git(repository_root, "config", "user.name", "tool-system test")
+    _run_git(repository_root, "config", "user.email", "tool-system@example.invalid")
+    _run_git(
+        repository_root,
+        "remote",
+        "add",
+        "origin",
+        "https://github.com/apolo183/tool-system.git",
+    )
+    _run_git(repository_root, "add", "--all")
+    _run_git(repository_root, "commit", "-q", "-m", "fixture source")
+    ledger_root = tmp_path / "ledger"
+    ledger_root.mkdir(mode=0o700)
+    replay_ledger = DurableOrchestratorStore(
+        ledger_root / "approval.sqlite3",
+        forbidden_roots=(ROOT, repository_root),
+    )
+    monkeypatch.setattr(
+        live_provider_module,
+        "__file__",
+        str(repository_root / P14C_CRITICAL_SOURCE_PATHS[0]),
+    )
+    monkeypatch.setattr(
+        orchestrator_package,
+        "__file__",
+        str(repository_root / P14C_CRITICAL_SOURCE_PATHS[1]),
+    )
+    monkeypatch.setattr(
+        durable_module,
+        "__file__",
+        str(repository_root / P14C_CRITICAL_SOURCE_PATHS[2]),
+    )
+    monkeypatch.setattr(
+        process_authority_package,
+        "__file__",
+        str(repository_root / P14C_CRITICAL_SOURCE_PATHS[3]),
+    )
+    monkeypatch.setattr(
+        approval_module,
+        "__file__",
+        str(repository_root / P14C_CRITICAL_SOURCE_PATHS[4]),
+    )
+    return repository_root, replay_ledger
+
+
+def _live_capability_arguments(
+    execution_context: ExecutionContext,
+) -> dict[str, object]:
+    repository_root, replay_ledger = execution_context
+    return {
+        "repository_root": repository_root,
+        "replay_ledger": replay_ledger,
+    }
+
+
 def test_owner_comment_issues_one_exact_capability_without_real_io(
     monkeypatch: pytest.MonkeyPatch,
+    execution_context: ExecutionContext,
 ) -> None:
     now = datetime.now(timezone.utc).replace(microsecond=0)
     comment_id = 91_001
     connections = _install_fake_github(
         monkeypatch,
         payload=_comment_payload(
+            execution_context=execution_context,
             comment_id=comment_id,
             created_at=now - timedelta(minutes=1),
         ),
@@ -153,15 +260,18 @@ def test_owner_comment_issues_one_exact_capability_without_real_io(
         packet=packet,
         request=request,
         transport=transport,
+        **_live_capability_arguments(execution_context),
     )
 
-    assert capability.authorization_id == "P14C-LIVE-EXEC-v1"
+    assert capability.authorization_id == "P14C-LIVE-EXEC-v2"
     assert capability.transport_kind == "live_network"
     assert capability.approval_comment_id == comment_id
     assert capability.approval_issue_number == 148
     assert isinstance(capability.expires_at_epoch_seconds, int)
     assert isinstance(capability.approval_record_sha256, str)
     assert len(capability.approval_record_sha256) == 64
+    assert capability.source_seal is not None
+    assert capability.source_seal.clean_worktree is True
     assert len(connections) == 1
     assert connections[0].requests == [
         {
@@ -191,13 +301,14 @@ def test_owner_comment_issues_one_exact_capability_without_real_io(
 
     with pytest.raises(
         P14CLiveExecutionAuthorizationError,
-        match="already used",
+        match="already consumed",
     ):
         issue_p14c_live_network_capability(
             comment_id=comment_id,
             packet=packet,
             request=request,
             transport=OpenAIResponsesTransport(),
+            **_live_capability_arguments(execution_context),
         )
 
 
@@ -230,6 +341,7 @@ def test_owner_comment_issues_one_exact_capability_without_real_io(
 )
 def test_untrusted_edited_expired_or_wrong_repo_comment_blocks(
     monkeypatch: pytest.MonkeyPatch,
+    execution_context: ExecutionContext,
     comment_id: int,
     changes: dict[str, Any],
     reason: str,
@@ -241,6 +353,7 @@ def test_untrusted_edited_expired_or_wrong_repo_comment_blocks(
         timedelta(minutes=10),
     )
     payload = _comment_payload(
+        execution_context=execution_context,
         comment_id=comment_id,
         created_at=created_at,
         updated_at=created_at + changes.get("updated_offset", timedelta()),
@@ -251,6 +364,7 @@ def test_untrusted_edited_expired_or_wrong_repo_comment_blocks(
             "https://api.github.com/repos/apolo183/tool-system/issues/148",
         ),
         body=_approval_body(
+            execution_context=execution_context,
             created_at=created_at,
             expires_at=expires_at,
             nonce_digit=str(comment_id)[-1],
@@ -267,18 +381,26 @@ def test_untrusted_edited_expired_or_wrong_repo_comment_blocks(
             packet=build_p14c_execution_packet(),
             request=build_p14c_synthetic_request(),
             transport=OpenAIResponsesTransport(),
+            **_live_capability_arguments(execution_context),
         )
 
 
 def test_approval_body_drift_and_duplicate_fields_block(
     monkeypatch: pytest.MonkeyPatch,
+    execution_context: ExecutionContext,
 ) -> None:
     now = datetime.now(timezone.utc).replace(microsecond=0)
-    body = json.loads(_approval_body(created_at=now - timedelta(minutes=1)))
+    body = json.loads(
+        _approval_body(
+            execution_context=execution_context,
+            created_at=now - timedelta(minutes=1),
+        )
+    )
     body["model_id"] = "different-model"
     _install_fake_github(
         monkeypatch,
         payload=_comment_payload(
+            execution_context=execution_context,
             comment_id=91_008,
             created_at=now - timedelta(minutes=1),
             body=json.dumps(body),
@@ -293,9 +415,11 @@ def test_approval_body_drift_and_duplicate_fields_block(
             packet=build_p14c_execution_packet(),
             request=build_p14c_synthetic_request(),
             transport=OpenAIResponsesTransport(),
+            **_live_capability_arguments(execution_context),
         )
 
     duplicate = _approval_body(
+        execution_context=execution_context,
         created_at=now - timedelta(minutes=1),
         nonce_digit="9",
     ).replace(
@@ -306,6 +430,7 @@ def test_approval_body_drift_and_duplicate_fields_block(
     _install_fake_github(
         monkeypatch,
         payload=_comment_payload(
+            execution_context=execution_context,
             comment_id=91_009,
             created_at=now - timedelta(minutes=1),
             body=duplicate,
@@ -320,11 +445,13 @@ def test_approval_body_drift_and_duplicate_fields_block(
             packet=build_p14c_execution_packet(),
             request=build_p14c_synthetic_request(),
             transport=OpenAIResponsesTransport(),
+            **_live_capability_arguments(execution_context),
         )
 
 
 def test_http_failure_and_nonexact_transport_fail_closed_before_provider_access(
     monkeypatch: pytest.MonkeyPatch,
+    execution_context: ExecutionContext,
 ) -> None:
     _install_fake_github(monkeypatch, payload=b"{}", status=302)
     with pytest.raises(GitHubApprovalReadError, match="HTTP 302"):
@@ -333,6 +460,7 @@ def test_http_failure_and_nonexact_transport_fail_closed_before_provider_access(
             packet=build_p14c_execution_packet(),
             request=build_p14c_synthetic_request(),
             transport=OpenAIResponsesTransport(),
+            **_live_capability_arguments(execution_context),
         )
 
     class CallerTransport(OpenAIResponsesTransport):
@@ -344,17 +472,20 @@ def test_http_failure_and_nonexact_transport_fail_closed_before_provider_access(
             packet=build_p14c_execution_packet(),
             request=build_p14c_synthetic_request(),
             transport=CallerTransport(),
+            **_live_capability_arguments(execution_context),
         )
 
 
 def test_live_capability_expiry_blocks_after_issuance(
     monkeypatch: pytest.MonkeyPatch,
+    execution_context: ExecutionContext,
 ) -> None:
     now = datetime.now(timezone.utc).replace(microsecond=0)
     comment_id = 91_013
     _install_fake_github(
         monkeypatch,
         payload=_comment_payload(
+            execution_context=execution_context,
             comment_id=comment_id,
             created_at=now - timedelta(minutes=1),
         ),
@@ -367,6 +498,7 @@ def test_live_capability_expiry_blocks_after_issuance(
         packet=packet,
         request=request,
         transport=transport,
+        **_live_capability_arguments(execution_context),
     )
     assert capability.expires_at_epoch_seconds is not None
     monkeypatch.setattr(
@@ -382,20 +514,267 @@ def test_live_capability_expiry_blocks_after_issuance(
     ) == ("live execution capability has expired",)
 
 
-def test_grant_is_opaque_and_approval_builder_preserves_all_denials() -> None:
+def test_source_seal_is_exact_and_wrong_host_or_ledger_fails(
+    execution_context: ExecutionContext,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository_root, replay_ledger = execution_context
+    seal = build_p14c_execution_source_seal(repository_root, replay_ledger)
+
+    assert seal.clean_worktree is True
+    assert len(seal.execution_commit_sha) == 40
+    assert len(seal.execution_tree_sha) == 40
+    assert len(seal.source_manifest_sha256) == 64
+    assert validate_p14c_execution_source_seal(
+        seal,
+        repository_root=repository_root,
+        replay_ledger=replay_ledger,
+    ) == ()
+    assert validate_p14c_execution_source_seal(
+        replace(seal, execution_host_id="different-host"),
+        repository_root=repository_root,
+        replay_ledger=replay_ledger,
+    ) == ("P14C execution source seal execution_host_id does not match",)
+
+    second_root = tmp_path / "second-ledger"
+    second_root.mkdir(mode=0o700)
+    second_ledger = DurableOrchestratorStore(
+        second_root / "approval.sqlite3",
+        forbidden_roots=(ROOT, repository_root),
+    )
+    assert validate_p14c_execution_source_seal(
+        seal,
+        repository_root=repository_root,
+        replay_ledger=second_ledger,
+    ) == (
+        "P14C execution source seal replay_ledger_instance_id does not match",
+    )
+    monkeypatch.setattr(
+        live_provider_module,
+        "__file__",
+        str(ROOT / P14C_CRITICAL_SOURCE_PATHS[0]),
+    )
+    with pytest.raises(
+        P14CLiveExecutionAuthorizationError,
+        match="module source does not match execution checkout",
+    ):
+        build_p14c_execution_source_seal(repository_root, replay_ledger)
+
+
+def test_dirty_source_blocks_before_github_read(
+    monkeypatch: pytest.MonkeyPatch,
+    execution_context: ExecutionContext,
+) -> None:
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    payload = _comment_payload(
+        execution_context=execution_context,
+        comment_id=91_014,
+        created_at=now - timedelta(minutes=1),
+    )
+    connections = _install_fake_github(monkeypatch, payload=payload)
+    repository_root, _ = execution_context
+    source = repository_root / P14C_CRITICAL_SOURCE_PATHS[0]
+    source.write_text(source.read_text(encoding="utf-8") + "\n# drift\n", encoding="utf-8")
+
+    with pytest.raises(
+        P14CLiveExecutionAuthorizationError,
+        match="worktree must be exactly clean",
+    ):
+        issue_p14c_live_network_capability(
+            comment_id=91_014,
+            packet=build_p14c_execution_packet(),
+            request=build_p14c_synthetic_request(),
+            transport=OpenAIResponsesTransport(),
+            **_live_capability_arguments(execution_context),
+        )
+    assert connections == []
+
+
+@pytest.mark.parametrize("source_state", ["missing", "symlink"])
+def test_missing_or_symlinked_critical_source_fails_closed(
+    execution_context: ExecutionContext,
+    source_state: str,
+) -> None:
+    repository_root, replay_ledger = execution_context
+    source = repository_root / P14C_CRITICAL_SOURCE_PATHS[0]
+    source.unlink()
+    if source_state == "symlink":
+        target = repository_root / P14C_CRITICAL_SOURCE_PATHS[1]
+        source.symlink_to(target)
+    _run_git(repository_root, "add", "--all")
+    _run_git(repository_root, "commit", "-q", "-m", f"{source_state} source")
+
+    expected = "unavailable" if source_state == "missing" else "non-symlink"
+    with pytest.raises(P14CLiveExecutionAuthorizationError, match=expected):
+        build_p14c_execution_source_seal(repository_root, replay_ledger)
+
+
+def test_approval_v1_is_rejected_and_not_consumed(
+    monkeypatch: pytest.MonkeyPatch,
+    execution_context: ExecutionContext,
+) -> None:
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    record = json.loads(
+        _approval_body(
+            execution_context=execution_context,
+            created_at=now - timedelta(minutes=1),
+        )
+    )
+    record["approval_version"] = "p14c-live-execution-approval-v1"
+    _install_fake_github(
+        monkeypatch,
+        payload=_comment_payload(
+            execution_context=execution_context,
+            comment_id=91_015,
+            created_at=now - timedelta(minutes=1),
+            body=json.dumps(record),
+        ),
+    )
+
+    with pytest.raises(
+        P14CLiveExecutionAuthorizationError,
+        match="approval version does not match",
+    ):
+        issue_p14c_live_network_capability(
+            comment_id=91_015,
+            packet=build_p14c_execution_packet(),
+            request=build_p14c_synthetic_request(),
+            transport=OpenAIResponsesTransport(),
+            **_live_capability_arguments(execution_context),
+        )
+    _, replay_ledger = execution_context
+    assert replay_ledger.get_authorization_consumption(
+        approval_source="github_issue_comment",
+        repository="apolo183/tool-system",
+        approval_record_id="91015",
+    ) is None
+
+
+def test_failure_after_durable_claim_leaves_approval_burned(
+    monkeypatch: pytest.MonkeyPatch,
+    execution_context: ExecutionContext,
+) -> None:
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    _install_fake_github(
+        monkeypatch,
+        payload=_comment_payload(
+            execution_context=execution_context,
+            comment_id=91_017,
+            created_at=now - timedelta(minutes=1),
+        ),
+    )
+    original_grant_type = approval_module.P14CLiveExecutionGrant
+
+    def crash_after_claim(**values: object) -> object:
+        raise RuntimeError("simulated crash after durable claim")
+
+    monkeypatch.setattr(
+        approval_module,
+        "P14CLiveExecutionGrant",
+        crash_after_claim,
+    )
+    values = {
+        "comment_id": 91_017,
+        "packet": build_p14c_execution_packet(),
+        "request": build_p14c_synthetic_request(),
+        "transport": OpenAIResponsesTransport(),
+        **_live_capability_arguments(execution_context),
+    }
+    with pytest.raises(RuntimeError, match="simulated crash"):
+        issue_p14c_live_network_capability(**values)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(
+        approval_module,
+        "P14CLiveExecutionGrant",
+        original_grant_type,
+    )
+    with pytest.raises(
+        P14CLiveExecutionAuthorizationError,
+        match="already consumed",
+    ):
+        issue_p14c_live_network_capability(**values)  # type: ignore[arg-type]
+
+
+def test_source_drift_after_issuance_blocks_before_credential_and_transport(
+    monkeypatch: pytest.MonkeyPatch,
+    execution_context: ExecutionContext,
+) -> None:
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    _install_fake_github(
+        monkeypatch,
+        payload=_comment_payload(
+            execution_context=execution_context,
+            comment_id=91_016,
+            created_at=now - timedelta(minutes=1),
+        ),
+    )
     packet = build_p14c_execution_packet()
     request = build_p14c_synthetic_request(packet)
-    binding = build_p14c_live_execution_binding(packet, request)
+    transport = OpenAIResponsesTransport()
+    capability = issue_p14c_live_network_capability(
+        comment_id=91_016,
+        packet=packet,
+        request=request,
+        transport=transport,
+        **_live_capability_arguments(execution_context),
+    )
+    credential_calls = 0
+    transport_calls = 0
+
+    class Resolver:
+        def resolve(self, reference: str) -> str:
+            nonlocal credential_calls
+            credential_calls += 1
+            return "not-a-real-secret"
+
+    def blocked_transport(*args: object, **kwargs: object) -> object:
+        nonlocal transport_calls
+        transport_calls += 1
+        raise AssertionError("transport must not run")
+
+    monkeypatch.setattr(OpenAIResponsesTransport, "send", blocked_transport)
+    repository_root, _ = execution_context
+    source = repository_root / P14C_CRITICAL_SOURCE_PATHS[0]
+    source.write_text(source.read_text(encoding="utf-8") + "\n# drift\n", encoding="utf-8")
+    response = OpenAIResponsesProvider(
+        packet=packet,
+        transport=transport,
+        credential_resolver=Resolver(),
+        execution_capability=capability,
+    ).invoke(request)
+
+    assert response.error is not None
+    assert response.error.code is AIWorkerErrorCode.PROVIDER_MISMATCH
+    assert credential_calls == 0
+    assert transport_calls == 0
+
+
+def test_grant_is_opaque_and_approval_builder_preserves_all_denials(
+    execution_context: ExecutionContext,
+) -> None:
+    packet = build_p14c_execution_packet()
+    request = build_p14c_synthetic_request(packet)
+    repository_root, replay_ledger = execution_context
+    source_seal = build_p14c_execution_source_seal(
+        repository_root, replay_ledger
+    )
+    binding = build_p14c_live_execution_binding(
+        packet, request, source_seal
+    )
     record = json.loads(
         build_p14c_github_approval_body(
             expires_at_utc="2026-07-31T12:15:00Z",
             nonce="f" * 64,
             packet=packet,
             request=request,
+            repository_root=repository_root,
+            replay_ledger=replay_ledger,
         )
     )
 
-    assert record["authorization_id"] == "P14C-LIVE-EXEC-v1"
+    assert record["approval_version"] == P14C_APPROVAL_VERSION
+    assert record["authorization_id"] == "P14C-LIVE-EXEC-v2"
     assert record["repository"] == "apolo183/tool-system"
     assert record["provider_id"] == "openai"
     assert record["model_id"] == "gpt-5.6-luna"
@@ -403,6 +782,14 @@ def test_grant_is_opaque_and_approval_builder_preserves_all_denials() -> None:
     assert record["provider_invocation_ceiling"] == 1
     assert record["max_attempts"] == 2
     assert record["cumulative_cost_microusd"] == 20_000
+    assert record["execution_commit_sha"] == source_seal.execution_commit_sha
+    assert record["execution_tree_sha"] == source_seal.execution_tree_sha
+    assert record["source_manifest_sha256"] == source_seal.source_manifest_sha256
+    assert record["clean_worktree"] is True
+    assert record["execution_host_id"] == source_seal.execution_host_id
+    assert record["replay_ledger_instance_id"] == (
+        source_seal.replay_ledger_instance_id
+    )
     assert record["target_repo_mutation_authorized"] is False
     assert record["production_deployment_authorized"] is False
     assert record["cleanup_execution_authorized"] is False

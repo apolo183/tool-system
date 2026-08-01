@@ -82,26 +82,27 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:agent_worker_runtime@1.0.0
     - current_module_id: ai_worker_runtime
       canonical_module_id: ai-worker-runtime
-      current_module_version: 1.2.0
+      current_module_version: 1.3.0
       aggregate_interface_id: ai-worker-runtime-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.ai_worker}
       direct_consumer_module_ids: []
-      change_risk: "critical: bounded live-adapter source consuming an exact process-authority grant while default execution remains fixture-only"
-      rollback_identity: tool-system@b6ea3c62aa668031e87abb6341f82cb1bd32a3eb:ai_worker_runtime@1.1.0
+      change_risk: "critical: bounded live-adapter source consuming a durably burned exact-source process-authority grant while default execution remains fixture-only"
+      rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:ai_worker_runtime@1.2.0
     - current_module_id: durable_orchestrator
       canonical_module_id: durable-orchestrator
-      current_module_version: 1.0.0
+      current_module_version: 1.1.0
       aggregate_interface_id: durable-orchestrator-api
-      aggregate_interface_version: 1.0.0
+      aggregate_interface_version: 1.1.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.orchestrator}
-      direct_consumer_module_ids: []
-      change_risk: "high: persistent SQLite state and recovery boundary"
-      rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:durable_orchestrator@1.0.0
+      direct_consumer_module_ids:
+        - process_authority
+      change_risk: "high: persistent SQLite state, recovery, and burn-on-claim authorization boundary"
+      rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:durable_orchestrator@1.0.0
     - current_module_id: repository_controller
       canonical_module_id: repository-controller
       current_module_version: 1.2.0
@@ -121,9 +122,9 @@ mapping_contract:
       rollback_identity: tool-system@6cb43f8723619bddfdd4c5b52a7d68db1ea3f30f:repository_controller@1.1.0
     - current_module_id: process_authority
       canonical_module_id: process-authority
-      current_module_version: 2.1.0
+      current_module_version: 2.2.0
       aggregate_interface_id: process-authority-api
-      aggregate_interface_version: 2.0.0
+      aggregate_interface_version: 2.1.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.process_authority}
@@ -134,8 +135,8 @@ mapping_contract:
         - ai_worker_runtime
         - task_planner
         - task_runner
-      change_risk: "critical: current task-pair authority, replay boundary, and GitHub-owner P14C live-grant authentication"
-      rollback_identity: tool-system@b6ea3c62aa668031e87abb6341f82cb1bd32a3eb:process_authority@2.0.0
+      change_risk: "critical: current task-pair authority, exact execution-source binding, and durable single-host GitHub-owner approval consumption"
+      rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:process_authority@2.1.0
     - current_module_id: task_planner
       canonical_module_id: task-planner
       current_module_version: 1.1.0
@@ -275,7 +276,8 @@ static_import_dag:
       - role_runtime
       - worker_adapter
     ai_worker_runtime: []
-    durable_orchestrator: []
+    durable_orchestrator:
+      - process_authority
     repository_controller:
       - cleanup_planner
       - cli_frontend

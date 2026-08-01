@@ -121,15 +121,15 @@ def test_authority_schema_and_yaml_register_the_same_top_level_fields() -> None:
     assert set(schema["properties"]) == AUTHORITY_FIELDS
     assert authority["module"] == {
         "module_id": "process-authority",
-        "module_version": "2.1.0",
+        "module_version": "2.2.0",
         "public_interface_id": "process-authority-api",
-        "public_interface_version": "2.0.0",
+        "public_interface_version": "2.1.0",
     }
     assert schema["properties"]["module"]["properties"] == {
         "module_id": {"const": "process-authority"},
-        "module_version": {"const": "2.1.0"},
+        "module_version": {"const": "2.2.0"},
         "public_interface_id": {"const": "process-authority-api"},
-        "public_interface_version": {"const": "2.0.0"},
+        "public_interface_version": {"const": "2.1.0"},
     }
 
 
@@ -173,8 +173,8 @@ def test_current_authority_rejects_mixed_identity(tmp_path: Path) -> None:
 
 def test_current_authority_rejects_duplicate_yaml_identity_key(tmp_path: Path) -> None:
     payload = AUTHORITY.read_text(encoding="utf-8").replace(
-        "  module_version: 2.1.0\n",
-        "  module_id: process_authority\n  module_version: 2.1.0\n",
+        "  module_version: 2.2.0\n",
+        "  module_id: process_authority\n  module_version: 2.2.0\n",
     )
     path = tmp_path / "process_authority_v1.yaml"
     path.write_text(payload, encoding="utf-8")
