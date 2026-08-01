@@ -12,8 +12,8 @@ Downstream: task planner, task runner, role runtime, CLI adapters, tests, and au
 
 `config/process_authority_v1.yaml` is the single local machine contract for task-pair authority. Current execution requires one task manifest and one change plan supplied explicitly for that invocation. The change plan must name the same manifest. A repository-wide implicit task index is not current execution authority.
 
-Its machine module identity is exactly `process-authority@2.1.0`, exposing
-`process-authority-api@2.0.0`. The historical compatibility ID
+Its machine module identity is exactly `process-authority@2.2.0`, exposing
+`process-authority-api@2.1.0`. The historical compatibility ID
 `process_authority` is not accepted in the current authority file. The Python
 package remains `tool_system.process_authority`; that language-level underscore
 does not create a second module authority or an identity alias.
@@ -30,7 +30,7 @@ same captured plan bytes. Any validation failure or byte drift blocks before
 
 ## P14C GitHub approval boundary
 
-`process-authority@2.1.0` also implements the separately authorized source for
+`process-authority@2.2.0` also implements the separately authorized source for
 one P14C live-provider approval trust root. Given a positive comment ID and an
 exact typed action binding, the issuer performs one TLS-verified public `GET`
 to
@@ -39,12 +39,22 @@ The host, repository, owner login, endpoint, API version, timeout, response-size
 limit, and request headers are fixed internally. The caller cannot substitute a
 reader, identity mapping, approval boolean, or prevalidated record.
 
+Before the GitHub read, the issuer measures the caller-selected canonical
+tool-system checkout and requires its canonical origin, exact Git top level,
+current commit and tree, clean status, and fixed critical runtime source files.
+It hashes a canonical manifest of those bytes and binds the result to the actual
+host name and the immutable identity of one caller-selected hardened
+`DurableOrchestratorStore`. No caller-created source PASS value is accepted.
+
 The response must identify the same comment in `apolo183/tool-system`, with
 author login `apolo183`, `author_association: OWNER`, and identical
 `created_at` and `updated_at` timestamps. The comment body must be strict JSON
 with no duplicate or extra keys and must bind exactly:
 
-- authorization ID, repository, action, source base, packet and request hashes;
+- authorization ID, repository, action, historical implementation-authorization
+  base, packet and request hashes;
+- exact execution commit, execution tree, critical-source manifest SHA-256,
+  `clean_worktree: true`, actual execution host, and durable ledger identity;
 - public fixture, provider, exact model, method, host, path, credential
   reference, and `live_network` transport;
 - one provider invocation, attempt/token/time/cost ceilings, a 64-character
@@ -53,19 +63,28 @@ with no duplicate or extra keys and must bind exactly:
 - `false` for target-repository mutation, production deployment, cleanup, and
   P14D.
 
-Authentication failures, API failures, edits, expiry, malformed data, binding
-drift, or reuse of the same comment in the same process block issuance. A valid
-record yields one opaque in-memory grant; that grant can mint one immutable
-capability bound to the exact packet, request, and live transport object, and
-the capability can be consumed once and only before the approval expiry.
+Authentication failures, API failures, edits, expiry, malformed data, source or
+binding drift, wrong host or ledger, or reuse of the same comment block
+issuance. After full validation and before grant construction, the issuer calls
+`durable-orchestrator-api@1.1.0` to insert the exact approval identity and
+digests with `BEGIN IMMEDIATE`. The record is burn-on-claim: if the process
+crashes after commit, it remains consumed and a fresh approval comment is
+required. Two processes using the same single-host database therefore have at
+most one winner. This is not a multi-host or distributed exactly-once claim.
+
+A valid durably consumed record yields one opaque in-memory grant; that grant
+can mint one immutable capability bound to the exact packet, request, live
+transport object, source seal, host, and ledger identity. The capability can be
+consumed once and revalidates the same source seal immediately before each
+credential access and before approval expiry.
 
 This is source capability, not live-execution evidence. This implementation
 creates or edits no GitHub comment, reads no credential value, calls no model
 provider, and leaves `live_model_provider_execution_authorized: false`. It does
-not claim durable replay prevention across independent processes or protection
-against hostile code already executing inside the trusted Python process.
-Those require a separately authorized durable authority owner and threat-model
-expansion.
+not claim multi-host replay prevention, guaranteed provider completion, or
+protection against hostile code already executing inside the trusted Python
+process. A first real approval, credential read, or provider call remains
+separately prohibited until explicitly authorized.
 
 ## Canonical replay boundary
 

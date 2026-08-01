@@ -11,8 +11,11 @@ from tool_system.process_authority.live_provider_approval import (
     P14CLiveExecutionAuthorizationError,
     P14CLiveExecutionBinding,
     P14CLiveExecutionGrant,
+    P14CExecutionSourceSeal,
+    build_p14c_execution_source_seal,
     build_p14c_live_execution_approval_body,
     issue_p14c_live_execution_grant,
+    validate_p14c_execution_source_seal,
 )
 
 __all__ = [
@@ -21,8 +24,11 @@ __all__ = [
     "P14CLiveExecutionAuthorizationError",
     "P14CLiveExecutionBinding",
     "P14CLiveExecutionGrant",
+    "P14CExecutionSourceSeal",
+    "build_p14c_execution_source_seal",
     "build_p14c_live_execution_approval_body",
     "issue_p14c_live_execution_grant",
+    "validate_p14c_execution_source_seal",
     "validate_explicit_task_pair",
     "validate_process_authority",
     "validate_replay_snapshot",

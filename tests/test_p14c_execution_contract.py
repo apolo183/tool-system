@@ -15,6 +15,9 @@ ROOT = Path(__file__).resolve().parents[1]
 PROJECT_STATE = ROOT / "docs" / "tool_system_project_state_v1.yaml"
 REPORT = ROOT / "docs" / "reports" / "p14c_bounded_real_model_provider_execution.md"
 LIVE_ISSUER_REPORT = ROOT / "docs" / "reports" / "p14c_live_issuer_implementation.md"
+SOURCE_HARDENING_REPORT = (
+    ROOT / "docs" / "reports" / "p14c_source_seal_replay_hardening.md"
+)
 GATE_REPORT = ROOT / "docs" / "reports" / "p14c_pr_authorization_gate.md"
 LIVE_PROVIDER = ROOT / "src" / "tool_system" / "ai_worker" / "live_provider.py"
 LIVE_EVIDENCE = ROOT / "src" / "tool_system" / "ai_worker" / "live_evidence.py"
@@ -29,6 +32,7 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     boundaries = project_state["authorization_boundaries"]
     report = REPORT.read_text(encoding="utf-8")
     live_issuer_report = LIVE_ISSUER_REPORT.read_text(encoding="utf-8")
+    source_hardening_report = SOURCE_HARDENING_REPORT.read_text(encoding="utf-8")
 
     assert current_phase["last_accepted_stage"] == (
         "P14MR_MILESTONE_MODULE_INVARIANT"
@@ -65,6 +69,17 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert live_source["main_ci_run_id"] == 30_616_558_561
     assert live_source["branch_retained"] is True
     assert p14c["trust_root"] == "github_owner_issue_comment"
+    assert p14c["source_hardening_authorization_packet"] == (
+        "P14C-SOURCE-SEAL-REPLAY-LIFECYCLE-v1"
+    )
+    assert p14c["approval_contract_version"] == (
+        "p14c-live-execution-approval-v2"
+    )
+    assert p14c["execution_source_seal_required"] is True
+    assert p14c["durable_replay_boundary"] == (
+        "single_host_sqlite_burn_on_claim_at_most_once"
+    )
+    assert p14c["multi_host_exactly_once_claimed"] is False
     assert p14c["real_live_approval_record_created"] is False
     assert p14c["live_capability_issued"] is False
     assert p14c["stage_accepted"] is False
@@ -104,6 +119,14 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
         "the source-publication evidence recorded here does not close them"
         in " ".join(live_issuer_report.split())
     )
+    assert "SOURCE_HARDENED_FAKE_IO_ONLY_NO_EXECUTION_NOT_ACCEPTED" in (
+        source_hardening_report
+    )
+    assert "real GitHub approval reads: `0`" in source_hardening_report
+    assert "credential-value accesses: `0`" in source_hardening_report
+    assert "real provider calls: `0`" in source_hardening_report
+    assert "single-host at-most-once" in source_hardening_report
+    assert "does not accept P14C" in source_hardening_report
 
 
 def test_merged_pr_gate_evidence_keeps_p14c_and_live_mutation_blocked() -> None:
@@ -131,7 +154,9 @@ def test_packet_binds_exact_provider_network_secret_reference_and_budgets() -> N
 
     assert validate_p14c_execution_packet(packet) == ()
     assert packet.packet_id == "P14C-IMPL-v2"
-    assert packet.tool_system_base == ("637fe60782ed9e15d58795a0113b84965d6664d2")
+    assert packet.implementation_authorization_base_sha == (
+        "637fe60782ed9e15d58795a0113b84965d6664d2"
+    )
     assert "central_" + "governance_base" not in packet.canonical_record()
     assert (packet.provider_id, packet.model_id) == ("openai", "gpt-5.6-luna")
     assert (packet.method, packet.host, packet.path) == (

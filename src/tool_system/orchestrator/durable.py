@@ -4,6 +4,7 @@ import json
 import math
 import os
 import re
+import secrets
 import sqlite3
 import stat
 import time
@@ -12,8 +13,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _RUN_STATUSES = {"ACTIVE", "COMPLETED", "FAILED"}
 _TASK_STATUSES = {"READY", "RUNNING", "COMPLETED", "FAILED"}
 
@@ -28,6 +30,10 @@ class LeaseConflict(StateConflict):
 
 class RetryExhausted(StateConflict):
     """A task cannot be claimed because its attempt budget is exhausted."""
+
+
+class AuthorizationReplay(StateConflict):
+    """An external authorization record was already durably consumed."""
 
 
 def _is_relative_to(path: Path, root: Path) -> bool:
@@ -77,6 +83,15 @@ def _require_sha(value: str) -> str:
     result = value.strip()
     if not _SHA_RE.fullmatch(result):
         raise ValueError("expected_precondition_sha must be a lowercase 40-character SHA")
+    return result
+
+
+def _require_sha256(value: str, label: str) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f"{label} must be a string")
+    result = value.strip()
+    if not _SHA256_RE.fullmatch(result):
+        raise ValueError(f"{label} must be a lowercase 64-character SHA-256")
     return result
 
 
@@ -344,6 +359,21 @@ class DurableOrchestratorStore:
                 );
                 CREATE INDEX IF NOT EXISTS idx_outbox_delivery
                     ON outbox(state, lease_expires_at, event_id);
+                CREATE TABLE IF NOT EXISTS authorization_consumptions (
+                    approval_source TEXT NOT NULL,
+                    repository TEXT NOT NULL,
+                    approval_record_id TEXT NOT NULL,
+                    authorization_id TEXT NOT NULL,
+                    approval_record_sha256 TEXT NOT NULL,
+                    binding_sha256 TEXT NOT NULL,
+                    executor_host_id TEXT NOT NULL,
+                    ledger_instance_id TEXT NOT NULL,
+                    expires_at REAL NOT NULL,
+                    consumed_at REAL NOT NULL,
+                    PRIMARY KEY (approval_source, repository, approval_record_id)
+                );
+                CREATE INDEX IF NOT EXISTS idx_authorization_consumed_at
+                    ON authorization_consumptions(consumed_at, authorization_id);
                 """
             )
             row = connection.execute(
@@ -354,7 +384,7 @@ class DurableOrchestratorStore:
                     "INSERT INTO metadata(key, value) VALUES('schema_version', ?)",
                     (str(SCHEMA_VERSION),),
                 )
-            elif int(row["value"]) == 1:
+            elif int(row["value"]) in {1, 2}:
                 connection.execute(
                     "UPDATE metadata SET value=? WHERE key='schema_version'",
                     (str(SCHEMA_VERSION),),
@@ -362,6 +392,18 @@ class DurableOrchestratorStore:
             elif int(row["value"]) != SCHEMA_VERSION:
                 raise StateConflict(
                     f"unsupported schema version {row['value']}; expected {SCHEMA_VERSION}"
+                )
+            ledger_row = connection.execute(
+                "SELECT value FROM metadata WHERE key = 'authorization_ledger_instance_id'"
+            ).fetchone()
+            if ledger_row is None:
+                connection.execute(
+                    "INSERT INTO metadata(key, value) VALUES(?, ?)",
+                    ("authorization_ledger_instance_id", secrets.token_hex(32)),
+                )
+            else:
+                _require_sha256(
+                    ledger_row["value"], "authorization_ledger_instance_id"
                 )
             connection.commit()
         except Exception:
@@ -383,7 +425,143 @@ class DurableOrchestratorStore:
                         "SELECT value FROM metadata WHERE key = 'schema_version'"
                     ).fetchone()[0]
                 ),
+                "authorization_ledger_instance_id": connection.execute(
+                    "SELECT value FROM metadata "
+                    "WHERE key = 'authorization_ledger_instance_id'"
+                ).fetchone()[0],
             }
+        finally:
+            connection.close()
+
+    @property
+    def authorization_ledger_instance_id(self) -> str:
+        """Return the immutable identity of this single-host authorization ledger."""
+
+        connection = self._connect()
+        try:
+            row = connection.execute(
+                "SELECT value FROM metadata "
+                "WHERE key = 'authorization_ledger_instance_id'"
+            ).fetchone()
+            if row is None:
+                raise StateConflict("authorization ledger instance identity is missing")
+            return _require_sha256(
+                row["value"], "authorization_ledger_instance_id"
+            )
+        finally:
+            connection.close()
+
+    def consume_authorization_once(
+        self,
+        *,
+        approval_source: str,
+        repository: str,
+        approval_record_id: str,
+        authorization_id: str,
+        approval_record_sha256: str,
+        binding_sha256: str,
+        executor_host_id: str,
+        ledger_instance_id: str,
+        expires_at_epoch_seconds: int | float,
+    ) -> dict[str, object]:
+        """Burn one external authorization record in a durable transaction.
+
+        The insert is intentionally not idempotent: once the transaction commits,
+        a crash or later failure leaves the record consumed and a fresh external
+        authorization is required.
+        """
+
+        approval_source = self._text(approval_source, "approval_source")
+        repository = self._text(repository, "repository")
+        approval_record_id = self._text(
+            approval_record_id, "approval_record_id"
+        )
+        authorization_id = self._text(authorization_id, "authorization_id")
+        approval_record_sha256 = _require_sha256(
+            approval_record_sha256, "approval_record_sha256"
+        )
+        binding_sha256 = _require_sha256(binding_sha256, "binding_sha256")
+        executor_host_id = self._text(executor_host_id, "executor_host_id")
+        ledger_instance_id = _require_sha256(
+            ledger_instance_id, "ledger_instance_id"
+        )
+        if (
+            not isinstance(expires_at_epoch_seconds, (int, float))
+            or isinstance(expires_at_epoch_seconds, bool)
+            or not math.isfinite(expires_at_epoch_seconds)
+        ):
+            raise ValueError("expires_at_epoch_seconds must be finite")
+        expires_at = float(expires_at_epoch_seconds)
+        consumed_at = self._now()
+        with self._transaction() as connection:
+            current_ledger_id = connection.execute(
+                "SELECT value FROM metadata "
+                "WHERE key = 'authorization_ledger_instance_id'"
+            ).fetchone()
+            if current_ledger_id is None:
+                raise StateConflict("authorization ledger instance identity is missing")
+            if current_ledger_id["value"] != ledger_instance_id:
+                raise StateConflict("authorization ledger instance identity does not match")
+            if consumed_at > expires_at:
+                raise StateConflict("authorization record has expired")
+            try:
+                connection.execute(
+                    """
+                    INSERT INTO authorization_consumptions(
+                        approval_source, repository, approval_record_id,
+                        authorization_id, approval_record_sha256, binding_sha256,
+                        executor_host_id, ledger_instance_id, expires_at, consumed_at
+                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        approval_source,
+                        repository,
+                        approval_record_id,
+                        authorization_id,
+                        approval_record_sha256,
+                        binding_sha256,
+                        executor_host_id,
+                        ledger_instance_id,
+                        expires_at,
+                        consumed_at,
+                    ),
+                )
+            except sqlite3.IntegrityError as exc:
+                raise AuthorizationReplay(
+                    "external authorization record was already consumed"
+                ) from exc
+            row = connection.execute(
+                """
+                SELECT * FROM authorization_consumptions
+                WHERE approval_source=? AND repository=? AND approval_record_id=?
+                """,
+                (approval_source, repository, approval_record_id),
+            ).fetchone()
+            assert row is not None
+            return dict(row)
+
+    def get_authorization_consumption(
+        self,
+        *,
+        approval_source: str,
+        repository: str,
+        approval_record_id: str,
+    ) -> dict[str, object] | None:
+        approval_source = self._text(approval_source, "approval_source")
+        repository = self._text(repository, "repository")
+        approval_record_id = self._text(
+            approval_record_id, "approval_record_id"
+        )
+        connection = self._connect()
+        try:
+            row = connection.execute(
+                """
+                SELECT * FROM authorization_consumptions
+                WHERE approval_source=? AND repository=? AND approval_record_id=?
+                """,
+                (approval_source, repository, approval_record_id),
+            ).fetchone()
+            return dict(row) if row is not None else None
         finally:
             connection.close()
 

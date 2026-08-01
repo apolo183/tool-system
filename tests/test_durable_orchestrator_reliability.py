@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import multiprocessing
 import os
 import sqlite3
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Barrier
@@ -9,6 +11,7 @@ from threading import Barrier
 import pytest
 
 from tool_system.orchestrator import (
+    AuthorizationReplay,
     DurableOrchestratorStore,
     LeaseConflict,
     StateConflict,
@@ -17,6 +20,36 @@ from tool_system.orchestrator import (
 
 ROOT = Path(__file__).resolve().parents[1]
 SHA = "a" * 40
+
+
+def _consume_authorization_in_process(
+    database_path: str,
+    ledger_instance_id: str,
+    expires_at: float,
+    start: object,
+    results: object,
+) -> None:
+    store = DurableOrchestratorStore(
+        database_path,
+        forbidden_roots=(ROOT,),
+    )
+    start.wait()  # type: ignore[attr-defined]
+    try:
+        store.consume_authorization_once(
+            approval_source="github_issue_comment",
+            repository="apolo183/tool-system",
+            approval_record_id="process-race-comment",
+            authorization_id="P14C-LIVE-EXEC-v2",
+            approval_record_sha256="b" * 64,
+            binding_sha256="c" * 64,
+            executor_host_id="test-host",
+            ledger_instance_id=ledger_instance_id,
+            expires_at_epoch_seconds=expires_at,
+        )
+    except AuthorizationReplay:
+        results.put("replay")  # type: ignore[attr-defined]
+    else:
+        results.put("consumed")  # type: ignore[attr-defined]
 
 
 def _store(
@@ -239,6 +272,38 @@ def test_concurrent_claim_has_exactly_one_winner(tmp_path: Path) -> None:
 
     assert "conflict" in outcomes
     assert len(outcomes) == 2
+
+
+def test_two_independent_processes_have_one_authorization_winner(
+    tmp_path: Path,
+) -> None:
+    database = tmp_path / "state.sqlite3"
+    ledger = DurableOrchestratorStore(database, forbidden_roots=(ROOT,))
+    context = multiprocessing.get_context("spawn")
+    start = context.Event()
+    results = context.Queue()
+    processes = [
+        context.Process(
+            target=_consume_authorization_in_process,
+            args=(
+                str(database),
+                ledger.authorization_ledger_instance_id,
+                time.time() + 60,
+                start,
+                results,
+            ),
+        )
+        for _ in range(2)
+    ]
+    for process in processes:
+        process.start()
+    start.set()
+    outcomes = sorted(results.get(timeout=20) for _ in processes)
+    for process in processes:
+        process.join(timeout=20)
+        assert process.exitcode == 0
+
+    assert outcomes == ["consumed", "replay"]
 
 
 def test_foreign_key_corruption_fails_integrity_check(tmp_path: Path) -> None:

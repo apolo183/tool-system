@@ -1,0 +1,58 @@
+plan_id: tool-system-p14c-source-seal-replay-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p14c_source_seal_replay_v1.yaml
+changed_files:
+  - README.md
+  - REPO_MANIFEST.md
+  - config/module_registry_v1.yaml
+  - config/process_authority_schema_v1.json
+  - config/process_authority_v1.yaml
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/modules/durable-orchestrator-contract-v1.md
+  - docs/modules/process-authority-contract-v1.md
+  - docs/process_authority_contract_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - docs/reports/p14c_source_seal_replay_hardening.md
+  - examples/change_plans/tool_system_p14c_source_seal_replay_v1.yaml
+  - examples/task_manifests/tool_system_p14c_source_seal_replay_v1.yaml
+  - src/tool_system/ai_worker/live_provider.py
+  - src/tool_system/orchestrator/__init__.py
+  - src/tool_system/orchestrator/durable.py
+  - src/tool_system/process_authority/__init__.py
+  - src/tool_system/process_authority/contract.py
+  - src/tool_system/process_authority/live_provider_approval.py
+  - tests/test_ai_worker_live_provider.py
+  - tests/test_durable_orchestrator_reliability.py
+  - tests/test_durable_orchestrator_side_effects.py
+  - tests/test_durable_orchestrator_state.py
+  - tests/test_module_contracts.py
+  - tests/test_module_registry.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_p14c_live_issuer.py
+  - tests/test_phase_alignment.py
+  - tests/test_process_authority.py
+  - tests/test_repo_manifest.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p14c_source_seal_replay_v1.yaml
+    section_or_key: scope
+    scope: Implement only exact current-source/host binding and single-host durable approval consumption around the existing P14C live issuer.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Strengthen one bounded provider authorization path without expanding provider, repository, phase, cleanup, or production authority.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_p14c_live_issuer.py tests/test_ai_worker_live_provider.py tests/test_durable_orchestrator_state.py tests/test_durable_orchestrator_reliability.py tests/test_durable_orchestrator_side_effects.py tests/test_process_authority.py tests/test_p14c_execution_contract.py tests/test_phase_alignment.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14c_source_seal_replay_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_source_seal_replay_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+rollback:
+  method: git_revert
+  reference: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967

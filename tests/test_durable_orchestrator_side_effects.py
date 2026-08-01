@@ -235,14 +235,21 @@ def test_reconciliation_publishes_once_and_failed_delivery_requeues(
     assert failures == 1
 
 
-def test_schema_version_one_is_migrated_to_two(tmp_path: Path) -> None:
+@pytest.mark.parametrize("previous_version", [1, 2])
+def test_prior_schema_versions_are_migrated_to_three(
+    tmp_path: Path, previous_version: int
+) -> None:
     database = tmp_path / "migration.sqlite3"
     connection = sqlite3.connect(database)
     connection.execute("CREATE TABLE metadata(key TEXT PRIMARY KEY, value TEXT NOT NULL)")
-    connection.execute("INSERT INTO metadata VALUES('schema_version', '1')")
+    connection.execute(
+        "INSERT INTO metadata VALUES('schema_version', ?)",
+        (str(previous_version),),
+    )
     connection.commit()
     connection.close()
 
     store = DurableOrchestratorStore(database, forbidden_roots=(ROOT,))
 
-    assert store.pragmas()["schema_version"] == 2
+    assert store.pragmas()["schema_version"] == 3
+    assert len(store.authorization_ledger_instance_id) == 64

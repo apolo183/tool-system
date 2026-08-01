@@ -30,11 +30,11 @@ CONTRACT_DIR = ROOT / "docs/modules"
 BLUEPRINT = ROOT / "blueprint/tool_system_v0.yaml"
 
 EXPECTED_RAW_SHA256 = (
-    "971cf952562b24b0baadcd3d8f5b6ffb0bbd40ad5c8af310dfe227775cccb6e5"
+    "ab22c97ed0ec29d59e516d770c35fdd24f20237eae63919076d1400e0461f7b6"
 )
-EXPECTED_BYTE_LENGTH = 83_194
+EXPECTED_BYTE_LENGTH = 84_016
 EXPECTED_SEMANTIC_SHA256 = (
-    "7d1d96be4a5a115e719a3a54b483b26f00bc5bf82c5a8dda635ecb9474b87e62"
+    "dbd178a568542a4bd05bd61f2f48407bf231f0c9d790b491e2408d08c8c25819"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 93
 EXPECTED_MODULE_IDS = {
@@ -87,6 +87,18 @@ ADDITIONAL_TEST_SELECTORS = {
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _git_path(name: str) -> Path:
+    value = subprocess.run(
+        ["git", "rev-parse", "--git-path", name],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    path = Path(value)
+    return path if path.is_absolute() else ROOT / path
 
 
 def _yaml_block(path: Path, name: str) -> dict[str, Any]:
@@ -284,8 +296,8 @@ def _registry_effect_matrix(
 
 def assert_effect_oracle(registry: dict[str, Any]) -> None:
     expanded, grouped = authority_effect_matrices()
-    assert len(expanded) == 86
-    assert len(grouped) == 40
+    assert len(expanded) == 87
+    assert len(grouped) == 41
     assert _registry_effect_matrix(registry) == grouped
 
 
@@ -379,8 +391,8 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert len(registry["modules"]) == len(registry["interfaces"]) == 14
     assert sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 101
     assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 16
-    assert sum(len(module["permitted_side_effects"]) for module in registry["modules"]) == 40
-    assert len(list(_iter_contract_references(registry))) == 152
+    assert sum(len(module["permitted_side_effects"]) for module in registry["modules"]) == 41
+    assert len(list(_iter_contract_references(registry))) == 153
     assert sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
     assert len(target_python_owner_by_path()) == 93
     assert_effect_oracle(registry)
@@ -402,7 +414,7 @@ def test_current_current_registry_is_authority_and_tmp_copy_is_not(
     assert current["current_registry_authority"] is True
     assert current["validation_scope"] == "tool_system_current_module_registry"
     assert current["compatibility_adapter"]["applied"] is False
-    assert current["contract_reference_count"] == 152
+    assert current["contract_reference_count"] == 153
     assert current["external_provider_count"] == 0
     assert compatibility["status"] == "PASS"
     assert compatibility["current_registry_authority"] is False
@@ -475,7 +487,7 @@ def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
         edge_count += len(expected_dependencies)
         key = (row["aggregate_interface_id"], row["aggregate_interface_version"])
         assert interfaces[key]["provider_module_id"] == canonical
-    assert edge_count == 27
+    assert edge_count == 28
     assert_effect_oracle(registry)
 
 
@@ -688,7 +700,8 @@ def test_adapter_reads_one_registry_and_does_not_mutate_index(
     fixture = _write_registry(tmp_path, current_registry_fixture())
     calls: list[Path] = []
     real_loader = module_registry.load_yaml_file
-    index_sha = _sha256(ROOT / ".git/index")
+    index_path = _git_path("index")
+    index_sha = _sha256(index_path)
 
     def tracked_loader(path: str | Path) -> dict[str, Any]:
         calls.append(Path(path).resolve())
@@ -698,7 +711,7 @@ def test_adapter_reads_one_registry_and_does_not_mutate_index(
     result = validate_module_registry(fixture, ROOT)
     assert result["status"] == "PASS"
     assert calls == [fixture.resolve()]
-    assert _sha256(ROOT / ".git/index") == index_sha
+    assert _sha256(index_path) == index_sha
 
 
 def test_blueprint_and_ci_keep_local_registry_authority() -> None:

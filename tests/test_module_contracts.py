@@ -124,7 +124,9 @@ DELEGATED_EFFECT_EXPECTATIONS = {
         )
     },
     "repository_controller": {},
-    "process_authority": {},
+    "process_authority": {
+        "durable-authorization-consumption": frozenset({"database_write"})
+    },
     "task_planner": {},
     "task_runner": {
         "configured-command-execution": frozenset(TOOL_SYSTEM_EFFECT_CLASSES)

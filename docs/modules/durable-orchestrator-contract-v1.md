@@ -3,6 +3,8 @@
 This file defines the module contract owned by the current
 `durable_orchestrator` module. Its persistent boundary is a caller-selected
 single-host SQLite database outside protected roots.
+Version 1.1 also owns a generic burn-on-claim authorization-consumption ledger;
+it does not claim multi-host global exactly-once delivery.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -13,20 +15,20 @@ module_compound_contract:
   identity:
     canonical_module_id: durable-orchestrator
     current_module_id: durable_orchestrator
-    module_version: 1.0.0
+    module_version: 1.1.0
     aggregate_interface:
       interface_id: durable-orchestrator-api
-      interface_version: 1.0.0
+      interface_version: 1.1.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:durable_orchestrator@1.0.0
+    rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:durable_orchestrator@1.0.0
     python_import_identities:
       - kind: prefix
         name: tool_system.orchestrator
   role:
-    summary: persist and reconcile single-host task state, leases, attempts, and side-effect evidence
-    responsibility_boundary: Own one hardened local SQLite state store for task, lease, checkpoint, side-effect, outbox, recovery, and integrity records.
+    summary: persist and reconcile single-host task state, side-effect evidence, and one-time authorization consumption
+    responsibility_boundary: Own one hardened local SQLite state store for task, lease, checkpoint, side-effect, outbox, recovery, integrity, immutable ledger identity, and burn-on-claim authorization records.
   natural_owner_evidence_paths:
     - src/tool_system/orchestrator/__init__.py
     - src/tool_system/orchestrator/durable.py
@@ -34,19 +36,23 @@ module_compound_contract:
     basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids: []
-    direct_consumer_module_ids: []
+    direct_consumer_module_ids:
+      - process_authority
   input_contract:
     registered_inputs:
       - durable_task_and_side_effect_intent_v1
-    boundary: Accept bounded identifiers, content hashes, checkpoints, lease requests, local-fixture side-effect intent, and idempotent outbox callbacks.
+      - durable_authorization_consumption_v1
+    boundary: Accept bounded identifiers, content hashes, checkpoints, lease requests, local-fixture side-effect intent, idempotent outbox callbacks, or one exact external authorization identity, digest, binding, host, ledger identity, and expiry.
   output_contract:
     registered_outputs:
       - durable_task_state_and_reconciliation_result_v1
-    boundary: Return durable run, task, effect, outbox, recovery, integrity, and reconciliation records from the current SQLite state.
+      - durable_authorization_consumption_result_v1
+    boundary: Return durable run, task, effect, outbox, recovery, integrity, reconciliation, immutable ledger-identity, and authorization-consumption records from the current SQLite state.
   error_contract:
     registered_error_semantics:
       - lease_retry_recovery_and_terminal_error_states
-    boundary: Invalid paths, unsafe permissions, identity substitution, stale lease, precondition drift, retry exhaustion, ambiguous replay, corruption, or integrity failure blocks.
+      - authorization_replay_is_terminal
+    boundary: Invalid paths, unsafe permissions, identity substitution, stale lease, precondition drift, retry exhaustion, ambiguous replay, duplicate authorization consumption, wrong ledger identity, expiry, corruption, or integrity failure blocks.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -62,11 +68,11 @@ module_compound_contract:
       - effect_class: data_write
         evidence_paths:
           - src/tool_system/orchestrator/durable.py
-        boundary: Persist bounded task, lease, checkpoint, side-effect, outbox, reconciliation, and receipt state in the selected local database.
+        boundary: Persist bounded task, lease, checkpoint, side-effect, outbox, reconciliation, receipt, ledger identity, and authorization-consumption state in the selected local database.
       - effect_class: database_write
         evidence_paths:
           - src/tool_system/orchestrator/durable.py
-        boundary: Create, migrate, transact, checkpoint, and integrity-check one local SQLite database and its SQLite sidecars.
+        boundary: Create, migrate through schema v3, transact with BEGIN IMMEDIATE, checkpoint, and integrity-check one local SQLite database and its SQLite sidecars.
     delegated_effects:
       - capability_id: caller-supplied-outbox-delivery-sink
         capability_state: conditional-delegated-maximum
@@ -86,13 +92,13 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve schema migration, state machine, leases, attempts, idempotency, preconditions, transactions, outbox, recovery, integrity, and record shapes.
+    interface_compatible_replacement: Preserve schema migration, state machine, leases, attempts, idempotency, preconditions, transactions, outbox, recovery, integrity, immutable ledger identity, burn-on-claim uniqueness, and record shapes.
     interface_incompatible_change: Requires a new aggregate interface version, explicit database migration contract, and recovery evidence.
   rollback_contract:
-    rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:durable_orchestrator@1.0.0
+    rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:durable_orchestrator@1.0.0
     method: Revert through a separately audited pull request while retaining the prior database and applying no destructive data rollback without separate authorization.
   replacement_contract:
-    activation_rule: Replace only after schema, migration, concurrency, lease, side-effect, outbox, recovery, corruption, and integrity tests pass against a copied fixture store.
+    activation_rule: Replace only after schema v2-to-v3 migration, cross-process authorization races, reopen and crash-burn replay, lease, side-effect, outbox, recovery, corruption, and integrity tests pass against temporary fixture stores.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -106,13 +112,13 @@ module_compound_contract:
       contract: The database path must remain outside the tool-system repository and every caller-supplied forbidden root.
     data:
       mode: persistent-single-host
-      contract: Durable orchestration records are bounded canonical JSON and text stored under the versioned local schema.
+      contract: Durable orchestration and authorization-consumption records are bounded canonical JSON and text stored under the versioned local schema; a committed claim is never released after caller failure.
     artifact:
       mode: none
       contract: The module owns durable database state, not a separate report, projection, cache, or authority artifact.
     database:
       mode: sqlite-read-write
-      contract: One regular non-symlink SQLite file with controlled parent permissions, identity checks, WAL, foreign keys, synchronous writes, and transactions.
+      contract: One regular non-symlink SQLite file with controlled parent permissions, identity checks, WAL, foreign keys, synchronous writes, BEGIN IMMEDIATE transactions, schema v3, and an immutable random ledger instance identity.
   external_root_contracts:
     declaration: declared
     roots:

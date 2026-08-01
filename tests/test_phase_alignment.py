@@ -90,6 +90,14 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
         "merged_hosted_ci_validated"
     )
     assert p14c["live_issuer_source"]["branch_retained"] is True
+    assert p14c["source_hardening_authorization_packet"] == (
+        "P14C-SOURCE-SEAL-REPLAY-LIFECYCLE-v1"
+    )
+    assert p14c["execution_source_seal_required"] is True
+    assert p14c["durable_replay_boundary"] == (
+        "single_host_sqlite_burn_on_claim_at_most_once"
+    )
+    assert p14c["multi_host_exactly_once_claimed"] is False
     assert p14c["real_live_approval_record_created"] is False
     assert p14c["live_capability_issued"] is False
     assert p14c["stage_accepted"] is False
