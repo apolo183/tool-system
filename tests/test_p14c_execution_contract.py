@@ -81,7 +81,8 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert current_phase["next_stage_authorized"] is False
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_status"] == (
-        "corrected_source_and_live_issuer_merged_no_execution_not_accepted"
+        "corrected_source_live_issuer_and_qwen_recovery_route_implemented_"
+        "no_success_not_accepted"
     )
     assert (
         p14c["live_issuer_implementation_authorization_packet"]
@@ -120,8 +121,28 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
         "single_host_sqlite_burn_on_claim_at_most_once"
     )
     assert p14c["multi_host_exactly_once_claimed"] is False
-    assert p14c["real_live_approval_record_created"] is False
-    assert p14c["live_capability_issued"] is False
+    first_attempt = p14c["first_live_attempt"]
+    assert first_attempt["packet_id"] == "P14C-IMPL-v2"
+    assert first_attempt["provider_id"] == "openai"
+    assert first_attempt["approval_comment_id"] == 5_152_284_946
+    assert first_attempt["approval_durably_consumed"] is True
+    assert first_attempt["live_capability_issued"] is True
+    assert first_attempt["provider_invocation_count"] == 1
+    assert first_attempt["redacted_error_code"] == "PROVIDER_FAILURE"
+    assert first_attempt["output_received"] is False
+    assert first_attempt["credential_value_recorded"] is False
+    assert first_attempt["acceptance_effect"] == "none"
+    assert p14c["real_live_approval_record_created"] is True
+    assert p14c["live_capability_issued"] is True
+    assert p14c["recovery_implementation_packet"] == (
+        "P14C-QWEN-RECOVERY-v1"
+    )
+    recovery = p14c["recovery_route"]
+    assert recovery["provider_id"] == "qwen"
+    assert recovery["model_id"] == "qwen3.7-plus-2026-05-26"
+    assert recovery["api_access_mode"] == "one_explicit_execute_only"
+    assert recovery["fallback_allowed"] is False
+    assert recovery["live_execution_attempted"] is False
     assert p14c["stage_accepted"] is False
     assert boundaries["state_file_grants_authority"] is False
     assert boundaries["live_model_provider_execution_authorized"] is False
@@ -193,30 +214,35 @@ def test_packet_binds_exact_provider_network_secret_reference_and_budgets() -> N
     request = build_p14c_synthetic_request(packet)
 
     assert validate_p14c_execution_packet(packet) == ()
-    assert packet.packet_id == "P14C-IMPL-v2"
+    assert packet.packet_id == "P14C-QWEN-RECOVERY-v1"
     assert packet.implementation_authorization_base_sha == (
-        "637fe60782ed9e15d58795a0113b84965d6664d2"
+        "c92c55940f7d6cb4db2e743472ec2a739d910b3a"
     )
     assert "central_" + "governance_base" not in packet.canonical_record()
-    assert (packet.provider_id, packet.model_id) == ("openai", "gpt-5.6-luna")
+    assert (packet.provider_id, packet.model_id) == (
+        "qwen",
+        "qwen3.7-plus-2026-05-26",
+    )
     assert (packet.method, packet.host, packet.path) == (
         "POST",
-        "api.openai.com",
-        "/v1/responses",
+        "dashscope.aliyuncs.com",
+        "/compatible-mode/v1/chat/completions",
     )
-    assert packet.credential_reference == "env:OPENAI_API_KEY"
+    assert packet.credential_reference == (
+        "file:~/.config/tool-system/credentials.toml#providers.qwen.api_key"
+    )
     assert packet.reasoning_effort == "none"
     assert packet.store is packet.tools_allowed is False
     assert (
         packet.per_attempt_input_tokens,
         packet.per_attempt_output_tokens,
         packet.per_attempt_total_tokens,
-    ) == (4_096, 512, 4_608)
-    assert packet.max_attempts == 2
-    assert packet.cumulative_token_ceiling == 9_216
+    ) == (1_024, 128, 1_152)
+    assert packet.max_attempts == 1
+    assert packet.cumulative_token_ceiling == 1_152
     assert packet.request_timeout_ms == 20_000
-    assert packet.total_wall_clock_ms == 45_000
-    assert packet.cumulative_cost_microusd == 20_000
+    assert packet.total_wall_clock_ms == 25_000
+    assert packet.cumulative_cost_microusd == 2_000
     assert request.execution_mode == "live"
     assert request.writes_target_repo is False
     assert request.executes_target_repo_mutation is False
@@ -235,7 +261,7 @@ def test_packet_only_evidence_is_redacted_and_operator_entry_is_explicit() -> No
     assert evidence["provider_call_count"] == 0
     assert evidence["transport_call_count"] == 0
     assert evidence["live_provider_execution_authorized"] is False
-    assert "OPENAI_API_KEY=" not in rendered
+    assert "api_key =" not in rendered
     assert "--validate-packet-only" in source
     assert "prepare-approval" in source
     assert '"execute"' in source
@@ -308,7 +334,7 @@ def test_live_source_uses_injected_boundary_and_no_embedded_secret() -> None:
     assert "ssl.create_default_context()" in source
     assert "urllib" not in source
     assert "requests." not in source
-    assert "OPENAI_API_KEY=" not in source
+    assert "api_key =" not in source
     assert "test-key-never-log" not in source
     assert "live_execution_" + "authorized" not in source
     assert "_issue_p14c_fake_transport_capability" in source

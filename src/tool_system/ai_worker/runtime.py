@@ -405,6 +405,7 @@ class AIWorkerRuntime:
                 code=response.error.code,
                 message=f"provider returned {response.error.code.value}",
                 retryable=response.error.retryable,
+                reasons=response.error.reasons,
                 usage=response.usage,
                 evidence=("ai_worker.provider.terminal_error",),
             )

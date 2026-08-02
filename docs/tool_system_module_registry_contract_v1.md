@@ -82,15 +82,15 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:agent_worker_runtime@1.0.0
     - current_module_id: ai_worker_runtime
       canonical_module_id: ai-worker-runtime
-      current_module_version: 1.4.0
+      current_module_version: 1.5.0
       aggregate_interface_id: ai-worker-runtime-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.ai_worker}
       direct_consumer_module_ids: []
-      change_risk: "critical: committed source-sealed operator entry can consume a durably burned process-authority grant and invoke the bounded live adapter while default execution remains fixture-only"
-      rollback_identity: tool-system@999cb60d20a15730dbf0096ad20a598f3bf0fa5c:ai_worker_runtime@1.3.0
+      change_risk: "critical: committed source-sealed operator entry can consume a durably burned process-authority grant and invoke the one-attempt Qwen recovery adapter with an owner-only local credential file while default execution remains fixture-only"
+      rollback_identity: tool-system@c92c55940f7d6cb4db2e743472ec2a739d910b3a:ai_worker_runtime@1.4.0
     - current_module_id: durable_orchestrator
       canonical_module_id: durable-orchestrator
       current_module_version: 1.1.0

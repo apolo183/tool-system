@@ -93,8 +93,8 @@ provider call.
 `execute` requires the same repository and ledger plus one positive GitHub
 comment ID. It recomputes the seal, uses the internally fixed public GitHub
 reader, burns a matching approval before capability construction, invokes only
-the existing P14C public synthetic request through the exact OpenAI transport,
-and prints a redacted receipt. The receipt contains approval and source digests,
+the current exact packet-bound P14C public synthetic provider transport, and
+prints a redacted receipt. The receipt contains approval and source digests,
 bounded usage, an output hash, and audit-safe error fields; it contains neither
 the credential value nor raw provider output. The command creates or edits no
 GitHub comment. Calling the module through an unsealed one-off script cannot

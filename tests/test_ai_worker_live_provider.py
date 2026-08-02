@@ -3,17 +3,20 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
 from tool_system.ai_worker.contract import AIWorkerErrorCode
 from tool_system.ai_worker.live_evidence import build_packet_validation_evidence
 from tool_system.ai_worker.live_provider import (
+    CredentialResolutionFailure,
     HTTPTransportResponse,
-    OpenAIResponsesProvider,
-    OpenAIResponsesTransport,
+    LocalCredentialFileResolver,
     P14CLiveExecutionCapability,
     P14CLiveExecutionGuard,
+    QwenChatCompletionsProvider,
+    QwenChatCompletionsTransport,
     TransportFailure,
     _issue_p14c_fake_transport_capability,
     build_p14c_execution_packet,
@@ -29,7 +32,9 @@ class _FakeCredentialResolver:
         self.call_count = 0
 
     def resolve(self, reference: str) -> str:
-        assert reference == "env:OPENAI_API_KEY"
+        assert reference == (
+            "file:~/.config/tool-system/credentials.toml#providers.qwen.api_key"
+        )
         self.call_count += 1
         return self.value
 
@@ -87,35 +92,33 @@ def _success_response(
     *,
     input_tokens: int = 64,
     output_tokens: int = 16,
-    status: str = "completed",
-    model: str = "gpt-5.6-luna",
-    content: list[dict[str, object]] | None = None,
+    finish_reason: str = "stop",
+    model: str = "qwen3.7-plus-2026-05-26",
+    content: str | None = None,
 ) -> HTTPTransportResponse:
-    output_content = content or [
+    output_content = content or json.dumps(
         {
-            "type": "output_text",
-            "text": json.dumps(
-                {
-                    "summary": "synthetic control is bounded",
-                    "control_status": "PASS",
-                }
-            ),
+            "summary": "synthetic control is bounded",
+            "control_status": "PASS",
         }
-    ]
+    )
     body = {
-        "id": "resp_synthetic",
+        "id": "chatcmpl_synthetic",
         "model": model,
-        "status": status,
-        "output": [
+        "choices": [
             {
-                "type": "message",
-                "role": "assistant",
-                "content": output_content,
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": output_content,
+                },
+                "finish_reason": finish_reason,
             }
         ],
         "usage": {
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
+            "prompt_tokens": input_tokens,
+            "completion_tokens": output_tokens,
+            "total_tokens": input_tokens + output_tokens,
         },
     }
     return HTTPTransportResponse(
@@ -145,7 +148,7 @@ def _runtime(
     )
     resolver = _FakeCredentialResolver()
     clock = _FakeClock()
-    provider = OpenAIResponsesProvider(
+    provider = QwenChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=resolver,
@@ -171,7 +174,7 @@ def test_packet_is_exact_and_packet_only_evidence_performs_zero_access() -> None
     assert validate_p14c_execution_packet(packet) == ()
     assert (
         packet.sha256()
-        == "a4a4efecf35b8a1a49b79c7d1e0000925c1a737b32588f463dec6db7bc1f21a7"
+        == "f4cc9d509992bb1fa8ef51c21bcc57d50604d00e188c9c30118dc0993e6554c4"
     )
     evidence = build_packet_validation_evidence()
     assert evidence["status"] == "PASS"
@@ -185,7 +188,7 @@ def test_packet_drift_is_rejected() -> None:
     packet = replace(build_p14c_execution_packet(), max_attempts=3)
 
     assert validate_p14c_execution_packet(packet) == (
-        "packet field max_attempts does not match P14C-IMPL-v2",
+        "packet field max_attempts does not match P14C-QWEN-RECOVERY-v1",
     )
 
 
@@ -195,7 +198,7 @@ def test_default_runtime_guard_blocks_live_provider_before_secret_or_transport()
     packet = build_p14c_execution_packet()
     resolver = _FakeCredentialResolver()
     transport = _FakeTransport([_success_response()])
-    provider = OpenAIResponsesProvider(
+    provider = QwenChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=resolver,
@@ -231,7 +234,7 @@ def test_provider_entrypoint_blocks_without_capability_before_access() -> None:
     request = build_p14c_synthetic_request(packet)
     resolver = _FakeCredentialResolver()
     transport = _FakeTransport([_success_response()])
-    provider = OpenAIResponsesProvider(
+    provider = QwenChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=resolver,
@@ -258,7 +261,7 @@ def test_fake_capability_cannot_authorize_live_network_transport(
         fake_transport,
     )
     resolver = _FakeCredentialResolver()
-    transport = OpenAIResponsesTransport()
+    transport = QwenChatCompletionsTransport()
     transport_calls: list[dict[str, object]] = []
 
     def forbidden_send(**kwargs: object) -> HTTPTransportResponse:
@@ -266,7 +269,7 @@ def test_fake_capability_cannot_authorize_live_network_transport(
         raise AssertionError("network transport must not be reached")
 
     monkeypatch.setattr(transport, "send", forbidden_send)
-    provider = OpenAIResponsesProvider(
+    provider = QwenChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=resolver,
@@ -308,7 +311,7 @@ def test_capability_is_opaque_exact_and_single_use() -> None:
     with pytest.raises(AttributeError, match="immutable"):
         capability._transport_kind = "live_network"  # type: ignore[misc]
     resolver = _FakeCredentialResolver()
-    provider = OpenAIResponsesProvider(
+    provider = QwenChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=resolver,
@@ -342,7 +345,7 @@ def test_runtime_replay_does_not_reinvoke_consumed_capability() -> None:
     assert len(transport.calls) == 1
 
 
-def test_fake_transport_success_uses_exact_bounded_responses_envelope() -> None:
+def test_fake_transport_success_uses_exact_bounded_qwen_envelope() -> None:
     runtime, resolver, transport, _ = _runtime([_success_response()])
     request = build_p14c_synthetic_request()
 
@@ -355,26 +358,26 @@ def test_fake_transport_success_uses_exact_bounded_responses_envelope() -> None:
     }
     assert result.usage.input_tokens == 64
     assert result.usage.output_tokens == 16
-    assert result.usage.cost_microunits == 160
+    assert result.usage.cost_microunits == 96
     assert resolver.call_count == 1
     assert len(transport.calls) == 1
     call = transport.calls[0]
     assert (call["method"], call["host"], call["path"]) == (
         "POST",
-        "api.openai.com",
-        "/v1/responses",
+        "dashscope.aliyuncs.com",
+        "/compatible-mode/v1/chat/completions",
     )
     headers = call["headers"]
     assert isinstance(headers, dict)
     assert headers["authorization"] == "Bearer test-key-never-log"
     body = json.loads(call["body"])
-    assert body["model"] == "gpt-5.6-luna"
-    assert body["reasoning"] == {"effort": "none"}
-    assert body["store"] is False
-    assert body["max_output_tokens"] == 512
+    assert body["model"] == "qwen3.7-plus-2026-05-26"
+    assert body["enable_thinking"] is False
+    assert body["response_format"] == {"type": "json_object"}
+    assert body["max_completion_tokens"] == 128
+    assert body["stream"] is False
     assert "tools" not in body
-    assert body["text"]["format"]["strict"] is True
-    assert body["text"]["format"]["schema"]["additionalProperties"] is False
+    assert "JSON" in body["messages"][0]["content"]
 
     audit = json.dumps(result.to_audit_record(), sort_keys=True)
     assert "test-key-never-log" not in audit
@@ -382,20 +385,22 @@ def test_fake_transport_success_uses_exact_bounded_responses_envelope() -> None:
     assert request.inputs[0].payload not in result.to_audit_record().values()
 
 
-def test_retry_is_exact_bounded_and_retry_after_is_capped() -> None:
+def test_retryable_http_failure_stops_without_silent_second_call() -> None:
     retry = HTTPTransportResponse(
         status_code=429,
         headers={"Retry-After": "10"},
         body=b'{"error":{"type":"rate_limit"}}',
     )
-    runtime, resolver, transport, clock = _runtime([retry, _success_response()])
+    runtime, resolver, transport, clock = _runtime([retry])
 
     result = runtime.run(build_p14c_synthetic_request())
 
-    assert result.status == "PASS"
-    assert resolver.call_count == 2
-    assert len(transport.calls) == 2
-    assert clock.sleeps == [2.0]
+    assert result.status == "ERROR"
+    assert result.error is not None
+    assert result.error.reasons == ("RATE_LIMITED",)
+    assert resolver.call_count == 1
+    assert len(transport.calls) == 1
+    assert clock.sleeps == []
 
 
 @pytest.mark.parametrize("status_code", [400, 401, 403, 404, 409, 422])
@@ -417,10 +422,9 @@ def test_nonretryable_statuses_stop_after_one_fake_call(status_code: int) -> Non
     assert len(transport.calls) == 1
 
 
-def test_retryable_transport_failure_is_bounded_to_two_fake_calls() -> None:
+def test_retryable_transport_failure_is_bounded_to_one_fake_call() -> None:
     runtime, resolver, transport, clock = _runtime(
         [
-            TransportFailure("timeout", retryable=True),
             TransportFailure("timeout", retryable=True),
         ]
     )
@@ -431,17 +435,17 @@ def test_retryable_transport_failure_is_bounded_to_two_fake_calls() -> None:
     assert result.error is not None
     assert result.error.code is AIWorkerErrorCode.TIMEOUT
     assert result.error.retryable is True
-    assert resolver.call_count == 2
-    assert len(transport.calls) == 2
-    assert clock.sleeps == [0.25]
+    assert resolver.call_count == 1
+    assert len(transport.calls) == 1
+    assert clock.sleeps == []
 
 
 @pytest.mark.parametrize(
     "response",
     [
-        _success_response(status="incomplete"),
+        _success_response(finish_reason="length"),
         _success_response(model="different-model"),
-        _success_response(content=[{"type": "refusal", "refusal": "no"}]),
+        _success_response(content=json.dumps({"refusal": "no"})),
         HTTPTransportResponse(status_code=200, headers={}, body=b"not-json"),
     ],
 )
@@ -460,7 +464,7 @@ def test_incomplete_refusal_model_drift_and_malformed_json_fail_closed(
 
 @pytest.mark.parametrize(
     ("input_tokens", "output_tokens"),
-    [(4_097, 1), (1, 513)],
+    [(1_025, 1), (1, 129)],
 )
 def test_fake_response_cannot_exceed_token_budget(
     input_tokens: int,
@@ -493,3 +497,60 @@ def test_precancelled_request_never_resolves_credential_or_sends_transport() -> 
     assert result.error.code is AIWorkerErrorCode.CANCELLED
     assert resolver.call_count == 0
     assert transport.calls == []
+
+
+def _credential_file(tmp_path: Path) -> Path:
+    config_dir = tmp_path / "tool-system"
+    config_dir.mkdir(mode=0o700)
+    path = config_dir / "credentials.toml"
+    path.write_text(
+        '[providers.qwen]\napi_key = "test-key-never-log"\n',
+        encoding="utf-8",
+    )
+    path.chmod(0o600)
+    return path
+
+
+def test_local_credential_file_reads_only_exact_owner_only_qwen_record(
+    tmp_path: Path,
+) -> None:
+    path = _credential_file(tmp_path)
+    packet = build_p14c_execution_packet()
+
+    value = LocalCredentialFileResolver(path).resolve(
+        packet.credential_reference
+    )
+
+    assert value == "test-key-never-log"
+    assert "test-key-never-log" not in json.dumps(packet.audit_record())
+
+
+def test_local_credential_file_rejects_broad_permissions(
+    tmp_path: Path,
+) -> None:
+    path = _credential_file(tmp_path)
+    path.chmod(0o644)
+
+    with pytest.raises(
+        CredentialResolutionFailure,
+        match="owner-only regular storage",
+    ):
+        LocalCredentialFileResolver(path).resolve(
+            build_p14c_execution_packet().credential_reference
+        )
+
+
+def test_local_credential_file_rejects_symlink(
+    tmp_path: Path,
+) -> None:
+    target = _credential_file(tmp_path)
+    symlink = target.parent / "linked.toml"
+    symlink.symlink_to(target)
+
+    with pytest.raises(
+        CredentialResolutionFailure,
+        match="owner-only regular storage",
+    ):
+        LocalCredentialFileResolver(symlink).resolve(
+            build_p14c_execution_packet().credential_reference
+        )

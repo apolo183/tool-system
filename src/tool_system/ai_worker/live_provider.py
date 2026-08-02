@@ -4,12 +4,18 @@ import http.client
 import json
 import os
 import ssl
+import stat
 import threading
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python 3.10 compatibility
+    import tomli as tomllib  # type: ignore[no-redef]
 
 from tool_system.ai_worker.contract import (
     AIModelSpec,
@@ -40,16 +46,19 @@ from tool_system.process_authority.live_provider_approval import (
     validate_p14c_execution_source_seal,
 )
 
-P14C_AUTHORIZATION_PACKET = "P14C-IMPL-v2"
+P14C_AUTHORIZATION_PACKET = "P14C-QWEN-RECOVERY-v1"
 P14C_IMPLEMENTATION_AUTHORIZATION_BASE_SHA = (
-    "637fe60782ed9e15d58795a0113b84965d6664d2"
+    "c92c55940f7d6cb4db2e743472ec2a739d910b3a"
 )
 P14C_FIXTURE_ID = "P14C-001"
-OPENAI_PROVIDER_ID = "openai"
-OPENAI_MODEL_ID = "gpt-5.6-luna"
-OPENAI_HOST = "api.openai.com"
-OPENAI_PATH = "/v1/responses"
-OPENAI_CREDENTIAL_REFERENCE = "env:OPENAI_API_KEY"
+QWEN_PROVIDER_ID = "qwen"
+QWEN_MODEL_ID = "qwen3.7-plus-2026-05-26"
+QWEN_HOST = "dashscope.aliyuncs.com"
+QWEN_PATH = "/compatible-mode/v1/chat/completions"
+QWEN_CREDENTIAL_REFERENCE = (
+    "file:~/.config/tool-system/credentials.toml#providers.qwen.api_key"
+)
+QWEN_CREDENTIAL_FILE = Path("~/.config/tool-system/credentials.toml")
 P14C_PROMPT_ID = "p14c-bounded-provider-proof"
 P14C_PROMPT_VERSION = "v1"
 MAX_RESPONSE_BYTES = 1_048_576
@@ -149,12 +158,12 @@ def build_p14c_execution_packet() -> P14CExecutionPacket:
             P14C_IMPLEMENTATION_AUTHORIZATION_BASE_SHA
         ),
         fixture_id=P14C_FIXTURE_ID,
-        provider_id=OPENAI_PROVIDER_ID,
-        model_id=OPENAI_MODEL_ID,
+        provider_id=QWEN_PROVIDER_ID,
+        model_id=QWEN_MODEL_ID,
         method="POST",
-        host=OPENAI_HOST,
-        path=OPENAI_PATH,
-        credential_reference=OPENAI_CREDENTIAL_REFERENCE,
+        host=QWEN_HOST,
+        path=QWEN_PATH,
+        credential_reference=QWEN_CREDENTIAL_REFERENCE,
         prompt_id=P14C_PROMPT_ID,
         prompt_version=P14C_PROMPT_VERSION,
         required_capabilities=("structured-output", "tool-free-generation"),
@@ -162,16 +171,16 @@ def build_p14c_execution_packet() -> P14CExecutionPacket:
         reasoning_effort="none",
         store=False,
         tools_allowed=False,
-        per_attempt_input_tokens=4_096,
-        per_attempt_output_tokens=512,
-        per_attempt_total_tokens=4_608,
-        max_attempts=2,
-        cumulative_token_ceiling=9_216,
+        per_attempt_input_tokens=1_024,
+        per_attempt_output_tokens=128,
+        per_attempt_total_tokens=1_152,
+        max_attempts=1,
+        cumulative_token_ceiling=1_152,
         request_timeout_ms=20_000,
-        total_wall_clock_ms=45_000,
-        cumulative_cost_microusd=20_000,
+        total_wall_clock_ms=25_000,
+        cumulative_cost_microusd=2_000,
         input_price_microusd_per_token=1,
-        output_price_microusd_per_token=6,
+        output_price_microusd_per_token=2,
         retry_after_cap_ms=2_000,
         default_backoff_ms=250,
         tls_verification=True,
@@ -191,7 +200,9 @@ def validate_p14c_execution_packet(
     for key, expected_value in expected.canonical_record().items():
         actual_value = packet.canonical_record().get(key)
         if actual_value != expected_value:
-            reasons.append(f"packet field {key} does not match P14C-IMPL-v2")
+            reasons.append(
+                f"packet field {key} does not match {P14C_AUTHORIZATION_PACKET}"
+            )
     return tuple(reasons)
 
 
@@ -217,7 +228,7 @@ def build_p14c_synthetic_request(
             provider_id=active_packet.provider_id,
             model_id=active_packet.model_id,
             capabilities=active_packet.required_capabilities,
-            context_window_tokens=1_050_000,
+            context_window_tokens=1_000_000,
         ),
         prompt=PromptSpec(
             prompt_id=active_packet.prompt_id,
@@ -257,7 +268,7 @@ class CredentialResolver(Protocol):
     def resolve(self, reference: str) -> str: ...
 
 
-class ResponsesTransport(Protocol):
+class P14CTransport(Protocol):
     transport_kind: str
 
     def send(
@@ -290,17 +301,61 @@ class TransportFailure(RuntimeError):
         self.retryable = retryable
 
 
-class EnvironmentCredentialResolver:
+class LocalCredentialFileResolver:
+    """Read one exact Qwen key from an owner-only local TOML file."""
+
+    def __init__(self, credential_file: str | Path | None = None) -> None:
+        selected = (
+            credential_file
+            if credential_file is not None
+            else QWEN_CREDENTIAL_FILE
+        )
+        self._credential_file = Path(selected).expanduser()
+
     def resolve(self, reference: str) -> str:
-        if reference != OPENAI_CREDENTIAL_REFERENCE:
+        if reference != QWEN_CREDENTIAL_REFERENCE:
             raise CredentialResolutionFailure("credential reference is not approved")
-        value = os.environ.get("OPENAI_API_KEY")
+        path = self._credential_file
+        try:
+            path_stat = path.lstat()
+            parent_stat = path.parent.lstat()
+        except OSError:
+            raise CredentialResolutionFailure(
+                "approved credential file is unavailable"
+            ) from None
+        if (
+            stat.S_ISLNK(path_stat.st_mode)
+            or not stat.S_ISREG(path_stat.st_mode)
+            or path_stat.st_nlink != 1
+            or path_stat.st_uid != os.getuid()
+            or path_stat.st_mode & 0o077
+        ):
+            raise CredentialResolutionFailure(
+                "approved credential file is not owner-only regular storage"
+            )
+        if (
+            stat.S_ISLNK(parent_stat.st_mode)
+            or not stat.S_ISDIR(parent_stat.st_mode)
+            or parent_stat.st_uid != os.getuid()
+            or parent_stat.st_mode & 0o077
+        ):
+            raise CredentialResolutionFailure(
+                "approved credential directory is not owner-only"
+            )
+        try:
+            with path.open("rb") as handle:
+                record = tomllib.load(handle)
+            value = record["providers"]["qwen"]["api_key"]
+        except (OSError, KeyError, TypeError, tomllib.TOMLDecodeError):
+            raise CredentialResolutionFailure(
+                "approved credential record is unavailable"
+            ) from None
         if not isinstance(value, str) or not value:
             raise CredentialResolutionFailure("approved credential is unavailable")
         return value
 
 
-class OpenAIResponsesTransport:
+class QwenChatCompletionsTransport:
     """Direct TLS transport that ignores proxy environment and refuses redirects."""
 
     transport_kind = "live_network"
@@ -317,8 +372,8 @@ class OpenAIResponsesTransport:
     ) -> HTTPTransportResponse:
         if (
             method != "POST"
-            or host != OPENAI_HOST
-            or path != OPENAI_PATH
+            or host != QWEN_HOST
+            or path != QWEN_PATH
             or timeout_seconds <= 0
         ):
             raise TransportFailure("transport_precondition", retryable=False)
@@ -386,7 +441,7 @@ class P14CLiveExecutionCapability:
         packet_sha256: str,
         request_sha256: str,
         transport_kind: str,
-        transport: ResponsesTransport,
+        transport: P14CTransport,
         approval_record_sha256: str | None = None,
         approval_comment_id: int | None = None,
         approval_issue_number: int | None = None,
@@ -414,7 +469,7 @@ class P14CLiveExecutionCapability:
         live_capability = (
             authorization_id == P14C_LIVE_EXECUTION_AUTHORIZATION_ID
             and transport_kind == P14C_LIVE_TRANSPORT_KIND
-            and type(transport) is OpenAIResponsesTransport
+            and type(transport) is QwenChatCompletionsTransport
             and isinstance(approval_record_sha256, str)
             and len(approval_record_sha256) == 64
             and isinstance(approval_comment_id, int)
@@ -565,7 +620,7 @@ class P14CLiveExecutionCapability:
 def _issue_p14c_fake_transport_capability(
     packet: P14CExecutionPacket,
     request: AIWorkerRequest,
-    transport: ResponsesTransport,
+    transport: P14CTransport,
 ) -> P14CLiveExecutionCapability:
     """Issue only a fake-transport capability for isolated contract tests."""
 
@@ -672,14 +727,14 @@ def issue_p14c_live_network_capability(
     comment_id: int,
     packet: P14CExecutionPacket,
     request: AIWorkerRequest,
-    transport: OpenAIResponsesTransport,
+    transport: QwenChatCompletionsTransport,
     repository_root: str | Path,
     replay_ledger: object,
 ) -> P14CLiveExecutionCapability:
     """Authenticate GitHub owner authority and mint one exact live capability."""
 
-    if type(transport) is not OpenAIResponsesTransport:
-        raise TypeError("live capability requires the exact OpenAI TLS transport")
+    if type(transport) is not QwenChatCompletionsTransport:
+        raise TypeError("live capability requires the exact Qwen TLS transport")
     source_seal = build_p14c_execution_source_seal(
         repository_root,
         replay_ledger,  # type: ignore[arg-type]
@@ -771,9 +826,9 @@ class P14CLiveExecutionGuard:
         return tuple(reasons)
 
 
-class OpenAIResponsesProvider:
-    provider_id = OPENAI_PROVIDER_ID
-    model_id = OPENAI_MODEL_ID
+class QwenChatCompletionsProvider:
+    provider_id = QWEN_PROVIDER_ID
+    model_id = QWEN_MODEL_ID
     capabilities = ("structured-output", "tool-free-generation")
     provider_kind = "live_provider"
     execution_mode = "live"
@@ -785,7 +840,7 @@ class OpenAIResponsesProvider:
         self,
         *,
         packet: P14CExecutionPacket,
-        transport: ResponsesTransport,
+        transport: P14CTransport,
         credential_resolver: CredentialResolver,
         execution_capability: P14CLiveExecutionCapability | None = None,
         monotonic: Callable[[], float] = time.monotonic,
@@ -842,7 +897,7 @@ class OpenAIResponsesProvider:
                 reasons=capability_reasons,
             )
 
-        body = _build_responses_request_body(request, self.packet)
+        body = _build_chat_completions_request_body(request, self.packet)
         started_at = self._monotonic()
         last_failure_code = AIWorkerErrorCode.PROVIDER_FAILURE
 
@@ -882,6 +937,7 @@ class OpenAIResponsesProvider:
                     AIWorkerErrorCode.PROVIDER_FAILURE,
                     "approved provider credential is unavailable",
                     retryable=False,
+                    reasons=("KEY_MISSING_OR_UNREADABLE",),
                     duration_ms=elapsed_ms,
                 )
             except Exception:  # noqa: BLE001 - injected resolver must fail closed
@@ -889,6 +945,7 @@ class OpenAIResponsesProvider:
                     AIWorkerErrorCode.PROVIDER_FAILURE,
                     "credential resolver failed",
                     retryable=False,
+                    reasons=("KEY_RESOLUTION_FAILED",),
                     duration_ms=elapsed_ms,
                 )
             if not isinstance(credential, str) or not credential:
@@ -896,6 +953,7 @@ class OpenAIResponsesProvider:
                     AIWorkerErrorCode.PROVIDER_FAILURE,
                     "credential resolver returned an invalid value",
                     retryable=False,
+                    reasons=("KEY_INVALID",),
                     duration_ms=elapsed_ms,
                 )
             if cancellation is not None and cancellation.is_cancelled():
@@ -943,6 +1001,7 @@ class OpenAIResponsesProvider:
                         last_failure_code,
                         "provider transport failed",
                         retryable=exc.retryable,
+                        reasons=("NETWORK_FAILED",),
                         duration_ms=_elapsed_ms(started_at, self._monotonic()),
                     )
                 retry_delay_ms = self.packet.default_backoff_ms
@@ -951,6 +1010,7 @@ class OpenAIResponsesProvider:
                     AIWorkerErrorCode.PROVIDER_FAILURE,
                     "provider transport raised an unexpected exception",
                     retryable=False,
+                    reasons=("PROVIDER_FAILED",),
                     duration_ms=_elapsed_ms(started_at, self._monotonic()),
                 )
             else:
@@ -972,6 +1032,7 @@ class OpenAIResponsesProvider:
                         AIWorkerErrorCode.PROVIDER_FAILURE,
                         "provider returned a non-retryable HTTP status",
                         retryable=False,
+                        reasons=(_classify_http_failure(response),),
                         duration_ms=_elapsed_ms(started_at, self._monotonic()),
                     )
                 if attempt == self.packet.max_attempts:
@@ -979,6 +1040,7 @@ class OpenAIResponsesProvider:
                         AIWorkerErrorCode.PROVIDER_FAILURE,
                         "provider retry budget was exhausted",
                         retryable=True,
+                        reasons=(_classify_http_failure(response),),
                         duration_ms=_elapsed_ms(started_at, self._monotonic()),
                     )
                 retry_delay_ms = _retry_delay_ms(response.headers, self.packet)
@@ -999,58 +1061,31 @@ class OpenAIResponsesProvider:
         )
 
 
-def _build_responses_request_body(
+def _build_chat_completions_request_body(
     request: AIWorkerRequest,
     packet: P14CExecutionPacket,
 ) -> bytes:
     payload = request.inputs[0].payload
     body = {
         "model": packet.model_id,
-        "input": [
+        "messages": [
             {
                 "role": "system",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": (
-                            "Evaluate only the supplied public synthetic control. "
-                            "Return the required JSON object and do not request tools."
-                        ),
-                    }
-                ],
+                "content": (
+                    "Evaluate only the supplied public synthetic control. "
+                    "Return one JSON object with exactly summary and "
+                    "control_status; use PASS or BLOCK and do not request tools."
+                ),
             },
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": canonical_json_bytes(payload).decode("utf-8"),
-                    }
-                ],
+                "content": canonical_json_bytes(payload).decode("utf-8"),
             },
         ],
-        "reasoning": {"effort": packet.reasoning_effort},
-        "text": {
-            "format": {
-                "type": "json_schema",
-                "name": "p14c_bounded_response",
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "summary": {"type": "string"},
-                        "control_status": {
-                            "type": "string",
-                            "enum": ["PASS", "BLOCK"],
-                        },
-                    },
-                    "required": list(packet.required_output_keys),
-                    "additionalProperties": False,
-                },
-                "strict": True,
-            }
-        },
-        "max_output_tokens": packet.per_attempt_output_tokens,
-        "store": packet.store,
+        "enable_thinking": False,
+        "response_format": {"type": "json_object"},
+        "max_completion_tokens": packet.per_attempt_output_tokens,
+        "stream": False,
     }
     return canonical_json_bytes(body)
 
@@ -1088,50 +1123,40 @@ def _parse_success_response(
             "provider response model does not match the packet",
             duration_ms=duration_ms,
         )
-    if record.get("status") != "completed":
+    choices = record.get("choices")
+    if not isinstance(choices, list) or len(choices) != 1:
         return _provider_error(
             AIWorkerErrorCode.INVALID_RESPONSE,
-            "provider response did not complete",
+            "provider response must contain exactly one choice",
             duration_ms=duration_ms,
         )
-
-    output_texts: list[str] = []
-    refusal_seen = False
-    output_items = record.get("output")
-    if isinstance(output_items, list):
-        for item in output_items:
-            if not isinstance(item, dict) or item.get("type") != "message":
-                continue
-            content = item.get("content")
-            if not isinstance(content, list):
-                continue
-            for part in content:
-                if not isinstance(part, dict):
-                    continue
-                if part.get("type") == "refusal":
-                    refusal_seen = True
-                elif part.get("type") == "output_text" and isinstance(
-                    part.get("text"), str
-                ):
-                    output_texts.append(part["text"])
-    if refusal_seen:
+    choice = choices[0]
+    if not isinstance(choice, dict) or choice.get("finish_reason") != "stop":
         return _provider_error(
             AIWorkerErrorCode.INVALID_RESPONSE,
-            "provider refused the synthetic request",
+            "provider response did not finish normally",
             duration_ms=duration_ms,
         )
-    if len(output_texts) != 1:
+    message = choice.get("message")
+    if not isinstance(message, dict) or message.get("role") != "assistant":
         return _provider_error(
             AIWorkerErrorCode.INVALID_RESPONSE,
-            "provider response must contain exactly one output_text item",
+            "provider response assistant message is invalid",
+            duration_ms=duration_ms,
+        )
+    output_text = message.get("content")
+    if not isinstance(output_text, str):
+        return _provider_error(
+            AIWorkerErrorCode.INVALID_RESPONSE,
+            "provider response content is invalid",
             duration_ms=duration_ms,
         )
     try:
-        output = json.loads(output_texts[0])
+        output = json.loads(output_text)
     except json.JSONDecodeError:
         return _provider_error(
             AIWorkerErrorCode.INVALID_RESPONSE,
-            "provider output_text is not valid JSON",
+            "provider content is not valid JSON",
             duration_ms=duration_ms,
         )
     if not isinstance(output, dict) or set(output) != set(request.required_output_keys):
@@ -1156,8 +1181,8 @@ def _parse_success_response(
             "provider usage is missing",
             duration_ms=duration_ms,
         )
-    input_tokens = usage_record.get("input_tokens")
-    output_tokens = usage_record.get("output_tokens")
+    input_tokens = usage_record.get("prompt_tokens")
+    output_tokens = usage_record.get("completion_tokens")
     if not _non_negative_int(input_tokens) or not _non_negative_int(output_tokens):
         return _provider_error(
             AIWorkerErrorCode.INVALID_RESPONSE,
@@ -1219,6 +1244,34 @@ def _retry_delay_ms(
         if seconds >= 0:
             return min(int(seconds * 1_000), packet.retry_after_cap_ms)
     return packet.default_backoff_ms
+
+
+def _classify_http_failure(response: HTTPTransportResponse) -> str:
+    provider_code = ""
+    try:
+        record = json.loads(response.body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        record = None
+    if isinstance(record, dict):
+        error = record.get("error")
+        if isinstance(error, dict) and isinstance(error.get("code"), str):
+            provider_code = error["code"].lower()
+        elif isinstance(record.get("code"), str):
+            provider_code = record["code"].lower()
+    if response.status_code in {401, 403}:
+        return "AUTH_FAILED"
+    if response.status_code == 402 or any(
+        marker in provider_code
+        for marker in ("arrearage", "balance", "quota", "allocation")
+    ):
+        return "BALANCE_OR_QUOTA"
+    if response.status_code == 429 or any(
+        marker in provider_code for marker in ("throttl", "rate")
+    ):
+        return "RATE_LIMITED"
+    if response.status_code >= 500:
+        return "PROVIDER_FAILED"
+    return "REQUEST_REJECTED"
 
 
 def _provider_error(

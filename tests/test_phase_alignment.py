@@ -96,7 +96,8 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     p14c = project_state["p14c"]
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_status"] == (
-        "corrected_source_and_live_issuer_merged_no_execution_not_accepted"
+        "corrected_source_live_issuer_and_qwen_recovery_route_implemented_"
+        "no_success_not_accepted"
     )
     assert (
         p14c["live_issuer_implementation_authorization_packet"]
@@ -122,8 +123,16 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
         "single_host_sqlite_burn_on_claim_at_most_once"
     )
     assert p14c["multi_host_exactly_once_claimed"] is False
-    assert p14c["real_live_approval_record_created"] is False
-    assert p14c["live_capability_issued"] is False
+    assert p14c["real_live_approval_record_created"] is True
+    assert p14c["live_capability_issued"] is True
+    assert p14c["first_live_attempt"]["approval_durably_consumed"] is True
+    assert p14c["first_live_attempt"]["redacted_error_code"] == (
+        "PROVIDER_FAILURE"
+    )
+    assert p14c["recovery_implementation_packet"] == (
+        "P14C-QWEN-RECOVERY-v1"
+    )
+    assert p14c["recovery_route"]["live_execution_attempted"] is False
     assert p14c["stage_accepted"] is False
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["state_file_grants_authority"] is False
