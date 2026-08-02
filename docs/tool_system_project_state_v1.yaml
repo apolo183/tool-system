@@ -11,9 +11,9 @@ current_phase:
   status: active
   entry_record: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
   entry_authorized: true
-  last_accepted_stage: P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
-  last_accepted_stage_record: docs/reports/p14c_bounded_real_provider_acceptance.md
-  next_stage: P14D_REPOSITORY_CONTEXT_NATURAL_OWNER
+  last_accepted_stage: P14D_REPOSITORY_CONTEXT_NATURAL_OWNER
+  last_accepted_stage_record: docs/reports/p14d_repository_context_natural_owner_acceptance.md
+  next_stage: P14E_BLUEPRINT_COMPILER
   next_stage_authorized: false
   next_phase: P15_MULTI_PROJECT_BENCHMARK
   next_phase_entry_authorized: false
@@ -130,6 +130,44 @@ p14c:
     credential_value_recorded: false
     raw_provider_output_recorded: false
     acceptance_effect: p14c_bounded_real_model_provider_execution_accepted
+  stage_accepted: true
+p14d:
+  implementation_authorization_packet: P14D-REPOSITORY-CONTEXT-LIFECYCLE-v1
+  module_id: repository-context
+  module_version: 1.0.0
+  public_interface_id: repository-context-api
+  public_interface_version: 1.0.0
+  acceptance_record: docs/reports/p14d_repository_context_natural_owner_acceptance.md
+  acceptance_status: accepted
+  accepted_at: 2026-08-02 UTC+09:00
+  evidence_boundary: isolated_local_git_fixture_repositories_only
+  repository_snapshot_contract:
+    exact_expected_head_required: true
+    clean_worktree_required: true
+    committed_tracked_blobs_only: true
+    content_addressed_head_tree_tracked_set_and_context: true
+    end_of_build_revalidation_required: true
+  bounded_context_contract:
+    maximum_tracked_files: 512
+    maximum_selected_files: 32
+    maximum_file_bytes: 131072
+    maximum_scan_bytes: 4194304
+    maximum_selected_bytes: 1048576
+    maximum_query_terms: 24
+  accepted_fixture_evidence:
+    python_dependency_and_test_mapping: true
+    typescript_dependency_and_test_mapping: true
+    relevance_and_seed_selection: true
+    natural_owner_evidence_sufficiency_gate: true
+    dirty_and_stale_snapshot_blocking: true
+    path_symlink_binary_utf8_and_size_safety: true
+    deterministic_replay: true
+    repository_writes: 0
+    network_operations: 0
+    provider_invocations: 0
+    credential_accesses: 0
+  natural_owner_proposal_grants_authority: false
+  real_downstream_repository_accessed: false
   stage_accepted: true
 authorization_boundaries:
   state_file_grants_authority: false

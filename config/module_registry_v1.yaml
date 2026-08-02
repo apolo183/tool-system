@@ -1381,6 +1381,44 @@ modules:
     sha256: 080a8734a874a739fcaa48dff32b6eb619dc0431c3013f4073b9c2d7bc361b9a
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: repository-context
+  module_version: 1.0.0
+  role: build deterministic bounded repository context and natural-owner evidence from one clean committed local Git snapshot. Index tracked blobs, map static dependencies and tests, select relevant context, and propose a natural owner without writing the repository, contacting a remote, or granting authority.
+  owner: repository-context
+  public_interface_refs:
+  - interface_id: repository-context-api
+    interface_version: 1.0.0
+  internal_dependencies: []
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repository_context/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/repository_context/builder.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_repository_context_builder.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary:
+    repo_relative_path: docs/modules/repository-context-contract-v1.md
+    sha256: 435f3c0df241bf046db48632b4818727dc62b630a511bf2e1e838c1143898c79
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/repository-context-contract-v1.md
+    sha256: 435f3c0df241bf046db48632b4818727dc62b630a511bf2e1e838c1143898c79
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
 interfaces:
 - interface_id: architecture-registry-api
   interface_version: 2.0.0
@@ -1884,5 +1922,39 @@ interfaces:
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/cli-frontend-contract-v1.md
     sha256: 080a8734a874a739fcaa48dff32b6eb619dc0431c3013f4073b9c2d7bc361b9a
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: repository-context-api
+  interface_version: 1.0.0
+  provider_module_id: repository-context
+  consumers: []
+  input_contract:
+    repo_relative_path: docs/modules/repository-context-contract-v1.md
+    sha256: 435f3c0df241bf046db48632b4818727dc62b630a511bf2e1e838c1143898c79
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/repository-context-contract-v1.md
+    sha256: 435f3c0df241bf046db48632b4818727dc62b630a511bf2e1e838c1143898c79
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/repository-context-contract-v1.md
+    sha256: 435f3c0df241bf046db48632b4818727dc62b630a511bf2e1e838c1143898c79
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/repository-context-contract-v1.md
+    sha256: 435f3c0df241bf046db48632b4818727dc62b630a511bf2e1e838c1143898c79
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/repository-context-contract-v1.md
+    sha256: 435f3c0df241bf046db48632b4818727dc62b630a511bf2e1e838c1143898c79
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/repository-context-contract-v1.md
+    sha256: 435f3c0df241bf046db48632b4818727dc62b630a511bf2e1e838c1143898c79
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1

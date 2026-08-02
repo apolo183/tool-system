@@ -13,7 +13,7 @@ This is a tool-system-owned implementation and validation contract. It grants
 no execution, downstream-repository, cleanup, provider, or production
 authority, and it records no external policy state.
 
-## Fourteen-row identity and aggregate-interface mapping
+## Fifteen-row identity and aggregate-interface mapping
 
 The canonical registry IDs use hyphens while Python package and import names
 remain unchanged. The mapping below is the local identity owner used by the
@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 14
+  module_count: 15
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -242,6 +242,17 @@ mapping_contract:
       direct_consumer_module_ids: []
       change_risk: "high: public entrypoint delegation surface"
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cli_frontend@1.1.0
+    - current_module_id: repository_context
+      canonical_module_id: repository-context
+      current_module_version: 1.0.0
+      aggregate_interface_id: repository-context-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.repository_context}
+      direct_consumer_module_ids: []
+      change_risk: "medium: bounded read-only local Git context and non-authorizing natural-owner evidence boundary"
+      rollback_identity: tool-system@7e3a114a25d70c3ebecc952f13ce68b1adbbbc80:repository_context@absent
 ~~~
 <!-- MODULE-IDENTITY-MAPPING:END -->
 
@@ -303,12 +314,14 @@ static_import_dag:
     cleanup_planner:
       - cli_frontend
     cli_frontend: []
+    repository_context: []
   zero_consumer_modules:
     - architecture_registry
     - ai_worker_runtime
     - durable_orchestrator
     - worker_adapter
     - cli_frontend
+    - repository_context
   non_claim: >-
     Static AST import equality does not prove absence of dynamic imports, CLI
     invocation dependencies, data dependencies, configuration dependencies,
