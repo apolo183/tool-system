@@ -1,0 +1,348 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import stat
+import subprocess
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+from pathlib import Path
+
+from tool_system.development_loop import (
+    DevelopmentLoopError,
+    DevelopmentLoopLimits,
+    FrozenDevelopmentContract,
+    run_development_loop,
+)
+from tool_system.orchestrator import DurableOrchestratorStore, StateConflict
+
+_SHA = re.compile(r"^[0-9a-f]{40}$")
+_BRANCH = re.compile(r"^agent/[a-z0-9][a-z0-9._/-]{0,119}$")
+
+
+class DurableLocalGitError(RuntimeError):
+    """A frozen local-Git precondition or durable transition failed."""
+
+    def __init__(self, code: str) -> None:
+        super().__init__(code)
+        self.code = code
+
+
+@dataclass(frozen=True)
+class LocalGitIdentity:
+    expected_head_sha: str
+    expected_tree_sha: str
+    branch_name: str
+    commit_message: str
+
+    def validate(self) -> None:
+        if _SHA.fullmatch(self.expected_head_sha) is None:
+            raise DurableLocalGitError("INVALID_EXPECTED_HEAD")
+        if _SHA.fullmatch(self.expected_tree_sha) is None:
+            raise DurableLocalGitError("INVALID_EXPECTED_TREE")
+        if _BRANCH.fullmatch(self.branch_name) is None or ".." in self.branch_name:
+            raise DurableLocalGitError("INVALID_LOCAL_BRANCH")
+        if not self.commit_message.strip() or "\n" in self.commit_message:
+            raise DurableLocalGitError("INVALID_COMMIT_MESSAGE")
+
+
+def _git(root: Path, *args: str, check: bool = True) -> str:
+    completed = subprocess.run(
+        ["git", *args],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+        env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+    )
+    if check and completed.returncode:
+        raise DurableLocalGitError("LOCAL_GIT_COMMAND_FAILED")
+    return completed.stdout.strip()
+
+
+def _canonical(value: object) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+
+def _digest(value: object) -> str:
+    return hashlib.sha256(_canonical(value).encode()).hexdigest()
+
+
+def _validate_repository(
+    root: Path,
+    identity: LocalGitIdentity,
+    *,
+    completed_branch: Mapping[str, object] | None,
+    completed_commit: Mapping[str, object] | None,
+) -> None:
+    identity.validate()
+    if not root.is_absolute() or root.is_symlink() or not root.is_dir():
+        raise DurableLocalGitError("INVALID_REPOSITORY_ROOT")
+    git_dir = root / ".git"
+    if git_dir.is_symlink() or not git_dir.is_dir():
+        raise DurableLocalGitError("INVALID_GIT_DIRECTORY")
+    if Path(_git(root, "rev-parse", "--show-toplevel")) != root:
+        raise DurableLocalGitError("REPOSITORY_ROOT_MISMATCH")
+    if _git(root, "remote"):
+        raise DurableLocalGitError("REMOTE_REPOSITORY_FORBIDDEN")
+    if _git(root, "status", "--porcelain=v1", "--untracked-files=all"):
+        raise DurableLocalGitError("DIRTY_WORKTREE")
+    current_head = _git(root, "rev-parse", "HEAD")
+    current_tree = _git(root, "rev-parse", "HEAD^{tree}")
+    branch_exists = bool(
+        _git(root, "show-ref", "--verify", f"refs/heads/{identity.branch_name}", check=False)
+    )
+    if completed_commit is not None:
+        result = completed_commit.get("result")
+        if not isinstance(result, Mapping) or current_head != result.get("commit") or current_tree != result.get("tree"):
+            raise DurableLocalGitError("COMPLETED_COMMIT_RECEIPT_DRIFT")
+        if _git(root, "branch", "--show-current") != identity.branch_name:
+            raise DurableLocalGitError("COMPLETED_BRANCH_RECEIPT_DRIFT")
+        return
+    if completed_branch is not None:
+        result = completed_branch.get("result")
+        if not isinstance(result, Mapping) or result.get("branch") != identity.branch_name:
+            raise DurableLocalGitError("COMPLETED_BRANCH_RECEIPT_DRIFT")
+        if not branch_exists or _git(root, "branch", "--show-current") != identity.branch_name:
+            raise DurableLocalGitError("COMPLETED_BRANCH_RECEIPT_DRIFT")
+    elif branch_exists:
+        raise DurableLocalGitError("BRANCH_ALREADY_EXISTS_WITHOUT_RECEIPT")
+    if current_head != identity.expected_head_sha:
+        raise DurableLocalGitError("HEAD_PRECONDITION_DRIFT")
+    if current_tree != identity.expected_tree_sha:
+        raise DurableLocalGitError("TREE_PRECONDITION_DRIFT")
+
+
+def _write_candidate(root: Path, files: Mapping[str, object], scope: tuple[str, ...]) -> None:
+    if set(files) != set(scope):
+        raise DurableLocalGitError("SEALED_SCOPE_MISMATCH")
+    for name in scope:
+        target = root / name
+        try:
+            target.relative_to(root)
+        except ValueError as exc:
+            raise DurableLocalGitError("PATH_ESCAPE") from exc
+        if target.exists() and (target.is_symlink() or not stat.S_ISREG(target.lstat().st_mode)):
+            raise DurableLocalGitError("UNSAFE_CANDIDATE_PATH")
+        content = files[name]
+        if not isinstance(content, str):
+            raise DurableLocalGitError("INVALID_CANDIDATE_CONTENT")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+
+
+def run_durable_local_git(
+    *,
+    repository_root: str | Path,
+    store: DurableOrchestratorStore,
+    run_id: str,
+    task_id: str,
+    lease_owner: str,
+    identity: LocalGitIdentity,
+    contract: FrozenDevelopmentContract,
+    baseline_files: Mapping[str, object],
+    worker: Callable[[Mapping[str, object]], Mapping[str, object]],
+    validator: Callable[[Mapping[str, str]], Mapping[str, object]],
+    code_reviewer: Callable[[Mapping[str, object]], Mapping[str, object]],
+    contract_reviewer: Callable[[Mapping[str, object]], Mapping[str, object]],
+    limits: DevelopmentLoopLimits | None = None,
+    lease_seconds: float = 60.0,
+    after_effect: Callable[[str], None] | None = None,
+) -> dict[str, object]:
+    """Seal one P14F candidate and commit it in an isolated local repository.
+
+    The caller owns callbacks and authority. This function rejects remotes, records
+    branch/commit effects durably, and emits plans—not execution—for rollback,
+    creator cleanup, and a future draft PR.
+    """
+
+    root = Path(repository_root).resolve(strict=True)
+    try:
+        branch_receipt = store.get_side_effect(f"{run_id}:branch")
+        commit_receipt = store.get_side_effect(f"{run_id}:commit")
+        completed_branch = (
+            branch_receipt if branch_receipt and branch_receipt["state"] == "COMPLETED" else None
+        )
+        completed_commit = (
+            commit_receipt if commit_receipt and commit_receipt["state"] == "COMPLETED" else None
+        )
+        if branch_receipt and branch_receipt["state"] != "COMPLETED":
+            raise DurableLocalGitError("AMBIGUOUS_BRANCH_SIDE_EFFECT")
+        if commit_receipt and commit_receipt["state"] != "COMPLETED":
+            raise DurableLocalGitError("AMBIGUOUS_COMMIT_SIDE_EFFECT")
+        _validate_repository(
+            root,
+            identity,
+            completed_branch=completed_branch,
+            completed_commit=completed_commit,
+        )
+        contract.validate()
+        if not set(contract.allowed_scope) or set(contract.allowed_scope) != set(baseline_files):
+            raise DurableLocalGitError("BASELINE_SCOPE_MISMATCH")
+        store.create_run(run_id, blueprint_ref="P14G", manifest_ref=contract.task_digest)
+        if store.get_task(run_id, task_id) is None:
+            store.add_task(
+                run_id,
+                task_id,
+                idempotency_key=f"{run_id}:{task_id}",
+                expected_precondition_sha=identity.expected_head_sha,
+                max_attempts=2,
+                checkpoint={"phase": "FROZEN", "contract_digest": _digest(contract.__dict__)},
+            )
+        store.recover_expired_leases()
+        task = store.claim_task(
+            run_id, task_id, lease_owner=lease_owner, lease_seconds=lease_seconds
+        )
+        attempt = int(task["attempt"])
+        if completed_commit is not None:
+            store.complete_task(run_id, task_id, lease_owner=lease_owner, attempt=attempt)
+            store.complete_run(run_id)
+            result = completed_commit["result"]
+            assert isinstance(result, Mapping)
+            return {
+                "status": "PASS",
+                "terminal_code": "RESUMED_COMPLETED_LOCAL_COMMIT",
+                "branch": identity.branch_name,
+                "commit": result["commit"],
+                "tree": result["tree"],
+                "rollback_plan": {"authorized": False, "base": identity.expected_head_sha},
+                "cleanup_plan": {"authorized": False, "branch": identity.branch_name},
+                "draft_pr_plan": {"authorized": False, "remote_operations": 0},
+                "provider_calls": 0,
+                "credential_reads": 0,
+                "remote_operations": 0,
+            }
+        loop_result = run_development_loop(
+            contract=contract,
+            baseline_files=baseline_files,
+            worker=worker,
+            validator=validator,
+            code_reviewer=code_reviewer,
+            contract_reviewer=contract_reviewer,
+            limits=limits,
+            resume_state=task["checkpoint"].get("loop_result"),
+        )
+        store.checkpoint_task(
+            run_id,
+            task_id,
+            lease_owner=lease_owner,
+            attempt=attempt,
+            checkpoint={"phase": "CANDIDATE_EVALUATED", "loop_result": loop_result},
+        )
+        if loop_result["status"] != "PASS" or not loop_result["terminal_candidate_sealed"]:
+            store.fail_task(
+                run_id,
+                task_id,
+                lease_owner=lease_owner,
+                attempt=attempt,
+                retryable=False,
+                checkpoint={"phase": "LOOP_BLOCKED", "loop_result": loop_result},
+            )
+            return {"status": "BLOCK", "terminal_code": loop_result["terminal_code"]}
+
+        branch_effect = store.plan_side_effect(
+            run_id,
+            task_id,
+            effect_id=f"{run_id}:branch",
+            effect_kind="local_git_branch",
+            action="create",
+            resource_scope="local_fixture",
+            idempotency_key=f"{run_id}:branch:{identity.branch_name}",
+            expected_precondition_sha=identity.expected_head_sha,
+            payload={"branch": identity.branch_name},
+            lease_owner=lease_owner,
+            task_attempt=attempt,
+        )
+        if completed_branch is None:
+            store.begin_side_effect(branch_effect["effect_id"], lease_owner=lease_owner, task_attempt=attempt)
+            _git(root, "switch", "-c", identity.branch_name, identity.expected_head_sha)
+            store.complete_side_effect(
+                branch_effect["effect_id"],
+                lease_owner=lease_owner,
+                task_attempt=attempt,
+                expected_precondition_sha=identity.expected_head_sha,
+                result={"branch": identity.branch_name, "head": identity.expected_head_sha},
+                event_kind="local_git_branch_created",
+                event_payload={"branch": identity.branch_name},
+            )
+            if after_effect is not None:
+                after_effect("branch")
+
+        candidate_files = loop_result["candidate_files"]
+        assert isinstance(candidate_files, Mapping)
+        _write_candidate(root, candidate_files, contract.allowed_scope)
+        _git(root, "add", "--", *contract.allowed_scope)
+        staged = tuple(filter(None, _git(root, "diff", "--cached", "--name-only").splitlines()))
+        if set(staged) != set(contract.allowed_scope):
+            raise DurableLocalGitError("STAGED_SCOPE_MISMATCH")
+
+        commit_effect = store.plan_side_effect(
+            run_id,
+            task_id,
+            effect_id=f"{run_id}:commit",
+            effect_kind="local_git_commit",
+            action="create",
+            resource_scope="local_fixture",
+            idempotency_key=f"{run_id}:commit:{loop_result['candidate_tree']}",
+            expected_precondition_sha=identity.expected_head_sha,
+            payload={"branch": identity.branch_name, "candidate_tree": loop_result["candidate_tree"]},
+            lease_owner=lease_owner,
+            task_attempt=attempt,
+        )
+        store.begin_side_effect(commit_effect["effect_id"], lease_owner=lease_owner, task_attempt=attempt)
+        _git(
+            root,
+            "-c", "user.name=tool-system fixture",
+            "-c", "user.email=fixture@tool-system.invalid",
+            "commit", "-m", identity.commit_message,
+        )
+        commit_sha = _git(root, "rev-parse", "HEAD")
+        commit_tree = _git(root, "rev-parse", "HEAD^{tree}")
+        store.complete_side_effect(
+            commit_effect["effect_id"],
+            lease_owner=lease_owner,
+            task_attempt=attempt,
+            expected_precondition_sha=identity.expected_head_sha,
+            result={"commit": commit_sha, "tree": commit_tree},
+            event_kind="local_git_commit_created",
+            event_payload={"commit": commit_sha, "tree": commit_tree},
+        )
+        if after_effect is not None:
+            after_effect("commit")
+        store.checkpoint_task(
+            run_id,
+            task_id,
+            lease_owner=lease_owner,
+            attempt=attempt,
+            checkpoint={"phase": "LOCAL_COMMIT_RECORDED", "commit": commit_sha, "tree": commit_tree, "loop_result": loop_result},
+        )
+        store.complete_task(run_id, task_id, lease_owner=lease_owner, attempt=attempt)
+        store.complete_run(run_id)
+        return {
+            "status": "PASS",
+            "terminal_code": "LOCAL_COMMIT_RECORDED",
+            "branch": identity.branch_name,
+            "commit": commit_sha,
+            "tree": commit_tree,
+            "candidate_tree": loop_result["candidate_tree"],
+            "rollback_plan": {"authorized": False, "action": "reset_fixture_to_base", "base": identity.expected_head_sha},
+            "cleanup_plan": {"authorized": False, "action": "delete_creator_owned_fixture_branch", "branch": identity.branch_name},
+            "draft_pr_plan": {"authorized": False, "remote_operations": 0},
+            "provider_calls": 0,
+            "credential_reads": 0,
+            "remote_operations": 0,
+        }
+    except (DevelopmentLoopError, DurableLocalGitError, StateConflict) as exc:
+        return {
+            "status": "BLOCK",
+            "terminal_code": (
+                exc.code
+                if isinstance(exc, (DevelopmentLoopError, DurableLocalGitError))
+                else "DURABLE_STATE_CONFLICT"
+            ),
+            "provider_calls": 0,
+            "credential_reads": 0,
+            "remote_operations": 0,
+        }

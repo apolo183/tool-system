@@ -64,7 +64,7 @@ EFFECT_SOURCE_SIGNALS = {
         "write_bytes",
         ".open(",
     ),
-    "git_write": ("\"pr\"", "\"merge\"", "execute_action_plan"),
+    "git_write": ("\"pr\"", "\"merge\"", "\"switch\"", "execute_action_plan"),
     "database_write": ("sqlite3",),
     "network_write": ("run_gh", "subprocess.run", "HTTPSConnection("),
     "external_system_write": (
@@ -111,6 +111,7 @@ DIRECT_EFFECT_EXPECTATIONS = {
     "repository_context": frozenset(),
     "blueprint_compiler": frozenset(),
     "development_loop": frozenset(),
+    "local_git": frozenset({"repository_write", "data_write", "git_write"}),
 }
 DELEGATED_EFFECT_EXPECTATIONS = {
     "architecture_registry": {},
@@ -150,6 +151,12 @@ DELEGATED_EFFECT_EXPECTATIONS = {
     "repository_context": {},
     "blueprint_compiler": {},
     "development_loop": {},
+    "local_git": {
+        "durable-orchestrator-store": frozenset({"database_write"}),
+        "injected-development-loop-callbacks": frozenset(
+            TOOL_SYSTEM_EFFECT_CLASSES
+        )
+    },
 }
 TOKEN_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SEMVER_RE = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
@@ -240,13 +247,13 @@ def _mapping_contract() -> dict[str, Any]:
 def _mappings_by_current_id() -> dict[str, dict[str, Any]]:
     rows = _mapping_contract().get("mappings")
     _require(isinstance(rows, list), "module identity mappings must be a list")
-    _require(len(rows) == 17, "module identity mappings must contain seventeen rows")
+    _require(len(rows) == 18, "module identity mappings must contain eighteen rows")
     result = {
         str(row["current_module_id"]): row
         for row in rows
         if isinstance(row, dict)
     }
-    _require(len(result) == 17, "current module IDs must be unique")
+    _require(len(result) == 18, "current module IDs must be unique")
     return result
 
 
@@ -852,7 +859,7 @@ def _validate_contract_set(
     contracts: list[dict[str, Any]],
     digests: list[str],
 ) -> None:
-    _require(len(contracts) == 17, "exactly seventeen module contracts are required")
+    _require(len(contracts) == 18, "exactly eighteen module contracts are required")
     for key_path in (
         ("contract_path",),
         ("identity", "current_module_id"),
@@ -887,7 +894,7 @@ def _validated_contracts() -> tuple[list[dict[str, Any]], list[str]]:
         for mapping in mappings.values()
     }
     actual_paths = set(CONTRACT_DIR.glob("*.md"))
-    _require(actual_paths == expected_paths, "contract directory must contain exactly seventeen owners")
+    _require(actual_paths == expected_paths, "contract directory must contain exactly eighteen owners")
 
     contracts: list[dict[str, Any]] = []
     digests: list[str] = []
@@ -912,8 +919,8 @@ def _validated_contracts() -> tuple[list[dict[str, Any]], list[str]]:
 def test_all_module_contracts_match_module_registry_and_real_owner_evidence() -> None:
     contracts, digests = _validated_contracts()
 
-    assert len(contracts) == 17
-    assert len(digests) == len(set(digests)) == 17
+    assert len(contracts) == 18
+    assert len(digests) == len(set(digests)) == 18
     assert all(re.fullmatch(r"[0-9a-f]{64}", digest) for digest in digests)
 
 

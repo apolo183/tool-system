@@ -155,12 +155,12 @@ def test_p14c_bounded_deepseek_receipt_is_accepted_without_new_authority() -> No
     acceptance_report = ACCEPTANCE_REPORT.read_text(encoding="utf-8")
 
     assert current_phase["last_accepted_stage"] == (
-        "P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW"
+        "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
     )
     assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p14f_development_loop_acceptance.md"
+        "docs/reports/p14g_durable_local_git_acceptance.md"
     )
-    assert current_phase["next_stage"] == "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
+    assert current_phase["next_stage"] == "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
     assert current_phase["next_stage_authorized"] is False
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_status"] == "bounded_deepseek_live_provider_proof_accepted"

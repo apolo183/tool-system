@@ -35,7 +35,8 @@ module_compound_contract:
     basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids: []
-    direct_consumer_module_ids: []
+    direct_consumer_module_ids:
+      - local_git
   input_contract:
     registered_inputs:
       - frozen_development_contract_virtual_repository_and_fixture_callbacks_v1
