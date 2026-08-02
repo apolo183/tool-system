@@ -19,20 +19,20 @@ module_compound_contract:
   identity:
     canonical_module_id: ai-worker-runtime
     current_module_id: ai_worker_runtime
-    module_version: 1.5.1
+    module_version: 1.6.0
     aggregate_interface:
       interface_id: ai-worker-runtime-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@1d0100be219e991fdebc3f138477e948b6517511:ai_worker_runtime@1.5.0
+    rollback_identity: tool-system@d9c211324487e3bfd31c1276763ed2ed781cc085:ai_worker_runtime@1.5.1
     python_import_identities:
       - kind: prefix
         name: tool_system.ai_worker
   role:
     summary: provide a provider-neutral structured AI worker contract, deterministic fixture, bounded live adapter, and committed source-sealed P14C operator entry
-    responsibility_boundary: Validate content-addressed requests, default to deterministic in-memory fixtures, prepare exact source-bound approval JSON without external reads, reject credential whitespace before transport, keep HTTP 401 invalid-key and HTTP 403 forbidden-access outcomes distinctly redacted, and admit only the exact public P14C synthetic request through the frozen Qwen recovery adapter when a durably consumed process-authority grant has minted a capability bound to the same packet, request, exact live transport instance, clean execution commit/tree/critical-source manifest including the operator entry, host, and ledger identity.
+    responsibility_boundary: Validate content-addressed requests, default to deterministic in-memory fixtures, prepare exact source-bound approval JSON without external reads, reject credential whitespace before transport, keep HTTP 401 invalid-key and HTTP 403 forbidden-access outcomes distinctly redacted, and admit only the exact public P14C synthetic request through the frozen DeepSeek V4 Flash recovery adapter when a durably consumed process-authority grant has minted a capability bound to the same packet, request, exact live transport instance, clean execution commit/tree/critical-source manifest including the operator entry, host, and ledger identity.
   natural_owner_evidence_paths:
     - src/tool_system/ai_worker/__init__.py
     - src/tool_system/ai_worker/contract.py
@@ -70,18 +70,18 @@ module_compound_contract:
       - effect_class: network_write
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
-        boundary: The committed execute entry can reach the optional transport, which may issue one exact TLS-verified POST to dashscope.aliyuncs.com/compatible-mode/v1/chat/completions only after source, ledger, owner approval, packet, request, guard, cancellation, owner-only local credential-file reference, and budget preflight succeed.
+        boundary: The committed execute entry can reach the optional transport, which may issue one exact TLS-verified POST to api.deepseek.com/chat/completions only after source, ledger, owner approval, packet, request, guard, cancellation, owner-only local credential-file reference, and budget preflight succeed.
       - effect_class: external_system_write
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
-        boundary: The execute entry can submit only public fixture P14C-001 to the exact Qwen Chat Completions endpoint with thinking disabled and no fallback; prepare, packet-only evidence, default runtime guards, and all tests perform no external provider call.
+        boundary: The execute entry can submit only public fixture P14C-001 to the exact DeepSeek V4 Flash Chat Completions endpoint with thinking disabled and no fallback; prepare, packet-only evidence, default runtime guards, and all tests perform no external provider call.
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
     interface_compatible_replacement: Preserve request validation, stable redacted error taxonomy including distinct invalid-key and forbidden-access classes, deterministic replay, default fixture-only execution, separate prepare and execute commands, process-authority durable grant, exact live-capability and operator-entry source-seal binding, immediate pre-credential revalidation, credential-whitespace rejection, redaction, budgets, provider metadata checks, and result fields.
     interface_incompatible_change: Requires a new aggregate interface version and a separately authorized provider qualification or migration stage.
   rollback_contract:
-    rollback_identity: tool-system@1d0100be219e991fdebc3f138477e948b6517511:ai_worker_runtime@1.5.0
+    rollback_identity: tool-system@d9c211324487e3bfd31c1276763ed2ed781cc085:ai_worker_runtime@1.5.1
     method: Revert through a separately audited pull request and rerun contract, fixture-provider, operator-entry, live-adapter fake-transport, replay, budget, redaction, and packet-only no-I/O tests.
   replacement_contract:
     activation_rule: Replace only after provider-neutral contract, deterministic fixture, committed prepare/execute entry, process-authority durable grant, exact transport/operator-source-bound capability, fake GitHub and provider transports, source-drift-before-credential, replay, receipt redaction, budget, and isolation behavior pass with no real I/O.
@@ -117,18 +117,18 @@ module_compound_contract:
           - build_prepare_approval_evidence
           - execute_p14c_live_entry
           - issue_p14c_live_network_capability
-          - QwenChatCompletionsProvider
+          - DeepSeekChatCompletionsProvider
         boundary_parameters:
           - repository_root
         constraint: Load the canonical committed operator module and use only the exact clean source seal returned and revalidated by process-authority; missing entry source or any drift blocks before approval read or credential access.
   external_system_contracts:
     declaration: declared
     systems:
-      - system_id: qwen-chat-completions-api
+      - system_id: deepseek-chat-completions-api
         mode: optional-explicitly-guarded-live-provider
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
-        boundary: Only the execute command may reach exact POST https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions for exact model qwen3.7-plus-2026-05-26, public fixture P14C-001, JSON mode, thinking disabled, one 128-token output ceiling, one transport attempt, no tools, redirects, proxy environment, or fallback, and owner-only local credential reference file:~/.config/tool-system/credentials.toml#providers.qwen.api_key resolved only after all preflight checks; prepare performs no credential or provider access.
+        boundary: Only the execute command may reach exact POST https://api.deepseek.com/chat/completions for exact model deepseek-v4-flash, public fixture P14C-001, JSON mode, thinking disabled, one 128-token output ceiling, one transport attempt, no tools, redirects, proxy environment, or fallback, and owner-only local credential reference file:~/.config/tool-system/credentials.toml#providers.deepseek.api_key resolved only after all preflight checks; prepare performs no credential or provider access.
   non_claims:
     provider_execution_authorized: false
     target_repo_mutation_authorized: false

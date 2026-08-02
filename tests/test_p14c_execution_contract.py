@@ -52,6 +52,18 @@ AUTH_DIAGNOSTICS_PLAN = (
     / "change_plans"
     / "tool_system_p14c_qwen_auth_diagnostics_v1.yaml"
 )
+DEEPSEEK_RECOVERY_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p14c_deepseek_recovery_v1.yaml"
+)
+DEEPSEEK_RECOVERY_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p14c_deepseek_recovery_v1.yaml"
+)
 ENTRY_FILES = {
     "README.md",
     "pyproject.toml",
@@ -87,6 +99,21 @@ AUTH_DIAGNOSTICS_FILES = {
     "examples/task_manifests/tool_system_p14c_qwen_auth_diagnostics_v1.yaml",
     "examples/change_plans/tool_system_p14c_qwen_auth_diagnostics_v1.yaml",
 }
+DEEPSEEK_RECOVERY_FILES = {
+    "config/module_registry_v1.yaml",
+    "docs/modules/ai-worker-runtime-contract-v1.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "src/tool_system/ai_worker/live_evidence.py",
+    "src/tool_system/ai_worker/live_provider.py",
+    "tests/test_ai_worker_live_provider.py",
+    "tests/test_module_registry.py",
+    "tests/test_p14c_execution_contract.py",
+    "tests/test_p14c_live_issuer.py",
+    "tests/test_phase_alignment.py",
+    "examples/task_manifests/tool_system_p14c_deepseek_recovery_v1.yaml",
+    "examples/change_plans/tool_system_p14c_deepseek_recovery_v1.yaml",
+}
 
 
 def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance() -> (
@@ -107,8 +134,8 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert current_phase["next_stage_authorized"] is False
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_status"] == (
-        "corrected_source_live_issuer_and_qwen_recovery_route_implemented_"
-        "no_success_not_accepted"
+        "corrected_source_live_issuer_and_deepseek_recovery_route_implemented_"
+        "not_attempted_not_accepted"
     )
     assert (
         p14c["live_issuer_implementation_authorization_packet"]
@@ -160,28 +187,46 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert first_attempt["acceptance_effect"] == "none"
     assert p14c["real_live_approval_record_created"] is True
     assert p14c["live_capability_issued"] is True
-    assert p14c["recovery_implementation_packet"] == (
+    assert p14c["prior_recovery_implementation_packet"] == (
         "P14C-QWEN-RECOVERY-v1"
     )
-    recovery = p14c["recovery_route"]
-    assert recovery["provider_id"] == "qwen"
-    assert recovery["model_id"] == "qwen3.7-plus-2026-05-26"
-    assert recovery["api_access_mode"] == "one_explicit_execute_only"
-    assert recovery["fallback_allowed"] is False
-    assert recovery["live_execution_attempted"] is True
-    assert recovery["live_execution_succeeded"] is False
-    assert recovery["approval_comment_id"] == 5_156_628_612
-    assert recovery["approval_durably_consumed"] is True
-    assert recovery["credential_resolution_attempt_count"] == 1
-    assert recovery["provider_invocation_count"] == 1
-    assert recovery["redacted_failure_class"] == "AUTH_FAILED"
-    assert recovery["failure_detail"] == (
+    prior_recovery = p14c["prior_recovery_attempt"]
+    assert prior_recovery["provider_id"] == "qwen"
+    assert prior_recovery["model_id"] == "qwen3.7-plus-2026-05-26"
+    assert prior_recovery["api_access_mode"] == "one_explicit_execute_only"
+    assert prior_recovery["fallback_allowed"] is False
+    assert prior_recovery["live_execution_attempted"] is True
+    assert prior_recovery["live_execution_succeeded"] is False
+    assert prior_recovery["approval_comment_id"] == 5_156_628_612
+    assert prior_recovery["approval_durably_consumed"] is True
+    assert prior_recovery["credential_resolution_attempt_count"] == 1
+    assert prior_recovery["provider_invocation_count"] == 1
+    assert prior_recovery["redacted_failure_class"] == "AUTH_FAILED"
+    assert prior_recovery["failure_detail"] == (
         "ambiguous_http_401_or_403_under_legacy_classifier"
     )
-    assert recovery["output_received"] is False
+    assert prior_recovery["output_received"] is False
+    assert prior_recovery["credential_value_recorded"] is False
+    assert prior_recovery["usage_tokens"] == 0
+    assert prior_recovery["cost_microunits"] == 0
+    assert prior_recovery["acceptance_effect"] == "none"
+    assert p14c["recovery_implementation_packet"] == (
+        "P14C-DEEPSEEK-RECOVERY-v1"
+    )
+    recovery = p14c["recovery_route"]
+    assert recovery["provider_id"] == "deepseek"
+    assert recovery["model_id"] == "deepseek-v4-flash"
+    assert recovery["endpoint"] == (
+        "https://api.deepseek.com/chat/completions"
+    )
+    assert recovery["credential_reference"] == (
+        "file:~/.config/tool-system/credentials.toml#providers.deepseek.api_key"
+    )
+    assert recovery["api_access_mode"] == "one_explicit_execute_only"
+    assert recovery["fallback_allowed"] is False
+    assert recovery["live_execution_attempted"] is False
+    assert recovery["live_execution_succeeded"] is False
     assert recovery["credential_value_recorded"] is False
-    assert recovery["usage_tokens"] == 0
-    assert recovery["cost_microunits"] == 0
     assert recovery["acceptance_effect"] == "none"
     assert p14c["stage_accepted"] is False
     assert boundaries["state_file_grants_authority"] is False
@@ -254,22 +299,22 @@ def test_packet_binds_exact_provider_network_secret_reference_and_budgets() -> N
     request = build_p14c_synthetic_request(packet)
 
     assert validate_p14c_execution_packet(packet) == ()
-    assert packet.packet_id == "P14C-QWEN-RECOVERY-v1"
+    assert packet.packet_id == "P14C-DEEPSEEK-RECOVERY-v1"
     assert packet.implementation_authorization_base_sha == (
-        "c92c55940f7d6cb4db2e743472ec2a739d910b3a"
+        "d9c211324487e3bfd31c1276763ed2ed781cc085"
     )
     assert "central_" + "governance_base" not in packet.canonical_record()
     assert (packet.provider_id, packet.model_id) == (
-        "qwen",
-        "qwen3.7-plus-2026-05-26",
+        "deepseek",
+        "deepseek-v4-flash",
     )
     assert (packet.method, packet.host, packet.path) == (
         "POST",
-        "dashscope.aliyuncs.com",
-        "/compatible-mode/v1/chat/completions",
+        "api.deepseek.com",
+        "/chat/completions",
     )
     assert packet.credential_reference == (
-        "file:~/.config/tool-system/credentials.toml#providers.qwen.api_key"
+        "file:~/.config/tool-system/credentials.toml#providers.deepseek.api_key"
     )
     assert packet.reasoning_effort == "none"
     assert packet.store is packet.tools_allowed is False
@@ -382,6 +427,32 @@ def test_qwen_auth_diagnostics_pair_freezes_exact_zero_live_io_scope() -> None:
     ]
     assert "blueprint/tool_system_v0.yaml" not in AUTH_DIAGNOSTICS_FILES
     assert "config/process_authority_v1.yaml" not in AUTH_DIAGNOSTICS_FILES
+
+
+def test_deepseek_recovery_pair_freezes_exact_zero_live_io_scope() -> None:
+    manifest = load_yaml_file(DEEPSEEK_RECOVERY_MANIFEST)
+    plan = load_yaml_file(DEEPSEEK_RECOVERY_PLAN)
+    closure = manifest["bounded_closure"]["frozen_before_execution"]
+
+    assert set(manifest["allowed_files"]) == DEEPSEEK_RECOVERY_FILES
+    assert set(manifest["scope"]["in_scope"]) == DEEPSEEK_RECOVERY_FILES
+    assert set(plan["changed_files"]) == DEEPSEEK_RECOVERY_FILES
+    assert closure["baseline_commit"] == (
+        "d9c211324487e3bfd31c1276763ed2ed781cc085"
+    )
+    assert closure["baseline_tree"] == (
+        "2632892774fe5f6587568349e3d6dbf10410b25e"
+    )
+    assert closure["allowed_scope"] == "exact_13_paths_listed_below"
+    assert closure["finite_budgets"]["real_github_approval_reads"] == 0
+    assert closure["finite_budgets"]["credential_value_accesses"] == 0
+    assert closure["finite_budgets"]["provider_invocations"] == 0
+    assert closure["finite_budgets"]["transport_attempts"] == 0
+    assert "attempt_number" not in manifest["bounded_closure"][
+        "recurrence_fingerprint"
+    ]
+    assert "blueprint/tool_system_v0.yaml" not in DEEPSEEK_RECOVERY_FILES
+    assert "config/process_authority_v1.yaml" not in DEEPSEEK_RECOVERY_FILES
 
 
 def test_operator_entry_is_part_of_critical_source_manifest_v2() -> None:

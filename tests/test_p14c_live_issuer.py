@@ -27,8 +27,8 @@ from tool_system.ai_worker.live_evidence import (
     execute_p14c_live_entry,
 )
 from tool_system.ai_worker.live_provider import (
-    QwenChatCompletionsProvider,
-    QwenChatCompletionsTransport,
+    DeepSeekChatCompletionsProvider,
+    DeepSeekChatCompletionsTransport,
     build_p14c_execution_packet,
     build_p14c_github_approval_body,
     build_p14c_live_execution_binding,
@@ -325,7 +325,7 @@ def test_execute_entry_emits_only_redacted_receipt_with_injected_io(
         def resolve(self, reference: str) -> str:
             assert reference == (
                 "file:~/.config/tool-system/credentials.toml"
-                "#providers.qwen.api_key"
+                "#providers.deepseek.api_key"
             )
             return "sensitive-credential-must-not-appear"
 
@@ -353,7 +353,7 @@ def test_execute_entry_emits_only_redacted_receipt_with_injected_io(
         def invoke(self, request: object) -> ProviderResponse:
             self.credential_resolver.resolve(
                 "file:~/.config/tool-system/credentials.toml"
-                "#providers.qwen.api_key"
+                "#providers.deepseek.api_key"
             )
             return ProviderResponse(
                 output=output,
@@ -373,7 +373,7 @@ def test_execute_entry_emits_only_redacted_receipt_with_injected_io(
     )
     monkeypatch.setattr(
         live_evidence_module,
-        "QwenChatCompletionsTransport",
+        "DeepSeekChatCompletionsTransport",
         lambda: transport,
     )
     monkeypatch.setattr(
@@ -393,7 +393,7 @@ def test_execute_entry_emits_only_redacted_receipt_with_injected_io(
     )
     monkeypatch.setattr(
         live_evidence_module,
-        "QwenChatCompletionsProvider",
+        "DeepSeekChatCompletionsProvider",
         FakeProvider,
     )
 
@@ -431,7 +431,7 @@ def test_owner_comment_issues_one_exact_capability_without_real_io(
     )
     packet = build_p14c_execution_packet()
     request = build_p14c_synthetic_request(packet)
-    transport = QwenChatCompletionsTransport()
+    transport = DeepSeekChatCompletionsTransport()
 
     capability = issue_p14c_live_network_capability(
         comment_id=comment_id,
@@ -485,7 +485,7 @@ def test_owner_comment_issues_one_exact_capability_without_real_io(
             comment_id=comment_id,
             packet=packet,
             request=request,
-            transport=QwenChatCompletionsTransport(),
+            transport=DeepSeekChatCompletionsTransport(),
             **_live_capability_arguments(execution_context),
         )
 
@@ -558,7 +558,7 @@ def test_untrusted_edited_expired_or_wrong_repo_comment_blocks(
             comment_id=comment_id,
             packet=build_p14c_execution_packet(),
             request=build_p14c_synthetic_request(),
-            transport=QwenChatCompletionsTransport(),
+            transport=DeepSeekChatCompletionsTransport(),
             **_live_capability_arguments(execution_context),
         )
 
@@ -592,7 +592,7 @@ def test_approval_body_drift_and_duplicate_fields_block(
             comment_id=91_008,
             packet=build_p14c_execution_packet(),
             request=build_p14c_synthetic_request(),
-            transport=QwenChatCompletionsTransport(),
+            transport=DeepSeekChatCompletionsTransport(),
             **_live_capability_arguments(execution_context),
         )
 
@@ -622,7 +622,7 @@ def test_approval_body_drift_and_duplicate_fields_block(
             comment_id=91_009,
             packet=build_p14c_execution_packet(),
             request=build_p14c_synthetic_request(),
-            transport=QwenChatCompletionsTransport(),
+            transport=DeepSeekChatCompletionsTransport(),
             **_live_capability_arguments(execution_context),
         )
 
@@ -637,14 +637,14 @@ def test_http_failure_and_nonexact_transport_fail_closed_before_provider_access(
             comment_id=91_010,
             packet=build_p14c_execution_packet(),
             request=build_p14c_synthetic_request(),
-            transport=QwenChatCompletionsTransport(),
+            transport=DeepSeekChatCompletionsTransport(),
             **_live_capability_arguments(execution_context),
         )
 
-    class CallerTransport(QwenChatCompletionsTransport):
+    class CallerTransport(DeepSeekChatCompletionsTransport):
         pass
 
-    with pytest.raises(TypeError, match="exact Qwen TLS transport"):
+    with pytest.raises(TypeError, match="exact DeepSeek TLS transport"):
         issue_p14c_live_network_capability(
             comment_id=91_011,
             packet=build_p14c_execution_packet(),
@@ -670,7 +670,7 @@ def test_live_capability_expiry_blocks_after_issuance(
     )
     packet = build_p14c_execution_packet()
     request = build_p14c_synthetic_request(packet)
-    transport = QwenChatCompletionsTransport()
+    transport = DeepSeekChatCompletionsTransport()
     capability = issue_p14c_live_network_capability(
         comment_id=comment_id,
         packet=packet,
@@ -763,7 +763,7 @@ def test_dirty_source_blocks_before_github_read(
             comment_id=91_014,
             packet=build_p14c_execution_packet(),
             request=build_p14c_synthetic_request(),
-            transport=QwenChatCompletionsTransport(),
+            transport=DeepSeekChatCompletionsTransport(),
             **_live_capability_arguments(execution_context),
         )
     assert connections == []
@@ -818,7 +818,7 @@ def test_approval_v1_is_rejected_and_not_consumed(
             comment_id=91_015,
             packet=build_p14c_execution_packet(),
             request=build_p14c_synthetic_request(),
-            transport=QwenChatCompletionsTransport(),
+            transport=DeepSeekChatCompletionsTransport(),
             **_live_capability_arguments(execution_context),
         )
     _, replay_ledger = execution_context
@@ -856,7 +856,7 @@ def test_failure_after_durable_claim_leaves_approval_burned(
         "comment_id": 91_017,
         "packet": build_p14c_execution_packet(),
         "request": build_p14c_synthetic_request(),
-        "transport": QwenChatCompletionsTransport(),
+        "transport": DeepSeekChatCompletionsTransport(),
         **_live_capability_arguments(execution_context),
     }
     with pytest.raises(RuntimeError, match="simulated crash"):
@@ -889,7 +889,7 @@ def test_source_drift_after_issuance_blocks_before_credential_and_transport(
     )
     packet = build_p14c_execution_packet()
     request = build_p14c_synthetic_request(packet)
-    transport = QwenChatCompletionsTransport()
+    transport = DeepSeekChatCompletionsTransport()
     capability = issue_p14c_live_network_capability(
         comment_id=91_016,
         packet=packet,
@@ -912,14 +912,14 @@ def test_source_drift_after_issuance_blocks_before_credential_and_transport(
         raise AssertionError("transport must not run")
 
     monkeypatch.setattr(
-        QwenChatCompletionsTransport,
+        DeepSeekChatCompletionsTransport,
         "send",
         blocked_transport,
     )
     repository_root, _ = execution_context
     source = repository_root / P14C_CRITICAL_SOURCE_PATHS[0]
     source.write_text(source.read_text(encoding="utf-8") + "\n# drift\n", encoding="utf-8")
-    response = QwenChatCompletionsProvider(
+    response = DeepSeekChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=Resolver(),
@@ -958,10 +958,10 @@ def test_grant_is_opaque_and_approval_builder_preserves_all_denials(
     assert record["approval_version"] == P14C_APPROVAL_VERSION
     assert record["authorization_id"] == "P14C-LIVE-EXEC-v2"
     assert record["repository"] == "apolo183/tool-system"
-    assert record["provider_id"] == "qwen"
-    assert record["model_id"] == "qwen3.7-plus-2026-05-26"
+    assert record["provider_id"] == "deepseek"
+    assert record["model_id"] == "deepseek-v4-flash"
     assert record["credential_reference"] == (
-        "file:~/.config/tool-system/credentials.toml#providers.qwen.api_key"
+        "file:~/.config/tool-system/credentials.toml#providers.deepseek.api_key"
     )
     assert record["provider_invocation_ceiling"] == 1
     assert record["max_attempts"] == 1

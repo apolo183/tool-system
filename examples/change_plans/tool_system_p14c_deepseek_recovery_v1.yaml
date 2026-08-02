@@ -1,0 +1,48 @@
+plan_id: tool-system-p14c-deepseek-recovery-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p14c_deepseek_recovery_v1.yaml
+changed_files:
+  - config/module_registry_v1.yaml
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - src/tool_system/ai_worker/live_evidence.py
+  - src/tool_system/ai_worker/live_provider.py
+  - tests/test_ai_worker_live_provider.py
+  - tests/test_module_registry.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_p14c_live_issuer.py
+  - tests/test_phase_alignment.py
+  - examples/task_manifests/tool_system_p14c_deepseek_recovery_v1.yaml
+  - examples/change_plans/tool_system_p14c_deepseek_recovery_v1.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p14c_deepseek_recovery_v1.yaml
+    section_or_key: scope
+    scope: Implement only the frozen one-route DeepSeek V4 Flash P14C recovery source and descriptive-state correction with zero live I/O during publication.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve a bounded, auditable, source-sealed AI-worker proof without silent fallback, repository mutation, or P15 expansion.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_ai_worker_live_provider.py tests/test_p14c_live_issuer.py tests/test_p14c_execution_contract.py tests/test_phase_alignment.py tests/test_module_registry.py tests/test_module_contracts.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14c_deepseek_recovery_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_deepseek_recovery_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -B -m tool_system.ai_worker.live_evidence --validate-packet-only
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p14c-deepseek-recovery-v1
+  retain_feature_branch: true
+  exact_base: d9c211324487e3bfd31c1276763ed2ed781cc085
+  exact_base_tree: 2632892774fe5f6587568349e3d6dbf10410b25e
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@d9c211324487e3bfd31c1276763ed2ed781cc085

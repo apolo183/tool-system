@@ -96,8 +96,8 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     p14c = project_state["p14c"]
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_status"] == (
-        "corrected_source_live_issuer_and_qwen_recovery_route_implemented_"
-        "no_success_not_accepted"
+        "corrected_source_live_issuer_and_deepseek_recovery_route_implemented_"
+        "not_attempted_not_accepted"
     )
     assert (
         p14c["live_issuer_implementation_authorization_packet"]
@@ -129,19 +129,29 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert p14c["first_live_attempt"]["redacted_error_code"] == (
         "PROVIDER_FAILURE"
     )
-    assert p14c["recovery_implementation_packet"] == (
+    assert p14c["prior_recovery_implementation_packet"] == (
         "P14C-QWEN-RECOVERY-v1"
     )
-    recovery = p14c["recovery_route"]
-    assert recovery["live_execution_attempted"] is True
-    assert recovery["live_execution_succeeded"] is False
-    assert recovery["approval_comment_id"] == 5_156_628_612
-    assert recovery["approval_durably_consumed"] is True
-    assert recovery["provider_invocation_count"] == 1
-    assert recovery["redacted_failure_class"] == "AUTH_FAILED"
-    assert recovery["failure_detail"] == (
+    prior_recovery = p14c["prior_recovery_attempt"]
+    assert prior_recovery["live_execution_attempted"] is True
+    assert prior_recovery["live_execution_succeeded"] is False
+    assert prior_recovery["approval_comment_id"] == 5_156_628_612
+    assert prior_recovery["approval_durably_consumed"] is True
+    assert prior_recovery["provider_invocation_count"] == 1
+    assert prior_recovery["redacted_failure_class"] == "AUTH_FAILED"
+    assert prior_recovery["failure_detail"] == (
         "ambiguous_http_401_or_403_under_legacy_classifier"
     )
+    assert prior_recovery["credential_value_recorded"] is False
+    assert prior_recovery["acceptance_effect"] == "none"
+    assert p14c["recovery_implementation_packet"] == (
+        "P14C-DEEPSEEK-RECOVERY-v1"
+    )
+    recovery = p14c["recovery_route"]
+    assert recovery["provider_id"] == "deepseek"
+    assert recovery["model_id"] == "deepseek-v4-flash"
+    assert recovery["live_execution_attempted"] is False
+    assert recovery["live_execution_succeeded"] is False
     assert recovery["credential_value_recorded"] is False
     assert recovery["acceptance_effect"] == "none"
     assert p14c["stage_accepted"] is False
