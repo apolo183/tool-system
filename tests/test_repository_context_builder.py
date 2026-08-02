@@ -397,16 +397,17 @@ def test_p14d_exact_task_pair_and_descriptive_acceptance_state_validate() -> Non
     assert set(plan["changed_files"]) == P14D_FILES
     assert len(P14D_FILES) == 19
     current = state["current_phase"]
-    assert current["last_accepted_stage"] == "P14E_BLUEPRINT_COMPILER"
+    assert current["last_accepted_stage"] == "P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW"
     assert current["last_accepted_stage_record"] == (
-        "docs/reports/p14e_blueprint_compiler_acceptance.md"
+        "docs/reports/p14f_development_loop_acceptance.md"
     )
-    assert current["next_stage"] == "P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW"
+    assert current["next_stage"] == "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
     assert current["next_stage_authorized"] is False
     assert state["authority_effect"] == "none"
     assert state["p14d"]["stage_accepted"] is True
     assert state["p14d"]["natural_owner_proposal_grants_authority"] is False
     assert state["p14e"]["stage_accepted"] is True
+    assert state["p14f"]["stage_accepted"] is True
     assert state["authorization_boundaries"] == {
         "state_file_grants_authority": False,
         "live_model_provider_execution_authorized": False,
