@@ -265,7 +265,9 @@ def _receipt_failure_class(error: object) -> str | None:
     if isinstance(reasons, tuple):
         for reason in reasons:
             if reason in {
+                "ACCESS_FORBIDDEN",
                 "AUTH_FAILED",
+                "AUTH_INVALID_KEY",
                 "BALANCE_OR_QUOTA",
                 "KEY_INVALID",
                 "KEY_MISSING_OR_UNREADABLE",
