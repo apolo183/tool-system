@@ -21,6 +21,9 @@ from tool_system.process_authority.live_provider_approval import (
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT_STATE = ROOT / "docs" / "tool_system_project_state_v1.yaml"
 REPORT = ROOT / "docs" / "reports" / "p14c_bounded_real_model_provider_execution.md"
+ACCEPTANCE_REPORT = (
+    ROOT / "docs" / "reports" / "p14c_bounded_real_provider_acceptance.md"
+)
 LIVE_ISSUER_REPORT = ROOT / "docs" / "reports" / "p14c_live_issuer_implementation.md"
 SOURCE_HARDENING_REPORT = (
     ROOT / "docs" / "reports" / "p14c_source_seal_replay_hardening.md"
@@ -63,6 +66,18 @@ DEEPSEEK_RECOVERY_PLAN = (
     / "examples"
     / "change_plans"
     / "tool_system_p14c_deepseek_recovery_v1.yaml"
+)
+DEEPSEEK_ACCEPTANCE_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p14c_deepseek_result_acceptance_v1.yaml"
+)
+DEEPSEEK_ACCEPTANCE_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p14c_deepseek_result_acceptance_v1.yaml"
 )
 ENTRY_FILES = {
     "README.md",
@@ -114,11 +129,22 @@ DEEPSEEK_RECOVERY_FILES = {
     "examples/task_manifests/tool_system_p14c_deepseek_recovery_v1.yaml",
     "examples/change_plans/tool_system_p14c_deepseek_recovery_v1.yaml",
 }
+DEEPSEEK_ACCEPTANCE_FILES = {
+    "docs/reports/p14c_bounded_real_provider_acceptance.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "tests/test_p14c_execution_contract.py",
+    "tests/test_phase_alignment.py",
+    "tests/test_milestone_module_invariant.py",
+    "tests/test_model_provider_portfolio_contract.py",
+    "tests/test_p14_phase_entry_contract.py",
+    "examples/task_manifests/"
+    "tool_system_p14c_deepseek_result_acceptance_v1.yaml",
+    "examples/change_plans/"
+    "tool_system_p14c_deepseek_result_acceptance_v1.yaml",
+}
 
 
-def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance() -> (
-    None
-):
+def test_p14c_bounded_deepseek_receipt_is_accepted_without_new_authority() -> None:
     project_state = load_yaml_file(PROJECT_STATE)
     current_phase = project_state["current_phase"]
     p14c = project_state["p14c"]
@@ -126,17 +152,25 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     report = REPORT.read_text(encoding="utf-8")
     live_issuer_report = LIVE_ISSUER_REPORT.read_text(encoding="utf-8")
     source_hardening_report = SOURCE_HARDENING_REPORT.read_text(encoding="utf-8")
+    acceptance_report = ACCEPTANCE_REPORT.read_text(encoding="utf-8")
 
     assert current_phase["last_accepted_stage"] == (
-        "P14MR_MILESTONE_MODULE_INVARIANT"
+        "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
     )
-    assert current_phase["next_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
+    assert current_phase["last_accepted_stage_record"] == (
+        "docs/reports/p14c_bounded_real_provider_acceptance.md"
+    )
+    assert current_phase["next_stage"] == "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER"
     assert current_phase["next_stage_authorized"] is False
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
-    assert p14c["source_status"] == (
-        "corrected_source_live_issuer_and_deepseek_recovery_route_implemented_"
-        "not_attempted_not_accepted"
+    assert p14c["source_status"] == "bounded_deepseek_live_provider_proof_accepted"
+    assert p14c["acceptance_record"] == (
+        "docs/reports/p14c_bounded_real_provider_acceptance.md"
     )
+    assert p14c["acceptance_authorization_packet"] == (
+        "P14C-DEEPSEEK-RESULT-ACCEPTANCE-v1"
+    )
+    assert p14c["acceptance_status"] == "accepted"
     assert (
         p14c["live_issuer_implementation_authorization_packet"]
         == "P14C-LIVE-ISSUER-IMPL-v1"
@@ -224,17 +258,52 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     )
     assert recovery["api_access_mode"] == "one_explicit_execute_only"
     assert recovery["fallback_allowed"] is False
-    assert recovery["live_execution_attempted"] is False
-    assert recovery["live_execution_succeeded"] is False
+    assert recovery["live_execution_attempted"] is True
+    assert recovery["live_execution_succeeded"] is True
+    assert recovery["approval_conversation"] == 157
+    assert recovery["approval_comment_id"] == 5_158_008_082
+    assert recovery["approval_record_sha256"] == (
+        "61715c0b87e46b871016265cf88a0ca6c8b9e4383c444ea41db5374192173e5d"
+    )
+    assert recovery["approval_durably_consumed"] is True
+    assert recovery["credential_resolution_attempt_count"] == 1
+    assert recovery["provider_invocation_count"] == 1
+    assert recovery["transport_attempt_ceiling"] == 1
+    assert recovery["usage"] == {
+        "input_tokens": 106,
+        "output_tokens": 39,
+        "total_tokens": 145,
+        "cost_microunits": 184,
+        "duration_ms": 1770,
+    }
+    assert recovery["output_sha256"] == (
+        "16a6f16328aad19a4d64aa4ff329c7e78e02a09a270e2b55bb3f795a3e6bba33"
+    )
+    source_seal = recovery["source_seal"]
+    assert source_seal["execution_commit_sha"] == (
+        "55ed92e336d2aa110e50e197c5eefb8fa80896a8"
+    )
+    assert source_seal["execution_tree_sha"] == (
+        "2e6ce267738a396f52a5847052f91edafea74af9"
+    )
+    assert source_seal["execution_host_id"] == "apolo-9004"
+    assert source_seal["source_seal_sha256"] == (
+        "1d7688faf8be7950ff88b359af2d726ccaea52e832a33796defd08c3793f2019"
+    )
     assert recovery["credential_value_recorded"] is False
-    assert recovery["acceptance_effect"] == "none"
-    assert p14c["stage_accepted"] is False
+    assert recovery["raw_provider_output_recorded"] is False
+    assert recovery["acceptance_effect"] == (
+        "p14c_bounded_real_model_provider_execution_accepted"
+    )
+    assert p14c["stage_accepted"] is True
     assert boundaries["state_file_grants_authority"] is False
     assert boundaries["live_model_provider_execution_authorized"] is False
     assert boundaries["credential_value_access_authorized"] is False
     assert boundaries["downstream_repository_access_authorized"] is False
     assert boundaries["remote_target_mutation_authorized"] is False
     assert boundaries["production_deployment_authorized"] is False
+    assert boundaries["cleanup_execution_authorized"] is False
+    assert boundaries["rollback_execution_authorized"] is False
     assert (
         "P14C_SOURCE_ONLY_NO_EXECUTION_NOT_ACCEPTED"
         in report
@@ -273,6 +342,15 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert "real provider calls: `0`" in source_hardening_report
     assert "single-host at-most-once" in source_hardening_report
     assert "does not accept P14C" in source_hardening_report
+    assert "P14C_ACCEPTED_BOUNDED_DEEPSEEK_PROOF" in acceptance_report
+    assert "P14C-DEEPSEEK-RESULT-ACCEPTANCE-v1" in acceptance_report
+    assert "5158008082" in acceptance_report
+    assert "145" in acceptance_report
+    assert "184 microUSD" in acceptance_report
+    assert "does not authorize another provider call or entry to P14D" in (
+        " ".join(acceptance_report.split())
+    )
+    assert "No provider was called" in acceptance_report
 
 
 def test_merged_pr_gate_evidence_keeps_p14c_and_live_mutation_blocked() -> None:
@@ -453,6 +531,33 @@ def test_deepseek_recovery_pair_freezes_exact_zero_live_io_scope() -> None:
     ]
     assert "blueprint/tool_system_v0.yaml" not in DEEPSEEK_RECOVERY_FILES
     assert "config/process_authority_v1.yaml" not in DEEPSEEK_RECOVERY_FILES
+
+
+def test_deepseek_acceptance_pair_freezes_exact_nine_file_scope() -> None:
+    manifest = load_yaml_file(DEEPSEEK_ACCEPTANCE_MANIFEST)
+    plan = load_yaml_file(DEEPSEEK_ACCEPTANCE_PLAN)
+    closure = manifest["bounded_closure"]["frozen_before_execution"]
+
+    assert set(manifest["allowed_files"]) == DEEPSEEK_ACCEPTANCE_FILES
+    assert set(manifest["scope"]["in_scope"]) == DEEPSEEK_ACCEPTANCE_FILES
+    assert set(plan["changed_files"]) == DEEPSEEK_ACCEPTANCE_FILES
+    assert closure["baseline_commit"] == (
+        "55ed92e336d2aa110e50e197c5eefb8fa80896a8"
+    )
+    assert closure["baseline_tree"] == (
+        "2e6ce267738a396f52a5847052f91edafea74af9"
+    )
+    assert closure["allowed_scope"] == "exact_9_paths_listed_below"
+    assert closure["finite_budgets"]["real_github_approval_reads"] == 1
+    assert closure["finite_budgets"]["credential_value_accesses"] == 0
+    assert closure["finite_budgets"]["provider_invocations"] == 0
+    assert closure["finite_budgets"]["transport_attempts"] == 0
+    assert "attempt_number" not in manifest["bounded_closure"][
+        "recurrence_fingerprint"
+    ]
+    assert all(not path.startswith("src/") for path in DEEPSEEK_ACCEPTANCE_FILES)
+    assert "blueprint/tool_system_v0.yaml" not in DEEPSEEK_ACCEPTANCE_FILES
+    assert "config/process_authority_v1.yaml" not in DEEPSEEK_ACCEPTANCE_FILES
 
 
 def test_operator_entry_is_part_of_critical_source_manifest_v2() -> None:
