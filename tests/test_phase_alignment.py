@@ -25,6 +25,9 @@ P14D_ACCEPTANCE_REPORT = (
 P14E_ACCEPTANCE_REPORT = (
     ROOT / "docs" / "reports" / "p14e_blueprint_compiler_acceptance.md"
 )
+P14F_ACCEPTANCE_REPORT = (
+    ROOT / "docs" / "reports" / "p14f_development_loop_acceptance.md"
+)
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
@@ -77,13 +80,13 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert project_state["current_phase"]["status"] == "active"
     assert project_state["authority_effect"] == "none"
     assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P14E_BLUEPRINT_COMPILER"
+        "P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW"
     )
     assert project_state["current_phase"]["last_accepted_stage_record"] == (
-        "docs/reports/p14e_blueprint_compiler_acceptance.md"
+        "docs/reports/p14f_development_loop_acceptance.md"
     )
     assert project_state["current_phase"]["next_stage"] == (
-        "P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW"
+        "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
     )
     assert project_state["current_phase"]["next_stage_authorized"] is False
     assert project_state["current_phase"]["next_phase"] == (
@@ -237,6 +240,9 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     )
     assert "P14E_ACCEPTED_ISOLATED_FIXTURE_ONLY" in (
         P14E_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+    )
+    assert "P14F_ACCEPTED_ISOLATED_FIXTURE_ONLY" in (
+        P14F_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
     )
     for public_contract in (agents_text, readme_text, principles_text):
         assert "docs/tool_system_project_state_v1.yaml" in public_contract

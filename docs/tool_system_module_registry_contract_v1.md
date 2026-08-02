@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 16
+  module_count: 17
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -264,6 +264,17 @@ mapping_contract:
       direct_consumer_module_ids: []
       change_risk: "medium: deterministic non-authorizing blueprint compilation and task-graph compatibility boundary"
       rollback_identity: tool-system@00793ad07bba2e3fe3bd29882e83788d32697da6:blueprint_compiler@absent
+    - current_module_id: development_loop
+      canonical_module_id: development-loop
+      current_module_version: 1.0.0
+      aggregate_interface_id: development-loop-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.development_loop}
+      direct_consumer_module_ids: []
+      change_risk: "medium: bounded in-memory fixture patch, validation, repair, review, and no-progress termination boundary"
+      rollback_identity: tool-system@0b5110a2eea79ebde650e1088b787c781ddab171:development_loop@absent
 ~~~
 <!-- MODULE-IDENTITY-MAPPING:END -->
 
@@ -327,6 +338,7 @@ static_import_dag:
     cli_frontend: []
     repository_context: []
     blueprint_compiler: []
+    development_loop: []
   zero_consumer_modules:
     - architecture_registry
     - ai_worker_runtime
@@ -335,6 +347,7 @@ static_import_dag:
     - cli_frontend
     - repository_context
     - blueprint_compiler
+    - development_loop
   non_claim: >-
     Static AST import equality does not prove absence of dynamic imports, CLI
     invocation dependencies, data dependencies, configuration dependencies,

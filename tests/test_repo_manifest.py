@@ -119,7 +119,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
     assert legacy_reasons == []
-    assert len(rows) == 215
+    assert len(rows) == 219
     assert EXACT_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
     assert all(
         not any(character in row["path"] for character in "*?[]{}") for row in rows
@@ -127,7 +127,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_file_count"] == 215
+    assert result["formal_file_count"] == 219
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == len(retained_paths)
@@ -347,7 +347,7 @@ def test_module_contract_files_are_registered_as_local_contracts() -> None:
 
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
-    assert len(matches) == 16
+    assert len(matches) == 17
     assert all(row["role"] == "module-owned compound contracts" for row in matches)
     assert all(
         row["owner"] == "respective natural module owners" for row in matches
@@ -481,6 +481,7 @@ def test_blueprint_module_registry_packaging_and_ci_register_manifest() -> None:
     }
     architecture = modules["architecture-registry"]
     blueprint_compiler = modules["blueprint-compiler"]
+    development_loop = modules["development-loop"]
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     workflow = (
         ROOT / ".github" / "workflows" / "tool-system-ci.yml"
@@ -504,6 +505,14 @@ def test_blueprint_module_registry_packaging_and_ci_register_manifest() -> None:
     } == {
         "src/tool_system/blueprint_compiler/__init__.py",
         "src/tool_system/blueprint_compiler/compiler.py",
+    }
+    assert development_loop["module_version"] == "1.0.0"
+    assert {
+        boundary["path"]
+        for boundary in development_loop["boundaries"]["code"]
+    } == {
+        "src/tool_system/development_loop/__init__.py",
+        "src/tool_system/development_loop/loop.py",
     }
     assert (
         'tool-system-validate-repo-manifest = "tool_system.cli.validate_repo_manifest:main"'
