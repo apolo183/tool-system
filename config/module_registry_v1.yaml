@@ -1419,6 +1419,44 @@ modules:
     sha256: 435f3c0df241bf046db48632b4818727dc62b630a511bf2e1e838c1143898c79
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: blueprint-compiler
+  module_version: 1.0.0
+  role: compile approved blueprint milestones and accepted repository evidence into deterministic bounded development plans. Validate explicit module-change bindings and derive module and task DAGs, documents, manifests, plans, gates, tests, isolation, replacement, and rollback nodes without persisting or executing them.
+  owner: blueprint-compiler
+  public_interface_refs:
+  - interface_id: blueprint-compiler-api
+    interface_version: 1.0.0
+  internal_dependencies: []
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/blueprint_compiler/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/blueprint_compiler/compiler.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_blueprint_compiler.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary:
+    repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
+    sha256: 41ed50f213d425003c4b2a85c4570e1c812acfabe492f90bd73dbe95c978e7f7
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary:
+    repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
+    sha256: 41ed50f213d425003c4b2a85c4570e1c812acfabe492f90bd73dbe95c978e7f7
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
 interfaces:
 - interface_id: architecture-registry-api
   interface_version: 2.0.0
@@ -1956,5 +1994,39 @@ interfaces:
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/repository-context-contract-v1.md
     sha256: 435f3c0df241bf046db48632b4818727dc62b630a511bf2e1e838c1143898c79
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: blueprint-compiler-api
+  interface_version: 1.0.0
+  provider_module_id: blueprint-compiler
+  consumers: []
+  input_contract:
+    repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
+    sha256: 41ed50f213d425003c4b2a85c4570e1c812acfabe492f90bd73dbe95c978e7f7
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract:
+    repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
+    sha256: 41ed50f213d425003c4b2a85c4570e1c812acfabe492f90bd73dbe95c978e7f7
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  error_contract:
+    repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
+    sha256: 41ed50f213d425003c4b2a85c4570e1c812acfabe492f90bd73dbe95c978e7f7
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  side_effect_contract:
+    repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
+    sha256: 41ed50f213d425003c4b2a85c4570e1c812acfabe492f90bd73dbe95c978e7f7
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  compatibility_policy:
+    repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
+    sha256: 41ed50f213d425003c4b2a85c4570e1c812acfabe492f90bd73dbe95c978e7f7
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_revalidation_boundary:
+    repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
+    sha256: 41ed50f213d425003c4b2a85c4570e1c812acfabe492f90bd73dbe95c978e7f7
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
