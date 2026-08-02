@@ -46,19 +46,19 @@ from tool_system.process_authority.live_provider_approval import (
     validate_p14c_execution_source_seal,
 )
 
-P14C_AUTHORIZATION_PACKET = "P14C-QWEN-RECOVERY-v1"
+P14C_AUTHORIZATION_PACKET = "P14C-DEEPSEEK-RECOVERY-v1"
 P14C_IMPLEMENTATION_AUTHORIZATION_BASE_SHA = (
-    "c92c55940f7d6cb4db2e743472ec2a739d910b3a"
+    "d9c211324487e3bfd31c1276763ed2ed781cc085"
 )
 P14C_FIXTURE_ID = "P14C-001"
-QWEN_PROVIDER_ID = "qwen"
-QWEN_MODEL_ID = "qwen3.7-plus-2026-05-26"
-QWEN_HOST = "dashscope.aliyuncs.com"
-QWEN_PATH = "/compatible-mode/v1/chat/completions"
-QWEN_CREDENTIAL_REFERENCE = (
-    "file:~/.config/tool-system/credentials.toml#providers.qwen.api_key"
+DEEPSEEK_PROVIDER_ID = "deepseek"
+DEEPSEEK_MODEL_ID = "deepseek-v4-flash"
+DEEPSEEK_HOST = "api.deepseek.com"
+DEEPSEEK_PATH = "/chat/completions"
+DEEPSEEK_CREDENTIAL_REFERENCE = (
+    "file:~/.config/tool-system/credentials.toml#providers.deepseek.api_key"
 )
-QWEN_CREDENTIAL_FILE = Path("~/.config/tool-system/credentials.toml")
+DEEPSEEK_CREDENTIAL_FILE = Path("~/.config/tool-system/credentials.toml")
 P14C_PROMPT_ID = "p14c-bounded-provider-proof"
 P14C_PROMPT_VERSION = "v1"
 MAX_RESPONSE_BYTES = 1_048_576
@@ -158,12 +158,12 @@ def build_p14c_execution_packet() -> P14CExecutionPacket:
             P14C_IMPLEMENTATION_AUTHORIZATION_BASE_SHA
         ),
         fixture_id=P14C_FIXTURE_ID,
-        provider_id=QWEN_PROVIDER_ID,
-        model_id=QWEN_MODEL_ID,
+        provider_id=DEEPSEEK_PROVIDER_ID,
+        model_id=DEEPSEEK_MODEL_ID,
         method="POST",
-        host=QWEN_HOST,
-        path=QWEN_PATH,
-        credential_reference=QWEN_CREDENTIAL_REFERENCE,
+        host=DEEPSEEK_HOST,
+        path=DEEPSEEK_PATH,
+        credential_reference=DEEPSEEK_CREDENTIAL_REFERENCE,
         prompt_id=P14C_PROMPT_ID,
         prompt_version=P14C_PROMPT_VERSION,
         required_capabilities=("structured-output", "tool-free-generation"),
@@ -309,18 +309,18 @@ class TransportFailure(RuntimeError):
 
 
 class LocalCredentialFileResolver:
-    """Read one exact Qwen key from an owner-only local TOML file."""
+    """Read one exact DeepSeek key from an owner-only local TOML file."""
 
     def __init__(self, credential_file: str | Path | None = None) -> None:
         selected = (
             credential_file
             if credential_file is not None
-            else QWEN_CREDENTIAL_FILE
+            else DEEPSEEK_CREDENTIAL_FILE
         )
         self._credential_file = Path(selected).expanduser()
 
     def resolve(self, reference: str) -> str:
-        if reference != QWEN_CREDENTIAL_REFERENCE:
+        if reference != DEEPSEEK_CREDENTIAL_REFERENCE:
             raise CredentialResolutionFailure("credential reference is not approved")
         path = self._credential_file
         try:
@@ -352,7 +352,7 @@ class LocalCredentialFileResolver:
         try:
             with path.open("rb") as handle:
                 record = tomllib.load(handle)
-            value = record["providers"]["qwen"]["api_key"]
+            value = record["providers"]["deepseek"]["api_key"]
         except (OSError, KeyError, TypeError, tomllib.TOMLDecodeError):
             raise CredentialResolutionFailure(
                 "approved credential record is unavailable"
@@ -367,7 +367,7 @@ class LocalCredentialFileResolver:
         return value
 
 
-class QwenChatCompletionsTransport:
+class DeepSeekChatCompletionsTransport:
     """Direct TLS transport that ignores proxy environment and refuses redirects."""
 
     transport_kind = "live_network"
@@ -384,8 +384,8 @@ class QwenChatCompletionsTransport:
     ) -> HTTPTransportResponse:
         if (
             method != "POST"
-            or host != QWEN_HOST
-            or path != QWEN_PATH
+            or host != DEEPSEEK_HOST
+            or path != DEEPSEEK_PATH
             or timeout_seconds <= 0
         ):
             raise TransportFailure("transport_precondition", retryable=False)
@@ -481,7 +481,7 @@ class P14CLiveExecutionCapability:
         live_capability = (
             authorization_id == P14C_LIVE_EXECUTION_AUTHORIZATION_ID
             and transport_kind == P14C_LIVE_TRANSPORT_KIND
-            and type(transport) is QwenChatCompletionsTransport
+            and type(transport) is DeepSeekChatCompletionsTransport
             and isinstance(approval_record_sha256, str)
             and len(approval_record_sha256) == 64
             and isinstance(approval_comment_id, int)
@@ -739,14 +739,14 @@ def issue_p14c_live_network_capability(
     comment_id: int,
     packet: P14CExecutionPacket,
     request: AIWorkerRequest,
-    transport: QwenChatCompletionsTransport,
+    transport: DeepSeekChatCompletionsTransport,
     repository_root: str | Path,
     replay_ledger: object,
 ) -> P14CLiveExecutionCapability:
     """Authenticate GitHub owner authority and mint one exact live capability."""
 
-    if type(transport) is not QwenChatCompletionsTransport:
-        raise TypeError("live capability requires the exact Qwen TLS transport")
+    if type(transport) is not DeepSeekChatCompletionsTransport:
+        raise TypeError("live capability requires the exact DeepSeek TLS transport")
     source_seal = build_p14c_execution_source_seal(
         repository_root,
         replay_ledger,  # type: ignore[arg-type]
@@ -838,9 +838,9 @@ class P14CLiveExecutionGuard:
         return tuple(reasons)
 
 
-class QwenChatCompletionsProvider:
-    provider_id = QWEN_PROVIDER_ID
-    model_id = QWEN_MODEL_ID
+class DeepSeekChatCompletionsProvider:
+    provider_id = DEEPSEEK_PROVIDER_ID
+    model_id = DEEPSEEK_MODEL_ID
     capabilities = ("structured-output", "tool-free-generation")
     provider_kind = "live_provider"
     execution_mode = "live"
@@ -1085,7 +1085,7 @@ def _build_chat_completions_request_body(
                 "role": "system",
                 "content": (
                     "Evaluate only the supplied public synthetic control. "
-                    "Return one JSON object with exactly summary and "
+                    "Return one valid json object with exactly summary and "
                     "control_status; use PASS or BLOCK and do not request tools."
                 ),
             },
@@ -1094,9 +1094,9 @@ def _build_chat_completions_request_body(
                 "content": canonical_json_bytes(payload).decode("utf-8"),
             },
         ],
-        "enable_thinking": False,
+        "thinking": {"type": "disabled"},
         "response_format": {"type": "json_object"},
-        "max_completion_tokens": packet.per_attempt_output_tokens,
+        "max_tokens": packet.per_attempt_output_tokens,
         "stream": False,
     }
     return canonical_json_bytes(body)

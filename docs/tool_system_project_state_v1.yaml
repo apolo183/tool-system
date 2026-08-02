@@ -30,7 +30,7 @@ p14c:
   source_record: docs/reports/p14c_bounded_real_model_provider_execution.md
   source_role: implementation_evidence_only
   implementation_authorization_packet: P14C-IMPL-v2
-  source_status: corrected_source_live_issuer_and_qwen_recovery_route_implemented_no_success_not_accepted
+  source_status: corrected_source_live_issuer_and_deepseek_recovery_route_implemented_not_attempted_not_accepted
   live_issuer_record: docs/reports/p14c_live_issuer_implementation.md
   live_issuer_implementation_authorization_packet: P14C-LIVE-ISSUER-IMPL-v1
   live_issuer_lifecycle_authorization_packet: P14C-LIVE-ISSUER-LIFECYCLE-v1
@@ -70,8 +70,8 @@ p14c:
     acceptance_effect: none
   real_live_approval_record_created: true
   live_capability_issued: true
-  recovery_implementation_packet: P14C-QWEN-RECOVERY-v1
-  recovery_route:
+  prior_recovery_implementation_packet: P14C-QWEN-RECOVERY-v1
+  prior_recovery_attempt:
     provider_id: qwen
     model_id: qwen3.7-plus-2026-05-26
     endpoint: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
@@ -91,6 +91,18 @@ p14c:
     credential_value_recorded: false
     usage_tokens: 0
     cost_microunits: 0
+    acceptance_effect: none
+  recovery_implementation_packet: P14C-DEEPSEEK-RECOVERY-v1
+  recovery_route:
+    provider_id: deepseek
+    model_id: deepseek-v4-flash
+    endpoint: https://api.deepseek.com/chat/completions
+    credential_reference: file:~/.config/tool-system/credentials.toml#providers.deepseek.api_key
+    api_access_mode: one_explicit_execute_only
+    fallback_allowed: false
+    live_execution_attempted: false
+    live_execution_succeeded: false
+    credential_value_recorded: false
     acceptance_effect: none
   stage_accepted: false
 authorization_boundaries:

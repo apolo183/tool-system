@@ -12,8 +12,8 @@ from tool_system.ai_worker.contract import canonical_sha256, validate_ai_worker_
 from tool_system.ai_worker.live_provider import (
     LocalCredentialFileResolver,
     P14CLiveExecutionGuard,
-    QwenChatCompletionsProvider,
-    QwenChatCompletionsTransport,
+    DeepSeekChatCompletionsProvider,
+    DeepSeekChatCompletionsTransport,
     build_p14c_execution_packet,
     build_p14c_live_execution_binding,
     build_p14c_synthetic_request,
@@ -158,7 +158,7 @@ def execute_p14c_live_entry(
     )
     packet = build_p14c_execution_packet()
     request = build_p14c_synthetic_request(packet)
-    transport = QwenChatCompletionsTransport()
+    transport = DeepSeekChatCompletionsTransport()
     capability = issue_p14c_live_network_capability(
         comment_id=comment_id,
         packet=packet,
@@ -168,7 +168,7 @@ def execute_p14c_live_entry(
         replay_ledger=ledger,
     )
     credential_resolver = _CountingLocalCredentialFileResolver()
-    provider = QwenChatCompletionsProvider(
+    provider = DeepSeekChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=credential_resolver,

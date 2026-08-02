@@ -18,8 +18,8 @@ from tool_system.ai_worker.live_provider import (
     LocalCredentialFileResolver,
     P14CLiveExecutionCapability,
     P14CLiveExecutionGuard,
-    QwenChatCompletionsProvider,
-    QwenChatCompletionsTransport,
+    DeepSeekChatCompletionsProvider,
+    DeepSeekChatCompletionsTransport,
     TransportFailure,
     _issue_p14c_fake_transport_capability,
     build_p14c_execution_packet,
@@ -36,7 +36,7 @@ class _FakeCredentialResolver:
 
     def resolve(self, reference: str) -> str:
         assert reference == (
-            "file:~/.config/tool-system/credentials.toml#providers.qwen.api_key"
+            "file:~/.config/tool-system/credentials.toml#providers.deepseek.api_key"
         )
         self.call_count += 1
         return self.value
@@ -96,7 +96,7 @@ def _success_response(
     input_tokens: int = 64,
     output_tokens: int = 16,
     finish_reason: str = "stop",
-    model: str = "qwen3.7-plus-2026-05-26",
+    model: str = "deepseek-v4-flash",
     content: str | None = None,
 ) -> HTTPTransportResponse:
     output_content = content or json.dumps(
@@ -151,7 +151,7 @@ def _runtime(
     )
     resolver = _FakeCredentialResolver()
     clock = _FakeClock()
-    provider = QwenChatCompletionsProvider(
+    provider = DeepSeekChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=resolver,
@@ -177,7 +177,7 @@ def test_packet_is_exact_and_packet_only_evidence_performs_zero_access() -> None
     assert validate_p14c_execution_packet(packet) == ()
     assert (
         packet.sha256()
-        == "f4cc9d509992bb1fa8ef51c21bcc57d50604d00e188c9c30118dc0993e6554c4"
+        == "4ae138a24e9bf956b3ad00d665eb5413b45652e18eda9e4032666600e22a1376"
     )
     evidence = build_packet_validation_evidence()
     assert evidence["status"] == "PASS"
@@ -191,7 +191,7 @@ def test_packet_drift_is_rejected() -> None:
     packet = replace(build_p14c_execution_packet(), max_attempts=3)
 
     assert validate_p14c_execution_packet(packet) == (
-        "packet field max_attempts does not match P14C-QWEN-RECOVERY-v1",
+        "packet field max_attempts does not match P14C-DEEPSEEK-RECOVERY-v1",
     )
 
 
@@ -201,7 +201,7 @@ def test_default_runtime_guard_blocks_live_provider_before_secret_or_transport()
     packet = build_p14c_execution_packet()
     resolver = _FakeCredentialResolver()
     transport = _FakeTransport([_success_response()])
-    provider = QwenChatCompletionsProvider(
+    provider = DeepSeekChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=resolver,
@@ -237,7 +237,7 @@ def test_provider_entrypoint_blocks_without_capability_before_access() -> None:
     request = build_p14c_synthetic_request(packet)
     resolver = _FakeCredentialResolver()
     transport = _FakeTransport([_success_response()])
-    provider = QwenChatCompletionsProvider(
+    provider = DeepSeekChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=resolver,
@@ -264,7 +264,7 @@ def test_fake_capability_cannot_authorize_live_network_transport(
         fake_transport,
     )
     resolver = _FakeCredentialResolver()
-    transport = QwenChatCompletionsTransport()
+    transport = DeepSeekChatCompletionsTransport()
     transport_calls: list[dict[str, object]] = []
 
     def forbidden_send(**kwargs: object) -> HTTPTransportResponse:
@@ -272,7 +272,7 @@ def test_fake_capability_cannot_authorize_live_network_transport(
         raise AssertionError("network transport must not be reached")
 
     monkeypatch.setattr(transport, "send", forbidden_send)
-    provider = QwenChatCompletionsProvider(
+    provider = DeepSeekChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=resolver,
@@ -314,7 +314,7 @@ def test_capability_is_opaque_exact_and_single_use() -> None:
     with pytest.raises(AttributeError, match="immutable"):
         capability._transport_kind = "live_network"  # type: ignore[misc]
     resolver = _FakeCredentialResolver()
-    provider = QwenChatCompletionsProvider(
+    provider = DeepSeekChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=resolver,
@@ -348,7 +348,7 @@ def test_runtime_replay_does_not_reinvoke_consumed_capability() -> None:
     assert len(transport.calls) == 1
 
 
-def test_fake_transport_success_uses_exact_bounded_qwen_envelope() -> None:
+def test_fake_transport_success_uses_exact_bounded_deepseek_envelope() -> None:
     runtime, resolver, transport, _ = _runtime([_success_response()])
     request = build_p14c_synthetic_request()
 
@@ -367,20 +367,20 @@ def test_fake_transport_success_uses_exact_bounded_qwen_envelope() -> None:
     call = transport.calls[0]
     assert (call["method"], call["host"], call["path"]) == (
         "POST",
-        "dashscope.aliyuncs.com",
-        "/compatible-mode/v1/chat/completions",
+        "api.deepseek.com",
+        "/chat/completions",
     )
     headers = call["headers"]
     assert isinstance(headers, dict)
     assert headers["authorization"] == "Bearer test-key-never-log"
     body = json.loads(call["body"])
-    assert body["model"] == "qwen3.7-plus-2026-05-26"
-    assert body["enable_thinking"] is False
+    assert body["model"] == "deepseek-v4-flash"
+    assert body["thinking"] == {"type": "disabled"}
     assert body["response_format"] == {"type": "json_object"}
-    assert body["max_completion_tokens"] == 128
+    assert body["max_tokens"] == 128
     assert body["stream"] is False
     assert "tools" not in body
-    assert "JSON" in body["messages"][0]["content"]
+    assert "json" in body["messages"][0]["content"]
 
     audit = json.dumps(result.to_audit_record(), sort_keys=True)
     assert "test-key-never-log" not in audit
@@ -536,14 +536,14 @@ def _credential_file(tmp_path: Path) -> Path:
     config_dir.mkdir(mode=0o700)
     path = config_dir / "credentials.toml"
     path.write_text(
-        '[providers.qwen]\napi_key = "test-key-never-log"\n',
+        '[providers.deepseek]\napi_key = "test-key-never-log"\n',
         encoding="utf-8",
     )
     path.chmod(0o600)
     return path
 
 
-def test_local_credential_file_reads_only_exact_owner_only_qwen_record(
+def test_local_credential_file_reads_only_exact_owner_only_deepseek_record(
     tmp_path: Path,
 ) -> None:
     path = _credential_file(tmp_path)
@@ -572,7 +572,7 @@ def test_local_credential_file_rejects_whitespace_without_exposing_value(
 ) -> None:
     path = _credential_file(tmp_path)
     path.write_text(
-        '[providers.qwen]\napi_key = ' + json.dumps(value) + "\n",
+        '[providers.deepseek]\napi_key = ' + json.dumps(value) + "\n",
         encoding="utf-8",
     )
     path.chmod(0o600)
