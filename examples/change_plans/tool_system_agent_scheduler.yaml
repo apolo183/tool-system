@@ -1,0 +1,17 @@
+plan_id: tool-system-agent-scheduler
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_agent_scheduler.yaml
+changed_files:
+  - pyproject.toml
+  - src/tool_system/runtime/__init__.py
+  - src/tool_system/runtime/agent_scheduler.py
+  - src/tool_system/cli/plan_agents.py
+  - tests/test_agent_scheduler.py
+  - examples/task_manifests/tool_system_agent_scheduler.yaml
+  - examples/change_plans/tool_system_agent_scheduler.yaml
+verification:
+  commands:
+    - python -m pytest -q
+rollback:
+  method: git_revert
+  reference: branch commit
