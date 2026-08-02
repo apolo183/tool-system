@@ -38,6 +38,7 @@ module_compound_contract:
     direct_provider_module_ids: []
     direct_consumer_module_ids:
       - process_authority
+      - local_git
   input_contract:
     registered_inputs:
       - durable_task_and_side_effect_intent_v1

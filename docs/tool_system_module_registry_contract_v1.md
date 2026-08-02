@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 17
+  module_count: 18
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -101,6 +101,7 @@ mapping_contract:
         - {kind: prefix, name: tool_system.orchestrator}
       direct_consumer_module_ids:
         - process_authority
+        - local_git
       change_risk: "high: persistent SQLite state, recovery, and burn-on-claim authorization boundary"
       rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:durable_orchestrator@1.0.0
     - current_module_id: repository_controller
@@ -272,9 +273,21 @@ mapping_contract:
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.development_loop}
-      direct_consumer_module_ids: []
+      direct_consumer_module_ids:
+        - local_git
       change_risk: "medium: bounded in-memory fixture patch, validation, repair, review, and no-progress termination boundary"
       rollback_identity: tool-system@0b5110a2eea79ebde650e1088b787c781ddab171:development_loop@absent
+    - current_module_id: local_git
+      canonical_module_id: local-git
+      current_module_version: 1.0.0
+      aggregate_interface_id: local-git-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.local_git}
+      direct_consumer_module_ids: []
+      change_risk: "high: remote-free local Git writes coordinated with durable receipts and crash resume"
+      rollback_identity: tool-system@22dedb0f2a2c0b38a0bd4c67f36c1c2454ca19d5:local_git@absent
 ~~~
 <!-- MODULE-IDENTITY-MAPPING:END -->
 
@@ -311,6 +324,7 @@ static_import_dag:
     ai_worker_runtime: []
     durable_orchestrator:
       - process_authority
+      - local_git
     repository_controller:
       - cleanup_planner
       - cli_frontend
@@ -338,7 +352,9 @@ static_import_dag:
     cli_frontend: []
     repository_context: []
     blueprint_compiler: []
-    development_loop: []
+    development_loop:
+      - local_git
+    local_git: []
   zero_consumer_modules:
     - architecture_registry
     - ai_worker_runtime
@@ -348,6 +364,7 @@ static_import_dag:
     - repository_context
     - blueprint_compiler
     - development_loop
+    - local_git
   non_claim: >-
     Static AST import equality does not prove absence of dynamic imports, CLI
     invocation dependencies, data dependencies, configuration dependencies,

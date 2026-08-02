@@ -33,9 +33,9 @@ def test_provider_portfolio_contract_is_product_control_not_runtime_authority() 
 
     current_phase = project_state["current_phase"]
     assert current_phase["last_accepted_stage"] == (
-        "P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW"
+        "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
     )
-    assert current_phase["next_stage"] == "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
+    assert current_phase["next_stage"] == "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
     assert current_phase["next_stage_authorized"] is False
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["live_model_provider_execution_authorized"] is False

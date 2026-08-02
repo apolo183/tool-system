@@ -11,9 +11,9 @@ current_phase:
   status: active
   entry_record: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
   entry_authorized: true
-  last_accepted_stage: P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW
-  last_accepted_stage_record: docs/reports/p14f_development_loop_acceptance.md
-  next_stage: P14G_DURABLE_LOCAL_GIT_ORCHESTRATION
+  last_accepted_stage: P14G_DURABLE_LOCAL_GIT_ORCHESTRATION
+  last_accepted_stage_record: docs/reports/p14g_durable_local_git_acceptance.md
+  next_stage: P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE
   next_stage_authorized: false
   next_phase: P15_MULTI_PROJECT_BENCHMARK
   next_phase_entry_authorized: false
@@ -235,6 +235,29 @@ p14f:
     credential_accesses: 0
     downstream_repository_operations: 0
   durable_state_and_local_git_owned_by_p14g: true
+  real_downstream_repository_accessed: false
+  stage_accepted: true
+p14g:
+  implementation_authorization_packet: P14G-DURABLE-LOCAL-GIT-LIFECYCLE-v1
+  module_id: local-git
+  module_version: 1.0.0
+  public_interface_id: local-git-api
+  public_interface_version: 1.0.0
+  acceptance_record: docs/reports/p14g_durable_local_git_acceptance.md
+  acceptance_status: accepted
+  accepted_at: 2026-08-03 UTC+09:00
+  evidence_boundary: remote_free_pytest_temporary_local_git_and_sqlite_fixtures_only
+  accepted_fixture_evidence:
+    exact_base_commit_tree_and_scope_preflight: true
+    durable_lease_checkpoint_attempt_and_side_effect_receipts: true
+    one_local_branch_and_commit: true
+    crash_after_completed_commit_resume_without_duplicate: true
+    ambiguous_side_effect_blocks: true
+    rollback_cleanup_and_draft_pr_are_plans_only: true
+    remote_operations: 0
+    provider_invocations: 0
+    credential_accesses: 0
+    downstream_repository_operations: 0
   real_downstream_repository_accessed: false
   stage_accepted: true
 authorization_boundaries:

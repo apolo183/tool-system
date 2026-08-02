@@ -30,13 +30,13 @@ CONTRACT_DIR = ROOT / "docs/modules"
 BLUEPRINT = ROOT / "blueprint/tool_system_v0.yaml"
 
 EXPECTED_RAW_SHA256 = (
-    "52356e9e1df0abd7b0ddf5a6aeda7491b5c63f762af66e06e0c84240b7fe5228"
+    "51c4ded68805f60d1cb4b39923bfcd9a4446beb09b34034bf5455303d9b45fbd"
 )
-EXPECTED_BYTE_LENGTH = 95_360
+EXPECTED_BYTE_LENGTH = 98_183
 EXPECTED_SEMANTIC_SHA256 = (
-    "ad3f219b9cd63d936d25e57a967fd7ba9137d28baa5fd6733e76d2207c0e8ab9"
+    "2fe338e051001a757a2c3a6649f3612f854e9eebd1548a7a9540544992a7b85e"
 )
-EXPECTED_MANAGED_PYTHON_FILE_COUNT = 99
+EXPECTED_MANAGED_PYTHON_FILE_COUNT = 101
 EXPECTED_MODULE_IDS = {
     "architecture_registry",
     "manifest_validation",
@@ -55,6 +55,7 @@ EXPECTED_MODULE_IDS = {
     "repository_context",
     "blueprint_compiler",
     "development_loop",
+    "local_git",
 }
 TARGET_OWNER_DELTAS = {
     "src/tool_system/gate/command_runner.py": (
@@ -84,6 +85,7 @@ TEST_SELECTORS = {
     "repository_context": "tests/test_repository_context_builder.py",
     "blueprint_compiler": "tests/test_blueprint_compiler.py",
     "development_loop": "tests/test_development_loop.py",
+    "local_git": "tests/test_local_git_orchestrator.py",
 }
 ADDITIONAL_TEST_SELECTORS = {
     "ai_worker_runtime": ("tests/test_ai_worker_live_provider.py",),
@@ -170,7 +172,7 @@ def authority_code_paths() -> dict[str, list[str]]:
         for current_id, contract in contracts.items()
     }
     flattened = [path for paths in result.values() for path in paths]
-    assert len(flattened) == len(set(flattened)) == 107
+    assert len(flattened) == len(set(flattened)) == 109
     python_owners = target_python_owner_by_path()
     assert {
         path: current_id
@@ -302,8 +304,8 @@ def _registry_effect_matrix(
 
 def assert_effect_oracle(registry: dict[str, Any]) -> None:
     expanded, grouped = authority_effect_matrices()
-    assert len(expanded) == 87
-    assert len(grouped) == 41
+    assert len(expanded) == 92
+    assert len(grouped) == 43
     assert _registry_effect_matrix(registry) == grouped
 
 
@@ -394,13 +396,13 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert len(raw) == EXPECTED_BYTE_LENGTH
     assert hashlib.sha256(raw).hexdigest() == EXPECTED_RAW_SHA256
     assert hashlib.sha256(normalized).hexdigest() == EXPECTED_SEMANTIC_SHA256
-    assert len(registry["modules"]) == len(registry["interfaces"]) == 17
-    assert sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 107
-    assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 19
-    assert sum(len(module["permitted_side_effects"]) for module in registry["modules"]) == 41
-    assert len(list(_iter_contract_references(registry))) == 177
+    assert len(registry["modules"]) == len(registry["interfaces"]) == 18
+    assert sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 109
+    assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 20
+    assert sum(len(module["permitted_side_effects"]) for module in registry["modules"]) == 43
+    assert len(list(_iter_contract_references(registry))) == 187
     assert sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
-    assert len(target_python_owner_by_path()) == 99
+    assert len(target_python_owner_by_path()) == 101
     assert_effect_oracle(registry)
 
 
@@ -420,7 +422,7 @@ def test_current_current_registry_is_authority_and_tmp_copy_is_not(
     assert current["current_registry_authority"] is True
     assert current["validation_scope"] == "tool_system_current_module_registry"
     assert current["compatibility_adapter"]["applied"] is False
-    assert current["contract_reference_count"] == 177
+    assert current["contract_reference_count"] == 187
     assert current["external_provider_count"] == 0
     assert compatibility["status"] == "PASS"
     assert compatibility["current_registry_authority"] is False
@@ -493,7 +495,7 @@ def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
         edge_count += len(expected_dependencies)
         key = (row["aggregate_interface_id"], row["aggregate_interface_version"])
         assert interfaces[key]["provider_module_id"] == canonical
-    assert edge_count == 28
+    assert edge_count == 30
     assert_effect_oracle(registry)
 
 

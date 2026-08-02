@@ -313,7 +313,7 @@ modules:
     target_boundary_id: code-002
     effect_contract:
       repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
-      sha256: 70c9f1bd8cb46f1e89bbf884b5420597092d8276d4e9181fe10023e336966252
+      sha256: fcb667f0b19800023dd4e233e2e6257ba50a9c12bd82c9d9b11a4f21945ec041
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-002
@@ -329,17 +329,17 @@ modules:
     target_boundary_id: code-002
     effect_contract:
       repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
-      sha256: 70c9f1bd8cb46f1e89bbf884b5420597092d8276d4e9181fe10023e336966252
+      sha256: fcb667f0b19800023dd4e233e2e6257ba50a9c12bd82c9d9b11a4f21945ec041
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   rollback_boundary:
     repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
-    sha256: 70c9f1bd8cb46f1e89bbf884b5420597092d8276d4e9181fe10023e336966252
+    sha256: fcb667f0b19800023dd4e233e2e6257ba50a9c12bd82c9d9b11a4f21945ec041
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
-    sha256: 70c9f1bd8cb46f1e89bbf884b5420597092d8276d4e9181fe10023e336966252
+    sha256: fcb667f0b19800023dd4e233e2e6257ba50a9c12bd82c9d9b11a4f21945ec041
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: repository-controller
@@ -1487,14 +1487,60 @@ modules:
   permitted_side_effects: []
   rollback_boundary:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: 66598622c2f85e3c4b3fc282e61eda274af766ad4f9e58f30c0cc4b6710eaa31
+    sha256: 25787e4a0039f282d01a9fb4d50f2bd6da0b556812b7eb10e98dd4890a3a4023
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: 66598622c2f85e3c4b3fc282e61eda274af766ad4f9e58f30c0cc4b6710eaa31
+    sha256: 25787e4a0039f282d01a9fb4d50f2bd6da0b556812b7eb10e98dd4890a3a4023
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
+- module_id: local-git
+  module_version: 1.0.0
+  role: durably record one bounded change in an isolated local Git fixture. Freeze Git identity and scope, consume a sealed development-loop result, bind it to durable leases/checkpoints/side-effect receipts, create one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
+  owner: local-git
+  public_interface_refs:
+  - interface_id: local-git-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: development-loop-api
+    interface_version: 1.0.0
+  - interface_id: durable-orchestrator-api
+    interface_version: 1.1.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/local_git/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/local_git/orchestrator.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_local_git_orchestrator.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects:
+  - effect_id: direct-effects-code-002
+    effect_classes: [repository_write, data_write, git_write]
+    target_boundary_id: code-002
+    effect_contract: &local_git_contract
+      repo_relative_path: docs/modules/local-git-contract-v1.md
+      sha256: 2ca4242e4da2494a03fbcc64a1a2a9c0a00368e47e9a40f9101710c792080ed4
+      format_identity: tool-system-module-compound-contract-v1
+      schema_identity: tool-system-module-compound-contract-schema-v1
+  - effect_id: conditional-delegated-effects-code-002
+    effect_classes: [database_write, repository_write, data_write, generated_artifact_write, git_write, network_write, external_system_write, production_operation]
+    target_boundary_id: code-002
+    effect_contract: *local_git_contract
+  rollback_boundary: *local_git_contract
+  replacement_boundary: *local_git_contract
 interfaces:
 - interface_id: architecture-registry-api
   interface_version: 2.0.0
@@ -1648,34 +1694,35 @@ interfaces:
   provider_module_id: durable-orchestrator
   consumers:
   - consumer_module_id: process-authority
+  - consumer_module_id: local-git
   input_contract:
     repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
-    sha256: 70c9f1bd8cb46f1e89bbf884b5420597092d8276d4e9181fe10023e336966252
+    sha256: fcb667f0b19800023dd4e233e2e6257ba50a9c12bd82c9d9b11a4f21945ec041
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
-    sha256: 70c9f1bd8cb46f1e89bbf884b5420597092d8276d4e9181fe10023e336966252
+    sha256: fcb667f0b19800023dd4e233e2e6257ba50a9c12bd82c9d9b11a4f21945ec041
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
-    sha256: 70c9f1bd8cb46f1e89bbf884b5420597092d8276d4e9181fe10023e336966252
+    sha256: fcb667f0b19800023dd4e233e2e6257ba50a9c12bd82c9d9b11a4f21945ec041
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
-    sha256: 70c9f1bd8cb46f1e89bbf884b5420597092d8276d4e9181fe10023e336966252
+    sha256: fcb667f0b19800023dd4e233e2e6257ba50a9c12bd82c9d9b11a4f21945ec041
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
-    sha256: 70c9f1bd8cb46f1e89bbf884b5420597092d8276d4e9181fe10023e336966252
+    sha256: fcb667f0b19800023dd4e233e2e6257ba50a9c12bd82c9d9b11a4f21945ec041
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/durable-orchestrator-contract-v1.md
-    sha256: 70c9f1bd8cb46f1e89bbf884b5420597092d8276d4e9181fe10023e336966252
+    sha256: fcb667f0b19800023dd4e233e2e6257ba50a9c12bd82c9d9b11a4f21945ec041
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: repository-controller-api
@@ -2071,34 +2118,49 @@ interfaces:
 - interface_id: development-loop-api
   interface_version: 1.0.0
   provider_module_id: development-loop
-  consumers: []
+  consumers:
+  - consumer_module_id: local-git
   input_contract:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: 66598622c2f85e3c4b3fc282e61eda274af766ad4f9e58f30c0cc4b6710eaa31
+    sha256: 25787e4a0039f282d01a9fb4d50f2bd6da0b556812b7eb10e98dd4890a3a4023
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: 66598622c2f85e3c4b3fc282e61eda274af766ad4f9e58f30c0cc4b6710eaa31
+    sha256: 25787e4a0039f282d01a9fb4d50f2bd6da0b556812b7eb10e98dd4890a3a4023
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: 66598622c2f85e3c4b3fc282e61eda274af766ad4f9e58f30c0cc4b6710eaa31
+    sha256: 25787e4a0039f282d01a9fb4d50f2bd6da0b556812b7eb10e98dd4890a3a4023
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: 66598622c2f85e3c4b3fc282e61eda274af766ad4f9e58f30c0cc4b6710eaa31
+    sha256: 25787e4a0039f282d01a9fb4d50f2bd6da0b556812b7eb10e98dd4890a3a4023
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: 66598622c2f85e3c4b3fc282e61eda274af766ad4f9e58f30c0cc4b6710eaa31
+    sha256: 25787e4a0039f282d01a9fb4d50f2bd6da0b556812b7eb10e98dd4890a3a4023
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: 66598622c2f85e3c4b3fc282e61eda274af766ad4f9e58f30c0cc4b6710eaa31
+    sha256: 25787e4a0039f282d01a9fb4d50f2bd6da0b556812b7eb10e98dd4890a3a4023
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
+- interface_id: local-git-api
+  interface_version: 1.0.0
+  provider_module_id: local-git
+  consumers: []
+  input_contract: &local_git_interface_contract
+    repo_relative_path: docs/modules/local-git-contract-v1.md
+    sha256: 2ca4242e4da2494a03fbcc64a1a2a9c0a00368e47e9a40f9101710c792080ed4
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract: *local_git_interface_contract
+  error_contract: *local_git_interface_contract
+  side_effect_contract: *local_git_interface_contract
+  compatibility_policy: *local_git_interface_contract
+  replacement_revalidation_boundary: *local_git_interface_contract

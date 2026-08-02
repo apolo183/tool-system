@@ -80,13 +80,13 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert project_state["current_phase"]["status"] == "active"
     assert project_state["authority_effect"] == "none"
     assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW"
+        "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
     )
     assert project_state["current_phase"]["last_accepted_stage_record"] == (
-        "docs/reports/p14f_development_loop_acceptance.md"
+        "docs/reports/p14g_durable_local_git_acceptance.md"
     )
     assert project_state["current_phase"]["next_stage"] == (
-        "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
+        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
     )
     assert project_state["current_phase"]["next_stage_authorized"] is False
     assert project_state["current_phase"]["next_phase"] == (
