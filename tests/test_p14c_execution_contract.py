@@ -40,6 +40,18 @@ ENTRY_PLAN = (
     / "change_plans"
     / "tool_system_p14c_live_execution_entry_v1.yaml"
 )
+AUTH_DIAGNOSTICS_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p14c_qwen_auth_diagnostics_v1.yaml"
+)
+AUTH_DIAGNOSTICS_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p14c_qwen_auth_diagnostics_v1.yaml"
+)
 ENTRY_FILES = {
     "README.md",
     "pyproject.toml",
@@ -60,6 +72,20 @@ ENTRY_FILES = {
     "tests/test_process_authority.py",
     "examples/task_manifests/tool_system_p14c_live_execution_entry_v1.yaml",
     "examples/change_plans/tool_system_p14c_live_execution_entry_v1.yaml",
+}
+AUTH_DIAGNOSTICS_FILES = {
+    "config/module_registry_v1.yaml",
+    "docs/modules/ai-worker-runtime-contract-v1.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "src/tool_system/ai_worker/live_evidence.py",
+    "src/tool_system/ai_worker/live_provider.py",
+    "tests/test_ai_worker_live_provider.py",
+    "tests/test_module_registry.py",
+    "tests/test_p14c_execution_contract.py",
+    "tests/test_phase_alignment.py",
+    "examples/task_manifests/tool_system_p14c_qwen_auth_diagnostics_v1.yaml",
+    "examples/change_plans/tool_system_p14c_qwen_auth_diagnostics_v1.yaml",
 }
 
 
@@ -142,7 +168,21 @@ def test_p14c_source_authorization_does_not_claim_live_execution_or_acceptance()
     assert recovery["model_id"] == "qwen3.7-plus-2026-05-26"
     assert recovery["api_access_mode"] == "one_explicit_execute_only"
     assert recovery["fallback_allowed"] is False
-    assert recovery["live_execution_attempted"] is False
+    assert recovery["live_execution_attempted"] is True
+    assert recovery["live_execution_succeeded"] is False
+    assert recovery["approval_comment_id"] == 5_156_628_612
+    assert recovery["approval_durably_consumed"] is True
+    assert recovery["credential_resolution_attempt_count"] == 1
+    assert recovery["provider_invocation_count"] == 1
+    assert recovery["redacted_failure_class"] == "AUTH_FAILED"
+    assert recovery["failure_detail"] == (
+        "ambiguous_http_401_or_403_under_legacy_classifier"
+    )
+    assert recovery["output_received"] is False
+    assert recovery["credential_value_recorded"] is False
+    assert recovery["usage_tokens"] == 0
+    assert recovery["cost_microunits"] == 0
+    assert recovery["acceptance_effect"] == "none"
     assert p14c["stage_accepted"] is False
     assert boundaries["state_file_grants_authority"] is False
     assert boundaries["live_model_provider_execution_authorized"] is False
@@ -316,6 +356,32 @@ def test_operator_entry_pair_freezes_exact_source_only_scope() -> None:
     assert "blueprint/tool_system_v0.yaml" not in ENTRY_FILES
     assert "docs/tool_system_project_state_v1.yaml" not in ENTRY_FILES
     assert "src/tool_system/ai_worker/live_provider.py" not in ENTRY_FILES
+
+
+def test_qwen_auth_diagnostics_pair_freezes_exact_zero_live_io_scope() -> None:
+    manifest = load_yaml_file(AUTH_DIAGNOSTICS_MANIFEST)
+    plan = load_yaml_file(AUTH_DIAGNOSTICS_PLAN)
+    closure = manifest["bounded_closure"]["frozen_before_execution"]
+
+    assert set(manifest["allowed_files"]) == AUTH_DIAGNOSTICS_FILES
+    assert set(manifest["scope"]["in_scope"]) == AUTH_DIAGNOSTICS_FILES
+    assert set(plan["changed_files"]) == AUTH_DIAGNOSTICS_FILES
+    assert closure["baseline_commit"] == (
+        "1d0100be219e991fdebc3f138477e948b6517511"
+    )
+    assert closure["baseline_tree"] == (
+        "b1988b14e0a09fb69023eaa991b8a4e4d513c52d"
+    )
+    assert closure["allowed_scope"] == "exact_12_paths_listed_below"
+    assert closure["finite_budgets"]["real_github_approval_reads"] == 0
+    assert closure["finite_budgets"]["credential_value_accesses"] == 0
+    assert closure["finite_budgets"]["provider_invocations"] == 0
+    assert closure["finite_budgets"]["transport_attempts"] == 0
+    assert "attempt_number" not in manifest["bounded_closure"][
+        "recurrence_fingerprint"
+    ]
+    assert "blueprint/tool_system_v0.yaml" not in AUTH_DIAGNOSTICS_FILES
+    assert "config/process_authority_v1.yaml" not in AUTH_DIAGNOSTICS_FILES
 
 
 def test_operator_entry_is_part_of_critical_source_manifest_v2() -> None:

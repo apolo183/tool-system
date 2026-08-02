@@ -6,7 +6,9 @@ in-memory fixture. P14C adds a bounded live-provider adapter behind an exact
 process-authority grant and single-use execution capability. The committed
 operator entry prepares exact approval JSON separately from execution, is
 included in the source seal, and emits only redacted receipts. This source does
-not create a real approval comment or authorize a live provider call.
+not create a real approval comment or authorize a live provider call. Credential
+whitespace is rejected before transport, and live HTTP 401 and 403 responses
+produce distinct stable redacted failure classes.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -17,20 +19,20 @@ module_compound_contract:
   identity:
     canonical_module_id: ai-worker-runtime
     current_module_id: ai_worker_runtime
-    module_version: 1.5.0
+    module_version: 1.5.1
     aggregate_interface:
       interface_id: ai-worker-runtime-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@c92c55940f7d6cb4db2e743472ec2a739d910b3a:ai_worker_runtime@1.4.0
+    rollback_identity: tool-system@1d0100be219e991fdebc3f138477e948b6517511:ai_worker_runtime@1.5.0
     python_import_identities:
       - kind: prefix
         name: tool_system.ai_worker
   role:
     summary: provide a provider-neutral structured AI worker contract, deterministic fixture, bounded live adapter, and committed source-sealed P14C operator entry
-    responsibility_boundary: Validate content-addressed requests, default to deterministic in-memory fixtures, prepare exact source-bound approval JSON without external reads, and admit only the exact public P14C synthetic request through the frozen Qwen recovery adapter when a durably consumed process-authority grant has minted a capability bound to the same packet, request, exact live transport instance, clean execution commit/tree/critical-source manifest including the operator entry, host, and ledger identity.
+    responsibility_boundary: Validate content-addressed requests, default to deterministic in-memory fixtures, prepare exact source-bound approval JSON without external reads, reject credential whitespace before transport, keep HTTP 401 invalid-key and HTTP 403 forbidden-access outcomes distinctly redacted, and admit only the exact public P14C synthetic request through the frozen Qwen recovery adapter when a durably consumed process-authority grant has minted a capability bound to the same packet, request, exact live transport instance, clean execution commit/tree/critical-source manifest including the operator entry, host, and ledger identity.
   natural_owner_evidence_paths:
     - src/tool_system/ai_worker/__init__.py
     - src/tool_system/ai_worker/contract.py
@@ -58,7 +60,7 @@ module_compound_contract:
   error_contract:
     registered_error_semantics:
       - stable_redacted_provider_neutral_errors
-    boundary: Integrity, grant or capability binding, capability expiry, transport-instance identity, execution commit/tree/source/host/ledger drift, provider identity, budget, cancellation, timeout, response, replay, and internal failures return stable sanitized errors before credential or provider access whenever preflight fails.
+    boundary: Integrity, grant or capability binding, capability expiry, transport-instance identity, execution commit/tree/source/host/ledger drift, provider identity, credential whitespace, budget, cancellation, timeout, response, replay, and internal failures return stable sanitized errors; live HTTP 401 and 403 remain distinct as AUTH_INVALID_KEY and ACCESS_FORBIDDEN without exposing provider response details.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -76,10 +78,10 @@ module_compound_contract:
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve request validation, error taxonomy, deterministic replay, default fixture-only execution, separate prepare and execute commands, process-authority durable grant, exact live-capability and operator-entry source-seal binding, immediate pre-credential revalidation, redaction, budgets, provider metadata checks, and result fields.
+    interface_compatible_replacement: Preserve request validation, stable redacted error taxonomy including distinct invalid-key and forbidden-access classes, deterministic replay, default fixture-only execution, separate prepare and execute commands, process-authority durable grant, exact live-capability and operator-entry source-seal binding, immediate pre-credential revalidation, credential-whitespace rejection, redaction, budgets, provider metadata checks, and result fields.
     interface_incompatible_change: Requires a new aggregate interface version and a separately authorized provider qualification or migration stage.
   rollback_contract:
-    rollback_identity: tool-system@c92c55940f7d6cb4db2e743472ec2a739d910b3a:ai_worker_runtime@1.4.0
+    rollback_identity: tool-system@1d0100be219e991fdebc3f138477e948b6517511:ai_worker_runtime@1.5.0
     method: Revert through a separately audited pull request and rerun contract, fixture-provider, operator-entry, live-adapter fake-transport, replay, budget, redaction, and packet-only no-I/O tests.
   replacement_contract:
     activation_rule: Replace only after provider-neutral contract, deterministic fixture, committed prepare/execute entry, process-authority durable grant, exact transport/operator-source-bound capability, fake GitHub and provider transports, source-drift-before-credential, replay, receipt redaction, budget, and isolation behavior pass with no real I/O.

@@ -291,7 +291,14 @@ class HTTPTransportResponse:
 
 
 class CredentialResolutionFailure(RuntimeError):
-    pass
+    def __init__(
+        self,
+        message: str,
+        *,
+        failure_class: str = "KEY_MISSING_OR_UNREADABLE",
+    ) -> None:
+        super().__init__(message)
+        self.failure_class = failure_class
 
 
 class TransportFailure(RuntimeError):
@@ -352,6 +359,11 @@ class LocalCredentialFileResolver:
             ) from None
         if not isinstance(value, str) or not value:
             raise CredentialResolutionFailure("approved credential is unavailable")
+        if any(character.isspace() for character in value):
+            raise CredentialResolutionFailure(
+                "approved credential contains whitespace",
+                failure_class="KEY_INVALID",
+            )
         return value
 
 
@@ -932,12 +944,12 @@ class QwenChatCompletionsProvider:
                 credential = self._credential_resolver.resolve(
                     self.packet.credential_reference
                 )
-            except CredentialResolutionFailure:
+            except CredentialResolutionFailure as exc:
                 return _provider_error(
                     AIWorkerErrorCode.PROVIDER_FAILURE,
                     "approved provider credential is unavailable",
                     retryable=False,
-                    reasons=("KEY_MISSING_OR_UNREADABLE",),
+                    reasons=(exc.failure_class,),
                     duration_ms=elapsed_ms,
                 )
             except Exception:  # noqa: BLE001 - injected resolver must fail closed
@@ -1258,8 +1270,10 @@ def _classify_http_failure(response: HTTPTransportResponse) -> str:
             provider_code = error["code"].lower()
         elif isinstance(record.get("code"), str):
             provider_code = record["code"].lower()
-    if response.status_code in {401, 403}:
-        return "AUTH_FAILED"
+    if response.status_code == 401:
+        return "AUTH_INVALID_KEY"
+    if response.status_code == 403:
+        return "ACCESS_FORBIDDEN"
     if response.status_code == 402 or any(
         marker in provider_code
         for marker in ("arrearage", "balance", "quota", "allocation")

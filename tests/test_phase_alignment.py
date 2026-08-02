@@ -132,7 +132,18 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert p14c["recovery_implementation_packet"] == (
         "P14C-QWEN-RECOVERY-v1"
     )
-    assert p14c["recovery_route"]["live_execution_attempted"] is False
+    recovery = p14c["recovery_route"]
+    assert recovery["live_execution_attempted"] is True
+    assert recovery["live_execution_succeeded"] is False
+    assert recovery["approval_comment_id"] == 5_156_628_612
+    assert recovery["approval_durably_consumed"] is True
+    assert recovery["provider_invocation_count"] == 1
+    assert recovery["redacted_failure_class"] == "AUTH_FAILED"
+    assert recovery["failure_detail"] == (
+        "ambiguous_http_401_or_403_under_legacy_classifier"
+    )
+    assert recovery["credential_value_recorded"] is False
+    assert recovery["acceptance_effect"] == "none"
     assert p14c["stage_accepted"] is False
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["state_file_grants_authority"] is False

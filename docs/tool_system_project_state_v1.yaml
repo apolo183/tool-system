@@ -78,7 +78,20 @@ p14c:
     credential_reference: file:~/.config/tool-system/credentials.toml#providers.qwen.api_key
     api_access_mode: one_explicit_execute_only
     fallback_allowed: false
-    live_execution_attempted: false
+    live_execution_attempted: true
+    live_execution_succeeded: false
+    approval_conversation: 155
+    approval_comment_id: 5156628612
+    approval_durably_consumed: true
+    credential_resolution_attempt_count: 1
+    provider_invocation_count: 1
+    redacted_failure_class: AUTH_FAILED
+    failure_detail: ambiguous_http_401_or_403_under_legacy_classifier
+    output_received: false
+    credential_value_recorded: false
+    usage_tokens: 0
+    cost_microunits: 0
+    acceptance_effect: none
   stage_accepted: false
 authorization_boundaries:
   state_file_grants_authority: false

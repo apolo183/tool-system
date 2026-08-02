@@ -8,7 +8,10 @@ from pathlib import Path
 import pytest
 
 from tool_system.ai_worker.contract import AIWorkerErrorCode
-from tool_system.ai_worker.live_evidence import build_packet_validation_evidence
+from tool_system.ai_worker.live_evidence import (
+    _receipt_failure_class,
+    build_packet_validation_evidence,
+)
 from tool_system.ai_worker.live_provider import (
     CredentialResolutionFailure,
     HTTPTransportResponse,
@@ -422,6 +425,35 @@ def test_nonretryable_statuses_stop_after_one_fake_call(status_code: int) -> Non
     assert len(transport.calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("status_code", "failure_class"),
+    [
+        (401, "AUTH_INVALID_KEY"),
+        (403, "ACCESS_FORBIDDEN"),
+    ],
+)
+def test_authentication_and_access_failures_remain_distinct_and_redacted(
+    status_code: int,
+    failure_class: str,
+) -> None:
+    response = HTTPTransportResponse(
+        status_code=status_code,
+        headers={"request-id": "provider-request-id-must-not-escape"},
+        body=b'{"error":{"code":"provider-detail-must-not-escape"}}',
+    )
+    runtime, _, transport, _ = _runtime([response])
+
+    result = runtime.run(build_p14c_synthetic_request())
+    audit = json.dumps(result.to_audit_record(), sort_keys=True)
+
+    assert result.error is not None
+    assert result.error.reasons == (failure_class,)
+    assert _receipt_failure_class(result.error) == failure_class
+    assert len(transport.calls) == 1
+    assert "provider-request-id-must-not-escape" not in audit
+    assert "provider-detail-must-not-escape" not in audit
+
+
 def test_retryable_transport_failure_is_bounded_to_one_fake_call() -> None:
     runtime, resolver, transport, clock = _runtime(
         [
@@ -523,6 +555,35 @@ def test_local_credential_file_reads_only_exact_owner_only_qwen_record(
 
     assert value == "test-key-never-log"
     assert "test-key-never-log" not in json.dumps(packet.audit_record())
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        " test-key-never-log",
+        "test-key-never-log ",
+        "test-key-never\nlog",
+        "test-key-never\tlog",
+    ],
+)
+def test_local_credential_file_rejects_whitespace_without_exposing_value(
+    tmp_path: Path,
+    value: str,
+) -> None:
+    path = _credential_file(tmp_path)
+    path.write_text(
+        '[providers.qwen]\napi_key = ' + json.dumps(value) + "\n",
+        encoding="utf-8",
+    )
+    path.chmod(0o600)
+
+    with pytest.raises(CredentialResolutionFailure) as captured:
+        LocalCredentialFileResolver(path).resolve(
+            build_p14c_execution_packet().credential_reference
+        )
+
+    assert captured.value.failure_class == "KEY_INVALID"
+    assert value not in str(captured.value)
 
 
 def test_local_credential_file_rejects_broad_permissions(
