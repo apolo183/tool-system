@@ -200,10 +200,10 @@ def test_p14mr_report_is_acceptance_evidence_not_durable_rule_owner() -> None:
 
     assert REPORT.is_file()
     assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p14mr_milestone_module_invariant.md"
+        "docs/reports/p14c_bounded_real_provider_acceptance.md"
     )
     assert current_phase["last_accepted_stage"] == (
-        "P14MR_MILESTONE_MODULE_INVARIANT"
+        "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
     )
     assert project_state["authority_effect"] == "none"
 
@@ -233,7 +233,9 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     assert "phase" not in blueprint
     assert "status" not in blueprint
     assert current_phase["id"] == "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
-    assert current_phase["last_accepted_stage"] == "P14MR_MILESTONE_MODULE_INVARIANT"
+    assert current_phase["last_accepted_stage"] == (
+        "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
+    )
     assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["execution_boundary"] == (
         "governance_only"
     )
@@ -257,7 +259,7 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     assert "durable_module_and_milestone_change_governance" in blueprint[
         "boundaries"
     ]["owns"]
-    assert current_phase["next_stage"] == "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
+    assert current_phase["next_stage"] == "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER"
     assert current_phase["next_stage_authorized"] is False
     assert (
         project_state["authorization_boundaries"]

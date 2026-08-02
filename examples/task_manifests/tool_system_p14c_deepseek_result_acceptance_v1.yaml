@@ -1,0 +1,175 @@
+task_id: tool-system-p14c-deepseek-result-acceptance-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/p14c-deepseek-result-acceptance-v1
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stage_plan.P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p14c_deepseek_recovery_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Accept only the exact bounded DeepSeek proof produced by the previously frozen source and execution route.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Record one bounded, auditable, source-sealed real AI-worker proof without extending mutation, production, cleanup, or successor-stage authority.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P14C-DEEPSEEK-RESULT-ACCEPTANCE-v1
+    baseline_commit: 55ed92e336d2aa110e50e197c5eefb8fa80896a8
+    baseline_tree: 2e6ce267738a396f52a5847052f91edafea74af9
+    allowed_scope: exact_9_paths_listed_below
+    acceptance_set:
+      - one new historical acceptance report records the redacted PASS receipt, exact source seal, frozen limits, decision, and non-claims without storing a credential value or raw provider output
+      - the sole descriptive project-state owner marks P14C accepted, makes P14D the unauthorized next stage, and preserves authority_effect none plus every continuing false authorization boundary
+      - the accepted proof is bound to tool-system main 55ed92e336d2aa110e50e197c5eefb8fa80896a8, tree 2e6ce267738a396f52a5847052f91edafea74af9, host apolo-9004, PR 157, and the exact source and approval digests
+      - the receipt records PASS with error null, one credential resolution, one provider invocation, at most one transport attempt, 145 total tokens, 1770 milliseconds, and 184 microUSD
+      - the result remains inside the frozen ceilings of 1152 tokens, 25 seconds, 2000 microUSD, one provider invocation, and one transport attempt
+      - credential value and raw provider output are absent while target mutation, production, cleanup, rollback, P14D, and downstream authority remain false
+      - historical source-only and failed-attempt reports are not rewritten and the stable target-state blueprint remains unchanged
+      - tests bind the acceptance evidence, exact nine-file scope, descriptive-state separation, and unchanged false authority boundaries across every existing project-state consumer
+      - no provider call, credential-value read, approval-comment creation, P14D work, downstream operation, production operation, cleanup, rollback, or branch deletion occurs during acceptance publication
+    validation_set:
+      - focused P14C execution-contract, phase-alignment, and repository-manifest tests
+      - full pytest suite
+      - task-manifest, change-plan, process-authority, module-registry, and repository-manifest validators
+      - packet-only zero-I/O evidence, source compilation, whitespace, exact scope, and forbidden-diff checks
+    terminal_predicate: all frozen acceptance and validation items pass, one commit and one Draft PR are published, hosted CI succeeds, the unchanged exact-scope PR is moved to Ready and squash-merged, the feature branch is retained, canonical main records P14C accepted, and execution stops with P14D unauthorized
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 1
+      review_cycles: 1
+      wall_clock_hours: 6
+      real_github_approval_comment_creations: 0
+      real_github_approval_reads: 1
+      credential_value_accesses: 0
+      provider_invocations: 0
+      transport_attempts: 0
+  per_cycle_state:
+    - candidate_tree
+    - acceptance_digest
+    - blocker_set
+    - satisfied_acceptance_items
+    - validation_results
+    - material_evidence
+    - attempt_number
+  recurrence_fingerprint:
+    - task_identity
+    - candidate_tree
+    - acceptance_digest
+    - blocker_set
+    - validation_results
+  recurrence_fingerprint_excludes:
+    - attempt_number
+    - timestamps
+    - receipts
+    - pull_request_metadata
+    - status_text
+scope:
+  summary: Audit and accept the already completed redacted DeepSeek PASS proof through one historical report, the sole descriptive state owner, tests, and the exact authorization pair without any new live execution.
+  in_scope:
+    - docs/reports/p14c_bounded_real_provider_acceptance.md
+    - docs/tool_system_project_state_v1.yaml
+    - tests/test_p14c_execution_contract.py
+    - tests/test_phase_alignment.py
+    - tests/test_milestone_module_invariant.py
+    - tests/test_model_provider_portfolio_contract.py
+    - tests/test_p14_phase_entry_contract.py
+    - examples/task_manifests/tool_system_p14c_deepseek_result_acceptance_v1.yaml
+    - examples/change_plans/tool_system_p14c_deepseek_result_acceptance_v1.yaml
+  out_of_scope:
+    - creating, editing, or rereading a real GitHub approval comment after the single read-only acceptance audit
+    - reading any credential value or invoking any provider
+    - runtime, provider, credential-resolution, source-seal, replay-ledger, module-registry, or process-authority changes
+    - blueprint or stable-principles changes
+    - provider pools, automatic fallback, model ranking, P15 runtime, or general production-readiness claims
+    - P14D or later-stage work
+    - downstream repository access or mutation
+    - production deployment
+    - cleanup, rollback execution, or branch deletion
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/tool_system_project_state_v1.yaml
+    commit_sha: 55ed92e336d2aa110e50e197c5eefb8fa80896a8
+    why_relevant: The sole descriptive state owner shows P14C unaccepted before this separately authorized result audit.
+  - repo: apolo183/tool-system
+    path: examples/task_manifests/tool_system_p14c_deepseek_recovery_v1.yaml
+    commit_sha: 55ed92e336d2aa110e50e197c5eefb8fa80896a8
+    why_relevant: The frozen DeepSeek source and execution limits provide the exact acceptance ceiling for the redacted PASS receipt.
+  - repo: apolo183/tool-system
+    path: src/tool_system/ai_worker/live_provider.py
+    commit_sha: 55ed92e336d2aa110e50e197c5eefb8fa80896a8
+    why_relevant: The executed source natural owner binds the exact provider, model, endpoint, request, secret reference, and budgets sealed by the receipt.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: 518c77dd4203d739380f774fdc67a18f38237dfd
+    why_relevant: Central bounded-closure rules require frozen acceptance, exact scope, finite budgets, and non-reopening evidence semantics.
+allowed_files:
+  - docs/reports/p14c_bounded_real_provider_acceptance.md
+  - docs/tool_system_project_state_v1.yaml
+  - tests/test_p14c_execution_contract.py
+  - tests/test_phase_alignment.py
+  - tests/test_milestone_module_invariant.py
+  - tests/test_model_provider_portfolio_contract.py
+  - tests/test_p14_phase_entry_contract.py
+  - examples/task_manifests/tool_system_p14c_deepseek_result_acceptance_v1.yaml
+  - examples/change_plans/tool_system_p14c_deepseek_result_acceptance_v1.yaml
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/**
+  - config/**
+  - policy/**
+  - harness/**
+  - src/**
+  - docs/modules/**
+  - docs/tool_system_global_development_principles_v1.md
+  - docs/model_provider_portfolio_and_economics_contract_v1.md
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_p14c_execution_contract.py tests/test_phase_alignment.py tests/test_milestone_module_invariant.py tests/test_model_provider_portfolio_contract.py tests/test_p14_phase_entry_contract.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14c_deepseek_result_acceptance_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_deepseek_result_acceptance_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -B -m tool_system.ai_worker.live_evidence --validate-packet-only
+  pass_conditions:
+    - exact nine-file closed scope and zero diff under every forbidden path
+    - acceptance evidence matches the redacted PASS receipt and all frozen source, approval, token, duration, cost, invocation, and isolation fields
+    - current project state names P14C as accepted and P14D as unauthorized next stage while retaining authority_effect none
+    - focused tests, full tests, all current validators, packet-only zero-I/O evidence, source compilation, and diff checks pass
+    - no additional approval-comment read or write, credential-value access, provider call, downstream operation, production operation, cleanup, rollback, or branch deletion occurs
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@55ed92e336d2aa110e50e197c5eefb8fa80896a8
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user_p14c_deepseek_result_acceptance_authorization
+  approval_source: chat_user_message:P14C-DEEPSEEK-RESULT-ACCEPTANCE-v1
+  approved_at: 2026-08-02 UTC+09:00

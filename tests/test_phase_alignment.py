@@ -13,6 +13,9 @@ AGENTS = ROOT / "AGENTS.md"
 README = ROOT / "README.md"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
 PROJECT_STATE = ROOT / "docs" / "tool_system_project_state_v1.yaml"
+P14C_ACCEPTANCE_REPORT = (
+    ROOT / "docs" / "reports" / "p14c_bounded_real_provider_acceptance.md"
+)
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
@@ -65,10 +68,13 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert project_state["current_phase"]["status"] == "active"
     assert project_state["authority_effect"] == "none"
     assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P14MR_MILESTONE_MODULE_INVARIANT"
+        "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
+    )
+    assert project_state["current_phase"]["last_accepted_stage_record"] == (
+        "docs/reports/p14c_bounded_real_provider_acceptance.md"
     )
     assert project_state["current_phase"]["next_stage"] == (
-        "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
+        "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER"
     )
     assert project_state["current_phase"]["next_stage_authorized"] is False
     assert project_state["current_phase"]["next_phase"] == (
@@ -95,10 +101,14 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     )
     p14c = project_state["p14c"]
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
-    assert p14c["source_status"] == (
-        "corrected_source_live_issuer_and_deepseek_recovery_route_implemented_"
-        "not_attempted_not_accepted"
+    assert p14c["source_status"] == "bounded_deepseek_live_provider_proof_accepted"
+    assert p14c["acceptance_record"] == (
+        "docs/reports/p14c_bounded_real_provider_acceptance.md"
     )
+    assert p14c["acceptance_authorization_packet"] == (
+        "P14C-DEEPSEEK-RESULT-ACCEPTANCE-v1"
+    )
+    assert p14c["acceptance_status"] == "accepted"
     assert (
         p14c["live_issuer_implementation_authorization_packet"]
         == "P14C-LIVE-ISSUER-IMPL-v1"
@@ -150,14 +160,40 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     recovery = p14c["recovery_route"]
     assert recovery["provider_id"] == "deepseek"
     assert recovery["model_id"] == "deepseek-v4-flash"
-    assert recovery["live_execution_attempted"] is False
-    assert recovery["live_execution_succeeded"] is False
+    assert recovery["live_execution_attempted"] is True
+    assert recovery["live_execution_succeeded"] is True
+    assert recovery["approval_comment_id"] == 5_158_008_082
+    assert recovery["approval_durably_consumed"] is True
+    assert recovery["credential_resolution_attempt_count"] == 1
+    assert recovery["provider_invocation_count"] == 1
+    assert recovery["transport_attempt_ceiling"] == 1
+    assert recovery["usage"]["total_tokens"] == 145
+    assert recovery["usage"]["cost_microunits"] == 184
+    assert recovery["usage"]["duration_ms"] == 1770
+    assert recovery["source_seal"]["execution_commit_sha"] == (
+        "55ed92e336d2aa110e50e197c5eefb8fa80896a8"
+    )
+    assert recovery["source_seal"]["execution_tree_sha"] == (
+        "2e6ce267738a396f52a5847052f91edafea74af9"
+    )
     assert recovery["credential_value_recorded"] is False
-    assert recovery["acceptance_effect"] == "none"
-    assert p14c["stage_accepted"] is False
+    assert recovery["raw_provider_output_recorded"] is False
+    assert recovery["acceptance_effect"] == (
+        "p14c_bounded_real_model_provider_execution_accepted"
+    )
+    assert p14c["stage_accepted"] is True
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["state_file_grants_authority"] is False
     assert boundaries["live_model_provider_execution_authorized"] is False
+    assert boundaries["credential_value_access_authorized"] is False
+    assert boundaries["downstream_repository_access_authorized"] is False
+    assert boundaries["remote_target_mutation_authorized"] is False
+    assert boundaries["production_deployment_authorized"] is False
+    assert boundaries["cleanup_execution_authorized"] is False
+    assert boundaries["rollback_execution_authorized"] is False
+    assert "P14C_ACCEPTED_BOUNDED_DEEPSEEK_PROOF" in (
+        P14C_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+    )
     for public_contract in (agents_text, readme_text, principles_text):
         assert "docs/tool_system_project_state_v1.yaml" in public_contract
         assert "authority" in public_contract

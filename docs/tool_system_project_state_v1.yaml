@@ -11,9 +11,9 @@ current_phase:
   status: active
   entry_record: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
   entry_authorized: true
-  last_accepted_stage: P14MR_MILESTONE_MODULE_INVARIANT
-  last_accepted_stage_record: docs/reports/p14mr_milestone_module_invariant.md
-  next_stage: P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+  last_accepted_stage: P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+  last_accepted_stage_record: docs/reports/p14c_bounded_real_provider_acceptance.md
+  next_stage: P14D_REPOSITORY_CONTEXT_NATURAL_OWNER
   next_stage_authorized: false
   next_phase: P15_MULTI_PROJECT_BENCHMARK
   next_phase_entry_authorized: false
@@ -30,7 +30,11 @@ p14c:
   source_record: docs/reports/p14c_bounded_real_model_provider_execution.md
   source_role: implementation_evidence_only
   implementation_authorization_packet: P14C-IMPL-v2
-  source_status: corrected_source_live_issuer_and_deepseek_recovery_route_implemented_not_attempted_not_accepted
+  source_status: bounded_deepseek_live_provider_proof_accepted
+  acceptance_record: docs/reports/p14c_bounded_real_provider_acceptance.md
+  acceptance_authorization_packet: P14C-DEEPSEEK-RESULT-ACCEPTANCE-v1
+  acceptance_status: accepted
+  accepted_at: 2026-08-02 UTC+09:00
   live_issuer_record: docs/reports/p14c_live_issuer_implementation.md
   live_issuer_implementation_authorization_packet: P14C-LIVE-ISSUER-IMPL-v1
   live_issuer_lifecycle_authorization_packet: P14C-LIVE-ISSUER-LIFECYCLE-v1
@@ -100,11 +104,33 @@ p14c:
     credential_reference: file:~/.config/tool-system/credentials.toml#providers.deepseek.api_key
     api_access_mode: one_explicit_execute_only
     fallback_allowed: false
-    live_execution_attempted: false
-    live_execution_succeeded: false
+    live_execution_attempted: true
+    live_execution_succeeded: true
+    approval_conversation: 157
+    approval_comment_id: 5158008082
+    approval_record_sha256: 61715c0b87e46b871016265cf88a0ca6c8b9e4383c444ea41db5374192173e5d
+    approval_durably_consumed: true
+    credential_resolution_attempt_count: 1
+    provider_invocation_count: 1
+    transport_attempt_ceiling: 1
+    usage:
+      input_tokens: 106
+      output_tokens: 39
+      total_tokens: 145
+      cost_microunits: 184
+      duration_ms: 1770
+    output_sha256: 16a6f16328aad19a4d64aa4ff329c7e78e02a09a270e2b55bb3f795a3e6bba33
+    source_seal:
+      execution_commit_sha: 55ed92e336d2aa110e50e197c5eefb8fa80896a8
+      execution_tree_sha: 2e6ce267738a396f52a5847052f91edafea74af9
+      execution_host_id: apolo-9004
+      replay_ledger_instance_id: 1f8f11e844f5ab829e38cecfc1b988d9aedb897ee9af543df011dd9397228fde
+      source_manifest_sha256: c2932b312b69804535dda1fde43caf90f7118f510870f19c00aa362641fdd112
+      source_seal_sha256: 1d7688faf8be7950ff88b359af2d726ccaea52e832a33796defd08c3793f2019
     credential_value_recorded: false
-    acceptance_effect: none
-  stage_accepted: false
+    raw_provider_output_recorded: false
+    acceptance_effect: p14c_bounded_real_model_provider_execution_accepted
+  stage_accepted: true
 authorization_boundaries:
   state_file_grants_authority: false
   live_model_provider_execution_authorized: false
