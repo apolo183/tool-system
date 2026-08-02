@@ -10,10 +10,10 @@ from pathlib import Path
 
 from tool_system.ai_worker.contract import canonical_sha256, validate_ai_worker_request
 from tool_system.ai_worker.live_provider import (
-    EnvironmentCredentialResolver,
-    OpenAIResponsesProvider,
-    OpenAIResponsesTransport,
+    LocalCredentialFileResolver,
     P14CLiveExecutionGuard,
+    QwenChatCompletionsProvider,
+    QwenChatCompletionsTransport,
     build_p14c_execution_packet,
     build_p14c_live_execution_binding,
     build_p14c_synthetic_request,
@@ -31,11 +31,11 @@ P14C_PREPARE_DEFAULT_TTL_SECONDS = 600
 P14C_PREPARE_MIN_TTL_SECONDS = 60
 
 
-class _CountingEnvironmentCredentialResolver:
+class _CountingLocalCredentialFileResolver:
     """Count resolution attempts without retaining or exposing the value."""
 
     def __init__(self) -> None:
-        self._delegate = EnvironmentCredentialResolver()
+        self._delegate = LocalCredentialFileResolver()
         self.attempt_count = 0
 
     def resolve(self, reference: str) -> str:
@@ -158,7 +158,7 @@ def execute_p14c_live_entry(
     )
     packet = build_p14c_execution_packet()
     request = build_p14c_synthetic_request(packet)
-    transport = OpenAIResponsesTransport()
+    transport = QwenChatCompletionsTransport()
     capability = issue_p14c_live_network_capability(
         comment_id=comment_id,
         packet=packet,
@@ -167,8 +167,8 @@ def execute_p14c_live_entry(
         repository_root=repository_root,
         replay_ledger=ledger,
     )
-    credential_resolver = _CountingEnvironmentCredentialResolver()
-    provider = OpenAIResponsesProvider(
+    credential_resolver = _CountingLocalCredentialFileResolver()
+    provider = QwenChatCompletionsProvider(
         packet=packet,
         transport=transport,
         credential_resolver=credential_resolver,
@@ -208,6 +208,7 @@ def execute_p14c_live_entry(
         "transport_attempt_ceiling": packet.max_attempts,
         "usage": response.usage.to_record(),
         "output_sha256": output_sha256,
+        "failure_class": _receipt_failure_class(response.error),
         "error": (
             response.error.to_record(audit=True)
             if response.error is not None
@@ -233,6 +234,8 @@ def _execution_receipt_base(
         "packet_sha256": packet.sha256(),
         "request_id": getattr(request, "request_id"),
         "request_sha256": request.sha256(),
+        "provider_id": getattr(packet, "provider_id"),
+        "model_id": getattr(packet, "model_id"),
         "approval_comment_id": comment_id,
         "approval_issue_number": getattr(
             capability, "approval_issue_number", None
@@ -253,6 +256,30 @@ def _execution_receipt_base(
         "cleanup_execution_authorized": False,
         "p14d_authorized": False,
     }
+
+
+def _receipt_failure_class(error: object) -> str | None:
+    if error is None:
+        return None
+    reasons = getattr(error, "reasons", ())
+    if isinstance(reasons, tuple):
+        for reason in reasons:
+            if reason in {
+                "AUTH_FAILED",
+                "BALANCE_OR_QUOTA",
+                "KEY_INVALID",
+                "KEY_MISSING_OR_UNREADABLE",
+                "KEY_RESOLUTION_FAILED",
+                "NETWORK_FAILED",
+                "PROVIDER_FAILED",
+                "RATE_LIMITED",
+                "REQUEST_REJECTED",
+            }:
+                return reason
+    code = getattr(getattr(error, "code", None), "value", None)
+    if code == "TIMEOUT":
+        return "NETWORK_FAILED"
+    return "PROVIDER_FAILED"
 
 
 def _blocked_entry_evidence(mode: str, error: Exception) -> dict[str, object]:

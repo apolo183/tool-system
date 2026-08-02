@@ -1,0 +1,189 @@
+task_id: tool-system-p14c-qwen-recovery-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/p14c-qwen-recovery-v1
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stage_plan.P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+alignment:
+  parent:
+    document: docs/model_provider_portfolio_and_economics_contract_v1.md
+    section_or_key: 9. Roadmap ownership
+    scope: Keep P14 limited to one separately authorized bounded provider proof and defer adaptive multi-provider routing to P15.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve one bounded, auditable, source-sealed real AI-worker proof without repository mutation, silent fallback, or authority expansion.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P14C-QWEN-RECOVERY-SOURCE-v1
+    baseline_commit: c92c55940f7d6cb4db2e743472ec2a739d910b3a
+    baseline_tree: 4d11188e3d951f27b99a3824825e4c14b5c64a1c
+    allowed_scope: exact_16_paths_listed_below
+    acceptance_set:
+      - descriptive project state records the consumed failed OpenAI attempt without granting authority or accepting P14C
+      - the existing single P14C live adapter is replaced in place by one exact Qwen route rather than extended into the P15 provider pool
+      - the route binds qwen3.7-plus-2026-05-26 and the Beijing Chat Completions endpoint with thinking, tools, proxy environment, redirects, and fallback disabled
+      - execute resolves only providers.qwen.api_key from the installation-local owner-only credentials.toml after every existing source, approval, replay, cancellation, request, and budget gate passes
+      - one explicit execute allows one provider invocation, one transport attempt, at most 1024 input tokens, 128 output tokens, 1152 total tokens, 25 seconds, and 2000 microUSD of conservative accounting ceiling
+      - credential, network, authentication, balance or quota, rate, provider, and rejected-request failures surface as redacted stable classes without silent retry or route escalation
+      - packet-only, prepare, fake transport, fake GitHub, credential-file, source-seal, replay, receipt, and module-contract tests perform zero real external or credential access
+      - ai-worker-runtime advances to 1.5.0 while its provider-neutral public interface remains 1.0.0 and all registry hashes remain coherent
+      - blueprint, process-authority implementation, durable-orchestrator, downstream behavior, production, cleanup, rollback, P14C acceptance, P14D, and P15 runtime remain unchanged
+    validation_set:
+      - focused P14C provider, issuer, entry, state, module-registry, and module-contract tests
+      - full pytest suite
+      - task-manifest, change-plan, process-authority, module-registry, and repository-manifest validators
+      - packet-only zero-I/O evidence, source compilation, whitespace, exact scope, and forbidden-diff checks
+    terminal_predicate: all frozen acceptance and validation items pass, one commit and one Draft PR are published, hosted CI succeeds, and the unchanged exact-scope PR is moved to Ready and squash-merged with its branch retained and no real provider or credential access
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 1
+      review_cycles: 1
+      wall_clock_hours: 6
+      real_github_approval_comment_creations: 0
+      real_github_approval_reads: 0
+      credential_value_accesses: 0
+      provider_invocations: 0
+      transport_attempts: 0
+  per_cycle_state:
+    - candidate_tree
+    - acceptance_digest
+    - blocker_set
+    - satisfied_acceptance_items
+    - validation_results
+    - material_evidence
+    - attempt_number
+  recurrence_fingerprint:
+    - task_identity
+    - candidate_tree
+    - acceptance_digest
+    - blocker_set
+    - validation_results
+  recurrence_fingerprint_excludes:
+    - attempt_number
+    - timestamps
+    - receipts
+    - pull_request_metadata
+    - status_text
+scope:
+  summary: Replace only the failed P14C OpenAI pilot route with one exact source-sealed Qwen recovery route, add owner-only local credential-file resolution and redacted failure classification, and correct descriptive state without performing live I/O.
+  in_scope:
+    - pyproject.toml
+    - config/module_registry_v1.yaml
+    - docs/modules/ai-worker-runtime-contract-v1.md
+    - docs/process_authority_contract_v1.md
+    - docs/tool_system_module_registry_contract_v1.md
+    - docs/tool_system_project_state_v1.yaml
+    - src/tool_system/ai_worker/live_evidence.py
+    - src/tool_system/ai_worker/live_provider.py
+    - src/tool_system/ai_worker/runtime.py
+    - tests/test_ai_worker_live_provider.py
+    - tests/test_module_registry.py
+    - tests/test_p14c_execution_contract.py
+    - tests/test_p14c_live_issuer.py
+    - tests/test_phase_alignment.py
+    - examples/task_manifests/tool_system_p14c_qwen_recovery_v1.yaml
+    - examples/change_plans/tool_system_p14c_qwen_recovery_v1.yaml
+  out_of_scope:
+    - creating, editing, or reading a real GitHub approval comment during implementation or publication
+    - reading any real credential value or invoking any real provider during implementation, tests, publication, or merge
+    - automatic provider pools, provider discovery, qualification, failover, escalation, daily/project/permanent API switches, or P15 runtime
+    - P14C execution acceptance or closure
+    - P14D or later-stage work
+    - downstream repository access or mutation
+    - production deployment
+    - cleanup, rollback execution, or branch deletion
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/tool_system_project_state_v1.yaml
+    commit_sha: c92c55940f7d6cb4db2e743472ec2a739d910b3a
+    why_relevant: The sole descriptive state owner still incorrectly says no real approval or live capability existed.
+  - repo: apolo183/tool-system
+    path: src/tool_system/ai_worker/live_provider.py
+    commit_sha: c92c55940f7d6cb4db2e743472ec2a739d910b3a
+    why_relevant: The natural owner freezes the failed OpenAI route and must be replaced in place for a single bounded Qwen recovery proof.
+  - repo: apolo183/tool-system
+    path: docs/model_provider_portfolio_and_economics_contract_v1.md
+    commit_sha: c92c55940f7d6cb4db2e743472ec2a739d910b3a
+    why_relevant: The roadmap explicitly keeps adaptive multi-provider routing in P15 while permitting one separately authorized P14 provider proof.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: current_main_consumed_at_task_start
+    why_relevant: Central bounded-closure rules require a frozen exact scope and finite zero-live-I/O publication budgets.
+allowed_files:
+  - pyproject.toml
+  - config/module_registry_v1.yaml
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/process_authority_contract_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - src/tool_system/ai_worker/live_evidence.py
+  - src/tool_system/ai_worker/live_provider.py
+  - src/tool_system/ai_worker/runtime.py
+  - tests/test_ai_worker_live_provider.py
+  - tests/test_module_registry.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_p14c_live_issuer.py
+  - tests/test_phase_alignment.py
+  - examples/task_manifests/tool_system_p14c_qwen_recovery_v1.yaml
+  - examples/change_plans/tool_system_p14c_qwen_recovery_v1.yaml
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/**
+  - config/process_authority_v1.yaml
+  - config/process_authority_schema_v1.json
+  - docs/reports/**
+  - policy/**
+  - harness/**
+  - src/tool_system/process_authority/**
+  - src/tool_system/orchestrator/**
+  - src/tool_system/repo_controller/**
+  - src/tool_system/target_repo/**
+  - finance/**
+  - trading/**
+  - market/**
+  - portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_ai_worker_live_provider.py tests/test_p14c_live_issuer.py tests/test_p14c_execution_contract.py tests/test_phase_alignment.py tests/test_module_registry.py tests/test_module_contracts.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14c_qwen_recovery_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14c_qwen_recovery_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -B -m tool_system.ai_worker.live_evidence --validate-packet-only
+  pass_conditions:
+    - exact 16-file closed scope and zero diff under every forbidden path
+    - packet-only mode reports qwen exact snapshot and zero credential, provider, transport, GitHub, and database access
+    - local credential tests use only temporary owner-only files and never expose their values in an audit record
+    - focused tests, full tests, all current validators, source compilation, and diff checks pass
+    - no real GitHub approval read or write, credential-value access, provider call, downstream operation, production operation, cleanup, rollback, or branch deletion occurs
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@c92c55940f7d6cb4db2e743472ec2a739d910b3a
+approval:
+  required: true
+  approved_by: user_agreed_qwen_recovery_after_domestic_tls_probe
+  approval_source: chat_user_messages:agreed_provider_pool_design_and_qwen_first_recovery_plus_zero_key_tls_probe_results
+  approved_at: 2026-08-02 UTC+09:00

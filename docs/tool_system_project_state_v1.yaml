@@ -30,7 +30,7 @@ p14c:
   source_record: docs/reports/p14c_bounded_real_model_provider_execution.md
   source_role: implementation_evidence_only
   implementation_authorization_packet: P14C-IMPL-v2
-  source_status: corrected_source_and_live_issuer_merged_no_execution_not_accepted
+  source_status: corrected_source_live_issuer_and_qwen_recovery_route_implemented_no_success_not_accepted
   live_issuer_record: docs/reports/p14c_live_issuer_implementation.md
   live_issuer_implementation_authorization_packet: P14C-LIVE-ISSUER-IMPL-v1
   live_issuer_lifecycle_authorization_packet: P14C-LIVE-ISSUER-LIFECYCLE-v1
@@ -52,8 +52,33 @@ p14c:
   execution_source_seal_required: true
   durable_replay_boundary: single_host_sqlite_burn_on_claim_at_most_once
   multi_host_exactly_once_claimed: false
-  real_live_approval_record_created: false
-  live_capability_issued: false
+  first_live_attempt:
+    packet_id: P14C-IMPL-v2
+    provider_id: openai
+    model_id: gpt-5.6-luna
+    approval_conversation: 153
+    approval_comment_id: 5152284946
+    approval_record_created: true
+    approval_durably_consumed: true
+    live_capability_issued: true
+    credential_resolution_attempt_count: 2
+    provider_invocation_count: 1
+    redacted_error_code: PROVIDER_FAILURE
+    output_received: false
+    credential_value_recorded: false
+    diagnosed_openai_tls_path: blocked
+    acceptance_effect: none
+  real_live_approval_record_created: true
+  live_capability_issued: true
+  recovery_implementation_packet: P14C-QWEN-RECOVERY-v1
+  recovery_route:
+    provider_id: qwen
+    model_id: qwen3.7-plus-2026-05-26
+    endpoint: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+    credential_reference: file:~/.config/tool-system/credentials.toml#providers.qwen.api_key
+    api_access_mode: one_explicit_execute_only
+    fallback_allowed: false
+    live_execution_attempted: false
   stage_accepted: false
 authorization_boundaries:
   state_file_grants_authority: false
