@@ -11,9 +11,9 @@ current_phase:
   status: active
   entry_record: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
   entry_authorized: true
-  last_accepted_stage: P14D_REPOSITORY_CONTEXT_NATURAL_OWNER
-  last_accepted_stage_record: docs/reports/p14d_repository_context_natural_owner_acceptance.md
-  next_stage: P14E_BLUEPRINT_COMPILER
+  last_accepted_stage: P14E_BLUEPRINT_COMPILER
+  last_accepted_stage_record: docs/reports/p14e_blueprint_compiler_acceptance.md
+  next_stage: P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW
   next_stage_authorized: false
   next_phase: P15_MULTI_PROJECT_BENCHMARK
   next_phase_entry_authorized: false
@@ -167,6 +167,38 @@ p14d:
     provider_invocations: 0
     credential_accesses: 0
   natural_owner_proposal_grants_authority: false
+  real_downstream_repository_accessed: false
+  stage_accepted: true
+p14e:
+  implementation_authorization_packet: P14E-BLUEPRINT-COMPILER-LIFECYCLE-v1
+  module_id: blueprint-compiler
+  module_version: 1.0.0
+  public_interface_id: blueprint-compiler-api
+  public_interface_version: 1.0.0
+  acceptance_record: docs/reports/p14e_blueprint_compiler_acceptance.md
+  acceptance_status: accepted
+  accepted_at: 2026-08-03 UTC+09:00
+  evidence_boundary: structured_in_memory_isolated_fixture_inputs_only
+  compilation_contract:
+    exact_milestone_to_module_binding_required: true
+    one_module_or_interface_change_per_milestone: true
+    deterministic_module_and_task_dags_required: true
+    task_planner_graph_compatibility_required: true
+    finite_limits_required: true
+    authority_effect: none
+  accepted_fixture_evidence:
+    deterministic_replay: true
+    module_dependency_ordering: true
+    task_graph_compatibility: true
+    overlap_and_cycle_blocking: true
+    authorization_and_context_blocking: true
+    path_precondition_and_limit_blocking: true
+    repository_reads: 0
+    repository_writes: 0
+    network_operations: 0
+    provider_invocations: 0
+    credential_accesses: 0
+  generated_documents_grant_authority: false
   real_downstream_repository_accessed: false
   stage_accepted: true
 authorization_boundaries:

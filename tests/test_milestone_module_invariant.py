@@ -200,10 +200,10 @@ def test_p14mr_report_is_acceptance_evidence_not_durable_rule_owner() -> None:
 
     assert REPORT.is_file()
     assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p14d_repository_context_natural_owner_acceptance.md"
+        "docs/reports/p14e_blueprint_compiler_acceptance.md"
     )
     assert current_phase["last_accepted_stage"] == (
-        "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER"
+        "P14E_BLUEPRINT_COMPILER"
     )
     assert project_state["authority_effect"] == "none"
 
@@ -234,7 +234,7 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     assert "status" not in blueprint
     assert current_phase["id"] == "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
     assert current_phase["last_accepted_stage"] == (
-        "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER"
+        "P14E_BLUEPRINT_COMPILER"
     )
     assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["execution_boundary"] == (
         "governance_only"
@@ -259,7 +259,7 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     assert "durable_module_and_milestone_change_governance" in blueprint[
         "boundaries"
     ]["owns"]
-    assert current_phase["next_stage"] == "P14E_BLUEPRINT_COMPILER"
+    assert current_phase["next_stage"] == "P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW"
     assert current_phase["next_stage_authorized"] is False
     assert (
         project_state["authorization_boundaries"]

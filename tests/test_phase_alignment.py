@@ -22,6 +22,9 @@ P14D_ACCEPTANCE_REPORT = (
     / "reports"
     / "p14d_repository_context_natural_owner_acceptance.md"
 )
+P14E_ACCEPTANCE_REPORT = (
+    ROOT / "docs" / "reports" / "p14e_blueprint_compiler_acceptance.md"
+)
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
@@ -74,13 +77,13 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert project_state["current_phase"]["status"] == "active"
     assert project_state["authority_effect"] == "none"
     assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER"
+        "P14E_BLUEPRINT_COMPILER"
     )
     assert project_state["current_phase"]["last_accepted_stage_record"] == (
-        "docs/reports/p14d_repository_context_natural_owner_acceptance.md"
+        "docs/reports/p14e_blueprint_compiler_acceptance.md"
     )
     assert project_state["current_phase"]["next_stage"] == (
-        "P14E_BLUEPRINT_COMPILER"
+        "P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW"
     )
     assert project_state["current_phase"]["next_stage_authorized"] is False
     assert project_state["current_phase"]["next_phase"] == (
@@ -205,6 +208,18 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert p14d["natural_owner_proposal_grants_authority"] is False
     assert p14d["real_downstream_repository_accessed"] is False
     assert p14d["stage_accepted"] is True
+    p14e = project_state["p14e"]
+    assert p14e["implementation_authorization_packet"] == (
+        "P14E-BLUEPRINT-COMPILER-LIFECYCLE-v1"
+    )
+    assert p14e["module_id"] == "blueprint-compiler"
+    assert p14e["module_version"] == "1.0.0"
+    assert p14e["public_interface_id"] == "blueprint-compiler-api"
+    assert p14e["acceptance_status"] == "accepted"
+    assert p14e["compilation_contract"]["authority_effect"] == "none"
+    assert p14e["generated_documents_grant_authority"] is False
+    assert p14e["real_downstream_repository_accessed"] is False
+    assert p14e["stage_accepted"] is True
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["state_file_grants_authority"] is False
     assert boundaries["live_model_provider_execution_authorized"] is False
@@ -219,6 +234,9 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     )
     assert "P14D_ACCEPTED_ISOLATED_FIXTURE_ONLY" in (
         P14D_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+    )
+    assert "P14E_ACCEPTED_ISOLATED_FIXTURE_ONLY" in (
+        P14E_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
     )
     for public_contract in (agents_text, readme_text, principles_text):
         assert "docs/tool_system_project_state_v1.yaml" in public_contract

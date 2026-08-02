@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 15
+  module_count: 16
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -253,6 +253,17 @@ mapping_contract:
       direct_consumer_module_ids: []
       change_risk: "medium: bounded read-only local Git context and non-authorizing natural-owner evidence boundary"
       rollback_identity: tool-system@7e3a114a25d70c3ebecc952f13ce68b1adbbbc80:repository_context@absent
+    - current_module_id: blueprint_compiler
+      canonical_module_id: blueprint-compiler
+      current_module_version: 1.0.0
+      aggregate_interface_id: blueprint-compiler-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.blueprint_compiler}
+      direct_consumer_module_ids: []
+      change_risk: "medium: deterministic non-authorizing blueprint compilation and task-graph compatibility boundary"
+      rollback_identity: tool-system@00793ad07bba2e3fe3bd29882e83788d32697da6:blueprint_compiler@absent
 ~~~
 <!-- MODULE-IDENTITY-MAPPING:END -->
 
@@ -315,6 +326,7 @@ static_import_dag:
       - cli_frontend
     cli_frontend: []
     repository_context: []
+    blueprint_compiler: []
   zero_consumer_modules:
     - architecture_registry
     - ai_worker_runtime
@@ -322,6 +334,7 @@ static_import_dag:
     - worker_adapter
     - cli_frontend
     - repository_context
+    - blueprint_compiler
   non_claim: >-
     Static AST import equality does not prove absence of dynamic imports, CLI
     invocation dependencies, data dependencies, configuration dependencies,
