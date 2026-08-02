@@ -155,12 +155,12 @@ def test_p14c_bounded_deepseek_receipt_is_accepted_without_new_authority() -> No
     acceptance_report = ACCEPTANCE_REPORT.read_text(encoding="utf-8")
 
     assert current_phase["last_accepted_stage"] == (
-        "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
+        "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER"
     )
     assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p14c_bounded_real_provider_acceptance.md"
+        "docs/reports/p14d_repository_context_natural_owner_acceptance.md"
     )
-    assert current_phase["next_stage"] == "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER"
+    assert current_phase["next_stage"] == "P14E_BLUEPRINT_COMPILER"
     assert current_phase["next_stage_authorized"] is False
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_status"] == "bounded_deepseek_live_provider_proof_accepted"

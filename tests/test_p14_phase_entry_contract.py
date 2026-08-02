@@ -110,7 +110,7 @@ def test_p14a_manifest_authorized_specification_but_not_implementation() -> None
     manifest = load_yaml_file(MANIFEST)
 
     assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION"
+        "P14D_REPOSITORY_CONTEXT_NATURAL_OWNER"
     )
     assert "active_phase_execution" not in blueprint
     assert manifest["task_type"] == "docs_update"
