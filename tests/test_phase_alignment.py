@@ -67,6 +67,36 @@ P14I_FILES = {
     "tests/test_p14c_execution_contract.py",
     "tests/test_repository_context_builder.py",
 }
+P15A_ACCEPTANCE_REPORT = (
+    ROOT
+    / "docs"
+    / "reports"
+    / "p15a_provider_portfolio_qualification_specification.md"
+)
+P15A_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p15a_phase_entry_qualification_spec_v1.yaml"
+)
+P15A_CHANGE_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p15a_phase_entry_qualification_spec_v1.yaml"
+)
+P15A_FILES = {
+    "docs/reports/p15a_provider_portfolio_qualification_specification.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p15a_phase_entry_qualification_spec_v1.yaml",
+    "examples/task_manifests/tool_system_p15a_phase_entry_qualification_spec_v1.yaml",
+    "tests/test_p14_phase_entry_contract.py",
+    "tests/test_phase_alignment.py",
+    "tests/test_milestone_module_invariant.py",
+    "tests/test_model_provider_portfolio_contract.py",
+    "tests/test_p14c_execution_contract.py",
+    "tests/test_repository_context_builder.py",
+}
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
@@ -97,7 +127,8 @@ BOUNDED_CLOSURE_FILES = {
     "examples/task_manifests/tool_system_bounded_closure_no_progress_contract_v1.yaml",
     "examples/change_plans/tool_system_bounded_closure_no_progress_contract_v1.yaml",
 }
-EXPECTED_PHASE = "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
+P14_PHASE = "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
+EXPECTED_PHASE = "P15_MULTI_PROJECT_BENCHMARK"
 TRANSIENT_RULE_OWNER_PATTERNS = {
     "pull-request receipt": r"\bPR\s+#\d+\b",
     "main commit receipt": r"\bmain@[0-9a-f]{40}\b",
@@ -116,27 +147,24 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     project_state = load_yaml_file(PROJECT_STATE)
 
     assert project_state["current_phase"]["id"] == EXPECTED_PHASE
-    assert project_state["current_phase"]["status"] == "accepted_and_closed"
+    assert project_state["current_phase"]["status"] == "active"
     assert project_state["authority_effect"] == "none"
+    assert project_state["current_phase"]["entry_record"] == (
+        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
+    )
+    assert project_state["current_phase"]["entry_authorized"] is True
     assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
+        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
     )
     assert project_state["current_phase"]["last_accepted_stage_record"] == (
-        "docs/reports/p14h_multi_stack_fixture_acceptance.md"
+        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
     )
-    assert project_state["current_phase"]["closure_stage"] == (
-        "P14I_ACCEPTANCE_CLOSURE"
+    assert project_state["current_phase"]["next_stage"] == (
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
-    assert project_state["current_phase"]["closure_stage_record"] == (
-        "docs/reports/p14i_blueprint_to_code_acceptance_closure.md"
-    )
-    assert project_state["current_phase"]["acceptance_record"] == (
-        "docs/reports/p14i_blueprint_to_code_acceptance_closure.md"
-    )
-    assert project_state["current_phase"]["next_stage"] is None
     assert project_state["current_phase"]["next_stage_authorized"] is False
     assert project_state["current_phase"]["next_phase"] == (
-        "P15_MULTI_PROJECT_BENCHMARK"
+        "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
     )
     assert project_state["current_phase"]["next_phase_entry_authorized"] is False
     assert EXPECTED_PHASE in blueprint["milestones"]
@@ -148,14 +176,16 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
         "active_phase_execution",
         "p14c_source_implementation",
     }.isdisjoint(blueprint)
+    assert project_state["prior_acceptance"]["phase"] == P14_PHASE
     assert project_state["prior_acceptance"]["record"] == (
-        "docs/reports/p13e_security_reliability_acceptance_closure.md"
+        "docs/reports/p14i_blueprint_to_code_acceptance_closure.md"
     )
     assert project_state["prior_acceptance"]["accepted_scope"] == (
-        "application_guarded_local_fixture_worker_and_single_host_sqlite_hardening"
+        "approved_bounded_blueprint_isolated_repository_fixture_auditable_"
+        "resumable_fail_closed_local_git_workflow"
     )
     assert project_state["prior_acceptance"]["predecessor"]["phase"] == (
-        "P12_DURABLE_ORCHESTRATOR"
+        "P13_SECURITY_RELIABILITY_HARDENING"
     )
     p14c = project_state["p14c"]
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
@@ -346,6 +376,87 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
         )
     )
     assert p14i["stage_accepted"] is True
+    p15a = project_state["p15a"]
+    assert p15a["authorization_packet"] == (
+        "P15A-PHASE-ENTRY-AND-QUALIFICATION-SPECIFICATION-LIFECYCLE-v1"
+    )
+    assert p15a["baseline_commit"] == (
+        "e3b02654edbe69850d0f801adb77a083c444b2d3"
+    )
+    assert p15a["baseline_tree"] == (
+        "ef8de13cce5ce55b713ba8a083196142f6504ccd"
+    )
+    assert p15a["specification_status"] == "accepted_governance_only"
+    assert p15a["provider_neutral_interface_lock"] == {
+        "protocol_path": "src/tool_system/ai_worker/contract.py",
+        "protocol_symbol": "AIWorkerProvider",
+        "aggregate_interface_id": "ai-worker-runtime-api",
+        "aggregate_interface_version": "1.0.0",
+        "selection_contract_path": (
+            "docs/model_provider_portfolio_and_economics_contract_v1.md"
+        ),
+        "selection_module_id": "adaptive_model_portfolio_and_economics",
+        "selection_public_interface_version": 1,
+    }
+    assert set(p15a["task_profile_required_fields"]) == {
+        "task_class_language_repository_context_and_dependency_breadth",
+        "reasoning_and_implementation_complexity",
+        "independent_security_data_repository_mutation_and_operational_risk",
+        "required_capabilities_and_minimum_quality_confidence_floor",
+        "verification_and_repair_burden",
+        "critical_path_slack_and_delay_sensitivity",
+        "evidence_confidence_and_uncertainty_reasons",
+    }
+    assert set(p15a["hard_floor_categories"]) == {
+        "authorization_and_execution_surface",
+        "data_policy_residency_retention_and_sensitivity",
+        "exact_model_capability_context_and_output_limits",
+        "independent_security_quality_and_risk",
+        "time_token_cost_retry_cancellation_and_no_progress_limits",
+        "current_catalog_policy_benchmark_health_and_precondition_evidence",
+        "repository_access_and_mutation_authority",
+    }
+    assert p15a["economics_objective"] == (
+        "expected_total_economic_cost_per_accepted_module"
+    )
+    assert p15a["private_economic_values_publicly_recorded"] is False
+    assert p15a["qualification_states"] == [
+        "DISCOVERED",
+        "QUARANTINED",
+        "BENCHMARKING",
+        "SHADOW",
+        "CANARY",
+        "ELIGIBLE",
+        "PRIMARY",
+        "DEGRADED",
+        "RETIRED",
+    ]
+    assert p15a["benchmark_corpus_seed_boundary"] == (
+        "accepted_p14_isolated_python_and_typescript_fixtures_as_"
+        "specification_inputs_only"
+    )
+    assert p15a["benchmark_results_created"] == 0
+    assert p15a["provider_candidates_enabled"] == 0
+    assert p15a["provider_adapters_added_or_modified"] == 0
+    assert p15a["credential_reference_metadata_inspected"] is True
+    assert all(
+        p15a[key] == 0
+        for key in (
+            "credential_resolver_invocations",
+            "credential_value_accesses",
+            "provider_invocations",
+            "network_operations",
+            "real_downstream_repository_accesses",
+            "target_mutations",
+            "production_operations",
+            "cleanup_operations",
+            "rollback_operations",
+            "blueprint_changes",
+            "runtime_source_changes",
+        )
+    )
+    assert p15a["p15b_authorized"] is False
+    assert p15a["stage_accepted"] is True
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["state_file_grants_authority"] is False
     assert boundaries["live_model_provider_execution_authorized"] is False
@@ -381,6 +492,14 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert "P14_ACCEPTED_AND_CLOSED_BOUNDED_ISOLATED_FIXTURE_SCOPE" in p14i_report
     assert "P15_entry_authorized: false" in p14i_report
     assert "product-wide P15 or P16 conditions" in normalized_p14i_report
+    p15a_report = P15A_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+    normalized_p15a_report = " ".join(p15a_report.split())
+    assert "P15A_ACCEPTED_GOVERNANCE_ONLY_QUALIFICATION_SPECIFICATION" in (
+        p15a_report
+    )
+    assert "Locked provider/model qualification record" in p15a_report
+    assert "expected_total_economic_cost_per_accepted_module" in p15a_report
+    assert "P15B remains separately unauthorized" in normalized_p15a_report
     for public_contract in (agents_text, readme_text, principles_text):
         assert "docs/tool_system_project_state_v1.yaml" in public_contract
         assert "authority" in public_contract
@@ -422,7 +541,7 @@ def test_p14i_closes_only_bounded_p14_and_stops_before_p15() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     project_state = load_yaml_file(PROJECT_STATE)
     report = P14I_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
-    p14 = blueprint["milestones"][EXPECTED_PHASE]
+    p14 = blueprint["milestones"][P14_PHASE]
     stages = {stage["stage"]: stage for stage in p14["stage_plan"]}
 
     assert stages["P14I_ACCEPTANCE_CLOSURE"]["execution_boundary"] == (
@@ -430,10 +549,12 @@ def test_p14i_closes_only_bounded_p14_and_stops_before_p15() -> None:
     )
     assert "isolated repository fixture" in p14["accepted_claim"]
     assert "local Git software change" in p14["accepted_claim"]
-    assert project_state["current_phase"]["next_phase"] == (
-        "P15_MULTI_PROJECT_BENCHMARK"
+    assert project_state["prior_acceptance"]["phase"] == P14_PHASE
+    assert project_state["p14i"]["p15_entry_authorized"] is False
+    assert project_state["current_phase"]["id"] == EXPECTED_PHASE
+    assert project_state["current_phase"]["last_accepted_stage"] == (
+        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
     )
-    assert project_state["current_phase"]["next_phase_entry_authorized"] is False
     for marker in (
         "P14 output acceptance matrix",
         "Required P14 fixture matrix",
@@ -441,6 +562,78 @@ def test_p14i_closes_only_bounded_p14_and_stops_before_p15() -> None:
         "provider_invocations: 0",
         "runtime_source_changes: 0",
         "P15_entry_authorized: false",
+    ):
+        assert marker in report
+
+
+def test_p15a_manifest_and_change_plan_freeze_exact_governance_scope() -> None:
+    manifest_result = validate_task_manifest(
+        P15A_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(P15A_CHANGE_PLAN)
+    manifest = load_yaml_file(P15A_MANIFEST)
+    plan = load_yaml_file(P15A_CHANGE_PLAN)
+    closure = manifest["bounded_closure"]["frozen_before_execution"]
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == P15A_FILES
+    assert set(manifest["scope"]["in_scope"]) == P15A_FILES
+    assert set(plan["changed_files"]) == P15A_FILES
+    assert closure["baseline_commit"] == (
+        "e3b02654edbe69850d0f801adb77a083c444b2d3"
+    )
+    assert closure["baseline_tree"] == (
+        "ef8de13cce5ce55b713ba8a083196142f6504ccd"
+    )
+    assert closure["allowed_scope"] == "exact_10_paths_listed_below"
+    assert closure["finite_budgets"]["provider_invocations"] == 0
+    assert closure["finite_budgets"]["benchmark_executions"] == 0
+    assert closure["finite_budgets"]["credential_value_accesses"] == 0
+    assert closure["finite_budgets"]["real_downstream_repository_accesses"] == 0
+    assert manifest["publication"]["retain_feature_branch"] is True
+    assert manifest["publication"]["branch_deletion_authorized"] is False
+    assert all(not path.startswith("src/") for path in P15A_FILES)
+    assert "blueprint/tool_system_v0.yaml" not in P15A_FILES
+    assert "docs/model_provider_portfolio_and_economics_contract_v1.md" not in (
+        P15A_FILES
+    )
+
+
+def test_p15a_enters_only_governance_specification_and_stops_before_p15b() -> None:
+    blueprint = load_yaml_file(BLUEPRINT)
+    project_state = load_yaml_file(PROJECT_STATE)
+    report = P15A_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+    p15 = blueprint["milestones"][EXPECTED_PHASE]
+    stages = {stage["stage"]: stage for stage in p15["stage_plan"]}
+
+    assert "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT accepted" in (
+        p15["entry_requires"]
+    )
+    assert "explicit P15 phase-entry authorization" in p15["entry_requires"]
+    assert stages["P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"][
+        "execution_boundary"
+    ] == "governance_only"
+    assert project_state["current_phase"]["id"] == EXPECTED_PHASE
+    assert project_state["current_phase"]["next_stage"] == (
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+    )
+    assert project_state["current_phase"]["next_stage_authorized"] is False
+    assert project_state["p15a"]["p15b_authorized"] is False
+    for marker in (
+        "Read-only existing-surface inventory",
+        "Locked task profile",
+        "Locked hard floors and decision order",
+        "Locked economics contract",
+        "Locked benchmark corpus and metrics",
+        "Credential-reference and evidence boundary",
+        "provider_invocations: 0",
+        "benchmark_executions: 0",
+        "P15B_authorized: false",
     ):
         assert marker in report
 

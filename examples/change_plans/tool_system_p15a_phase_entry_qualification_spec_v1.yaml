@@ -1,0 +1,44 @@
+plan_id: tool-system-p15a-phase-entry-qualification-spec-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p15a_phase_entry_qualification_spec_v1.yaml
+changed_files:
+  - docs/reports/p15a_provider_portfolio_qualification_specification.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p15a_phase_entry_qualification_spec_v1.yaml
+  - examples/task_manifests/tool_system_p15a_phase_entry_qualification_spec_v1.yaml
+  - tests/test_p14_phase_entry_contract.py
+  - tests/test_phase_alignment.py
+  - tests/test_milestone_module_invariant.py
+  - tests/test_model_provider_portfolio_contract.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_repository_context_builder.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p15a_phase_entry_qualification_spec_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Enter P15 and accept only the exact governance-only P15A specification scope.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Freeze later provider-portfolio qualification inputs and stop before implementation or benchmarking.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_phase_alignment.py tests/test_model_provider_portfolio_contract.py tests/test_p14_phase_entry_contract.py tests/test_milestone_module_invariant.py tests/test_p14c_execution_contract.py tests/test_repository_context_builder.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15a_phase_entry_qualification_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15a_phase_entry_qualification_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p15a-phase-entry-qualification-spec-v1
+  retain_feature_branch: true
+  exact_base: e3b02654edbe69850d0f801adb77a083c444b2d3
+  exact_base_tree: ef8de13cce5ce55b713ba8a083196142f6504ccd
+rollback:
+  method: git_revert
+  reference: tool-system@e3b02654edbe69850d0f801adb77a083c444b2d3
+  execution_authorized: false

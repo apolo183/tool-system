@@ -109,14 +109,22 @@ def test_p14a_manifest_authorized_specification_but_not_implementation() -> None
     project_state = load_yaml_file(PROJECT_STATE)
     manifest = load_yaml_file(MANIFEST)
 
+    assert project_state["prior_acceptance"]["phase"] == (
+        "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
+    )
+    assert project_state["prior_acceptance"]["record"] == (
+        "docs/reports/p14i_blueprint_to_code_acceptance_closure.md"
+    )
+    assert project_state["p14i"]["acceptance_status"] == "accepted_and_closed"
+    assert project_state["current_phase"]["id"] == "P15_MULTI_PROJECT_BENCHMARK"
     assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
+        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
     )
-    assert project_state["current_phase"]["closure_stage"] == (
-        "P14I_ACCEPTANCE_CLOSURE"
+    assert project_state["current_phase"]["status"] == "active"
+    assert project_state["current_phase"]["next_stage"] == (
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
-    assert project_state["current_phase"]["status"] == "accepted_and_closed"
-    assert project_state["current_phase"]["next_stage"] is None
+    assert project_state["current_phase"]["next_stage_authorized"] is False
     assert project_state["current_phase"]["next_phase_entry_authorized"] is False
     assert "active_phase_execution" not in blueprint
     assert manifest["task_type"] == "docs_update"
