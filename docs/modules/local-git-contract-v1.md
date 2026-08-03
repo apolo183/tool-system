@@ -13,10 +13,10 @@ module_compound_contract:
   identity:
     canonical_module_id: local-git
     current_module_id: local_git
-    module_version: 1.0.0
+    module_version: 1.1.0
     aggregate_interface:
       interface_id: local-git-api
-      interface_version: 1.0.0
+      interface_version: 1.1.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
@@ -26,7 +26,7 @@ module_compound_contract:
         name: tool_system.local_git
   role:
     summary: durably record one bounded change in an isolated local Git fixture
-    responsibility_boundary: Freeze Git identity and scope, consume a sealed development-loop result, bind it to durable leases/checkpoints/side-effect receipts, create one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
+    responsibility_boundary: Freeze Git identity, scope, and exact baseline presence/content topology, consume a sealed development-loop result containing a subset of the allowed scope, bind it to durable leases/checkpoints/side-effect receipts, stage the exact add/modify/delete delta, create one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
   natural_owner_evidence_paths:
     - src/tool_system/local_git/__init__.py
     - src/tool_system/local_git/orchestrator.py
@@ -42,7 +42,7 @@ module_compound_contract:
       - frozen_development_contract_and_callbacks_v1
       - isolated_local_git_identity_v1
       - durable_orchestrator_store_v1
-    boundary: Accept an absolute remote-free clean fixture root, exact base commit/tree, one agent branch, exact in-scope baseline files, frozen P14F callbacks and budgets, and one caller-selected hardened durable store.
+    boundary: Accept an absolute remote-free clean fixture root, exact base commit/tree, one agent branch, an allowed scope whose baseline mapping exactly represents the paths present at base, frozen P14F callbacks and budgets, and one caller-selected hardened durable store. Allowed paths absent from the baseline may be added; present paths may be modified or deleted.
   output_contract:
     registered_outputs:
       - durable_local_git_change_receipt_v1
@@ -52,7 +52,7 @@ module_compound_contract:
     registered_error_semantics:
       - precondition_scope_lease_and_receipt_conflicts_fail_closed
       - ambiguous_side_effect_never_replays
-    boundary: Remote configuration, dirty state, symlink or root drift, head/tree mismatch, unreceipted branch, ambiguous in-progress effect, lease conflict, candidate scope mismatch, or Git failure blocks without remote fallback.
+    boundary: Remote configuration, dirty state, symlink or root drift, head/tree mismatch, baseline presence/content mismatch, unreceipted branch, ambiguous in-progress effect, lease conflict, candidate scope expansion, empty candidate delta, staged-delta mismatch, or Git failure blocks without remote fallback.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -67,7 +67,7 @@ module_compound_contract:
     direct_effects:
       - effect_class: repository_write
         evidence_paths: [src/tool_system/local_git/orchestrator.py]
-        boundary: Write only exact frozen candidate paths inside the caller-owned isolated local fixture.
+        boundary: Add, modify, or delete only the exact changed subset of frozen paths inside the caller-owned isolated local fixture.
       - effect_class: data_write
         evidence_paths: [src/tool_system/local_git/orchestrator.py]
         boundary: Persist task checkpoints and side-effect receipts through durable-orchestrator-api and write exact fixture content.
@@ -91,13 +91,13 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve remote-free preflight, exact base/scope binding, durable effect ordering, no-duplicate completed-effect resume, and non-executing disposition plans.
+    interface_compatible_replacement: Preserve remote-free preflight, exact base/scope and baseline-topology binding, exact add/modify/delete staging, durable effect ordering, no-duplicate completed-effect resume, and non-executing disposition plans.
     interface_incompatible_change: Remote support, automatic rollback/cleanup, a new persistence schema, or weaker receipt reconciliation requires a new interface version and separate authorization.
   rollback_contract:
     rollback_identity: tool-system@22dedb0f2a2c0b38a0bd4c67f36c1c2454ca19d5:local_git@absent
     method: Revert the module through a separately audited pull request; runtime rollback plans remain non-executing.
   replacement_contract:
-    activation_rule: Replace only after isolated branch/commit, preflight drift, scope, durable receipts, crash-after-completion resume, conflict, and zero-remote tests pass.
+    activation_rule: Replace only after isolated add/modify/delete branch/commit, baseline presence/content drift, scope, durable receipts, crash-after-completion resume, conflict, and zero-remote tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
