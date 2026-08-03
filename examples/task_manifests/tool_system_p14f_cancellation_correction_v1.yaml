@@ -1,0 +1,105 @@
+task_id: tool-system-p14f-cancellation-correction-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/p14f-cancellation-correction-v1
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stage_plan.P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE
+alignment:
+  parent:
+    document: docs/modules/development-loop-contract-v1.md
+    section_or_key: input_contract
+    scope: Add deterministic fixture-only caller cancellation required by the unchanged P14H timeout fixture.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded resumable development while adding no external authority.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P14F-CANCELLATION-CORRECTION-LIFECYCLE-v1
+    baseline_commit: cb7b2e1f73738df931830063a906a7e3b3012a51
+    baseline_tree: b8a39d1075cd6af66d350dd8853f299dac6abfb6
+    allowed_scope: exact_12_paths_listed_below
+    acceptance_set:
+      - optional cancellation is checked before worker dispatch and before returned patch application
+      - cancellation after worker return discards the unapplied patch and preserves the prior candidate
+      - raising or non-boolean cancellation callbacks fail closed without leaking details
+      - existing callers remain compatible and all external operation counters remain zero
+      - blueprint P14G source provider credential downstream production cleanup and rollback behavior remain unchanged
+    validation_set:
+      - focused development-loop registry contract and phase tests
+      - full pytest and current validators
+      - exact scope blueprint and forbidden-diff checks
+    terminal_predicate: all frozen acceptance and validation items pass, one Draft PR is published, hosted CI succeeds, unchanged scope is moved to Ready and squash-merged, the feature branch is retained, and P14H remains unaccepted
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 1
+      review_cycles: 1
+      wall_clock_hours: 4
+      credential_value_accesses: 0
+      provider_invocations: 0
+      downstream_repository_accesses: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Correct only the P14F fixture cancellation boundary required before P14H.
+  in_scope: &p14f_correction_files
+    - config/module_registry_v1.yaml
+    - docs/modules/development-loop-contract-v1.md
+    - docs/reports/p14f_cancellation_correction_acceptance.md
+    - docs/tool_system_module_registry_contract_v1.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_p14f_cancellation_correction_v1.yaml
+    - examples/task_manifests/tool_system_p14f_cancellation_correction_v1.yaml
+    - src/tool_system/development_loop/loop.py
+    - tests/test_development_loop.py
+    - tests/test_module_registry.py
+    - tests/test_phase_alignment.py
+    - tests/test_repo_manifest.py
+  out_of_scope:
+    - blueprint modification or P14H acceptance
+    - P14G source or topology changes
+    - provider credential downstream remote production cleanup rollback or branch deletion
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: cb7b2e1f73738df931830063a906a7e3b3012a51
+    why_relevant: The unchanged P14H target requires timeout cancellation and cleanup-resume evidence.
+allowed_files: *p14f_correction_files
+forbidden_files:
+  - blueprint/**
+  - src/tool_system/local_git/**
+  - src/tool_system/ai_worker/**
+  - src/tool_system/repo_controller/**
+  - src/tool_system/target_repo/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_development_loop.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_phase_alignment.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14f_cancellation_correction_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14f_cancellation_correction_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+rollback:
+  method: git_revert
+  reference: tool-system@cb7b2e1f73738df931830063a906a7e3b3012a51
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:P14H-PREREQUISITE-CORRECTIONS-v1
+  approved_at: 2026-08-03 UTC+09:00

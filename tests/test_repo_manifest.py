@@ -506,7 +506,7 @@ def test_blueprint_module_registry_packaging_and_ci_register_manifest() -> None:
         "src/tool_system/blueprint_compiler/__init__.py",
         "src/tool_system/blueprint_compiler/compiler.py",
     }
-    assert development_loop["module_version"] == "1.0.0"
+    assert development_loop["module_version"] == "1.1.0"
     assert {
         boundary["path"]
         for boundary in development_loop["boundaries"]["code"]

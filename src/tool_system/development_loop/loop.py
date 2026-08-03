@@ -68,6 +68,7 @@ class FrozenDevelopmentContract:
 Worker = Callable[[Mapping[str, object]], Mapping[str, object]]
 Validator = Callable[[Mapping[str, str]], Mapping[str, object]]
 Reviewer = Callable[[Mapping[str, object]], Mapping[str, object]]
+CancellationRequested = Callable[[], bool]
 
 
 def _canonical(value: object) -> bytes:
@@ -279,6 +280,20 @@ def _blocked(code: str, contract: FrozenDevelopmentContract | None = None) -> di
     }
 
 
+def _is_cancelled(callback: CancellationRequested | None) -> bool:
+    if callback is None:
+        return False
+    if not callable(callback):
+        raise DevelopmentLoopError("INVALID_CANCELLATION_SIGNAL")
+    try:
+        result = callback()
+    except Exception as exc:
+        raise DevelopmentLoopError("INVALID_CANCELLATION_SIGNAL") from exc
+    if type(result) is not bool:
+        raise DevelopmentLoopError("INVALID_CANCELLATION_SIGNAL")
+    return result
+
+
 def run_development_loop(
     *,
     contract: FrozenDevelopmentContract,
@@ -289,6 +304,7 @@ def run_development_loop(
     contract_reviewer: Reviewer,
     limits: DevelopmentLoopLimits | None = None,
     resume_state: Mapping[str, object] | None = None,
+    cancellation_requested: CancellationRequested | None = None,
 ) -> dict[str, object]:
     """Run a finite, deterministic fixture development loop."""
 
@@ -297,6 +313,10 @@ def run_development_loop(
         contract.validate()
         limits.validate()
         files = _files(baseline_files)
+        if cancellation_requested is not None and not callable(
+            cancellation_requested
+        ):
+            raise DevelopmentLoopError("INVALID_CANCELLATION_SIGNAL")
     except DevelopmentLoopError as exc:
         return _blocked(exc.code, contract)
     allowed_scope = set(contract.allowed_scope)
@@ -339,6 +359,13 @@ def run_development_loop(
         except (TypeError, ValueError, DevelopmentLoopError):
             return _blocked("INVALID_RESUME_STATE", contract)
     for attempt in range(len(cycles) + 1, limits.max_cycles + 1):
+        try:
+            if _is_cancelled(cancellation_requested):
+                terminal_code = "CANCELLED_BY_CALLER"
+                break
+        except DevelopmentLoopError as exc:
+            terminal_code = exc.code
+            break
         if worker_calls >= limits.max_worker_calls:
             terminal_code = "WORKER_CALL_BUDGET_EXHAUSTED"
             break
@@ -357,6 +384,9 @@ def run_development_loop(
         try:
             patch = worker(request)
             worker_calls += 1
+            if _is_cancelled(cancellation_requested):
+                terminal_code = "CANCELLED_BY_CALLER"
+                break
             candidate, usage = _apply_patch(
                 files,
                 patch,
