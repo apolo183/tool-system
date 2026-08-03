@@ -19,13 +19,14 @@ authority:
 tool_system_baseline:
   repository: apolo183/tool-system
   branch: main
-  commit: 1ede788b8b1c36bcc224cde15a5f6462c9b51938
-  tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
-  reanchored_by: P15C-PACKET-CANONICAL-REFREEZE-v1
-  previous_commit: 81be20f8cdf2d588993347fa11ca090dc9f17135
-  previous_tree: 23addb451399ae89cc99e2c740115596f5e763c0
-  compatibility_basis: intervening_target_identity_governance_only_change
-  provider_model_economics_corpus_and_limit_semantics_changed: false
+  commit: f30f43512acfa497afd9f27dcce7cf4a0ebeb101
+  tree: 1c6b29bdcb9b823e7e063d5050587df45cd2f126
+  reanchored_by: P15C-DEEPSEEK-PACKET-EVIDENCE-CORRECTION-v1
+  previous_commit: 1ede788b8b1c36bcc224cde15a5f6462c9b51938
+  previous_tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
+  compatibility_basis: exact_deepseek_model_version_and_execution_surface_evidence_correction
+  provider_model_economics_corpus_and_limit_semantics_changed: true
+  execution_surface_corrected: true
   p15c_execution_authority_added: false
 
 private_control_plane:
@@ -159,13 +160,13 @@ common_attempt_limits: &common_attempt_limits
 provider_packets:
   - packet_id: P15C-DEEPSEEK-V4-FLASH-READONLY-v1
     provider_id: deepseek
-    execution_surface_id: deepseek-responses-api
+    execution_surface_id: deepseek-openai-compatible-chat
     model_id: deepseek-v4-flash
-    exact_model_version: DeepSeek-V4-Flash-0731
+    exact_model_version: DeepSeek-V4-Flash
     qualification_state: QUARANTINED
     packet_status: FROZEN_NOT_ACTIVATED
     base_url: https://api.deepseek.com
-    operation: responses.create
+    operation: chat.completions.create
     credential_reference: private-control:credentials#providers.deepseek.api_key
     credential_value_inspected: false
     operator_availability_attestation: available
@@ -190,7 +191,7 @@ provider_packets:
       training_or_service_improvement_use_excluded: false
     official_evidence:
       model_and_price: https://api-docs.deepseek.com/quick_start/pricing/
-      responses_surface: https://api-docs.deepseek.com/guides/responses_api/
+      chat_completions_surface: https://api-docs.deepseek.com/api/create-chat-completion
       health: https://status.deepseek.com/
       privacy: https://cdn.deepseek.com/policies/zh-CN/deepseek-privacy-policy.html
 
