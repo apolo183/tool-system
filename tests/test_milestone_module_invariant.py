@@ -204,10 +204,10 @@ def test_p14mr_report_is_acceptance_evidence_not_durable_rule_owner() -> None:
     )
     assert project_state["p14i"]["acceptance_status"] == "accepted_and_closed"
     assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
+        "docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md"
     )
     assert current_phase["last_accepted_stage"] == (
-        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
     assert project_state["authority_effect"] == "none"
 
@@ -238,7 +238,7 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     assert "status" not in blueprint
     assert current_phase["id"] == "P15_MULTI_PROJECT_BENCHMARK"
     assert current_phase["last_accepted_stage"] == (
-        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
     assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["execution_boundary"] == (
         "governance_only"
@@ -269,7 +269,7 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     assert project_state["p14i"]["acceptance_status"] == "accepted_and_closed"
     assert current_phase["status"] == "active"
     assert current_phase["next_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
     assert current_phase["next_stage_authorized"] is False
     assert current_phase["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"

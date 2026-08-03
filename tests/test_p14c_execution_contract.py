@@ -156,14 +156,14 @@ def test_p14c_bounded_deepseek_receipt_is_accepted_without_new_authority() -> No
 
     assert current_phase["id"] == "P15_MULTI_PROJECT_BENCHMARK"
     assert current_phase["last_accepted_stage"] == (
-        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
     assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
+        "docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md"
     )
     assert current_phase["status"] == "active"
     assert current_phase["next_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
     assert current_phase["next_stage_authorized"] is False
     assert current_phase["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"

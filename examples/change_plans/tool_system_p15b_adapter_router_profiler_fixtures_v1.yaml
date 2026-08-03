@@ -1,0 +1,56 @@
+plan_id: tool-system-p15b-adapter-router-profiler-fixtures-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml
+changed_files:
+  - REPO_MANIFEST.md
+  - config/module_registry_v1.yaml
+  - docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml
+  - examples/task_manifests/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml
+  - src/tool_system/provider_portfolio/__init__.py
+  - src/tool_system/provider_portfolio/fixtures.py
+  - tests/test_milestone_module_invariant.py
+  - tests/test_model_provider_portfolio_contract.py
+  - tests/test_module_contracts.py
+  - tests/test_module_registry.py
+  - tests/test_p14_phase_entry_contract.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_phase_alignment.py
+  - tests/test_provider_portfolio_fixtures.py
+  - tests/test_repo_manifest.py
+  - tests/test_repository_context_builder.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Implement and accept only the frozen one-module isolated P15B fixture scope.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Close deterministic portfolio profiling routing adapter and failure fixtures without live execution or real repositories.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_provider_portfolio_fixtures.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_repo_manifest.py tests/test_phase_alignment.py tests/test_milestone_module_invariant.py tests/test_model_provider_portfolio_contract.py tests/test_p14_phase_entry_contract.py tests/test_p14c_execution_contract.py tests/test_repository_context_builder.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p15b-adapter-router-profiler-fixtures-v1
+  retain_feature_branch: true
+  exact_base: f912add44845be9d60021333c6792e4ecf6a142b
+  exact_base_tree: 493c5563cf4d95b1cc3e236e1453c8c9db5e3423
+rollback:
+  method: git_revert
+  reference: tool-system@f912add44845be9d60021333c6792e4ecf6a142b
+  execution_authorized: false

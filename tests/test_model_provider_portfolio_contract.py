@@ -18,6 +18,12 @@ P15A_REPORT = (
     / "reports"
     / "p15a_provider_portfolio_qualification_specification.md"
 )
+P15B_REPORT = (
+    ROOT
+    / "docs"
+    / "reports"
+    / "p15b_adapter_router_profiler_fixture_acceptance.md"
+)
 
 
 def test_provider_portfolio_contract_is_product_control_not_runtime_authority() -> None:
@@ -40,17 +46,17 @@ def test_provider_portfolio_contract_is_product_control_not_runtime_authority() 
     current_phase = project_state["current_phase"]
     assert current_phase["id"] == "P15_MULTI_PROJECT_BENCHMARK"
     assert current_phase["last_accepted_stage"] == (
-        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
     assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
+        "docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md"
     )
     assert current_phase["status"] == "active"
     assert current_phase["entry_record"] == (
         "docs/reports/p15a_provider_portfolio_qualification_specification.md"
     )
     assert current_phase["next_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
     assert current_phase["next_stage_authorized"] is False
     assert current_phase["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
@@ -68,9 +74,27 @@ def test_provider_portfolio_contract_is_product_control_not_runtime_authority() 
     assert p15a["provider_invocations"] == 0
     assert p15a["credential_value_accesses"] == 0
     assert p15a["p15b_authorized"] is False
+    p15b = project_state["p15b"]
+    assert p15b["implementation_status"] == (
+        "accepted_isolated_fixture_no_live_provider"
+    )
+    assert p15b["module"]["current_module_id"] == (
+        "adaptive_model_portfolio_and_economics"
+    )
+    assert p15b["module"]["aggregate_interface_id"] == (
+        "adaptive-model-portfolio-and-economics-api"
+    )
+    assert p15b["hard_floors_evaluated_before_economics"] is True
+    assert p15b["provider_invocations"] == 0
+    assert p15b["credential_value_accesses"] == 0
+    assert p15b["p15c_authorized"] is False
+    assert p15b["stage_accepted"] is True
     report = P15A_REPORT.read_text(encoding="utf-8")
     assert "P15A_ACCEPTED_GOVERNANCE_ONLY_QUALIFICATION_SPECIFICATION" in report
     assert "expected_total_economic_cost_per_accepted_module" in report
+    p15b_report = P15B_REPORT.read_text(encoding="utf-8")
+    assert "P15B_ACCEPTED_ISOLATED_FIXTURE_NO_LIVE_PROVIDER" in p15b_report
+    assert "P15C_authorized: false" in p15b_report
     assert "active_phase_execution" not in blueprint
     assert "p14c_source_implementation" not in blueprint
 

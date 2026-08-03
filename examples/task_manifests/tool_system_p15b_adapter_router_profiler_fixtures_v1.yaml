@@ -1,0 +1,154 @@
+task_id: tool-system-p15b-adapter-router-profiler-fixtures-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/p15b-adapter-router-profiler-fixtures-v1
+phase: P15_MULTI_PROJECT_BENCHMARK
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P15_MULTI_PROJECT_BENCHMARK
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P15_MULTI_PROJECT_BENCHMARK.stage_plan.P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES
+alignment:
+  parent:
+    document: docs/reports/p15a_provider_portfolio_qualification_specification.md
+    section_or_key: State transition and stop condition
+    scope: Implement only the provider-neutral isolated fixtures after the accepted P15A qualification specification.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Add one deterministic non-authorizing portfolio-selection module without entering live provider or real-repository benchmarking.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P15B-ADAPTER-ROUTER-AND-PROFILER-FIXTURES-LIFECYCLE-v1
+    baseline_commit: f912add44845be9d60021333c6792e4ecf6a142b
+    baseline_tree: 493c5563cf4d95b1cc3e236e1453c8c9db5e3423
+    allowed_scope: exact_21_paths_listed_below
+    acceptance_set:
+      - P15A remains accepted as the direct predecessor and canonical main remains at the frozen baseline before publication
+      - adaptive_model_portfolio_and_economics 1.0.0 is the only new durable module and consumes the existing ai-worker-runtime-api 1.0.0 structural provider boundary
+      - immutable task profiles keep complexity risk mutation risk verification burden critical-path sensitivity confidence and uncertainty separate
+      - exact catalog and authorization snapshots evaluate every hard floor before integer economic cost and reproduce the same route evidence for the same inputs
+      - only isolated no-network no-credential fixture adapters can be constructed or selected and every route decision has authority_effect none
+      - availability failover quality repair and escalation policy block and terminal stop failure classes remain distinct and bounded
+      - module registry contract repository manifest task pair acceptance record descriptive state and necessary consistency tests close the one-module change
+      - descriptive state records P15B accepted and leaves P15C live-provider read-only benchmarking separately unauthorized
+      - blueprint provider-economics roadmap contract policies process authority existing runtime source provider implementations fixture directories and downstream repositories remain unchanged
+      - no live provider network credential-value real-repository benchmark target production cleanup or rollback operation occurs
+    validation_set:
+      - focused provider-portfolio module registry module contract import graph repository manifest and phase-state tests
+      - full pytest suite active gates process authority current module registry and repository manifest
+      - source compilation whitespace exact twenty-one-path scope forbidden-diff and no-side-effect review
+      - unchanged canonical base and Hosted CI before Ready and squash merge
+    terminal_predicate: all frozen acceptance and validation items pass, one Draft PR is published, Hosted CI succeeds, unchanged base head and exact scope move to Ready and squash-merge, the feature branch is retained, canonical main records P15B accepted, and execution stops before P15C
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 1
+      review_cycles: 1
+      wall_clock_hours: 8
+      provider_invocations: 0
+      live_provider_network_operations: 0
+      credential_resolver_invocations: 0
+      credential_value_accesses: 0
+      benchmark_executions: 0
+      real_downstream_repository_accesses: 0
+      target_mutations: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Add and accept one deterministic provider-neutral portfolio module using isolated in-memory fixtures only.
+  in_scope: &p15b_files
+    - REPO_MANIFEST.md
+    - config/module_registry_v1.yaml
+    - docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
+    - docs/modules/ai-worker-runtime-contract-v1.md
+    - docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md
+    - docs/tool_system_module_registry_contract_v1.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml
+    - examples/task_manifests/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml
+    - src/tool_system/provider_portfolio/__init__.py
+    - src/tool_system/provider_portfolio/fixtures.py
+    - tests/test_milestone_module_invariant.py
+    - tests/test_model_provider_portfolio_contract.py
+    - tests/test_module_contracts.py
+    - tests/test_module_registry.py
+    - tests/test_p14_phase_entry_contract.py
+    - tests/test_p14c_execution_contract.py
+    - tests/test_phase_alignment.py
+    - tests/test_provider_portfolio_fixtures.py
+    - tests/test_repo_manifest.py
+    - tests/test_repository_context_builder.py
+  out_of_scope:
+    - blueprint or provider-economics roadmap contract modification
+    - existing runtime source provider implementation or credential resolver modification
+    - live provider model qualification network or credential-value access
+    - benchmark execution remote fixture or real downstream repository access
+    - P15C or later-stage entry target mutation production cleanup rollback or branch deletion
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p15a_provider_portfolio_qualification_specification.md
+    commit_sha: f912add44845be9d60021333c6792e4ecf6a142b
+    why_relevant: Accepted P15A is the direct parent and freezes the exact task-profile hard-floor economics catalog failure and authority contracts.
+  - repo: apolo183/tool-system
+    path: docs/model_provider_portfolio_and_economics_contract_v1.md
+    commit_sha: f912add44845be9d60021333c6792e4ecf6a142b
+    why_relevant: The unchanged roadmap contract owns the durable portfolio responsibility and non-bypass semantics.
+  - repo: apolo183/tool-system
+    path: src/tool_system/ai_worker/contract.py
+    commit_sha: f912add44845be9d60021333c6792e4ecf6a142b
+    why_relevant: The existing AIWorkerProvider protocol is the unchanged provider-neutral adapter boundary.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: f912add44845be9d60021333c6792e4ecf6a142b
+    why_relevant: P15B is explicitly bounded to isolated fixtures with no live provider.
+allowed_files: *p15b_files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/**
+  - config/process_authority_v1.yaml
+  - config/replay_snapshot_v1.yaml
+  - policy/**
+  - docs/model_provider_portfolio_and_economics_contract_v1.md
+  - docs/tool_system_global_development_principles_v1.md
+  - src/tool_system/ai_worker/**
+  - src/tool_system/process_authority/**
+  - src/tool_system/repo_controller/**
+  - src/tool_system/target_repo/**
+  - tests/fixtures/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_provider_portfolio_fixtures.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_repo_manifest.py tests/test_phase_alignment.py tests/test_milestone_module_invariant.py tests/test_model_provider_portfolio_contract.py tests/test_p14_phase_entry_contract.py tests/test_p14c_execution_contract.py tests/test_repository_context_builder.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+rollback:
+  method: git_revert
+  reference: tool-system@f912add44845be9d60021333c6792e4ecf6a142b
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user_standing_small_milestone_process_authority
+  approval_source: chat_user_message:small_milestones_no_authorization_required
+  approved_at: 2026-08-03 UTC+09:00
