@@ -112,6 +112,12 @@ def test_p14a_manifest_authorized_specification_but_not_implementation() -> None
     assert project_state["current_phase"]["last_accepted_stage"] == (
         "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
     )
+    assert project_state["current_phase"]["closure_stage"] == (
+        "P14I_ACCEPTANCE_CLOSURE"
+    )
+    assert project_state["current_phase"]["status"] == "accepted_and_closed"
+    assert project_state["current_phase"]["next_stage"] is None
+    assert project_state["current_phase"]["next_phase_entry_authorized"] is False
     assert "active_phase_execution" not in blueprint
     assert manifest["task_type"] == "docs_update"
     assert manifest["alignment"]["global"]["section_or_key"] == (

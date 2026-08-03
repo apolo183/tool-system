@@ -37,6 +37,36 @@ P14G_TOPOLOGY_REPORT = (
 P14H_ACCEPTANCE_REPORT = (
     ROOT / "docs" / "reports" / "p14h_multi_stack_fixture_acceptance.md"
 )
+P14I_ACCEPTANCE_REPORT = (
+    ROOT
+    / "docs"
+    / "reports"
+    / "p14i_blueprint_to_code_acceptance_closure.md"
+)
+P14I_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p14i_acceptance_closure_v1.yaml"
+)
+P14I_CHANGE_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p14i_acceptance_closure_v1.yaml"
+)
+P14I_FILES = {
+    "docs/reports/p14i_blueprint_to_code_acceptance_closure.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p14i_acceptance_closure_v1.yaml",
+    "examples/task_manifests/tool_system_p14i_acceptance_closure_v1.yaml",
+    "tests/test_p14_phase_entry_contract.py",
+    "tests/test_phase_alignment.py",
+    "tests/test_milestone_module_invariant.py",
+    "tests/test_model_provider_portfolio_contract.py",
+    "tests/test_p14c_execution_contract.py",
+    "tests/test_repository_context_builder.py",
+}
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
@@ -86,7 +116,7 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     project_state = load_yaml_file(PROJECT_STATE)
 
     assert project_state["current_phase"]["id"] == EXPECTED_PHASE
-    assert project_state["current_phase"]["status"] == "active"
+    assert project_state["current_phase"]["status"] == "accepted_and_closed"
     assert project_state["authority_effect"] == "none"
     assert project_state["current_phase"]["last_accepted_stage"] == (
         "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
@@ -94,9 +124,16 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert project_state["current_phase"]["last_accepted_stage_record"] == (
         "docs/reports/p14h_multi_stack_fixture_acceptance.md"
     )
-    assert project_state["current_phase"]["next_stage"] == (
+    assert project_state["current_phase"]["closure_stage"] == (
         "P14I_ACCEPTANCE_CLOSURE"
     )
+    assert project_state["current_phase"]["closure_stage_record"] == (
+        "docs/reports/p14i_blueprint_to_code_acceptance_closure.md"
+    )
+    assert project_state["current_phase"]["acceptance_record"] == (
+        "docs/reports/p14i_blueprint_to_code_acceptance_closure.md"
+    )
+    assert project_state["current_phase"]["next_stage"] is None
     assert project_state["current_phase"]["next_stage_authorized"] is False
     assert project_state["current_phase"]["next_phase"] == (
         "P15_MULTI_PROJECT_BENCHMARK"
@@ -283,6 +320,32 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
         )
     )
     assert p14h["stage_accepted"] is True
+    p14i = project_state["p14i"]
+    assert p14i["authorization_packet"] == (
+        "P14I-ACCEPTANCE-CLOSURE-LIFECYCLE-v1"
+    )
+    assert p14i["acceptance_status"] == "accepted_and_closed"
+    assert p14i["baseline_commit"] == (
+        "cf1b8344695ab6e325cdb6c3cdd6b69037b2d657"
+    )
+    assert len(p14i["evidence_chain_read_only_revalidated"]) == 9
+    assert p14i["product_wide_completion_claimed"] is False
+    assert p14i["p15_entry_authorized"] is False
+    assert all(
+        p14i[key] == 0
+        for key in (
+            "runtime_source_changes",
+            "blueprint_changes",
+            "provider_invocations",
+            "credential_value_accesses",
+            "downstream_repository_accesses",
+            "remote_fixture_operations",
+            "production_operations",
+            "cleanup_operations",
+            "rollback_operations",
+        )
+    )
+    assert p14i["stage_accepted"] is True
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["state_file_grants_authority"] is False
     assert boundaries["live_model_provider_execution_authorized"] is False
@@ -313,6 +376,11 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert "P14H_ACCEPTED_ISOLATED_MULTI_STACK_FIXTURES_ONLY" in (
         P14H_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
     )
+    p14i_report = P14I_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+    normalized_p14i_report = " ".join(p14i_report.split())
+    assert "P14_ACCEPTED_AND_CLOSED_BOUNDED_ISOLATED_FIXTURE_SCOPE" in p14i_report
+    assert "P15_entry_authorized: false" in p14i_report
+    assert "product-wide P15 or P16 conditions" in normalized_p14i_report
     for public_contract in (agents_text, readme_text, principles_text):
         assert "docs/tool_system_project_state_v1.yaml" in public_contract
         assert "authority" in public_contract
@@ -323,6 +391,58 @@ def test_phase_alignment_change_plan_validates() -> None:
 
     assert result["status"] == "PASS"
     assert result["reasons"] == []
+
+
+def test_p14i_manifest_and_change_plan_freeze_exact_governance_scope() -> None:
+    manifest_result = validate_task_manifest(
+        P14I_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(P14I_CHANGE_PLAN)
+    manifest = load_yaml_file(P14I_MANIFEST)
+    plan = load_yaml_file(P14I_CHANGE_PLAN)
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == P14I_FILES
+    assert set(plan["changed_files"]) == P14I_FILES
+    assert manifest["bounded_closure"]["frozen_before_execution"][
+        "baseline_commit"
+    ] == "cf1b8344695ab6e325cdb6c3cdd6b69037b2d657"
+    assert manifest["publication"]["retain_feature_branch"] is True
+    assert manifest["publication"]["branch_deletion_authorized"] is False
+    assert all(not path.startswith("src/") for path in P14I_FILES)
+    assert "blueprint/tool_system_v0.yaml" not in P14I_FILES
+
+
+def test_p14i_closes_only_bounded_p14_and_stops_before_p15() -> None:
+    blueprint = load_yaml_file(BLUEPRINT)
+    project_state = load_yaml_file(PROJECT_STATE)
+    report = P14I_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+    p14 = blueprint["milestones"][EXPECTED_PHASE]
+    stages = {stage["stage"]: stage for stage in p14["stage_plan"]}
+
+    assert stages["P14I_ACCEPTANCE_CLOSURE"]["execution_boundary"] == (
+        "governance_only"
+    )
+    assert "isolated repository fixture" in p14["accepted_claim"]
+    assert "local Git software change" in p14["accepted_claim"]
+    assert project_state["current_phase"]["next_phase"] == (
+        "P15_MULTI_PROJECT_BENCHMARK"
+    )
+    assert project_state["current_phase"]["next_phase_entry_authorized"] is False
+    for marker in (
+        "P14 output acceptance matrix",
+        "Required P14 fixture matrix",
+        "Global product-objective disposition",
+        "provider_invocations: 0",
+        "runtime_source_changes: 0",
+        "P15_entry_authorized: false",
+    ):
+        assert marker in report
 
 
 def test_bounded_closure_manifest_and_change_plan_validate_exact_scope() -> None:

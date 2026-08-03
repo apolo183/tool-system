@@ -403,8 +403,12 @@ def test_p14d_exact_task_pair_and_descriptive_acceptance_state_validate() -> Non
     assert current["last_accepted_stage_record"] == (
         "docs/reports/p14h_multi_stack_fixture_acceptance.md"
     )
-    assert current["next_stage"] == "P14I_ACCEPTANCE_CLOSURE"
+    assert current["status"] == "accepted_and_closed"
+    assert current["closure_stage"] == "P14I_ACCEPTANCE_CLOSURE"
+    assert current["next_stage"] is None
     assert current["next_stage_authorized"] is False
+    assert current["next_phase"] == "P15_MULTI_PROJECT_BENCHMARK"
+    assert current["next_phase_entry_authorized"] is False
     assert state["authority_effect"] == "none"
     assert state["p14d"]["stage_accepted"] is True
     assert state["p14d"]["natural_owner_proposal_grants_authority"] is False

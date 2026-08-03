@@ -35,8 +35,12 @@ def test_provider_portfolio_contract_is_product_control_not_runtime_authority() 
     assert current_phase["last_accepted_stage"] == (
         "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
     )
-    assert current_phase["next_stage"] == "P14I_ACCEPTANCE_CLOSURE"
+    assert current_phase["status"] == "accepted_and_closed"
+    assert current_phase["closure_stage"] == "P14I_ACCEPTANCE_CLOSURE"
+    assert current_phase["next_stage"] is None
     assert current_phase["next_stage_authorized"] is False
+    assert current_phase["next_phase"] == "P15_MULTI_PROJECT_BENCHMARK"
+    assert current_phase["next_phase_entry_authorized"] is False
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["live_model_provider_execution_authorized"] is False
     assert boundaries["remote_target_mutation_authorized"] is False

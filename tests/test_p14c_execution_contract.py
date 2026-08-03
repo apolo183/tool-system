@@ -160,8 +160,12 @@ def test_p14c_bounded_deepseek_receipt_is_accepted_without_new_authority() -> No
     assert current_phase["last_accepted_stage_record"] == (
         "docs/reports/p14h_multi_stack_fixture_acceptance.md"
     )
-    assert current_phase["next_stage"] == "P14I_ACCEPTANCE_CLOSURE"
+    assert current_phase["status"] == "accepted_and_closed"
+    assert current_phase["closure_stage"] == "P14I_ACCEPTANCE_CLOSURE"
+    assert current_phase["next_stage"] is None
     assert current_phase["next_stage_authorized"] is False
+    assert current_phase["next_phase"] == "P15_MULTI_PROJECT_BENCHMARK"
+    assert current_phase["next_phase_entry_authorized"] is False
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_status"] == "bounded_deepseek_live_provider_proof_accepted"
     assert p14c["acceptance_record"] == (
