@@ -460,12 +460,32 @@ p15b:
 p15c_packet_freeze:
   authorization_packet: P15C-EXECUTION-PACKET-FREEZE-v1
   evidence_completion_source: chat_user_message:2026-08-03-provider-repository-budget-and-read-only-research-scope
-  baseline_commit: 81be20f8cdf2d588993347fa11ca090dc9f17135
-  baseline_tree: 23addb451399ae89cc99e2c740115596f5e763c0
+  baseline_commit: 1ede788b8b1c36bcc224cde15a5f6462c9b51938
+  baseline_tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
   packet_catalog: config/p15c_execution_packet_freeze_v1.yaml
   acceptance_record: docs/reports/p15c_execution_packet_freeze.md
   status: accepted_pre_entry_freeze_no_execution_authority
   frozen_at: 2026-08-03 UTC+09:00
+  canonical_refreeze:
+    authorization_packet: P15C-PACKET-CANONICAL-REFREEZE-v1
+    task_manifest: examples/task_manifests/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+    acceptance_record: docs/reports/p15c_packet_canonical_refreeze_acceptance.md
+    status: accepted_on_guarded_squash_merge
+    previous_baseline_commit: 81be20f8cdf2d588993347fa11ca090dc9f17135
+    previous_baseline_tree: 23addb451399ae89cc99e2c740115596f5e763c0
+    current_baseline_commit: 1ede788b8b1c36bcc224cde15a5f6462c9b51938
+    current_baseline_tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
+    compatibility_basis: intervening_target_identity_governance_only_change
+    packet_semantics_excluding_tool_system_baseline_sha256: 03f99a7e43ce7f3a381d59231c8a9d31ec1a9324922639126fa2268ff6d42626
+    provider_model_economics_corpus_and_limit_semantics_changed: false
+    official_provider_document_reads: 0
+    provider_invocations: 0
+    credential_value_accesses: 0
+    target_repository_accesses: 0
+    benchmark_executions: 0
+    p15c_authorized: false
+    p15c_stage_accepted: false
   provider_packets:
     deepseek:
       packet_id: P15C-DEEPSEEK-V4-FLASH-READONLY-v1
@@ -528,7 +548,7 @@ target_identity_decoupling:
   task_manifest: examples/task_manifests/tool_system_target_identity_decoupling_v1.yaml
   change_plan: examples/change_plans/tool_system_target_identity_decoupling_v1.yaml
   acceptance_record: docs/reports/target_identity_decoupling_acceptance.md
-  implementation_status: candidate_hosted_ci_passed_pending_evidence_sync
+  implementation_status: accepted_merged_terminal_evidence_verified
   authority_effect: none
   public_core_contract:
     downstream_repository_identity_serialized: false
@@ -549,20 +569,32 @@ target_identity_decoupling:
     repository: apolo183/tool-system
     number: 171
     url: https://github.com/apolo183/tool-system/pull/171
-    head_commit: 89730ca1ab8e6f5eb5d3a78025a905df3cb568a8
-    head_tree: 008e2deaf5378e3d8052a657aff1b7d35b0d22d5
+    final_head_commit: 2dbd0c6735b4a0f081d1a064458750d73d870cfe
+    final_head_tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
     changed_path_count: 31
-  hosted_ci_status: passed_on_candidate
-  hosted_ci:
+  hosted_ci_status: passed_on_final_head
+  initial_hosted_ci:
     workflow: tool-system-ci
     run_id: 30811492314
     run_number: 1066
+    conclusion: success
+  hosted_ci:
+    workflow: tool-system-ci
+    run_id: 30811800450
+    run_number: 1067
     conclusion: success
     tests: passed
     active_gates: passed
     process_authority: passed
     current_module_registry: passed
     repository_manifest: passed
+  terminal_lifecycle:
+    no_drift_ready_check: passed
+    squash_merge_commit: 1ede788b8b1c36bcc224cde15a5f6462c9b51938
+    canonical_main_tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
+    retained_branch: agent/target-identity-decoupling-v1
+    retained_branch_head: 2dbd0c6735b4a0f081d1a064458750d73d870cfe
+    retained_branch_verified: true
   downstream_repository_accesses: 0
   target_mutations: 0
   provider_invocations: 0

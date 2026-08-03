@@ -19,8 +19,14 @@ authority:
 tool_system_baseline:
   repository: apolo183/tool-system
   branch: main
-  commit: 81be20f8cdf2d588993347fa11ca090dc9f17135
-  tree: 23addb451399ae89cc99e2c740115596f5e763c0
+  commit: 1ede788b8b1c36bcc224cde15a5f6462c9b51938
+  tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
+  reanchored_by: P15C-PACKET-CANONICAL-REFREEZE-v1
+  previous_commit: 81be20f8cdf2d588993347fa11ca090dc9f17135
+  previous_tree: 23addb451399ae89cc99e2c740115596f5e763c0
+  compatibility_basis: intervening_target_identity_governance_only_change
+  provider_model_economics_corpus_and_limit_semantics_changed: false
+  p15c_execution_authority_added: false
 
 private_control_plane:
   credential_store:

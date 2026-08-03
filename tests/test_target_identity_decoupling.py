@@ -19,6 +19,9 @@ TARGET_FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "target_repo"
 TARGET_MANIFEST = TARGET_FIXTURE_ROOT / "task_manifest.yaml"
 TARGET_POLICY = TARGET_FIXTURE_ROOT / "repo_write_policy.yaml"
 PROJECT_STATE = ROOT / "docs" / "tool_system_project_state_v1.yaml"
+ACCEPTANCE_REPORT = (
+    ROOT / "docs" / "reports" / "target_identity_decoupling_acceptance.md"
+)
 GROUP_REPOSITORY_IDENTITY = re.compile(r"\bapolo183/[A-Za-z0-9_.-]+\b")
 ALLOWED_PUBLIC_IDENTITIES = {
     "apolo183/tool-system",
@@ -96,3 +99,37 @@ def test_blueprint_and_state_record_project_neutral_boundary_without_authority()
         "downstream_repository_identity_serialized"
     ] is False
     assert correction["p15c_authorized"] is False
+
+
+def test_state_and_report_record_terminal_decoupling_lifecycle() -> None:
+    state = load_yaml_file(PROJECT_STATE)
+    correction = state["target_identity_decoupling"]
+    pull_request = correction["draft_pull_request"]
+    ci = correction["hosted_ci"]
+    terminal = correction["terminal_lifecycle"]
+    report = ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+
+    assert correction["implementation_status"] == (
+        "accepted_merged_terminal_evidence_verified"
+    )
+    assert pull_request["number"] == 171
+    assert pull_request["final_head_commit"] == (
+        "2dbd0c6735b4a0f081d1a064458750d73d870cfe"
+    )
+    assert pull_request["final_head_tree"] == (
+        "7abd3b555d5c05f8bdf719c18619459ae9e06645"
+    )
+    assert correction["hosted_ci_status"] == "passed_on_final_head"
+    assert ci["run_id"] == 30811800450
+    assert ci["run_number"] == 1067
+    assert ci["conclusion"] == "success"
+    assert terminal["no_drift_ready_check"] == "passed"
+    assert terminal["squash_merge_commit"] == (
+        "1ede788b8b1c36bcc224cde15a5f6462c9b51938"
+    )
+    assert terminal["retained_branch"] == (
+        "agent/target-identity-decoupling-v1"
+    )
+    assert terminal["retained_branch_verified"] is True
+    assert "The lifecycle is accepted and closed" in report
+    assert "P15C remains unauthorized" in report

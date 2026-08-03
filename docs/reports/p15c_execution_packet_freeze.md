@@ -21,9 +21,12 @@ USD budget and cannot be selected by availability failover.
 
 - Direct accepted parent:
   `docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md`.
-- Canonical tool-system baseline:
-  `81be20f8cdf2d588993347fa11ca090dc9f17135`.
-- Canonical baseline tree:
+- Current compatible canonical tool-system baseline:
+  `1ede788b8b1c36bcc224cde15a5f6462c9b51938`.
+- Current compatible canonical baseline tree:
+  `7abd3b555d5c05f8bdf719c18619459ae9e06645`.
+- Original packet-freeze baseline:
+  `81be20f8cdf2d588993347fa11ca090dc9f17135` / tree
   `23addb451399ae89cc99e2c740115596f5e763c0`.
 - Stage owner:
   `blueprint/tool_system_v0.yaml:milestones.P15_MULTI_PROJECT_BENCHMARK.stage_plan.P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK`.
@@ -31,10 +34,14 @@ USD budget and cannot be selected by availability failover.
   2026-08-03 owner-supplied provider, private-target, budget, and official-doc
   read-only evidence scope.
 
-Canonical main compared identical to the frozen baseline before branch
-creation. The branch was created at that exact commit. The stable blueprint,
-runtime source, provider adapters, credential store, target repository, and
-fixture corpus remain unchanged.
+Canonical main compared identical to the original frozen baseline before the
+original branch was created. It later advanced only through the accepted
+target-identity decoupling governance correction. The
+`P15C-PACKET-CANONICAL-REFREEZE-v1` task verified current canonical main at the
+compatible commit above and re-anchored only `tool_system_baseline`. The stable
+blueprint, runtime source,
+provider packets, credential boundary, target packet, economics, limits, and
+fixture corpus remain unchanged, and P15C remains unauthorized.
 
 ## Secret, policy, and usage-state separation
 
@@ -178,6 +185,38 @@ tests/test_repo_manifest.py
 
 No blueprint, runtime source, provider adapter, credential file, P14H fixture,
 or downstream repository path is in scope.
+
+## Canonical re-freeze addendum
+
+The intervening canonical change was PR #171, which removed active downstream
+project identity coupling from the reusable public core. Its final candidate
+head was `2dbd0c6735b4a0f081d1a064458750d73d870cfe`, its final candidate tree was
+`7abd3b555d5c05f8bdf719c18619459ae9e06645`, Hosted CI run `30811800450`
+(`#1067`) passed, and the exact tree was squash-merged as
+`1ede788b8b1c36bcc224cde15a5f6462c9b51938`. The feature branch remains
+retained. These facts establish a governance-only compatibility transition;
+they do not qualify a provider or authorize P15C.
+
+The re-freeze is bounded to these nine paths:
+
+```text
+config/p15c_execution_packet_freeze_v1.yaml
+docs/reports/p15c_execution_packet_freeze.md
+docs/reports/p15c_packet_canonical_refreeze_acceptance.md
+docs/reports/target_identity_decoupling_acceptance.md
+docs/tool_system_project_state_v1.yaml
+examples/change_plans/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+examples/task_manifests/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+tests/test_p15c_execution_packet_freeze.py
+tests/test_target_identity_decoupling.py
+```
+
+The normalized SHA-256 of the entire packet after removing only the
+`tool_system_baseline` mapping remains
+`03f99a7e43ce7f3a381d59231c8a9d31ec1a9324922639126fa2268ff6d42626`.
+That lock proves the provider/model choices, official evidence snapshot,
+economics, corpus, private-control separation, target-packet contract, limits,
+activation gates, and zero-authority boundary are semantically preserved.
 
 ## Acceptance and stop condition
 

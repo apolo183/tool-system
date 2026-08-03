@@ -32,7 +32,7 @@ benchmark, production, cleanup, or rollback operation.
 - Retained evidence is unchanged and remains non-authoritative.
 - P15C remains unauthorized.
 
-## Candidate evidence
+## Accepted terminal evidence
 
 - Exact closure: the working tree differs from the canonical baseline in the
   frozen 31 paths only; no path is missing or unexpected.
@@ -47,14 +47,20 @@ benchmark, production, cleanup, or rollback operation.
 - External operations: zero downstream-repository access, provider invocation,
   credential-value access, benchmark execution, mutation, production, cleanup,
   and rollback operations.
-- Draft pull request: `apolo183/tool-system#171`, with 31 changed paths and
-  candidate commit `89730ca1ab8e6f5eb5d3a78025a905df3cb568a8` / tree
-  `008e2deaf5378e3d8052a657aff1b7d35b0d22d5` based directly on canonical
-  `main@5e964adfd40502a3798630b98fb0d876bbd01d91`.
-- Hosted CI: `tool-system-ci` run `30811492314` (`#1066`) passed. Its `verify`
-  job completed tests plus active-gates, process-authority, current module-
-  registry, and repository-manifest validation successfully.
+- Pull request: `apolo183/tool-system#171`, with the exact 31-path closure,
+  final candidate commit `2dbd0c6735b4a0f081d1a064458750d73d870cfe`, and
+  final candidate tree `7abd3b555d5c05f8bdf719c18619459ae9e06645`.
+- Hosted CI: initial `tool-system-ci` run `30811492314` (`#1066`) and final-head
+  run `30811800450` (`#1067`) both passed. The final run validated tests,
+  active gates, process authority, current module registry, and repository
+  manifest on the exact candidate head.
+- Ready transition: completed only after canonical `main` remained at
+  `5e964adfd40502a3798630b98fb0d876bbd01d91`, the final head and exact scope
+  were rechecked, Hosted CI passed, and the PR was mergeable.
+- Squash merge: the exact candidate tree was merged to canonical `main` as
+  `1ede788b8b1c36bcc224cde15a5f6462c9b51938`.
+- Retained branch: `agent/target-identity-decoupling-v1` exists and points to
+  final candidate head `2dbd0c6735b4a0f081d1a064458750d73d870cfe`.
 
-The evidence-sync commit, its Hosted CI replay, final no-drift check, squash
-merge, and retained-branch disposition remain pending and must be verified
-before lifecycle completion.
+The lifecycle is accepted and closed. Its authority effect remains `none`, and
+it does not enter or authorize P15C.
