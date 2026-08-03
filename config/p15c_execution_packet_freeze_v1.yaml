@@ -1,0 +1,282 @@
+schema_version: 1
+packet_set_id: p15c-execution-packet-freeze-v1
+status: P15C_PACKET_FROZEN_PRE_ENTRY_NO_EXECUTION_AUTHORITY
+frozen_on: 2026-08-03
+authority:
+  packet: P15C-EXECUTION-PACKET-FREEZE-v1
+  evidence_completion_source: chat_user_message:2026-08-03-provider-repository-budget-and-read-only-research-scope
+  execution_authorized: false
+  p15c_stage_entry_authorized: false
+  provider_invocations_authorized: 0
+  benchmark_executions_authorized: 0
+  credential_value_access_authorized: false
+  private_repository_provider_transfer_authorized: false
+  target_mutation_authorized: false
+  production_authorized: false
+  cleanup_authorized: false
+  rollback_authorized: false
+
+tool_system_baseline:
+  repository: apolo183/tool-system
+  branch: main
+  commit: 81be20f8cdf2d588993347fa11ca090dc9f17135
+  tree: 23addb451399ae89cc99e2c740115596f5e763c0
+
+private_control_plane:
+  credential_store:
+    reference_id: private-control:credentials
+    purpose: provider_secret_values_only
+    tracked_in_repository: false
+    may_contain_execution_switch_or_budget: false
+  execution_policy:
+    reference_id: private-control:p15c-execution-policy
+    purpose: human_adjustable_non_secret_execution_switches_and_budget
+    tracked_in_repository: false
+    may_contain_credential_values: false
+    required_shape:
+      enabled: false
+      total_budget_usd: 20
+      provider_enabled:
+        deepseek: false
+        openai: false
+        qwen: false
+      private_repository_transfer_enabled: false
+      expires_at: required_before_execution
+  target_packet_store:
+    reference_id: private-control:p15c-target-packet
+    purpose: exact_external_target_identity_commit_allowlist_and_policy_evidence
+    tracked_in_repository: false
+    may_contain_credential_values: false
+    public_serialization_allowed: false
+  usage_ledger:
+    reference_id: private-state:p15c-usage-ledger
+    purpose: durable_cumulative_usage_and_cost_accounting
+    tracked_in_repository: false
+    human_policy_input: false
+  invariants:
+    - the runtime must never write the credential store
+    - lowering the private policy budget or disabling a switch takes effect without changing code
+    - a private policy budget above the public authorization ceiling blocks execution
+    - the shared usage ledger must be checked atomically before and after every future attempt
+    - changing a credential never changes execution authority or budget
+    - changing a policy switch never exposes or rewrites a credential value
+    - changing an external target packet never changes provider credentials or budget
+
+budget_envelope:
+  currency: USD
+  public_authorization_ceiling_micro_usd: 20000000
+  private_policy_default_micro_usd: 20000000
+  shared_across_provider_packets: true
+  per_provider_private_suballocation_allowed: true
+  qwen_current_allocation_micro_usd: 0
+  increase_above_public_ceiling_requires_new_authorization: true
+  execution_spend_in_this_freeze_micro_usd: 0
+
+deterministic_corpus:
+  corpus_id: p14h-python-typescript-seed-v1
+  role: immutable_specification_input_not_benchmark_result
+  aggregate_sha256: 8b527c193fee4970516a5d7794c13db0a3b6b25770ef3d85c6b4d5ccc4234953
+  files:
+    - path: tests/fixtures/p14h/python_cli/GOVERNANCE.md
+      git_blob_sha: 70cb57ecd0a8191b948865e780c48389a60f3baa
+    - path: tests/fixtures/p14h/python_cli/STATUS.md
+      git_blob_sha: a8bad3481c98dd91695689ab6e1c5ab8687d0b99
+    - path: tests/fixtures/p14h/python_cli/blueprint.yaml
+      git_blob_sha: 0f002d2c538210338d2556fc45e8ab9baec072d4
+    - path: tests/fixtures/p14h/python_cli/src/calculator.py
+      git_blob_sha: e29153d33b4cbb6e9d2020d32103ca63aafa7e05
+    - path: tests/fixtures/p14h/python_cli/tests/calculator_spec.py
+      git_blob_sha: 549b41302fabe1caef8a71abb71c53e2593004d5
+    - path: tests/fixtures/p14h/typescript_package/GOVERNANCE.md
+      git_blob_sha: 041f62d282540584fbf8fbf85e8d96d772f0cd9f
+    - path: tests/fixtures/p14h/typescript_package/STATUS.md
+      git_blob_sha: a8bad3481c98dd91695689ab6e1c5ab8687d0b99
+    - path: tests/fixtures/p14h/typescript_package/blueprint.yaml
+      git_blob_sha: 33099d058b89bfc6d1cd8d6483e9f987818ab808
+    - path: tests/fixtures/p14h/typescript_package/package.json
+      git_blob_sha: 082e82d5fb55e27c0a3527ffeb90a4e0fd35b716
+    - path: tests/fixtures/p14h/typescript_package/src/index.ts
+      git_blob_sha: ac2da622a50b6f3c7c88bc2d4bd08cc41640de7d
+    - path: tests/fixtures/p14h/typescript_package/src/legacy.ts
+      git_blob_sha: d801a579d5011ddd3415d2a188ad64a495e3123e
+    - path: tests/fixtures/p14h/typescript_package/tests/index.test.ts
+      git_blob_sha: ff785ff814c23c4414dc84d8f9d48c034c9a742b
+
+private_target_packet_contract:
+  binding_mode: operator_private_runtime_input
+  public_identity_serialized: false
+  public_commit_serialized: false
+  public_path_allowlist_serialized: false
+  public_content_digest_serialized: false
+  prepared_target_attestation: present_outside_repository
+  exact_snapshot_required_before_execution: true
+  required_private_fields:
+    - repository_identity
+    - visibility
+    - branch
+    - exact_commit
+    - exact_file_allowlist
+    - content_addressed_inventory
+    - durable_module_contract
+    - inventory_read_authority
+    - benchmark_read_authority
+    - provider_transfer_authority_by_provider
+    - mutation_authority
+  benchmark_read_authorized: false
+  provider_transfer_authorized: false
+  mutation_authorized: false
+  redaction_and_context_rules:
+    exact_file_allowlist_required: true
+    reject_untracked_files: true
+    reject_symlinks: true
+    reject_git_metadata: true
+    reject_environment_files: true
+    reject_credential_or_secret_material: true
+    provider_tools_enabled: false
+    provider_web_search_enabled: false
+
+common_attempt_limits: &common_attempt_limits
+  max_input_tokens: 65536
+  max_output_tokens: 8192
+  max_total_tokens: 73728
+  max_attempts: 1
+  max_retries: 0
+  request_timeout_seconds: 90
+  wall_clock_timeout_seconds: 120
+  cancellation_required: true
+  no_progress_stop_required: true
+  streaming: false
+  provider_tools_enabled: false
+  provider_web_search_enabled: false
+  response_storage_requested: false
+
+provider_packets:
+  - packet_id: P15C-DEEPSEEK-V4-FLASH-READONLY-v1
+    provider_id: deepseek
+    execution_surface_id: deepseek-responses-api
+    model_id: deepseek-v4-flash
+    exact_model_version: DeepSeek-V4-Flash-0731
+    qualification_state: QUARANTINED
+    packet_status: FROZEN_NOT_ACTIVATED
+    base_url: https://api.deepseek.com
+    operation: responses.create
+    credential_reference: private-control:credentials#providers.deepseek.api_key
+    credential_value_inspected: false
+    operator_availability_attestation: available
+    official_health_snapshot: operational_on_2026-08-03
+    private_repository_policy_fit: blocked_pending_explicit_provider_transfer_authorization
+    official_limits:
+      context_tokens: 1000000
+      max_output_tokens: 384000
+      concurrency: 2500
+    attempt_limits: *common_attempt_limits
+    pricing_snapshot:
+      currency: USD
+      per_million_cache_miss_input: 0.14
+      per_million_output: 0.28
+      announced_peak_multiplier_used_for_ceiling: 2
+      calculated_worst_case_micro_usd: 22400
+      per_attempt_hard_cap_micro_usd: 25000
+    data_policy:
+      repository_content_transfer_allowed: false
+      retention_fit: blocked_pending_owner_review
+      residency: People's Republic of China
+      training_or_service_improvement_use_excluded: false
+    official_evidence:
+      model_and_price: https://api-docs.deepseek.com/quick_start/pricing/
+      responses_surface: https://api-docs.deepseek.com/guides/responses_api/
+      health: https://status.deepseek.com/
+      privacy: https://cdn.deepseek.com/policies/zh-CN/deepseek-privacy-policy.html
+
+  - packet_id: P15C-OPENAI-GPT-5.6-LUNA-READONLY-v1
+    provider_id: openai
+    execution_surface_id: openai-responses-api
+    model_id: gpt-5.6-luna
+    exact_model_version: gpt-5.6-luna
+    qualification_state: QUARANTINED
+    packet_status: FROZEN_NOT_ACTIVATED
+    base_url: https://api.openai.com/v1
+    operation: responses.create
+    credential_reference: private-control:credentials#providers.openai.api_key
+    prior_reference_to_migrate_without_reading_value: env:OPENAI_API_KEY
+    credential_value_inspected: false
+    operator_availability_attestation: available
+    official_health_snapshot: operational_on_2026-08-03
+    private_repository_policy_fit: blocked_pending_explicit_provider_transfer_authorization
+    official_limits:
+      context_tokens: 1050000
+      max_output_tokens: 128000
+      long_context_price_threshold_tokens: 272000
+    attempt_limits: *common_attempt_limits
+    pricing_snapshot:
+      currency: USD
+      per_million_input: 0.20
+      per_million_cached_input: 0.02
+      per_million_output: 1.20
+      calculated_worst_case_micro_usd: 22400
+      per_attempt_hard_cap_micro_usd: 25000
+    data_policy:
+      repository_content_transfer_allowed: false
+      api_training_default: false
+      default_abuse_monitoring_retention_days_max: 30
+      response_storage_requested: false
+    official_evidence:
+      model_price_limits_and_surface: https://developers.openai.com/api/docs/models/gpt-5.6-luna
+      health: https://status.openai.com/
+      data_controls: https://platform.openai.com/docs/models/default-usage-policies-by-endpoint
+
+  - packet_id: P15C-QWEN-3.7-PLUS-READONLY-v1
+    provider_id: qwen
+    execution_surface_id: qwen-openai-compatible-chat
+    model_id: qwen3.7-plus-2026-05-26
+    exact_model_version: qwen3.7-plus-2026-05-26
+    qualification_state: QUARANTINED
+    packet_status: BLOCKED_NOT_FUNDED
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    operation: chat.completions.create
+    credential_reference: private-control:credentials#providers.qwen.api_key
+    credential_value_inspected: false
+    operator_availability_attestation: not_funded
+    private_repository_policy_fit: blocked_pending_explicit_provider_transfer_authorization
+    official_limits:
+      context_tokens: 1000000
+      max_output_tokens: 65536
+      snapshot_rpm: 600
+      snapshot_tpm: 1000000
+    attempt_limits: *common_attempt_limits
+    pricing_snapshot:
+      currency: CNY
+      input_range_max_tokens: 256000
+      per_million_input: 2
+      per_million_output: 8
+      calculated_worst_case_micro_cny: 192000
+      per_attempt_hard_cap_micro_cny: 250000
+      shared_usd_budget_allocation_micro_usd: 0
+    data_policy:
+      repository_content_transfer_allowed: false
+      provider_declares_customer_data_used_for_training: false
+      transport_encryption_declared: true
+    unblock_requires:
+      - funded balance or quota evidence without recording a credential value
+      - current currency conversion policy if a USD allocation is assigned
+      - fresh health and availability preflight
+      - explicit private repository provider-transfer authorization
+      - separately authorized P15C execution
+    official_evidence:
+      model_price_limits: https://help.aliyun.com/zh/model-studio/qwen3-7-plus
+      endpoint: https://help.aliyun.com/zh/model-studio/qwen-api-via-openai-chat-completions
+      credential_safety: https://help.aliyun.com/zh/model-studio/get-api-key/
+      cost_control_limit: https://help.aliyun.com/zh/model-studio/model-telemetry/
+      data_policy: https://help.aliyun.com/zh/model-studio/what-is-model-studio
+
+activation_gates:
+  - a separately authorized P15C live execution lifecycle names this exact packet-set commit
+  - canonical tool-system main and the private target packet remain unchanged or are re-frozen
+  - the private execution policy exists, validates, is enabled, is unexpired, and does not exceed 20 USD
+  - the private usage ledger proves sufficient remaining shared budget
+  - the credential reference exists and is permission-valid without publishing or logging its value
+  - the selected provider is funded and currently available
+  - the selected provider data policy is explicitly accepted for the exact private repository allowlist
+  - provider transfer of the private repository is explicitly authorized
+  - cancellation, timeout, token, attempt, cost, retry, redaction, and no-progress controls are implemented and validated
+  - provider tools, provider web search, target mutation, production, cleanup, and rollback remain disabled
