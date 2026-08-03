@@ -249,9 +249,9 @@ p14f:
 p14g:
   implementation_authorization_packet: P14G-DURABLE-LOCAL-GIT-LIFECYCLE-v1
   module_id: local-git
-  module_version: 1.0.0
+  module_version: 1.1.0
   public_interface_id: local-git-api
-  public_interface_version: 1.0.0
+  public_interface_version: 1.1.0
   acceptance_record: docs/reports/p14g_durable_local_git_acceptance.md
   acceptance_status: accepted
   accepted_at: 2026-08-03 UTC+09:00
@@ -260,6 +260,9 @@ p14g:
     exact_base_commit_tree_and_scope_preflight: true
     durable_lease_checkpoint_attempt_and_side_effect_receipts: true
     one_local_branch_and_commit: true
+    exact_baseline_presence_and_content_topology: true
+    add_modify_delete_delta_in_one_commit: true
+    staged_paths_equal_actual_changed_subset: true
     crash_after_completed_commit_resume_without_duplicate: true
     ambiguous_side_effect_blocks: true
     rollback_cleanup_and_draft_pr_are_plans_only: true
@@ -268,6 +271,11 @@ p14g:
     credential_accesses: 0
     downstream_repository_operations: 0
   real_downstream_repository_accessed: false
+  file_topology_correction:
+    authorization_packet: P14H-PREREQUISITE-CORRECTIONS-v1
+    acceptance_record: docs/reports/p14g_file_topology_correction_acceptance.md
+    acceptance_status: accepted_fixture_only
+    authority_effect: none
   stage_accepted: true
 authorization_boundaries:
   state_file_grants_authority: false

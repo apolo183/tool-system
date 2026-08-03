@@ -1496,12 +1496,12 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: local-git
-  module_version: 1.0.0
-  role: durably record one bounded change in an isolated local Git fixture. Freeze Git identity and scope, consume a sealed development-loop result, bind it to durable leases/checkpoints/side-effect receipts, create one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
+  module_version: 1.1.0
+  role: durably record one bounded change in an isolated local Git fixture. Freeze Git identity, scope, and exact baseline presence/content topology, consume a sealed development-loop result containing a subset of the allowed scope, bind it to durable leases/checkpoints/side-effect receipts, stage the exact add/modify/delete delta, create one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
   owner: local-git
   public_interface_refs:
   - interface_id: local-git-api
-    interface_version: 1.0.0
+    interface_version: 1.1.0
   internal_dependencies:
   - interface_id: development-loop-api
     interface_version: 1.1.0
@@ -1532,7 +1532,7 @@ modules:
     target_boundary_id: code-002
     effect_contract: &local_git_contract
       repo_relative_path: docs/modules/local-git-contract-v1.md
-      sha256: 2ca4242e4da2494a03fbcc64a1a2a9c0a00368e47e9a40f9101710c792080ed4
+      sha256: cc4aba0c7fa37732628ba51d52d624f1bd28b2d279aaecc5f4dff367ede3d894
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-002
@@ -2151,12 +2151,12 @@ interfaces:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: local-git-api
-  interface_version: 1.0.0
+  interface_version: 1.1.0
   provider_module_id: local-git
   consumers: []
   input_contract: &local_git_interface_contract
     repo_relative_path: docs/modules/local-git-contract-v1.md
-    sha256: 2ca4242e4da2494a03fbcc64a1a2a9c0a00368e47e9a40f9101710c792080ed4
+    sha256: cc4aba0c7fa37732628ba51d52d624f1bd28b2d279aaecc5f4dff367ede3d894
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *local_git_interface_contract

@@ -208,3 +208,128 @@ def test_crash_after_durable_commit_resumes_without_duplicate_commit(tmp_path: P
     assert resumed["terminal_code"] == "RESUMED_COMPLETED_LOCAL_COMMIT"
     assert resumed["commit"] == commit
     assert _git(root, "rev-list", "--count", f"{identity.expected_head_sha}..HEAD") == "1"
+
+
+def test_records_add_modify_delete_topology_in_one_commit(tmp_path: Path) -> None:
+    root, store, identity = _fixture(tmp_path)
+    (root / "delete.txt").write_text("remove\n", encoding="utf-8")
+    _git(root, "add", "delete.txt")
+    _git(
+        root,
+        "-c",
+        "user.name=fixture",
+        "-c",
+        "user.email=f@x.invalid",
+        "commit",
+        "--amend",
+        "--no-edit",
+    )
+    identity = LocalGitIdentity(
+        expected_head_sha=_git(root, "rev-parse", "HEAD"),
+        expected_tree_sha=_git(root, "rev-parse", "HEAD^{tree}"),
+        branch_name=identity.branch_name,
+        commit_message=identity.commit_message,
+    )
+    contract = FrozenDevelopmentContract(
+        task_digest="c" * 64,
+        baseline_tree="d" * 64,
+        allowed_scope=("add.txt", "app.txt", "delete.txt"),
+        acceptance_set=("topology",),
+        validation_set=("test",),
+    )
+
+    result = run_durable_local_git(
+        repository_root=root,
+        store=store,
+        run_id="topology-run",
+        task_id="local-change",
+        lease_owner="fixture-worker",
+        identity=identity,
+        contract=contract,
+        baseline_files={"app.txt": "old\n", "delete.txt": "remove\n"},
+        worker=lambda _: {
+            "operations": [
+                {
+                    "op": "add",
+                    "path": "add.txt",
+                    "expected_sha256": None,
+                    "content": "added\n",
+                },
+                {
+                    "op": "replace",
+                    "path": "app.txt",
+                    "expected_sha256": hashlib.sha256(b"old\n").hexdigest(),
+                    "content": "new\n",
+                },
+                {
+                    "op": "delete",
+                    "path": "delete.txt",
+                    "expected_sha256": hashlib.sha256(b"remove\n").hexdigest(),
+                },
+            ]
+        },
+        validator=lambda files: {
+            "validation_results": {
+                "test": {
+                    "status": "PASS"
+                    if files == {"add.txt": "added\n", "app.txt": "new\n"}
+                    else "BLOCK",
+                    "diagnostic": None,
+                }
+            },
+            "satisfied_acceptance_items": ["topology"],
+        },
+        code_reviewer=_review,
+        contract_reviewer=_review,
+    )
+
+    assert result["status"] == "PASS"
+    assert _git(root, "diff", "--name-status", identity.expected_head_sha, "HEAD").splitlines() == [
+        "A\tadd.txt",
+        "M\tapp.txt",
+        "D\tdelete.txt",
+    ]
+    assert _git(root, "show", "HEAD:add.txt") == "added"
+    assert _git(root, "show", "HEAD:app.txt") == "new"
+
+
+def test_baseline_topology_and_content_drift_block_before_durable_write(
+    tmp_path: Path,
+) -> None:
+    for index, (baseline, expected) in enumerate((
+        ({}, "BASELINE_SCOPE_MISMATCH"),
+        ({"app.txt": "wrong\n"}, "BASELINE_CONTENT_MISMATCH"),
+        (
+            {"app.txt": "old\n", "absent.txt": "invented\n"},
+            "BASELINE_SCOPE_MISMATCH",
+        ),
+    )):
+        case_root = tmp_path / f"{index}-{expected}"
+        case_root.mkdir()
+        root, store, identity = _fixture(case_root)
+        contract = FrozenDevelopmentContract(
+            task_digest="e" * 64,
+            baseline_tree="f" * 64,
+            allowed_scope=("absent.txt", "app.txt"),
+            acceptance_set=("content",),
+            validation_set=("test",),
+        )
+
+        result = run_durable_local_git(
+            repository_root=root,
+            store=store,
+            run_id="drift-run",
+            task_id="local-change",
+            lease_owner="fixture-worker",
+            identity=identity,
+            contract=contract,
+            baseline_files=baseline,
+            worker=_worker,
+            validator=_validator,
+            code_reviewer=_review,
+            contract_reviewer=_review,
+        )
+
+        assert result["terminal_code"] == expected
+        assert store.get_run("drift-run") is None
+        assert _git(root, "branch", "--show-current") == "main"

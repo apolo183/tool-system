@@ -279,14 +279,14 @@ mapping_contract:
       rollback_identity: tool-system@0b5110a2eea79ebde650e1088b787c781ddab171:development_loop@absent
     - current_module_id: local_git
       canonical_module_id: local-git
-      current_module_version: 1.0.0
+      current_module_version: 1.1.0
       aggregate_interface_id: local-git-api
-      aggregate_interface_version: 1.0.0
+      aggregate_interface_version: 1.1.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.local_git}
       direct_consumer_module_ids: []
-      change_risk: "high: remote-free local Git writes coordinated with durable receipts and crash resume"
+      change_risk: "high: remote-free add/modify/delete local Git writes coordinated with durable receipts and crash resume"
       rollback_identity: tool-system@22dedb0f2a2c0b38a0bd4c67f36c1c2454ca19d5:local_git@absent
 ~~~
 <!-- MODULE-IDENTITY-MAPPING:END -->

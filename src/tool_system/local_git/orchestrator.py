@@ -115,22 +115,98 @@ def _validate_repository(
         raise DurableLocalGitError("TREE_PRECONDITION_DRIFT")
 
 
-def _write_candidate(root: Path, files: Mapping[str, object], scope: tuple[str, ...]) -> None:
-    if set(files) != set(scope):
-        raise DurableLocalGitError("SEALED_SCOPE_MISMATCH")
+def _validate_baseline_topology(
+    root: Path,
+    baseline_files: Mapping[str, object],
+    scope: tuple[str, ...],
+) -> None:
+    scope_set = set(scope)
+    if not scope_set or not set(baseline_files) <= scope_set:
+        raise DurableLocalGitError("BASELINE_SCOPE_MISMATCH")
+    existing: set[str] = set()
     for name in scope:
+        record = _git(root, "ls-tree", "HEAD", "--", name)
+        if not record:
+            continue
+        metadata, separator, recorded_name = record.partition("\t")
+        parts = metadata.split()
+        if separator != "\t" or recorded_name != name or len(parts) != 3:
+            raise DurableLocalGitError("UNSAFE_BASELINE_PATH")
+        mode, kind, blob_sha = parts
+        if kind != "blob" or mode not in {"100644", "100755"}:
+            raise DurableLocalGitError("UNSAFE_BASELINE_PATH")
+        existing.add(name)
+        content = baseline_files.get(name)
+        if not isinstance(content, str):
+            raise DurableLocalGitError("BASELINE_SCOPE_MISMATCH")
+        completed = subprocess.run(
+            ["git", "hash-object", "--stdin"],
+            cwd=root,
+            check=False,
+            input=content.encode("utf-8"),
+            capture_output=True,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+        )
+        if completed.returncode or completed.stdout.decode().strip() != blob_sha:
+            raise DurableLocalGitError("BASELINE_CONTENT_MISMATCH")
+    if existing != set(baseline_files):
+        raise DurableLocalGitError("BASELINE_SCOPE_MISMATCH")
+
+
+def _changed_paths(
+    baseline_files: Mapping[str, object],
+    candidate_files: Mapping[str, object],
+    scope: tuple[str, ...],
+) -> tuple[str, ...]:
+    scope_set = set(scope)
+    if not set(candidate_files) <= scope_set:
+        raise DurableLocalGitError("SEALED_SCOPE_MISMATCH")
+    for content in candidate_files.values():
+        if not isinstance(content, str):
+            raise DurableLocalGitError("INVALID_CANDIDATE_CONTENT")
+    changed = tuple(
+        name
+        for name in scope
+        if (name in baseline_files) != (name in candidate_files)
+        or baseline_files.get(name) != candidate_files.get(name)
+    )
+    if not changed:
+        raise DurableLocalGitError("EMPTY_CANDIDATE_CHANGE")
+    return changed
+
+
+def _write_candidate(
+    root: Path,
+    files: Mapping[str, object],
+    changed_paths: tuple[str, ...],
+) -> None:
+    for name in changed_paths:
         target = root / name
         try:
             target.relative_to(root)
         except ValueError as exc:
             raise DurableLocalGitError("PATH_ESCAPE") from exc
-        if target.exists() and (target.is_symlink() or not stat.S_ISREG(target.lstat().st_mode)):
+        parent = root
+        for part in Path(name).parts[:-1]:
+            parent /= part
+            if parent.is_symlink() or (
+                parent.exists() and not parent.is_dir()
+            ):
+                raise DurableLocalGitError("UNSAFE_CANDIDATE_PATH")
+        if target.is_symlink() or (
+            target.exists() and not stat.S_ISREG(target.lstat().st_mode)
+        ):
             raise DurableLocalGitError("UNSAFE_CANDIDATE_PATH")
-        content = files[name]
-        if not isinstance(content, str):
-            raise DurableLocalGitError("INVALID_CANDIDATE_CONTENT")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content, encoding="utf-8")
+        if name in files:
+            content = files[name]
+            if not isinstance(content, str):
+                raise DurableLocalGitError("INVALID_CANDIDATE_CONTENT")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
+        else:
+            if not target.exists():
+                raise DurableLocalGitError("DELETE_PRECONDITION_DRIFT")
+            target.unlink()
 
 
 def run_durable_local_git(
@@ -179,8 +255,12 @@ def run_durable_local_git(
             completed_commit=completed_commit,
         )
         contract.validate()
-        if not set(contract.allowed_scope) or set(contract.allowed_scope) != set(baseline_files):
-            raise DurableLocalGitError("BASELINE_SCOPE_MISMATCH")
+        if completed_commit is None:
+            _validate_baseline_topology(
+                root,
+                baseline_files,
+                contract.allowed_scope,
+            )
         store.create_run(run_id, blueprint_ref="P14G", manifest_ref=contract.task_digest)
         if store.get_task(run_id, task_id) is None:
             store.add_task(
@@ -272,10 +352,15 @@ def run_durable_local_git(
 
         candidate_files = loop_result["candidate_files"]
         assert isinstance(candidate_files, Mapping)
-        _write_candidate(root, candidate_files, contract.allowed_scope)
-        _git(root, "add", "--", *contract.allowed_scope)
+        changed_paths = _changed_paths(
+            baseline_files,
+            candidate_files,
+            contract.allowed_scope,
+        )
+        _write_candidate(root, candidate_files, changed_paths)
+        _git(root, "add", "-A", "--", *changed_paths)
         staged = tuple(filter(None, _git(root, "diff", "--cached", "--name-only").splitlines()))
-        if set(staged) != set(contract.allowed_scope):
+        if set(staged) != set(changed_paths):
             raise DurableLocalGitError("STAGED_SCOPE_MISMATCH")
 
         commit_effect = store.plan_side_effect(
@@ -287,7 +372,11 @@ def run_durable_local_git(
             resource_scope="local_fixture",
             idempotency_key=f"{run_id}:commit:{loop_result['candidate_tree']}",
             expected_precondition_sha=identity.expected_head_sha,
-            payload={"branch": identity.branch_name, "candidate_tree": loop_result["candidate_tree"]},
+            payload={
+                "branch": identity.branch_name,
+                "candidate_tree": loop_result["candidate_tree"],
+                "changed_paths": list(changed_paths),
+            },
             lease_owner=lease_owner,
             task_attempt=attempt,
         )

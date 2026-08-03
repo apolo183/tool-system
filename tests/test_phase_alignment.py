@@ -31,6 +31,9 @@ P14F_ACCEPTANCE_REPORT = (
 P14F_CANCELLATION_REPORT = (
     ROOT / "docs" / "reports" / "p14f_cancellation_correction_acceptance.md"
 )
+P14G_TOPOLOGY_REPORT = (
+    ROOT / "docs" / "reports" / "p14g_file_topology_correction_acceptance.md"
+)
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
@@ -239,6 +242,19 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
         "cancelled_worker_patch_discarded"
     ] is True
     assert p14f["cancellation_correction"]["authority_effect"] == "none"
+    p14g = project_state["p14g"]
+    assert p14g["module_version"] == "1.1.0"
+    assert p14g["public_interface_version"] == "1.1.0"
+    assert p14g["accepted_fixture_evidence"][
+        "exact_baseline_presence_and_content_topology"
+    ] is True
+    assert p14g["accepted_fixture_evidence"][
+        "add_modify_delete_delta_in_one_commit"
+    ] is True
+    assert p14g["accepted_fixture_evidence"][
+        "staged_paths_equal_actual_changed_subset"
+    ] is True
+    assert p14g["file_topology_correction"]["authority_effect"] == "none"
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["state_file_grants_authority"] is False
     assert boundaries["live_model_provider_execution_authorized"] is False
@@ -262,6 +278,9 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     )
     assert "P14F_CANCELLATION_CORRECTION_ACCEPTED_FIXTURE_ONLY" in (
         P14F_CANCELLATION_REPORT.read_text(encoding="utf-8")
+    )
+    assert "P14G_FILE_TOPOLOGY_CORRECTION_ACCEPTED_FIXTURE_ONLY" in (
+        P14G_TOPOLOGY_REPORT.read_text(encoding="utf-8")
     )
     for public_contract in (agents_text, readme_text, principles_text):
         assert "docs/tool_system_project_state_v1.yaml" in public_contract
