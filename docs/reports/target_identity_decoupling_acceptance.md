@@ -47,6 +47,14 @@ benchmark, production, cleanup, or rollback operation.
 - External operations: zero downstream-repository access, provider invocation,
   credential-value access, benchmark execution, mutation, production, cleanup,
   and rollback operations.
+- Draft pull request: `apolo183/tool-system#171`, with 31 changed paths and
+  candidate commit `89730ca1ab8e6f5eb5d3a78025a905df3cb568a8` / tree
+  `008e2deaf5378e3d8052a657aff1b7d35b0d22d5` based directly on canonical
+  `main@5e964adfd40502a3798630b98fb0d876bbd01d91`.
+- Hosted CI: `tool-system-ci` run `30811492314` (`#1066`) passed. Its `verify`
+  job completed tests plus active-gates, process-authority, current module-
+  registry, and repository-manifest validation successfully.
 
-Hosted CI, pull-request, squash-merge, and retained-branch evidence remain
-pending and must be verified before lifecycle completion.
+The evidence-sync commit, its Hosted CI replay, final no-drift check, squash
+merge, and retained-branch disposition remain pending and must be verified
+before lifecycle completion.
