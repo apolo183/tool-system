@@ -154,17 +154,19 @@ def test_p14c_bounded_deepseek_receipt_is_accepted_without_new_authority() -> No
     source_hardening_report = SOURCE_HARDENING_REPORT.read_text(encoding="utf-8")
     acceptance_report = ACCEPTANCE_REPORT.read_text(encoding="utf-8")
 
+    assert current_phase["id"] == "P15_MULTI_PROJECT_BENCHMARK"
     assert current_phase["last_accepted_stage"] == (
-        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
+        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
     )
     assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p14h_multi_stack_fixture_acceptance.md"
+        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
     )
-    assert current_phase["status"] == "accepted_and_closed"
-    assert current_phase["closure_stage"] == "P14I_ACCEPTANCE_CLOSURE"
-    assert current_phase["next_stage"] is None
+    assert current_phase["status"] == "active"
+    assert current_phase["next_stage"] == (
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+    )
     assert current_phase["next_stage_authorized"] is False
-    assert current_phase["next_phase"] == "P15_MULTI_PROJECT_BENCHMARK"
+    assert current_phase["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
     assert current_phase["next_phase_entry_authorized"] is False
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["source_status"] == "bounded_deepseek_live_provider_proof_accepted"

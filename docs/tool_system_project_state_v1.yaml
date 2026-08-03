@@ -7,29 +7,25 @@ blueprint:
   schema_version: 0.6
   process_state_allowed_in_blueprint: false
 current_phase:
-  id: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
-  status: accepted_and_closed
-  entry_record: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
+  id: P15_MULTI_PROJECT_BENCHMARK
+  status: active
+  entry_record: docs/reports/p15a_provider_portfolio_qualification_specification.md
   entry_authorized: true
-  acceptance_record: docs/reports/p14i_blueprint_to_code_acceptance_closure.md
-  accepted_at: 2026-08-03 UTC+09:00
-  last_accepted_stage: P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE
-  last_accepted_stage_record: docs/reports/p14h_multi_stack_fixture_acceptance.md
-  closure_stage: P14I_ACCEPTANCE_CLOSURE
-  closure_stage_record: docs/reports/p14i_blueprint_to_code_acceptance_closure.md
-  next_stage: null
+  last_accepted_stage: P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION
+  last_accepted_stage_record: docs/reports/p15a_provider_portfolio_qualification_specification.md
+  next_stage: P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES
   next_stage_authorized: false
-  next_phase: P15_MULTI_PROJECT_BENCHMARK
+  next_phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   next_phase_entry_authorized: false
 prior_acceptance:
-  phase: P13_SECURITY_RELIABILITY_HARDENING
-  record: docs/reports/p13e_security_reliability_acceptance_closure.md
-  accepted_at: 2026-07-12 UTC+09:00
-  accepted_scope: application_guarded_local_fixture_worker_and_single_host_sqlite_hardening
+  phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+  record: docs/reports/p14i_blueprint_to_code_acceptance_closure.md
+  accepted_at: 2026-08-03 UTC+09:00
+  accepted_scope: approved_bounded_blueprint_isolated_repository_fixture_auditable_resumable_fail_closed_local_git_workflow
   predecessor:
-    phase: P12_DURABLE_ORCHESTRATOR
-    record: docs/reports/p12e_durable_orchestrator_acceptance_closure.md
-    accepted_scope: single_host_local_fixture_sqlite_durable_orchestrator
+    phase: P13_SECURITY_RELIABILITY_HARDENING
+    record: docs/reports/p13e_security_reliability_acceptance_closure.md
+    accepted_scope: application_guarded_local_fixture_worker_and_single_host_sqlite_hardening
 p14c:
   source_record: docs/reports/p14c_bounded_real_model_provider_execution.md
   source_role: implementation_evidence_only
@@ -339,6 +335,67 @@ p14i:
   production_operations: 0
   cleanup_operations: 0
   rollback_operations: 0
+  stage_accepted: true
+p15a:
+  authorization_packet: P15A-PHASE-ENTRY-AND-QUALIFICATION-SPECIFICATION-LIFECYCLE-v1
+  baseline_commit: e3b02654edbe69850d0f801adb77a083c444b2d3
+  baseline_tree: ef8de13cce5ce55b713ba8a083196142f6504ccd
+  phase_entry_and_specification_record: docs/reports/p15a_provider_portfolio_qualification_specification.md
+  specification_status: accepted_governance_only
+  accepted_at: 2026-08-03 UTC+09:00
+  provider_neutral_interface_lock:
+    protocol_path: src/tool_system/ai_worker/contract.py
+    protocol_symbol: AIWorkerProvider
+    aggregate_interface_id: ai-worker-runtime-api
+    aggregate_interface_version: 1.0.0
+    selection_contract_path: docs/model_provider_portfolio_and_economics_contract_v1.md
+    selection_module_id: adaptive_model_portfolio_and_economics
+    selection_public_interface_version: 1
+  task_profile_required_fields:
+    - task_class_language_repository_context_and_dependency_breadth
+    - reasoning_and_implementation_complexity
+    - independent_security_data_repository_mutation_and_operational_risk
+    - required_capabilities_and_minimum_quality_confidence_floor
+    - verification_and_repair_burden
+    - critical_path_slack_and_delay_sensitivity
+    - evidence_confidence_and_uncertainty_reasons
+  hard_floor_categories:
+    - authorization_and_execution_surface
+    - data_policy_residency_retention_and_sensitivity
+    - exact_model_capability_context_and_output_limits
+    - independent_security_quality_and_risk
+    - time_token_cost_retry_cancellation_and_no_progress_limits
+    - current_catalog_policy_benchmark_health_and_precondition_evidence
+    - repository_access_and_mutation_authority
+  economics_objective: expected_total_economic_cost_per_accepted_module
+  private_economic_values_publicly_recorded: false
+  qualification_states:
+    - DISCOVERED
+    - QUARANTINED
+    - BENCHMARKING
+    - SHADOW
+    - CANARY
+    - ELIGIBLE
+    - PRIMARY
+    - DEGRADED
+    - RETIRED
+  benchmark_corpus_seed_boundary: accepted_p14_isolated_python_and_typescript_fixtures_as_specification_inputs_only
+  benchmark_results_created: 0
+  provider_candidates_enabled: 0
+  provider_adapters_added_or_modified: 0
+  credential_reference_metadata_inspected: true
+  credential_resolver_invocations: 0
+  credential_value_accesses: 0
+  provider_invocations: 0
+  network_operations: 0
+  real_downstream_repository_accesses: 0
+  target_mutations: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+  blueprint_changes: 0
+  runtime_source_changes: 0
+  p15b_authorized: false
   stage_accepted: true
 authorization_boundaries:
   state_file_grants_authority: false

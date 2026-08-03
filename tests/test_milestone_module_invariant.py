@@ -199,11 +199,15 @@ def test_p14mr_report_is_acceptance_evidence_not_durable_rule_owner() -> None:
     current_phase = project_state["current_phase"]
 
     assert REPORT.is_file()
+    assert project_state["prior_acceptance"]["phase"] == (
+        "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
+    )
+    assert project_state["p14i"]["acceptance_status"] == "accepted_and_closed"
     assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p14h_multi_stack_fixture_acceptance.md"
+        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
     )
     assert current_phase["last_accepted_stage"] == (
-        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
+        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
     )
     assert project_state["authority_effect"] == "none"
 
@@ -232,9 +236,9 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
 
     assert "phase" not in blueprint
     assert "status" not in blueprint
-    assert current_phase["id"] == "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
+    assert current_phase["id"] == "P15_MULTI_PROJECT_BENCHMARK"
     assert current_phase["last_accepted_stage"] == (
-        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
+        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
     )
     assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["execution_boundary"] == (
         "governance_only"
@@ -259,11 +263,16 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     assert "durable_module_and_milestone_change_governance" in blueprint[
         "boundaries"
     ]["owns"]
-    assert current_phase["status"] == "accepted_and_closed"
-    assert current_phase["closure_stage"] == "P14I_ACCEPTANCE_CLOSURE"
-    assert current_phase["next_stage"] is None
+    assert project_state["prior_acceptance"]["phase"] == (
+        "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
+    )
+    assert project_state["p14i"]["acceptance_status"] == "accepted_and_closed"
+    assert current_phase["status"] == "active"
+    assert current_phase["next_stage"] == (
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+    )
     assert current_phase["next_stage_authorized"] is False
-    assert current_phase["next_phase"] == "P15_MULTI_PROJECT_BENCHMARK"
+    assert current_phase["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
     assert current_phase["next_phase_entry_authorized"] is False
     assert (
         project_state["authorization_boundaries"]

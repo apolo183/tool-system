@@ -12,6 +12,12 @@ MODEL_CONTRACT = ROOT / "docs" / "model_provider_portfolio_and_economics_contrac
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 README = ROOT / "README.md"
 AGENTS = ROOT / "AGENTS.md"
+P15A_REPORT = (
+    ROOT
+    / "docs"
+    / "reports"
+    / "p15a_provider_portfolio_qualification_specification.md"
+)
 
 
 def test_provider_portfolio_contract_is_product_control_not_runtime_authority() -> None:
@@ -32,14 +38,22 @@ def test_provider_portfolio_contract_is_product_control_not_runtime_authority() 
     assert "The names above are portfolio candidates, not enabled routes." in contract
 
     current_phase = project_state["current_phase"]
+    assert current_phase["id"] == "P15_MULTI_PROJECT_BENCHMARK"
     assert current_phase["last_accepted_stage"] == (
-        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
+        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
     )
-    assert current_phase["status"] == "accepted_and_closed"
-    assert current_phase["closure_stage"] == "P14I_ACCEPTANCE_CLOSURE"
-    assert current_phase["next_stage"] is None
+    assert current_phase["last_accepted_stage_record"] == (
+        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
+    )
+    assert current_phase["status"] == "active"
+    assert current_phase["entry_record"] == (
+        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
+    )
+    assert current_phase["next_stage"] == (
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+    )
     assert current_phase["next_stage_authorized"] is False
-    assert current_phase["next_phase"] == "P15_MULTI_PROJECT_BENCHMARK"
+    assert current_phase["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
     assert current_phase["next_phase_entry_authorized"] is False
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["live_model_provider_execution_authorized"] is False
@@ -48,7 +62,15 @@ def test_provider_portfolio_contract_is_product_control_not_runtime_authority() 
     p14c = project_state["p14c"]
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
     assert p14c["stage_accepted"] is True
-    assert current_phase["next_phase_entry_authorized"] is False
+    p15a = project_state["p15a"]
+    assert p15a["specification_status"] == "accepted_governance_only"
+    assert p15a["provider_candidates_enabled"] == 0
+    assert p15a["provider_invocations"] == 0
+    assert p15a["credential_value_accesses"] == 0
+    assert p15a["p15b_authorized"] is False
+    report = P15A_REPORT.read_text(encoding="utf-8")
+    assert "P15A_ACCEPTED_GOVERNANCE_ONLY_QUALIFICATION_SPECIFICATION" in report
+    assert "expected_total_economic_cost_per_accepted_module" in report
     assert "active_phase_execution" not in blueprint
     assert "p14c_source_implementation" not in blueprint
 

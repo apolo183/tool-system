@@ -397,17 +397,19 @@ def test_p14d_exact_task_pair_and_descriptive_acceptance_state_validate() -> Non
     assert set(plan["changed_files"]) == P14D_FILES
     assert len(P14D_FILES) == 19
     current = state["current_phase"]
+    assert current["id"] == "P15_MULTI_PROJECT_BENCHMARK"
     assert current["last_accepted_stage"] == (
-        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
+        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
     )
     assert current["last_accepted_stage_record"] == (
-        "docs/reports/p14h_multi_stack_fixture_acceptance.md"
+        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
     )
-    assert current["status"] == "accepted_and_closed"
-    assert current["closure_stage"] == "P14I_ACCEPTANCE_CLOSURE"
-    assert current["next_stage"] is None
+    assert current["status"] == "active"
+    assert current["next_stage"] == (
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+    )
     assert current["next_stage_authorized"] is False
-    assert current["next_phase"] == "P15_MULTI_PROJECT_BENCHMARK"
+    assert current["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
     assert current["next_phase_entry_authorized"] is False
     assert state["authority_effect"] == "none"
     assert state["p14d"]["stage_accepted"] is True
