@@ -1,0 +1,123 @@
+task_id: tool-system-p14h-multi-stack-fixture-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/p14h-multi-stack-fixture-v1
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stage_plan.P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE
+alignment:
+  parent:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.required_acceptance_fixtures
+    scope: Accept every frozen P14H fixture scenario without changing P14C through P14G runtime source.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Prove the bounded blueprint-to-local-Git workflow across isolated Python and TypeScript stacks.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P14H-MULTI-STACK-FIXTURE-LIFECYCLE-v1
+    baseline_commit: c4905bbcde3b69e899a41046c00c172b03247c02
+    baseline_tree: cd1e21f33047c42ea51493754508c7b17825f09c
+    allowed_scope: exact_25_paths_listed_below
+    acceptance_set:
+      - greenfield Python CLI and existing Python library flows compile repair review and record one local commit
+      - TypeScript language-neutral flow records exact add modify delete topology
+      - ambiguous blueprint invented milestone and out-of-scope patch block before mutation
+      - cancellation resumes safely repeated fingerprints stop and stale metadata cannot reopen sealed source
+      - completed commit crash resumes without duplicate task branch commit or remote PR
+      - local branch conflict blocks and deterministic content-addressed replay is stable
+      - P14H state and immutable evidence are accepted while P14I remains unauthorized
+      - blueprint and P14C through P14G runtime source remain unchanged and all external operations remain zero
+    validation_set:
+      - focused P14H phase and repository-manifest tests
+      - full pytest suite and current validators
+      - TypeScript Node syntax validation
+      - exact scope runtime-source blueprint and external-operation forbidden-diff checks
+    terminal_predicate: all frozen acceptance and validation items pass, one Draft PR is published, hosted CI succeeds, unchanged scope is moved to Ready and squash-merged, the feature branch is retained, canonical main records P14H accepted, and execution stops at unauthorized P14I entrance
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 1
+      review_cycles: 1
+      wall_clock_hours: 6
+      fixture_local_git_commits_per_scenario: 1
+      remote_git_operations: 0
+      credential_value_accesses: 0
+      provider_invocations: 0
+      downstream_repository_accesses: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Add and accept only isolated Python and TypeScript P14H fixtures and evidence.
+  in_scope: &p14h_files
+    - REPO_MANIFEST.md
+    - docs/reports/p14h_multi_stack_fixture_acceptance.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_p14h_multi_stack_fixture_v1.yaml
+    - examples/task_manifests/tool_system_p14h_multi_stack_fixture_v1.yaml
+    - tests/fixtures/p14h/python_cli/GOVERNANCE.md
+    - tests/fixtures/p14h/python_cli/STATUS.md
+    - tests/fixtures/p14h/python_cli/blueprint.yaml
+    - tests/fixtures/p14h/python_cli/src/calculator.py
+    - tests/fixtures/p14h/python_cli/tests/calculator_spec.py
+    - tests/fixtures/p14h/typescript_package/GOVERNANCE.md
+    - tests/fixtures/p14h/typescript_package/STATUS.md
+    - tests/fixtures/p14h/typescript_package/blueprint.yaml
+    - tests/fixtures/p14h/typescript_package/package.json
+    - tests/fixtures/p14h/typescript_package/src/index.ts
+    - tests/fixtures/p14h/typescript_package/src/legacy.ts
+    - tests/fixtures/p14h/typescript_package/tests/index.test.ts
+    - tests/test_p14h_multi_stack_e2e.py
+    - tests/test_milestone_module_invariant.py
+    - tests/test_model_provider_portfolio_contract.py
+    - tests/test_p14_phase_entry_contract.py
+    - tests/test_p14c_execution_contract.py
+    - tests/test_phase_alignment.py
+    - tests/test_repo_manifest.py
+    - tests/test_repository_context_builder.py
+  out_of_scope:
+    - blueprint or P14C through P14G runtime source modification
+    - remote PR fixtures real downstream access or mutation
+    - provider execution credential-value access P14I P15 production cleanup rollback or branch deletion
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: c4905bbcde3b69e899a41046c00c172b03247c02
+    why_relevant: The stable target defines the exact P14H fixtures and acceptance scenarios.
+allowed_files: *p14h_files
+forbidden_files:
+  - blueprint/**
+  - src/**
+  - config/**
+  - policy/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_p14h_multi_stack_e2e.py tests/test_phase_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14h_multi_stack_fixture_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14h_multi_stack_fixture_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+rollback:
+  method: git_revert
+  reference: tool-system@c4905bbcde3b69e899a41046c00c172b03247c02
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:P14H-MULTI-STACK-FIXTURE-LIFECYCLE-v1
+  approved_at: 2026-08-03 UTC+09:00

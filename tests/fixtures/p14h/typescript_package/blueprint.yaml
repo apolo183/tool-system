@@ -1,0 +1,28 @@
+product_objective:
+  id: typescript-package-fixture
+  statement: replace a legacy formatter with a bounded TypeScript package flow
+agents:
+  evidence_collector: {role: evidence_collector}
+  policy_guard: {role: policy_guard}
+  blueprint_architect: {role: blueprint_architect}
+  change_planner: {role: change_planner}
+  patch_author: {role: patch_author}
+  test_engineer: {role: test_engineer}
+  code_reviewer: {role: code_reviewer}
+  contract_reviewer: {role: contract_reviewer}
+  audit_recorder: {role: audit_recorder}
+milestones:
+  TYPESCRIPT_PACKAGE:
+    objective: replace the isolated package formatter
+    module_change:
+      module_id: fixture-typescript-package
+      module_version: 1.0.0
+      interface_id: fixture-typescript-package-api
+      interface_version: 1.0.0
+      change_kind: add
+      natural_owner_paths: [src]
+      allowed_files: [STATUS.md, src/format.ts, src/index.ts, src/legacy.ts, tests/index.test.ts]
+      test_paths: [tests/index.test.ts]
+      depends_on_module_ids: []
+      acceptance: [formatter is exported, legacy source is removed, status converges]
+      validations: [isolated TypeScript syntax and content validation]
