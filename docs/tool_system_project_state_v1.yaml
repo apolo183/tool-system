@@ -8,12 +8,16 @@ blueprint:
   process_state_allowed_in_blueprint: false
 current_phase:
   id: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
-  status: active
+  status: accepted_and_closed
   entry_record: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
   entry_authorized: true
+  acceptance_record: docs/reports/p14i_blueprint_to_code_acceptance_closure.md
+  accepted_at: 2026-08-03 UTC+09:00
   last_accepted_stage: P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE
   last_accepted_stage_record: docs/reports/p14h_multi_stack_fixture_acceptance.md
-  next_stage: P14I_ACCEPTANCE_CLOSURE
+  closure_stage: P14I_ACCEPTANCE_CLOSURE
+  closure_stage_record: docs/reports/p14i_blueprint_to_code_acceptance_closure.md
+  next_stage: null
   next_stage_authorized: false
   next_phase: P15_MULTI_PROJECT_BENCHMARK
   next_phase_entry_authorized: false
@@ -305,6 +309,36 @@ p14h:
     credential_accesses: 0
     downstream_repository_operations: 0
   real_downstream_repository_accessed: false
+  stage_accepted: true
+p14i:
+  authorization_packet: P14I-ACCEPTANCE-CLOSURE-LIFECYCLE-v1
+  baseline_commit: cf1b8344695ab6e325cdb6c3cdd6b69037b2d657
+  baseline_tree: 0e54197070781c898f5cc5ce77596a1f52b9f252
+  acceptance_record: docs/reports/p14i_blueprint_to_code_acceptance_closure.md
+  acceptance_status: accepted_and_closed
+  accepted_at: 2026-08-03 UTC+09:00
+  evidence_chain_read_only_revalidated:
+    - P14A_PHASE_ENTRY_END_TO_END_SPECIFICATION
+    - P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT
+    - P14MR_MILESTONE_MODULE_INVARIANT
+    - P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+    - P14D_REPOSITORY_CONTEXT_NATURAL_OWNER
+    - P14E_BLUEPRINT_COMPILER
+    - P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW
+    - P14G_DURABLE_LOCAL_GIT_ORCHESTRATION
+    - P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE
+  accepted_claim_boundary: approved_bounded_blueprint_isolated_repository_fixture_auditable_resumable_fail_closed_local_git_workflow
+  product_wide_completion_claimed: false
+  p15_entry_authorized: false
+  runtime_source_changes: 0
+  blueprint_changes: 0
+  provider_invocations: 0
+  credential_value_accesses: 0
+  downstream_repository_accesses: 0
+  remote_fixture_operations: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
   stage_accepted: true
 authorization_boundaries:
   state_file_grants_authority: false

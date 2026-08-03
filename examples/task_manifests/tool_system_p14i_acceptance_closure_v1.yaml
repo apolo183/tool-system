@@ -1,0 +1,113 @@
+task_id: tool-system-p14i-acceptance-closure-v1
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: agent/p14i-acceptance-closure-v1
+phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stage_plan.P14I_ACCEPTANCE_CLOSURE
+alignment:
+  parent:
+    document: docs/reports/p14h_multi_stack_fixture_acceptance.md
+    section_or_key: State transition and non-claims
+    scope: Close P14 only after the accepted isolated P14H evidence and every predecessor record remain valid.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Accept only the bounded blueprint-to-code product claim and stop at the unauthorized P15 gate.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P14I-ACCEPTANCE-CLOSURE-LIFECYCLE-v1
+    baseline_commit: cf1b8344695ab6e325cdb6c3cdd6b69037b2d657
+    baseline_tree: 0e54197070781c898f5cc5ce77596a1f52b9f252
+    allowed_scope: exact_10_paths_listed_below
+    acceptance_set:
+      - P14A P14B P14MR P14C P14D P14E P14F P14G and P14H merged evidence is read-only revalidated
+      - the acceptance matrix maps every P14 output completion condition and required fixture to current evidence and bounded claims
+      - the P14 accepted claim remains exactly limited to approved bounded blueprints and isolated repository fixtures ending in local Git
+      - descriptive project state closes P14 and records P15 as the next phase with entry authorization false
+      - blueprint runtime source provider credential downstream remote fixture production cleanup rollback and branch deletion remain unchanged or unexecuted
+      - manifest change plan closure record state and consistency tests remain the only changed paths
+    validation_set:
+      - focused P14 phase and closure alignment tests
+      - full pytest suite and current validators
+      - exact ten-path scope and forbidden-diff checks
+      - unchanged canonical base and hosted CI before Ready and merge
+    terminal_predicate: all frozen acceptance and validation items pass, one Draft PR is published, hosted CI succeeds, unchanged base head and scope move to Ready and squash-merge, the feature branch is retained, canonical main records P14 accepted and closed, and execution stops before P15
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 1
+      review_cycles: 1
+      wall_clock_hours: 4
+      provider_invocations: 0
+      credential_value_accesses: 0
+      downstream_repository_accesses: 0
+      remote_fixture_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Revalidate and close only the bounded P14 blueprint-to-code acceptance evidence.
+  in_scope: &p14i_files
+    - docs/reports/p14i_blueprint_to_code_acceptance_closure.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_p14i_acceptance_closure_v1.yaml
+    - examples/task_manifests/tool_system_p14i_acceptance_closure_v1.yaml
+    - tests/test_p14_phase_entry_contract.py
+    - tests/test_phase_alignment.py
+    - tests/test_milestone_module_invariant.py
+    - tests/test_model_provider_portfolio_contract.py
+    - tests/test_p14c_execution_contract.py
+    - tests/test_repository_context_builder.py
+  out_of_scope:
+    - blueprint stable-principles policy config module-contract or runtime-source modification
+    - provider credential downstream remote fixture production cleanup rollback branch deletion or P15 entry
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p14h_multi_stack_fixture_acceptance.md
+    commit_sha: cf1b8344695ab6e325cdb6c3cdd6b69037b2d657
+    why_relevant: P14H is the required accepted direct parent for the governance-only P14I closure.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: cf1b8344695ab6e325cdb6c3cdd6b69037b2d657
+    why_relevant: The unchanged blueprint owns the P14 outputs completion definition fixtures accepted claim and P15 stop boundary.
+allowed_files: *p14i_files
+forbidden_files:
+  - blueprint/**
+  - src/**
+  - config/**
+  - policy/**
+  - docs/modules/**
+  - docs/tool_system_global_development_principles_v1.md
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_phase_alignment.py tests/test_p14_phase_entry_contract.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14i_acceptance_closure_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14i_acceptance_closure_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+rollback:
+  method: git_revert
+  reference: tool-system@cf1b8344695ab6e325cdb6c3cdd6b69037b2d657
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:P14I-ACCEPTANCE-CLOSURE-LIFECYCLE-v1
+  approved_at: 2026-08-03 UTC+09:00
