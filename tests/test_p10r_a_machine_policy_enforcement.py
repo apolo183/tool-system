@@ -8,46 +8,54 @@ from tool_system.policy.autonomy_policy import validate_autonomy_policy
 from tool_system.repo_controller.controller import evaluate_repo_write
 
 ROOT = Path(__file__).resolve().parents[1]
-POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
+POLICY_PATH = (
+    ROOT / "tests" / "fixtures" / "target_repo" / "repo_write_policy.yaml"
+)
 AUTONOMY_POLICY_PATH = ROOT / "policy" / "autonomy_policy.yaml"
+TARGET_REPO = "example-org/example-target"
+TARGET_BRANCH = "agent/add-greeting"
+HEAD_SHA = "example-target-head-sha"
 
 
 def _pull_request() -> dict[str, object]:
     return {
-        "repository": "apolo183/finance-us",
+        "repository": TARGET_REPO,
         "number": 3,
         "state": "open",
         "draft": False,
         "mergeable": True,
-        "head_sha": "finance-us-head-sha",
+        "head_sha": HEAD_SHA,
         "base": "main",
     }
 
 
 def _manifest() -> dict[str, object]:
     return {
-        "task_id": "finance-us-p1b-merge",
+        "task_id": "example-target-merge",
         "task_type": "repo_write",
-        "target_repo": "apolo183/finance-us",
-        "target_branch": "p1b-minimal-ranking-code",
-        "phase": "P1B_MINIMAL_RANKING_CODE",
+        "target_repo": TARGET_REPO,
+        "target_branch": TARGET_BRANCH,
+        "phase": "EXAMPLE_BOUNDED_CHANGE",
         "approved_blueprint_refs": [
             {
-                "repo": "apolo183/finance-us",
-                "path": "blueprint/finance_us_phase_1_v0.yaml",
-                "section_or_key": "milestones.P1B_MINIMAL_RANKING_CODE",
+                "repo": TARGET_REPO,
+                "path": "blueprint/example_target_v1.yaml",
+                "section_or_key": "milestones.ADD_GREETING",
             }
         ],
-        "scope": {"summary": "Merge an independently approved finance-us P1B PR."},
+        "scope": {"summary": "Merge one independently approved example change."},
         "evidence": [
             {
-                "repo": "apolo183/finance-us",
-                "path": "finance_us/ranking.py",
+                "repo": TARGET_REPO,
+                "path": "src/example_target/greeting.py",
                 "why_relevant": "Bounded implementation under review.",
             }
         ],
-        "allowed_files": ["finance_us/ranking.py", "tests/test_ranking.py"],
-        "forbidden_files": ["broker/**", "live_runtime/**"],
+        "allowed_files": [
+            "src/example_target/greeting.py",
+            "tests/test_greeting.py",
+        ],
+        "forbidden_files": ["tool_harness/**", "internal_orchestration/**"],
         "write_mode": "pull_request",
         "verification": {"commands": ["python -m pytest -q"]},
         "rollback": {"method": "git_revert", "reference": "future merge commit"},
@@ -60,10 +68,13 @@ def _manifest() -> dict[str, object]:
 
 def _change_plan() -> dict[str, object]:
     return {
-        "plan_id": "finance-us-p1b-merge",
-        "target_repo": "apolo183/finance-us",
-        "task_manifest": "examples/task_manifests/finance_us_p1b_merge.yaml",
-        "changed_files": ["finance_us/ranking.py", "tests/test_ranking.py"],
+        "plan_id": "example-target-merge",
+        "target_repo": TARGET_REPO,
+        "task_manifest": "operator-private:example-target-merge",
+        "changed_files": [
+            "src/example_target/greeting.py",
+            "tests/test_greeting.py",
+        ],
         "verification": {"commands": ["python -m pytest -q"]},
         "rollback": {"method": "git_revert", "reference": "future merge commit"},
     }
@@ -72,16 +83,16 @@ def _change_plan() -> dict[str, object]:
 def _lifecycle_approval() -> dict[str, object]:
     return {
         "required": True,
-        "approved_by": "user_explicit_finance_us_p1b_merge",
+        "approved_by": "synthetic_fixture_owner",
         "approval_source": "external_authority:injected_fixture",
-        "approved_at": "2026-07-31T00:00:00+09:00",
-        "approval_record_id": "finance-us-pr-3-merge",
-        "repository_full_name": "apolo183/finance-us",
+        "approved_at": "2026-08-03T00:00:00+09:00",
+        "approval_record_id": "example-target-pr-3-merge",
+        "repository_full_name": TARGET_REPO,
         "pull_request_number": 3,
         "action": "pr_merge",
         "base_branch": "main",
-        "expected_head_sha": "finance-us-head-sha",
-        "approval_record_or_reason": "named P1B merge authorization",
+        "expected_head_sha": HEAD_SHA,
+        "approval_record_or_reason": "named synthetic merge authorization",
     }
 
 
@@ -95,9 +106,9 @@ def _evaluate(
         repo_policy=load_yaml_file(POLICY_PATH),
         status_checks=[
             {
-                "name": "finance-us-ci",
+                "name": "example-target-ci",
                 "source_app": "github-actions",
-                "head_sha": "finance-us-head-sha",
+                "head_sha": HEAD_SHA,
                 "status": "completed",
                 "conclusion": "success",
             }
@@ -112,15 +123,12 @@ def _evaluate(
     )
 
 
-def test_named_finance_us_merge_approval_blocks_without_check_policy() -> None:
+def test_named_target_merge_approval_blocks_without_check_policy() -> None:
     decision = _evaluate()
 
     assert decision["status"] == "BLOCK"
     assert decision["reasons"] == [
-        (
-            "required status checks are not configured for repository: "
-            "apolo183/finance-us"
-        )
+        f"required status checks are not configured for repository: {TARGET_REPO}"
     ]
 
 
@@ -155,7 +163,9 @@ def test_stale_approval_head_sha_blocks() -> None:
     decision = _evaluate(lifecycle_approval=approval)
 
     assert decision["status"] == "BLOCK"
-    assert "approval.expected_head_sha must match current lifecycle context" in decision["reasons"]
+    assert "approval.expected_head_sha must match current lifecycle context" in decision[
+        "reasons"
+    ]
 
 
 def test_repository_mismatch_blocks() -> None:

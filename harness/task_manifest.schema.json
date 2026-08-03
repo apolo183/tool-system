@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/apolo183/tool-system/harness/task_manifest.schema.json",
-  "$comment": "repo_rel_path: harness/task_manifest.schema.json; role: schema contract; purpose: validate agent task manifests before any patch or repo write workflow; author: ChatGPT / apolo183; created_at: 2026-07-05 20:20 UTC+08:00; updated_at: 2026-07-05 20:20 UTC+08:00",
+  "$comment": "repo_rel_path: harness/task_manifest.schema.json; role: schema contract; purpose: validate project-neutral agent task manifests before any patch or repo write workflow; author: ChatGPT / apolo183; created_at: 2026-07-05 20:20 UTC+08:00; updated_at: 2026-08-03 UTC+09:00",
   "title": "tool-system task manifest schema",
   "type": "object",
   "required": [
@@ -32,7 +32,9 @@
     },
     "target_repo": {
       "type": "string",
-      "enum": ["apolo183/tool-system", "apolo183/finance-os"]
+      "maxLength": 140,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,38}/[A-Za-z0-9][A-Za-z0-9._-]{0,99}$",
+      "$comment": "Repository identity is structural. Authorization and path policy are caller-supplied inputs, not a public-core project enum."
     },
     "target_branch": {
       "type": "string",

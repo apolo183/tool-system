@@ -86,6 +86,7 @@ product_objective:
     - critical_path_time_and_avoidable_renewal_cost_are_measured
     - safety_quality_data_and_authorization_floors_override_economics
     - credentials_and_private_economic_values_remain_outside_public_repository
+    - downstream_project_identity_and_policy_are_caller_supplied
   non_goals:
     - unrestricted_remote_repository_mutation
     - autonomous_production_deployment
@@ -106,6 +107,7 @@ product_contract:
     - task_complexity_risk_and_critical_path_context
     - provider_price_quota_health_and_billing_context
     - private_project_economics_references
+    - caller_supplied_target_repository_identity_and_policy
   outputs:
     - milestone_hierarchy
     - durable_module_dag_and_milestone_change_bindings
@@ -551,7 +553,7 @@ milestones:
       - P10_CONTROLLED_TARGET_REPO_PR_PILOT accepted and P10R corrective lifecycle closed
       - explicit P11 phase-entry authorization
       - minimum safety controls pass before the first real worker execution
-      - finance-us and every other remote target repository remain no-mutation
+      - every remote target repository remains no-mutation
       - production deployment remains separately approved only
     outputs:
       - real worker request and result contract

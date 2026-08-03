@@ -6,18 +6,18 @@ from tool_system.cli.validate_change_plan import validate as validate_change_pla
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.target_repo.state_collector import run_state_collector_record
 
-
 ROOT = Path(__file__).resolve().parents[1]
-POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
-TARGET_MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "finance_os_p1b_minimal_ranking.yaml"
+FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "target_repo"
+POLICY_PATH = FIXTURE_ROOT / "repo_write_policy.yaml"
+TARGET_MANIFEST_PATH = FIXTURE_ROOT / "task_manifest.yaml"
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_state_collector.yaml"
 PLANNED_FILES = [
-    "pyproject.toml",
-    "src/finance_os/__init__.py",
-    "src/finance_os/ranking/__init__.py",
-    "src/finance_os/ranking/top10.py",
-    "tests/test_top10.py",
+    "src/example_target/__init__.py",
+    "src/example_target/greeting.py",
+    "tests/test_greeting.py",
 ]
+TARGET_REPO = "example-org/example-target"
+TARGET_BRANCH = "agent/add-greeting"
 
 
 def _manifest() -> dict[str, object]:
@@ -38,10 +38,10 @@ def _approvals() -> dict[str, object]:
 
 def _observed(**overrides: object) -> dict[str, object]:
     observed: dict[str, object] = {
-        "target_repo": "apolo183/finance-os",
+        "target_repo": TARGET_REPO,
         "default_branch": "main",
         "branches": {"main": {"sha": "abc123"}},
-        "target_branch": "p1b-minimal-ranking-code",
+        "target_branch": TARGET_BRANCH,
         "files": {path: {"exists": False, "sha": None} for path in PLANNED_FILES},
         "open_prs": [],
         "collected_at": "2026-07-06T21:30:00+08:00",
@@ -66,7 +66,9 @@ def test_state_collector_blocks_without_observation(tmp_path: Path) -> None:
 
 
 def test_state_collector_blocks_existing_target_branch(tmp_path: Path) -> None:
-    observed = _observed(branches={"main": {"sha": "abc123"}, "p1b-minimal-ranking-code": {"sha": "def456"}})
+    observed = _observed(
+        branches={"main": {"sha": "abc123"}, TARGET_BRANCH: {"sha": "def456"}}
+    )
     result = run_state_collector_record(
         task_manifest=_manifest(),
         repo_policy=_policy(),

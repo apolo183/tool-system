@@ -6,10 +6,10 @@ from tool_system.cli.validate_change_plan import validate as validate_change_pla
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.target_repo.mutation_command_packet import run_mutation_command_packet
 
-
 ROOT = Path(__file__).resolve().parents[1]
-POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
-TARGET_MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "finance_os_p1b_minimal_ranking.yaml"
+FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "target_repo"
+POLICY_PATH = FIXTURE_ROOT / "repo_write_policy.yaml"
+TARGET_MANIFEST_PATH = FIXTURE_ROOT / "task_manifest.yaml"
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_mutation_command_packet.yaml"
 
 
@@ -57,8 +57,6 @@ def test_mutation_command_packet_previews_commands_without_execution(tmp_path: P
     commands = result["command_packet"]["commands"]
     assert [command["would_call"] for command in commands] == [
         "create_branch",
-        "create_or_update_file",
-        "create_or_update_file",
         "create_or_update_file",
         "create_or_update_file",
         "create_or_update_file",

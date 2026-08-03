@@ -7,11 +7,12 @@ from tool_system.cli.validate_change_plan import validate as validate_change_pla
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.target_repo.write_intent_record import run_write_intent_record
 
-
 ROOT = Path(__file__).resolve().parents[1]
-POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
-TARGET_MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "finance_os_p1b_minimal_ranking.yaml"
+FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "target_repo"
+POLICY_PATH = FIXTURE_ROOT / "repo_write_policy.yaml"
+TARGET_MANIFEST_PATH = FIXTURE_ROOT / "task_manifest.yaml"
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_record_gate.yaml"
+TARGET_REPO = "example-org/example-target"
 
 
 def _manifest() -> dict[str, object]:
@@ -31,10 +32,12 @@ def test_write_intent_blocks_without_approval(tmp_path: Path) -> None:
 
     assert result["status"] == "BLOCK"
     assert result["intent_status"] == "BLOCKED"
-    assert result["target_repo"] == "apolo183/finance-os"
+    assert result["target_repo"] == TARGET_REPO
     assert result["writes_target_repo"] is False
     assert result["planned_intent"]["execute"] is False
-    assert "explicit target repo approval is required for apolo183/finance-os" in result["reasons"]
+    assert f"explicit target repo approval is required for {TARGET_REPO}" in result[
+        "reasons"
+    ]
 
 
 def test_write_intent_records_approval_without_mutation(tmp_path: Path) -> None:

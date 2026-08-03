@@ -4,7 +4,6 @@ from pathlib import Path
 
 from tool_system.manifest.task_manifest import load_yaml_file
 
-
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
 PROJECT_STATE = ROOT / "docs" / "tool_system_project_state_v1.yaml"
@@ -131,12 +130,13 @@ def test_p14a_manifest_authorized_specification_but_not_implementation() -> None
     assert manifest["alignment"]["global"]["section_or_key"] == (
         "product_objective"
     )
-    assert set(manifest["scope"]["out_of_scope"]) >= {
+    out_of_scope = set(manifest["scope"]["out_of_scope"])
+    assert out_of_scope >= {
         "policy or runtime source changes",
         "P14B or later implementation",
         "model/provider network calls or credentials",
-        "finance-us or any target-repository mutation",
     }
+    assert any("target-repository mutation" in item for item in out_of_scope)
 
 
 def test_capability_gap_record_names_current_audited_limitations() -> None:
