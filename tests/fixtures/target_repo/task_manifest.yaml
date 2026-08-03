@@ -1,0 +1,48 @@
+task_id: example-target-add-greeting
+task_type: code_add
+target_repo: example-org/example-target
+target_branch: agent/add-greeting
+phase: EXAMPLE_BOUNDED_CHANGE
+approved_blueprint_refs:
+  - repo: example-org/example-target
+    path: blueprint/example_target_v1.yaml
+    section_or_key: milestones.ADD_GREETING
+scope:
+  summary: Add one deterministic greeting function and its bounded tests.
+  in_scope:
+    - src/example_target/__init__.py
+    - src/example_target/greeting.py
+    - tests/test_greeting.py
+  out_of_scope:
+    - production deployment
+    - unrelated application behavior
+evidence:
+  - repo: example-org/example-target
+    path: AGENTS.md
+    why_relevant: Defines the synthetic target governance boundary.
+  - repo: example-org/example-target
+    path: blueprint/example_target_v1.yaml
+    why_relevant: Defines the synthetic bounded change.
+allowed_files:
+  - src/example_target/__init__.py
+  - src/example_target/greeting.py
+  - tests/test_greeting.py
+forbidden_files:
+  - tool_harness/**
+  - internal_orchestration/**
+write_mode: patch_only
+verification:
+  commands:
+    - python -m pytest -q
+    - python -m compileall src tests
+  pass_conditions:
+    - pytest exits 0
+    - compileall exits 0
+rollback:
+  method: git_revert
+  reference: synthetic future commit
+approval:
+  required: true
+  approved_by: synthetic_fixture_owner
+  approval_source: committed_non_authorizing_fixture
+  approved_at: 2026-08-03T00:00:00+09:00

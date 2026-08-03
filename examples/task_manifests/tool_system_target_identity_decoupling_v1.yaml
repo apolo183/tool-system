@@ -1,0 +1,93 @@
+task_id: tool-system-target-identity-decoupling-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/target-identity-decoupling-v1
+phase: TARGET_IDENTITY_DECOUPLING_CORRECTION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestone_module_invariant.tooling_boundary
+scope:
+  summary: Remove active downstream project identity coupling from the reusable tool-system target-policy boundary.
+  in_scope:
+    - Replace downstream repository enums and name-based approval logic with bounded caller-supplied policy inputs.
+    - Replace active project-specific target fixtures with a synthetic repository fixture.
+    - Preserve retained historical evidence without making it active or authoritative.
+    - Record and test the project-neutral public-core invariant.
+  out_of_scope:
+    - Accessing or mutating any downstream repository.
+    - Provider calls, credential values, benchmark execution, production, cleanup, or rollback execution.
+    - P15C stage entry or acceptance.
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    why_relevant: Requires reusable components to parameterize repository identity and business context.
+  - repo: apolo183/tool-system
+    path: policy/repo_write_policy.yaml
+    why_relevant: Current public policy serializes downstream repository identities and paths.
+  - repo: apolo183/tool-system
+    path: src/tool_system/target_repo/p4d_precheck.py
+    why_relevant: Current precheck branches on one downstream repository name.
+  - repo: apolo183/tool-system
+    path: harness/task_manifest.schema.json
+    why_relevant: Current schema constrains target_repo to a repository-specific enum.
+allowed_files:
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/tool_system_v0.yaml
+  - docs/process_authority_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - harness/task_manifest.schema.json
+  - policy/repo_write_policy.yaml
+  - src/tool_system/target_repo/p4d_precheck.py
+  - tests/fixtures/target_repo/task_manifest.yaml
+  - tests/fixtures/target_repo/repo_write_policy.yaml
+  - tests/test_target_identity_decoupling.py
+  - tests/test_target_repo_dry_run_probe.py
+  - tests/test_finance_os_dry_run_probe.py
+  - tests/test_task_manifest_policy.py
+  - tests/test_p4d_precheck.py
+  - tests/test_target_repo_dry_run.py
+  - tests/test_target_repo_pr_plan_preview.py
+  - tests/test_write_packet.py
+  - tests/test_write_intent.py
+  - tests/test_mutation_command_packet.py
+  - tests/test_execution_approval.py
+  - tests/test_state_collector.py
+  - tests/test_execution_state_snapshot.py
+  - tests/test_audit_bundle.py
+  - tests/test_final_record.py
+  - tests/test_p10r_a_machine_policy_enforcement.py
+  - tests/test_p14_phase_entry_contract.py
+  - tests/test_repo_manifest.py
+  - examples/task_manifests/tool_system_target_identity_decoupling_v1.yaml
+  - examples/change_plans/tool_system_target_identity_decoupling_v1.yaml
+  - docs/reports/target_identity_decoupling_acceptance.md
+forbidden_files:
+  - private/**
+  - config/p15c_execution_packet_freeze_v1.yaml
+  - src/tool_system/provider_portfolio/**
+  - src/tool_system/ai_worker/**
+write_mode: pull_request
+verification:
+  commands:
+    - .venv/bin/python -m pytest -q tests/test_target_identity_decoupling.py tests/test_task_manifest_policy.py tests/test_p4d_precheck.py tests/test_target_repo_dry_run.py tests/test_target_repo_pr_plan_preview.py tests/test_target_repo_dry_run_probe.py tests/test_write_packet.py tests/test_write_intent.py tests/test_mutation_command_packet.py tests/test_execution_approval.py tests/test_state_collector.py tests/test_execution_state_snapshot.py tests/test_audit_bundle.py tests/test_final_record.py tests/test_p10r_a_machine_policy_enforcement.py tests/test_p14_phase_entry_contract.py tests/test_repo_manifest.py
+    - .venv/bin/python -m pytest -q
+    - .venv/bin/python -m ruff check src/tool_system/target_repo/p4d_precheck.py tests/test_target_identity_decoupling.py tests/test_target_repo_dry_run_probe.py tests/test_task_manifest_policy.py tests/test_p4d_precheck.py tests/test_target_repo_dry_run.py tests/test_target_repo_pr_plan_preview.py tests/test_write_packet.py tests/test_write_intent.py tests/test_mutation_command_packet.py tests/test_execution_approval.py tests/test_state_collector.py tests/test_execution_state_snapshot.py tests/test_audit_bundle.py tests/test_final_record.py tests/test_p10r_a_machine_policy_enforcement.py tests/test_p14_phase_entry_contract.py tests/test_repo_manifest.py
+    - .venv/bin/python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - Focused target-policy and repository-governance tests pass.
+    - Full test suite and changed-file Ruff pass.
+    - Repository manifest covers every tracked path exactly once.
+    - Active formal files contain no serialized downstream project repository identity.
+rollback:
+  method: git_revert
+  reference: Revert the correction squash commit through a separately audited pull request; do not execute rollback in this task.
+approval:
+  required: true
+  approved_by: apolo183
+  approval_source: chat_user_message:recommended_project_neutral_decoupling_and_connector_only_publication
+  approved_at: 2026-08-03T00:00:00+09:00

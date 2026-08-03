@@ -6,18 +6,18 @@ from tool_system.cli.validate_change_plan import validate as validate_change_pla
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.target_repo.p5h_record import run_p5h_record
 
-
 ROOT = Path(__file__).resolve().parents[1]
-POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
-TARGET_MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "finance_os_p1b_minimal_ranking.yaml"
+FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "target_repo"
+POLICY_PATH = FIXTURE_ROOT / "repo_write_policy.yaml"
+TARGET_MANIFEST_PATH = FIXTURE_ROOT / "task_manifest.yaml"
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_final_record.yaml"
 PLANNED_FILES = [
-    "pyproject.toml",
-    "src/finance_os/__init__.py",
-    "src/finance_os/ranking/__init__.py",
-    "src/finance_os/ranking/top10.py",
-    "tests/test_top10.py",
+    "src/example_target/__init__.py",
+    "src/example_target/greeting.py",
+    "tests/test_greeting.py",
 ]
+TARGET_REPO = "example-org/example-target"
+TARGET_BRANCH = "agent/add-greeting"
 
 
 def _manifest() -> dict[str, object]:
@@ -38,10 +38,10 @@ def _approvals() -> dict[str, object]:
 
 def _observed(**overrides: object) -> dict[str, object]:
     observed: dict[str, object] = {
-        "target_repo": "apolo183/finance-os",
+        "target_repo": TARGET_REPO,
         "default_branch": "main",
         "branches": {"main": {"sha": "abc123"}},
-        "target_branch": "p1b-minimal-ranking-code",
+        "target_branch": TARGET_BRANCH,
         "files": {path: {"exists": False, "sha": None} for path in PLANNED_FILES},
         "open_prs": [],
         "collected_at": "2026-07-06T22:00:00+08:00",

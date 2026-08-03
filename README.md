@@ -109,9 +109,15 @@ This repository is a tool layer. Business systems are downstream targets. tool-s
 
 P10 acceptance does not authorize unrestricted downstream mutation, target PR ready transition, target PR merge, production deployment, real external worker execution, or Codex replacement claims. Each such action remains separately gated.
 
-Finance-us P1A is accepted, merged, strictly validated, and closed on target `main` at `7101847826e6701a4d8cc7f0a6208fb9aee2cc4e`. The finance-us P1B phase-entry record and implementation packet are prepared and merged in tool-system. P1B target implementation remains blocked pending a named, action-scoped target execution approval; P1B ready and merge remain separately gated.
+The public core serializes no active downstream project identity. A target
+repository identity, exact snapshot, path policy, lifecycle policy, and
+authorization envelope are caller-supplied inputs and are validated together
+at the execution boundary. The checked-in write policy governs tool-system
+itself; operator-private target bindings do not become source constants.
 
-The canonical active downstream identity is `apolo183/finance-us`. The legacy `apolo183/finance-os` route is retired and retained only as a closed, no-write compatibility fixture. Direct bootstrap on tool-system and finance-us is disabled, and downstream merge approval is bound to repository, action, base branch, and expected head SHA.
+Historical target reports and fixtures remain only in the manifest's retained
+non-authority sets. They are not current defaults, policy entries, or execution
+authority, and this correction does not rewrite or delete them.
 
 ## Bootstrap files
 

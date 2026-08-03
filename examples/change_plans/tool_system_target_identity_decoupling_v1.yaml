@@ -1,0 +1,76 @@
+plan_id: tool-system-target-identity-decoupling-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_target_identity_decoupling_v1.yaml
+baseline:
+  canonical_commit: 5e964adfd40502a3798630b98fb0d876bbd01d91
+  canonical_tree: 440a95606e964ce3477eab6e3e427b51df64c54a
+  drift_required: identical
+bounded_closure:
+  task_identity: TARGET-IDENTITY-DECOUPLING-v1
+  allowed_scope_digest_input: exact changed_files list in this plan
+  acceptance_set:
+    - Public schema accepts bounded owner/repository identities without an enumerated downstream project.
+    - Public repository policy contains tool-system self-policy only; external target rules are injected inputs.
+    - Target precheck derives approval requirements from the selected repository policy and fails closed by default.
+    - Active target-adapter tests use only a synthetic repository fixture.
+    - Retained non-authority evidence remains byte-preserved and excluded from current authority.
+    - P15C remains unauthorized and no provider, credential, network, benchmark, downstream, cleanup, rollback, or production operation occurs.
+  validation_set:
+    - focused pytest
+    - full pytest
+    - Ruff
+    - repository manifest validator
+    - active formal-file downstream identity scan
+  terminal_predicate: All acceptance and validation items pass on one no-drift Draft PR and Hosted CI succeeds.
+  finite_budgets:
+    repair_cycles: 3
+    review_cycles: 2
+    time_minutes: 180
+    external_cost_usd: 0
+changed_files:
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/tool_system_v0.yaml
+  - docs/process_authority_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - harness/task_manifest.schema.json
+  - policy/repo_write_policy.yaml
+  - src/tool_system/target_repo/p4d_precheck.py
+  - tests/fixtures/target_repo/task_manifest.yaml
+  - tests/fixtures/target_repo/repo_write_policy.yaml
+  - tests/test_target_identity_decoupling.py
+  - tests/test_target_repo_dry_run_probe.py
+  - tests/test_finance_os_dry_run_probe.py
+  - tests/test_task_manifest_policy.py
+  - tests/test_p4d_precheck.py
+  - tests/test_target_repo_dry_run.py
+  - tests/test_target_repo_pr_plan_preview.py
+  - tests/test_write_packet.py
+  - tests/test_write_intent.py
+  - tests/test_mutation_command_packet.py
+  - tests/test_execution_approval.py
+  - tests/test_state_collector.py
+  - tests/test_execution_state_snapshot.py
+  - tests/test_audit_bundle.py
+  - tests/test_final_record.py
+  - tests/test_p10r_a_machine_policy_enforcement.py
+  - tests/test_p14_phase_entry_contract.py
+  - tests/test_repo_manifest.py
+  - examples/task_manifests/tool_system_target_identity_decoupling_v1.yaml
+  - examples/change_plans/tool_system_target_identity_decoupling_v1.yaml
+  - docs/reports/target_identity_decoupling_acceptance.md
+implementation_order:
+  - Freeze the stable blueprint and public policy boundary.
+  - Make schema and precheck policy-driven without changing public function signatures.
+  - Add synthetic target inputs and migrate active tests away from retained fixtures.
+  - Register the exact formal topology and descriptive state.
+  - Run local validation, publish one Draft PR, verify Hosted CI and no drift, then squash merge and retain the branch.
+verification:
+  commands:
+    - .venv/bin/python -m pytest -q tests/test_target_identity_decoupling.py tests/test_task_manifest_policy.py tests/test_p4d_precheck.py tests/test_target_repo_dry_run.py tests/test_target_repo_pr_plan_preview.py tests/test_target_repo_dry_run_probe.py tests/test_write_packet.py tests/test_write_intent.py tests/test_mutation_command_packet.py tests/test_execution_approval.py tests/test_state_collector.py tests/test_execution_state_snapshot.py tests/test_audit_bundle.py tests/test_final_record.py tests/test_p10r_a_machine_policy_enforcement.py tests/test_p14_phase_entry_contract.py tests/test_repo_manifest.py
+    - .venv/bin/python -m pytest -q
+    - .venv/bin/python -m ruff check src/tool_system/target_repo/p4d_precheck.py tests/test_target_identity_decoupling.py tests/test_target_repo_dry_run_probe.py tests/test_task_manifest_policy.py tests/test_p4d_precheck.py tests/test_target_repo_dry_run.py tests/test_target_repo_pr_plan_preview.py tests/test_write_packet.py tests/test_write_intent.py tests/test_mutation_command_packet.py tests/test_execution_approval.py tests/test_state_collector.py tests/test_execution_state_snapshot.py tests/test_audit_bundle.py tests/test_final_record.py tests/test_p10r_a_machine_policy_enforcement.py tests/test_p14_phase_entry_contract.py tests/test_repo_manifest.py
+    - .venv/bin/python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+rollback:
+  method: git_revert
+  reference: Revert the correction squash commit through a separately audited pull request; preserve the retained branch and historical evidence.

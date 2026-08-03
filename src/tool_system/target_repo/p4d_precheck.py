@@ -9,8 +9,22 @@ from tool_system.target_repo.p4c_preview_module import build_p4c_preview
 from tool_system.target_repo.pr_plan_preview import build_target_repo_pr_plan_preview
 
 
-def _approval_ok(target_repo: object, approvals: dict[str, Any] | None) -> bool:
-    if target_repo != "apolo183/finance-os":
+def _approval_required(target_repo: object, repo_policy: dict[str, Any]) -> bool:
+    repos = repo_policy.get("allowed_target_repos")
+    if not isinstance(repos, dict):
+        return True
+    repo_rules = repos.get(target_repo)
+    if not isinstance(repo_rules, dict):
+        return True
+    return repo_rules.get("target_repo_approval_required") is not False
+
+
+def _approval_ok(
+    target_repo: object,
+    repo_policy: dict[str, Any],
+    approvals: dict[str, Any] | None,
+) -> bool:
+    if not _approval_required(target_repo, repo_policy):
         return True
     if not approvals:
         return False
@@ -53,7 +67,7 @@ def build_p4d_precheck(
         reasons.append("passing action-plan preview is required")
     if _nested_writes_target_repo(dry_run, pr_preview, action_preview):
         reasons.append("precheck inputs must not write target repo")
-    if not _approval_ok(target_repo, approvals):
+    if not _approval_ok(target_repo, repo_policy, approvals):
         reasons.append(f"explicit target repo approval is required for {target_repo}")
 
     return {
@@ -68,7 +82,11 @@ def build_p4d_precheck(
             "dry_run_status": dry_run.get("status"),
             "pr_preview_status": pr_preview.get("status"),
             "action_preview_status": action_preview.get("status"),
-            "target_repo_approval": _approval_ok(target_repo, approvals),
+            "target_repo_approval": _approval_ok(
+                target_repo,
+                repo_policy,
+                approvals,
+            ),
         },
         "dry_run_plan": dry_run,
         "pr_preview": pr_preview.get("pr_preview", {}),

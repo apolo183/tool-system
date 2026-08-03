@@ -1,7 +1,7 @@
 schema_version: 0.5
 policy: repo_write_policy
 status: active
-approved_by: user_explicit_target_identity_decoupling
+approved_by: synthetic_fixture_owner
 approved_at: 2026-08-03 UTC+09:00
 
 defaults:
@@ -23,61 +23,31 @@ approval_model:
     - milestone_acceptance
     - policy_boundary_change
 
-external_target_policy:
-  binding_mode: caller_supplied
-  public_repository_serializes_downstream_identity: false
-  unknown_target_disposition: block
-  approval_requirement_default: required
-  required_per_target_fields:
-    - role
-    - default_write_mode
-    - bootstrap_direct_main_allowed
-    - allowed_paths_by_mode
-    - lifecycle_approval
-    - forbidden_paths
-
 allowed_target_repos:
-  apolo183/tool-system:
-    role: domain_agnostic_tooling_repo
-    default_write_mode: pull_request
-    target_repo_approval_required: false
+  example-org/example-target:
+    role: synthetic_external_target_fixture
+    default_write_mode: patch_only
+    target_repo_approval_required: true
     bootstrap_direct_main_allowed: false
     allowed_paths_by_mode:
       read_only:
         - "**"
       patch_only:
-        - "**"
-      pull_request:
-        - config/**
-        - src/tool_system/**
+        - src/example_target/**
         - tests/**
-        - examples/**
-        - docs/**
-        - pyproject.toml
-        - .gitignore
-        - REPO_MANIFEST.md
-        - policy/**
         - blueprint/**
-        - harness/**
-        - README.md
         - AGENTS.md
-        - .github/workflows/**
-      direct_bootstrap:
-        - README.md
-        - AGENTS.md
+      pull_request:
+        - src/example_target/**
+        - tests/**
         - blueprint/**
-        - policy/**
-        - harness/**
+        - AGENTS.md
+      direct_bootstrap: []
     lifecycle_approval:
-      pr_merge: manifest
-    required_status_checks:
-      - name: verify
-        source_app: github-actions
+      pr_merge: named_action
     forbidden_paths:
-      - finance/**
-      - trading/**
-      - market/**
-      - portfolio/**
+      - tool_harness/**
+      - internal_orchestration/**
 
 write_modes:
   read_only:
@@ -97,17 +67,8 @@ write_modes:
       - files_match_bootstrap_allowlist
 
 hard_blocks:
-  - missing_task_manifest
-  - missing_blueprint_reference
-  - missing_evidence_block
-  - missing_rollback_plan
   - unapproved_target_repo
   - path_outside_allowlist
-  - tool_repo_contains_business_logic
-  - business_repo_contains_harness_logic
-  - required_verification_failed
-  - inactive_policy
-  - direct_bootstrap_disabled
   - missing_or_mismatched_lifecycle_approval
 
 merge_policy:

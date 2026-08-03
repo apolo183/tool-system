@@ -521,6 +521,40 @@ p15c_packet_freeze:
   runtime_source_changes: 0
   p15c_authorized: false
   p15c_stage_accepted: false
+target_identity_decoupling:
+  authorization_source: chat_user_message:recommended_project_neutral_decoupling
+  baseline_commit: 5e964adfd40502a3798630b98fb0d876bbd01d91
+  baseline_tree: 440a95606e964ce3477eab6e3e427b51df64c54a
+  task_manifest: examples/task_manifests/tool_system_target_identity_decoupling_v1.yaml
+  change_plan: examples/change_plans/tool_system_target_identity_decoupling_v1.yaml
+  acceptance_record: docs/reports/target_identity_decoupling_acceptance.md
+  implementation_status: candidate_local_validation_passed
+  authority_effect: none
+  public_core_contract:
+    downstream_repository_identity_serialized: false
+    target_identity_binding_mode: caller_supplied
+    target_policy_binding_mode: caller_supplied
+    unknown_target_disposition: block
+    synthetic_fixture_only: true
+  retained_historical_evidence_modified: false
+  local_validation:
+    exact_31_path_closure: passed
+    focused_pytest: 107_passed
+    full_pytest: 639_passed
+    changed_file_ruff: passed
+    governance_validators: passed
+    formal_path_count: 245
+    unclassified_path_count: 0
+  hosted_ci_status: pending
+  downstream_repository_accesses: 0
+  target_mutations: 0
+  provider_invocations: 0
+  credential_value_accesses: 0
+  benchmark_executions: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+  p15c_authorized: false
 authorization_boundaries:
   state_file_grants_authority: false
   live_model_provider_execution_authorized: false

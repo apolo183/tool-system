@@ -12,11 +12,12 @@ from tool_system.target_repo.dry_run_adapter import (
     run_target_repo_dry_run,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
-POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
-TARGET_MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "finance_os_p1b_minimal_ranking.yaml"
+FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "target_repo"
+POLICY_PATH = FIXTURE_ROOT / "repo_write_policy.yaml"
+TARGET_MANIFEST_PATH = FIXTURE_ROOT / "task_manifest.yaml"
 P4_CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p4_target_repo_dry_run.yaml"
+TARGET_REPO = "example-org/example-target"
 
 
 def _policy() -> dict[str, Any]:
@@ -27,11 +28,11 @@ def _target_manifest() -> dict[str, Any]:
     return load_yaml_file(TARGET_MANIFEST_PATH)
 
 
-def test_target_repo_dry_run_passes_finance_os_manifest() -> None:
+def test_target_repo_dry_run_passes_synthetic_manifest() -> None:
     plan = build_target_repo_dry_run_plan(_target_manifest(), _policy())
 
     assert plan["status"] == "PASS"
-    assert plan["target_repo"] == "apolo183/finance-os"
+    assert plan["target_repo"] == TARGET_REPO
     assert plan["writes_target_repo"] is False
     assert plan["reasons"] == []
 
@@ -49,10 +50,10 @@ def test_target_repo_dry_run_blocks_missing_target_agents_evidence() -> None:
 def test_target_repo_dry_run_blocks_change_plan_forbidden_path() -> None:
     manifest = _target_manifest()
     change_plan = {
-        "plan_id": "finance-os-invalid-plan",
-        "target_repo": "apolo183/finance-os",
-        "task_manifest": "examples/task_manifests/finance_os_p1b_minimal_ranking.yaml",
-        "changed_files": ["harness/not_allowed.py"],
+        "plan_id": "example-target-invalid-plan",
+        "target_repo": TARGET_REPO,
+        "task_manifest": "operator-private:example-target-manifest",
+        "changed_files": ["tool_harness/not_allowed.py"],
         "verification": {"commands": ["python3 -m pytest -q"]},
         "rollback": {"method": "git_revert", "reference": "dry-run"},
     }
@@ -60,8 +61,11 @@ def test_target_repo_dry_run_blocks_change_plan_forbidden_path() -> None:
     plan = build_target_repo_dry_run_plan(manifest, _policy(), change_plan=change_plan)
 
     assert plan["status"] == "BLOCK"
-    assert "blocked changed file: harness/not_allowed.py" in plan["reasons"]
-    assert "changed file outside manifest allowlist: harness/not_allowed.py" in plan["reasons"]
+    assert "blocked changed file: tool_harness/not_allowed.py" in plan["reasons"]
+    assert (
+        "changed file outside manifest allowlist: tool_harness/not_allowed.py"
+        in plan["reasons"]
+    )
 
 
 def test_target_repo_dry_run_writes_audit_jsonl(tmp_path: Path) -> None:
@@ -76,7 +80,7 @@ def test_target_repo_dry_run_writes_audit_jsonl(tmp_path: Path) -> None:
     assert result["status"] == "PASS"
     assert result["audit_path"] == str(audit_path)
     record = json.loads(audit_path.read_text(encoding="utf-8").strip())
-    assert record["target_repo"] == "apolo183/finance-os"
+    assert record["target_repo"] == TARGET_REPO
     assert record["writes_target_repo"] is False
 
 

@@ -7,11 +7,12 @@ from tool_system.cli.validate_change_plan import validate as validate_change_pla
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.target_repo.p4d_precheck import run_p4d_precheck
 
-
 ROOT = Path(__file__).resolve().parents[1]
-POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
-TARGET_MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "finance_os_p1b_minimal_ranking.yaml"
+FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "target_repo"
+POLICY_PATH = FIXTURE_ROOT / "repo_write_policy.yaml"
+TARGET_MANIFEST_PATH = FIXTURE_ROOT / "task_manifest.yaml"
 P4D_CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p4d_precheck.yaml"
+TARGET_REPO = "example-org/example-target"
 
 
 def _manifest() -> dict[str, object]:
@@ -22,7 +23,7 @@ def _policy() -> dict[str, object]:
     return load_yaml_file(POLICY_PATH)
 
 
-def test_p4d_blocks_finance_os_without_explicit_approval(tmp_path: Path) -> None:
+def test_p4d_blocks_policy_controlled_target_without_approval(tmp_path: Path) -> None:
     result = run_p4d_precheck(
         task_manifest=_manifest(),
         repo_policy=_policy(),
@@ -30,29 +31,31 @@ def test_p4d_blocks_finance_os_without_explicit_approval(tmp_path: Path) -> None
     )
 
     assert result["status"] == "BLOCK"
-    assert result["target_repo"] == "apolo183/finance-os"
+    assert result["target_repo"] == TARGET_REPO
     assert result["writes_target_repo"] is False
-    assert "explicit target repo approval is required for apolo183/finance-os" in result["reasons"]
+    assert f"explicit target repo approval is required for {TARGET_REPO}" in result[
+        "reasons"
+    ]
     assert result["required_gates"]["dry_run_status"] == "PASS"
     assert result["required_gates"]["pr_preview_status"] == "PASS"
     assert result["required_gates"]["action_preview_status"] == "PASS"
     assert result["required_gates"]["target_repo_approval"] is False
 
 
-def test_p4d_passes_finance_os_with_explicit_approval(tmp_path: Path) -> None:
+def test_p4d_passes_policy_controlled_target_with_approval(tmp_path: Path) -> None:
     result = run_p4d_precheck(
         task_manifest=_manifest(),
         repo_policy=_policy(),
         approvals={
             "target_repo_approved": True,
             "approved_by": "apolo183",
-            "approval_scope": "finance-os P1B dry-run-to-PR precheck only",
+            "approval_scope": "synthetic target precheck only",
         },
         audit_path=tmp_path / "p4d_pass.jsonl",
     )
 
     assert result["status"] == "PASS"
-    assert result["target_repo"] == "apolo183/finance-os"
+    assert result["target_repo"] == TARGET_REPO
     assert result["writes_target_repo"] is False
     assert result["reasons"] == []
     assert result["required_gates"]["target_repo_approval"] is True
