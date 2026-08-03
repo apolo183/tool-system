@@ -203,7 +203,7 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert project_state["current_phase"]["next_stage"] == (
         "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
-    assert project_state["current_phase"]["next_stage_authorized"] is False
+    assert project_state["current_phase"]["next_stage_authorized"] is True
     assert project_state["current_phase"]["next_phase"] == (
         "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
     )
@@ -574,9 +574,9 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     )
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["state_file_grants_authority"] is False
-    assert boundaries["live_model_provider_execution_authorized"] is False
-    assert boundaries["credential_value_access_authorized"] is False
-    assert boundaries["downstream_repository_access_authorized"] is False
+    assert boundaries["live_model_provider_execution_authorized"] is True
+    assert boundaries["credential_value_access_authorized"] is True
+    assert boundaries["downstream_repository_access_authorized"] is True
     assert boundaries["remote_target_mutation_authorized"] is False
     assert boundaries["production_deployment_authorized"] is False
     assert boundaries["cleanup_execution_authorized"] is False
@@ -744,7 +744,7 @@ def test_p15a_specification_remains_the_direct_parent_of_p15b() -> None:
     assert project_state["current_phase"]["next_stage"] == (
         "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
-    assert project_state["current_phase"]["next_stage_authorized"] is False
+    assert project_state["current_phase"]["next_stage_authorized"] is True
     assert project_state["p15a"]["p15b_authorized"] is False
     for marker in (
         "Read-only existing-surface inventory",
@@ -830,7 +830,7 @@ def test_p15b_accepts_only_isolated_fixtures_and_stops_before_p15c() -> None:
     assert project_state["current_phase"]["next_stage"] == (
         "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
-    assert project_state["current_phase"]["next_stage_authorized"] is False
+    assert project_state["current_phase"]["next_stage_authorized"] is True
     assert project_state["p15b"]["p15c_authorized"] is False
     for marker in (
         "Advisory task-profile fixture",

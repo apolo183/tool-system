@@ -1,0 +1,63 @@
+plan_id: tool-system-p15c-runtime-control-plane-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p15c_runtime_control_plane_v1.yaml
+changed_files:
+  - REPO_MANIFEST.md
+  - config/module_registry_v1.yaml
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/reports/p15c_runtime_control_plane_implementation.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p15c_runtime_control_plane_v1.yaml
+  - examples/task_manifests/tool_system_p15c_runtime_control_plane_v1.yaml
+  - pyproject.toml
+  - src/tool_system/ai_worker/__init__.py
+  - src/tool_system/ai_worker/p15c_benchmark.py
+  - src/tool_system/ai_worker/p15c_controls.py
+  - src/tool_system/ai_worker/p15c_entry.py
+  - tests/test_ai_worker_p15c_benchmark.py
+  - tests/test_ai_worker_p15c_controls.py
+  - tests/test_ai_worker_p15c_entry.py
+  - tests/test_milestone_module_invariant.py
+  - tests/test_model_provider_portfolio_contract.py
+  - tests/test_module_contracts.py
+  - tests/test_module_registry.py
+  - tests/test_p14_phase_entry_contract.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_p15c_execution_packet_freeze.py
+  - tests/test_phase_alignment.py
+  - tests/test_repo_manifest.py
+  - tests/test_repository_context_builder.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p15c_runtime_control_plane_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Implement only the frozen ai_worker_runtime source control plane and stop before private input or provider access.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Add bounded source-sealed live worker execution controls without target mutation provider bypass or downstream identity coupling.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_ai_worker_p15c_controls.py tests/test_ai_worker_p15c_benchmark.py tests/test_ai_worker_p15c_entry.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_repo_manifest.py tests/test_phase_alignment.py tests/test_milestone_module_invariant.py tests/test_model_provider_portfolio_contract.py tests/test_p14_phase_entry_contract.py tests/test_p14c_execution_contract.py tests/test_p15c_execution_packet_freeze.py tests/test_repository_context_builder.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15c_runtime_control_plane_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15c_runtime_control_plane_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -B -m tool_system.ai_worker.p15c_entry --packet-only
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p15c-runtime-control-plane-v1
+  retain_feature_branch: true
+  exact_base: 1019b719547fe0b38341821e968dcae57a1f3697
+  exact_base_tree: 8f74c31d2033feff357c4a306e23f6f7f8d44c13
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@1019b719547fe0b38341821e968dcae57a1f3697
+  execution_authorized: false
