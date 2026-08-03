@@ -14,7 +14,9 @@ current_phase:
   last_accepted_stage: P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES
   last_accepted_stage_record: docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md
   next_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
-  next_stage_authorized: false
+  next_stage_authorized: true
+  active_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
+  active_stage_status: runtime_control_plane_source_implemented_pending_publication_private_preflight_and_benchmark
   next_phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   next_phase_entry_authorized: false
 prior_acceptance:
@@ -569,6 +571,69 @@ p15c_packet_freeze:
   runtime_source_changes: 0
   p15c_authorized: false
   p15c_stage_accepted: false
+p15c_runtime_control_plane:
+  authorization_packet: P15C-CROSS-PROVIDER-READ-ONLY-BENCHMARK-LIFECYCLE-v1
+  authorization_source: chat_user_message:2026-08-03-p15c-cross-provider-read-only-benchmark-lifecycle-v1
+  requested_baseline_commit: f30f43512acfa497afd9f27dcce7cf4a0ebeb101
+  canonical_source_baseline_commit: 1019b719547fe0b38341821e968dcae57a1f3697
+  canonical_source_baseline_tree: 8f74c31d2033feff357c4a306e23f6f7f8d44c13
+  prerequisite_correction_record: docs/reports/p15c_deepseek_packet_evidence_correction.md
+  task_manifest: examples/task_manifests/tool_system_p15c_runtime_control_plane_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15c_runtime_control_plane_v1.yaml
+  implementation_record: docs/reports/p15c_runtime_control_plane_implementation.md
+  implementation_status: source_implemented_fake_transport_only_pending_publication
+  module:
+    current_module_id: ai_worker_runtime
+    canonical_module_id: ai-worker-runtime
+    module_version: 1.7.0
+    aggregate_interface_id: ai-worker-runtime-api
+    aggregate_interface_version: 1.0.0
+    natural_owner_paths_added:
+      - src/tool_system/ai_worker/p15c_benchmark.py
+      - src/tool_system/ai_worker/p15c_controls.py
+      - src/tool_system/ai_worker/p15c_entry.py
+  packet_catalog: config/p15c_execution_packet_freeze_v1.yaml
+  enabled_provider_ids:
+    - deepseek
+    - openai
+  qwen_enabled: false
+  case_ids:
+    - deterministic-corpus
+    - private-target
+  max_provider_invocations: 4
+  max_retries: 0
+  public_authorization_ceiling_micro_usd: 20000000
+  private_control_references:
+    execution_policy: private-control:p15c-execution-policy
+    credentials: private-control:credentials
+    target_packet: private-control:p15c-target-packet
+    usage_ledger: private-state:p15c-usage-ledger
+  private_repository_transfer_authorized_by_user:
+    deepseek: true
+    openai: true
+    qwen: false
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_repository_provider_transfers: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  public_receipt_private_target_identity_recorded: false
+  public_receipt_private_target_paths_recorded: false
+  raw_provider_outputs_recorded: false
+  blueprint_changes: 0
+  adaptive_portfolio_source_changes: 0
+  live_execution_pending: true
+  p15c_stage_accepted: false
+  p15d_authorized: false
+  authority_effect: none
 target_identity_decoupling:
   authorization_source: chat_user_message:recommended_project_neutral_decoupling
   baseline_commit: 5e964adfd40502a3798630b98fb0d876bbd01d91
@@ -634,9 +699,9 @@ target_identity_decoupling:
   p15c_authorized: false
 authorization_boundaries:
   state_file_grants_authority: false
-  live_model_provider_execution_authorized: false
-  credential_value_access_authorized: false
-  downstream_repository_access_authorized: false
+  live_model_provider_execution_authorized: true
+  credential_value_access_authorized: true
+  downstream_repository_access_authorized: true
   remote_target_mutation_authorized: false
   production_deployment_authorized: false
   cleanup_execution_authorized: false

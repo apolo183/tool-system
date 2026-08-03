@@ -1,4 +1,4 @@
-"""Provider-neutral AI worker contracts and deterministic P14B fixtures."""
+"""Provider-neutral AI worker contracts, fixtures, and bounded execution controls."""
 
 from tool_system.ai_worker.contract import (
     AIModelSpec,
@@ -26,6 +26,27 @@ from tool_system.ai_worker.fixture_provider import (
     DeterministicFixtureProvider,
     FixtureScenario,
 )
+from tool_system.ai_worker.p15c_benchmark import (
+    P15CBenchmarkCase,
+    P15CBenchmarkError,
+    P15CBenchmarkExecutor,
+    P15CProviderPacket,
+    build_p15c_private_case,
+    build_p15c_request,
+    load_p15c_deterministic_case,
+    load_p15c_provider_packets,
+)
+from tool_system.ai_worker.p15c_controls import (
+    OwnerOnlyCredentialResolver,
+    P15CControlError,
+    P15CExecutionPolicy,
+    P15CTargetPacket,
+    P15CUsageLedger,
+    load_execution_policy,
+    load_target_packet,
+    load_target_snapshot,
+    validate_target_snapshot,
+)
 from tool_system.ai_worker.runtime import (
     AIWorkerRuntime,
     CancellationToken,
@@ -49,14 +70,31 @@ __all__ = [
     "DeterministicFixtureProvider",
     "FixtureScenario",
     "InMemoryReplayStore",
+    "OwnerOnlyCredentialResolver",
+    "P15CBenchmarkCase",
+    "P15CBenchmarkError",
+    "P15CBenchmarkExecutor",
+    "P15CControlError",
+    "P15CExecutionPolicy",
+    "P15CProviderPacket",
+    "P15CTargetPacket",
+    "P15CUsageLedger",
     "PromptSpec",
     "ProviderResponse",
     "ReplayEntry",
     "RequestValidation",
     "canonical_json_bytes",
     "canonical_sha256",
+    "build_p15c_private_case",
+    "build_p15c_request",
     "estimate_input_tokens",
     "estimate_json_tokens",
+    "load_execution_policy",
+    "load_p15c_deterministic_case",
+    "load_p15c_provider_packets",
+    "load_target_packet",
+    "load_target_snapshot",
+    "validate_target_snapshot",
     "validate_ai_worker_request",
     "validate_structured_output",
     "validate_usage",

@@ -271,11 +271,11 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     assert current_phase["next_stage"] == (
         "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
-    assert current_phase["next_stage_authorized"] is False
+    assert current_phase["next_stage_authorized"] is True
     assert current_phase["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
     assert current_phase["next_phase_entry_authorized"] is False
     assert (
         project_state["authorization_boundaries"]
         ["live_model_provider_execution_authorized"]
-        is False
+        is True
     )

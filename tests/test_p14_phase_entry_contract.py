@@ -123,7 +123,7 @@ def test_p14a_manifest_authorized_specification_but_not_implementation() -> None
     assert project_state["current_phase"]["next_stage"] == (
         "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
-    assert project_state["current_phase"]["next_stage_authorized"] is False
+    assert project_state["current_phase"]["next_stage_authorized"] is True
     assert project_state["current_phase"]["next_phase_entry_authorized"] is False
     assert "active_phase_execution" not in blueprint
     assert manifest["task_type"] == "docs_update"

@@ -58,11 +58,11 @@ def test_provider_portfolio_contract_is_product_control_not_runtime_authority() 
     assert current_phase["next_stage"] == (
         "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
-    assert current_phase["next_stage_authorized"] is False
+    assert current_phase["next_stage_authorized"] is True
     assert current_phase["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
     assert current_phase["next_phase_entry_authorized"] is False
     boundaries = project_state["authorization_boundaries"]
-    assert boundaries["live_model_provider_execution_authorized"] is False
+    assert boundaries["live_model_provider_execution_authorized"] is True
     assert boundaries["remote_target_mutation_authorized"] is False
     assert boundaries["production_deployment_authorized"] is False
     p14c = project_state["p14c"]

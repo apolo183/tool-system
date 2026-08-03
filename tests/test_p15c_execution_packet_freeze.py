@@ -136,7 +136,7 @@ def test_exact_task_pair_and_pre_entry_state_validate() -> None:
         "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
     assert current["next_stage"] == "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
-    assert current["next_stage_authorized"] is False
+    assert current["next_stage_authorized"] is True
     freeze = state["p15c_packet_freeze"]
     assert freeze["status"] == "accepted_pre_entry_freeze_no_execution_authority"
     assert freeze["provider_packets_enabled_for_live_execution"] == 0

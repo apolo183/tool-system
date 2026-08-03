@@ -408,7 +408,7 @@ def test_p14d_exact_task_pair_and_descriptive_acceptance_state_validate() -> Non
     assert current["next_stage"] == (
         "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
-    assert current["next_stage_authorized"] is False
+    assert current["next_stage_authorized"] is True
     assert current["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
     assert current["next_phase_entry_authorized"] is False
     assert state["authority_effect"] == "none"
@@ -418,9 +418,9 @@ def test_p14d_exact_task_pair_and_descriptive_acceptance_state_validate() -> Non
     assert state["p14f"]["stage_accepted"] is True
     assert state["authorization_boundaries"] == {
         "state_file_grants_authority": False,
-        "live_model_provider_execution_authorized": False,
-        "credential_value_access_authorized": False,
-        "downstream_repository_access_authorized": False,
+        "live_model_provider_execution_authorized": True,
+        "credential_value_access_authorized": True,
+        "downstream_repository_access_authorized": True,
         "remote_target_mutation_authorized": False,
         "production_deployment_authorized": False,
         "cleanup_execution_authorized": False,

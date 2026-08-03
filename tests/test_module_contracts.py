@@ -78,7 +78,9 @@ DIRECT_EFFECT_EXPECTATIONS = {
     "architecture_registry": frozenset(),
     "manifest_validation": frozenset(),
     "agent_worker_runtime": frozenset({"generated_artifact_write"}),
-    "ai_worker_runtime": frozenset({"network_write", "external_system_write"}),
+    "ai_worker_runtime": frozenset(
+        {"network_write", "external_system_write", "data_write", "database_write"}
+    ),
     "adaptive_model_portfolio_and_economics": frozenset(),
     "durable_orchestrator": frozenset({"data_write", "database_write"}),
     "repository_controller": frozenset(

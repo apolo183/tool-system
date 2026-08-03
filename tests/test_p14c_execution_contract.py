@@ -165,7 +165,7 @@ def test_p14c_bounded_deepseek_receipt_is_accepted_without_new_authority() -> No
     assert current_phase["next_stage"] == (
         "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
-    assert current_phase["next_stage_authorized"] is False
+    assert current_phase["next_stage_authorized"] is True
     assert current_phase["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
     assert current_phase["next_phase_entry_authorized"] is False
     assert p14c["implementation_authorization_packet"] == "P14C-IMPL-v2"
@@ -303,9 +303,9 @@ def test_p14c_bounded_deepseek_receipt_is_accepted_without_new_authority() -> No
     )
     assert p14c["stage_accepted"] is True
     assert boundaries["state_file_grants_authority"] is False
-    assert boundaries["live_model_provider_execution_authorized"] is False
-    assert boundaries["credential_value_access_authorized"] is False
-    assert boundaries["downstream_repository_access_authorized"] is False
+    assert boundaries["live_model_provider_execution_authorized"] is True
+    assert boundaries["credential_value_access_authorized"] is True
+    assert boundaries["downstream_repository_access_authorized"] is True
     assert boundaries["remote_target_mutation_authorized"] is False
     assert boundaries["production_deployment_authorized"] is False
     assert boundaries["cleanup_execution_authorized"] is False
