@@ -1,0 +1,28 @@
+product_objective:
+  id: python-cli-fixture
+  statement: add a bounded increment CLI while preserving the library
+agents:
+  evidence_collector: {role: evidence_collector}
+  policy_guard: {role: policy_guard}
+  blueprint_architect: {role: blueprint_architect}
+  change_planner: {role: change_planner}
+  patch_author: {role: patch_author}
+  test_engineer: {role: test_engineer}
+  code_reviewer: {role: code_reviewer}
+  contract_reviewer: {role: contract_reviewer}
+  audit_recorder: {role: audit_recorder}
+milestones:
+  PYTHON_CLI:
+    objective: add and repair the isolated Python CLI fixture
+    module_change:
+      module_id: fixture-python-cli
+      module_version: 1.0.0
+      interface_id: fixture-python-cli-api
+      interface_version: 1.0.0
+      change_kind: add
+      natural_owner_paths: [src]
+      allowed_files: [STATUS.md, src/calculator.py, src/cli.py, tests/calculator_spec.py]
+      test_paths: [tests/calculator_spec.py]
+      depends_on_module_ids: []
+      acceptance: [library increments correctly, CLI delegates to library, status converges]
+      validations: [isolated Python fixture validation]

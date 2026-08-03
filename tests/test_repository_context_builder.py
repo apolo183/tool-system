@@ -397,11 +397,13 @@ def test_p14d_exact_task_pair_and_descriptive_acceptance_state_validate() -> Non
     assert set(plan["changed_files"]) == P14D_FILES
     assert len(P14D_FILES) == 19
     current = state["current_phase"]
-    assert current["last_accepted_stage"] == "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
-    assert current["last_accepted_stage_record"] == (
-        "docs/reports/p14g_durable_local_git_acceptance.md"
+    assert current["last_accepted_stage"] == (
+        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
     )
-    assert current["next_stage"] == "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
+    assert current["last_accepted_stage_record"] == (
+        "docs/reports/p14h_multi_stack_fixture_acceptance.md"
+    )
+    assert current["next_stage"] == "P14I_ACCEPTANCE_CLOSURE"
     assert current["next_stage_authorized"] is False
     assert state["authority_effect"] == "none"
     assert state["p14d"]["stage_accepted"] is True

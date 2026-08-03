@@ -1,0 +1,57 @@
+plan_id: tool-system-p14h-multi-stack-fixture-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p14h_multi_stack_fixture_v1.yaml
+changed_files:
+  - REPO_MANIFEST.md
+  - docs/reports/p14h_multi_stack_fixture_acceptance.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p14h_multi_stack_fixture_v1.yaml
+  - examples/task_manifests/tool_system_p14h_multi_stack_fixture_v1.yaml
+  - tests/fixtures/p14h/python_cli/GOVERNANCE.md
+  - tests/fixtures/p14h/python_cli/STATUS.md
+  - tests/fixtures/p14h/python_cli/blueprint.yaml
+  - tests/fixtures/p14h/python_cli/src/calculator.py
+  - tests/fixtures/p14h/python_cli/tests/calculator_spec.py
+  - tests/fixtures/p14h/typescript_package/GOVERNANCE.md
+  - tests/fixtures/p14h/typescript_package/STATUS.md
+  - tests/fixtures/p14h/typescript_package/blueprint.yaml
+  - tests/fixtures/p14h/typescript_package/package.json
+  - tests/fixtures/p14h/typescript_package/src/index.ts
+  - tests/fixtures/p14h/typescript_package/src/legacy.ts
+  - tests/fixtures/p14h/typescript_package/tests/index.test.ts
+  - tests/test_p14h_multi_stack_e2e.py
+  - tests/test_milestone_module_invariant.py
+  - tests/test_model_provider_portfolio_contract.py
+  - tests/test_p14_phase_entry_contract.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_phase_alignment.py
+  - tests/test_repo_manifest.py
+  - tests/test_repository_context_builder.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p14h_multi_stack_fixture_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Accept only the frozen isolated P14H multi-stack fixtures.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Prove the bounded target without changing runtime or external authority.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14h_multi_stack_fixture_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14h_multi_stack_fixture_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p14h-multi-stack-fixture-v1
+  retain_feature_branch: true
+  exact_base: c4905bbcde3b69e899a41046c00c172b03247c02
+  exact_base_tree: cd1e21f33047c42ea51493754508c7b17825f09c
+rollback:
+  method: git_revert
+  reference: tool-system@c4905bbcde3b69e899a41046c00c172b03247c02
+  execution_authorized: false

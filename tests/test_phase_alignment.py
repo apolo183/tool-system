@@ -34,6 +34,9 @@ P14F_CANCELLATION_REPORT = (
 P14G_TOPOLOGY_REPORT = (
     ROOT / "docs" / "reports" / "p14g_file_topology_correction_acceptance.md"
 )
+P14H_ACCEPTANCE_REPORT = (
+    ROOT / "docs" / "reports" / "p14h_multi_stack_fixture_acceptance.md"
+)
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
@@ -86,13 +89,13 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert project_state["current_phase"]["status"] == "active"
     assert project_state["authority_effect"] == "none"
     assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
+        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
     )
     assert project_state["current_phase"]["last_accepted_stage_record"] == (
-        "docs/reports/p14g_durable_local_git_acceptance.md"
+        "docs/reports/p14h_multi_stack_fixture_acceptance.md"
     )
     assert project_state["current_phase"]["next_stage"] == (
-        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
+        "P14I_ACCEPTANCE_CLOSURE"
     )
     assert project_state["current_phase"]["next_stage_authorized"] is False
     assert project_state["current_phase"]["next_phase"] == (
@@ -255,6 +258,31 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
         "staged_paths_equal_actual_changed_subset"
     ] is True
     assert p14g["file_topology_correction"]["authority_effect"] == "none"
+    p14h = project_state["p14h"]
+    assert p14h["implementation_authorization_packet"] == (
+        "P14H-MULTI-STACK-FIXTURE-LIFECYCLE-v1"
+    )
+    assert p14h["acceptance_status"] == "accepted"
+    assert p14h["evidence_boundary"] == (
+        "isolated_python_and_typescript_fixture_repositories_only"
+    )
+    assert all(
+        p14h["accepted_fixture_evidence"][key] is True
+        for key in (
+            "greenfield_python_cli",
+            "existing_python_library_natural_owner_change",
+            "typescript_package_language_neutral_flow",
+            "bounded_failing_test_repair",
+            "ambiguous_blueprint_pre_mutation_block",
+            "out_of_scope_patch_block_and_rollback",
+            "timeout_cancellation_cleanup_and_resume",
+            "completed_side_effect_crash_without_duplicate_replay",
+            "local_git_conflict_policy",
+            "deterministic_content_addressed_replay",
+            "system_does_not_invent_milestones",
+        )
+    )
+    assert p14h["stage_accepted"] is True
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["state_file_grants_authority"] is False
     assert boundaries["live_model_provider_execution_authorized"] is False
@@ -281,6 +309,9 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     )
     assert "P14G_FILE_TOPOLOGY_CORRECTION_ACCEPTED_FIXTURE_ONLY" in (
         P14G_TOPOLOGY_REPORT.read_text(encoding="utf-8")
+    )
+    assert "P14H_ACCEPTED_ISOLATED_MULTI_STACK_FIXTURES_ONLY" in (
+        P14H_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
     )
     for public_contract in (agents_text, readme_text, principles_text):
         assert "docs/tool_system_project_state_v1.yaml" in public_contract

@@ -11,9 +11,9 @@ current_phase:
   status: active
   entry_record: docs/reports/p14a_blueprint_to_code_phase_entry_and_contract.md
   entry_authorized: true
-  last_accepted_stage: P14G_DURABLE_LOCAL_GIT_ORCHESTRATION
-  last_accepted_stage_record: docs/reports/p14g_durable_local_git_acceptance.md
-  next_stage: P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE
+  last_accepted_stage: P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE
+  last_accepted_stage_record: docs/reports/p14h_multi_stack_fixture_acceptance.md
+  next_stage: P14I_ACCEPTANCE_CLOSURE
   next_stage_authorized: false
   next_phase: P15_MULTI_PROJECT_BENCHMARK
   next_phase_entry_authorized: false
@@ -276,6 +276,35 @@ p14g:
     acceptance_record: docs/reports/p14g_file_topology_correction_acceptance.md
     acceptance_status: accepted_fixture_only
     authority_effect: none
+  stage_accepted: true
+p14h:
+  implementation_authorization_packet: P14H-MULTI-STACK-FIXTURE-LIFECYCLE-v1
+  acceptance_record: docs/reports/p14h_multi_stack_fixture_acceptance.md
+  acceptance_status: accepted
+  accepted_at: 2026-08-03 UTC+09:00
+  evidence_boundary: isolated_python_and_typescript_fixture_repositories_only
+  accepted_fixture_evidence:
+    greenfield_python_cli: true
+    existing_python_library_natural_owner_change: true
+    typescript_package_language_neutral_flow: true
+    bounded_failing_test_repair: true
+    ambiguous_blueprint_pre_mutation_block: true
+    out_of_scope_patch_block_and_rollback: true
+    timeout_cancellation_cleanup_and_resume: true
+    completed_side_effect_crash_without_duplicate_replay: true
+    local_git_conflict_policy: true
+    deterministic_content_addressed_replay: true
+    stale_status_converges_within_finite_cycles: true
+    stale_pr_metadata_does_not_reopen_source: true
+    repeated_recurrence_fingerprint_stops: true
+    suggestions_outside_acceptance_are_non_blocking: true
+    receipts_cannot_add_acceptance_obligations: true
+    system_does_not_invent_milestones: true
+    remote_operations: 0
+    provider_invocations: 0
+    credential_accesses: 0
+    downstream_repository_operations: 0
+  real_downstream_repository_accessed: false
   stage_accepted: true
 authorization_boundaries:
   state_file_grants_authority: false

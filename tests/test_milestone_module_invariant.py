@@ -200,10 +200,10 @@ def test_p14mr_report_is_acceptance_evidence_not_durable_rule_owner() -> None:
 
     assert REPORT.is_file()
     assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p14g_durable_local_git_acceptance.md"
+        "docs/reports/p14h_multi_stack_fixture_acceptance.md"
     )
     assert current_phase["last_accepted_stage"] == (
-        "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
+        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
     )
     assert project_state["authority_effect"] == "none"
 
@@ -234,7 +234,7 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     assert "status" not in blueprint
     assert current_phase["id"] == "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
     assert current_phase["last_accepted_stage"] == (
-        "P14G_DURABLE_LOCAL_GIT_ORCHESTRATION"
+        "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
     )
     assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["execution_boundary"] == (
         "governance_only"
@@ -259,7 +259,7 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     assert "durable_module_and_milestone_change_governance" in blueprint[
         "boundaries"
     ]["owns"]
-    assert current_phase["next_stage"] == "P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE"
+    assert current_phase["next_stage"] == "P14I_ACCEPTANCE_CLOSURE"
     assert current_phase["next_stage_authorized"] is False
     assert (
         project_state["authorization_boundaries"]
