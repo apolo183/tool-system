@@ -1,0 +1,44 @@
+plan_id: tool-system-p14f-cancellation-correction-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p14f_cancellation_correction_v1.yaml
+changed_files:
+  - config/module_registry_v1.yaml
+  - docs/modules/development-loop-contract-v1.md
+  - docs/reports/p14f_cancellation_correction_acceptance.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p14f_cancellation_correction_v1.yaml
+  - examples/task_manifests/tool_system_p14f_cancellation_correction_v1.yaml
+  - src/tool_system/development_loop/loop.py
+  - tests/test_development_loop.py
+  - tests/test_module_registry.py
+  - tests/test_phase_alignment.py
+  - tests/test_repo_manifest.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p14f_cancellation_correction_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Close only the P14F cancellation prerequisite.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve the stable target while correcting one prerequisite module.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p14f_cancellation_correction_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p14f_cancellation_correction_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p14f-cancellation-correction-v1
+  retain_feature_branch: true
+  exact_base: cb7b2e1f73738df931830063a906a7e3b3012a51
+  exact_base_tree: b8a39d1075cd6af66d350dd8853f299dac6abfb6
+rollback:
+  method: git_revert
+  reference: tool-system@cb7b2e1f73738df931830063a906a7e3b3012a51
+  execution_authorized: false

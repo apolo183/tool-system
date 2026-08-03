@@ -14,10 +14,10 @@ module_compound_contract:
   identity:
     canonical_module_id: development-loop
     current_module_id: development_loop
-    module_version: 1.0.0
+    module_version: 1.1.0
     aggregate_interface:
       interface_id: development-loop-api
-      interface_version: 1.0.0
+      interface_version: 1.1.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
@@ -27,7 +27,7 @@ module_compound_contract:
         name: tool_system.development_loop
   role:
     summary: execute bounded structured patch, validation, diagnosis, repair, and independent review cycles against isolated in-memory fixture repositories
-    responsibility_boundary: Freeze acceptance and finite budgets, enforce atomic exact-scope patch preconditions, classify validation and review blockers, terminate repeated or non-progressing cycles, seal successful candidates, and apply evidence non-reopening semantics without performing external operations.
+    responsibility_boundary: Freeze acceptance and finite budgets, enforce atomic exact-scope patch preconditions, honor a caller-owned cancellation signal before worker dispatch and before applying returned patches, classify validation and review blockers, terminate repeated or non-progressing cycles, seal successful candidates, and apply evidence non-reopening semantics without performing external operations.
   natural_owner_evidence_paths:
     - src/tool_system/development_loop/__init__.py
     - src/tool_system/development_loop/loop.py
@@ -40,15 +40,15 @@ module_compound_contract:
   input_contract:
     registered_inputs:
       - frozen_development_contract_virtual_repository_and_fixture_callbacks_v1
-    boundary: Accept a frozen task digest, baseline tree, exact scope, acceptance and validation sets, fixed terminal predicate, finite budgets, caller-owned in-memory files, injected worker, validator and two independent reviewer callbacks, and optional caller-persisted resume state.
+    boundary: Accept a frozen task digest, baseline tree, exact scope, acceptance and validation sets, fixed terminal predicate, finite budgets, caller-owned in-memory files, injected worker, validator and two independent reviewer callbacks, optional caller-persisted resume state, and an optional caller-owned boolean cancellation callback.
   output_contract:
     registered_outputs:
       - bounded_development_cycle_state_v1
-    boundary: Return canonical candidate files and tree digest, per-cycle fingerprints, blockers, satisfied acceptance, validation and review evidence, finite usage, stop classification, sealed-candidate status, and zero-operation counters.
+    boundary: Return canonical candidate files and tree digest, per-cycle fingerprints, blockers, satisfied acceptance, validation and review evidence, finite usage, cancellation or other stop classification, sealed-candidate status, and zero-operation counters. Cancellation before worker dispatch performs no worker call; cancellation after worker return discards that unapplied patch.
   error_contract:
     registered_error_semantics:
       - invalid_drifted_out_of_scope_stale_unbounded_repeated_or_non_progressing_input_blocks
-    boundary: Invalid frozen identity, path, scope, patch, content precondition, callback output, validation set, acceptance set, review obligation, resume identity, finite budget, repeated fingerprint, or two-cycle no-progress state fails closed.
+    boundary: Invalid frozen identity, path, scope, patch, content precondition, callback output including a raising or non-boolean cancellation signal, validation set, acceptance set, review obligation, resume identity, finite budget, repeated fingerprint, or two-cycle no-progress state fails closed.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes: []
@@ -56,13 +56,13 @@ module_compound_contract:
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve exact frozen-contract semantics, atomic patch preconditions, validation and review set closure, recurrence fingerprint fields and exclusions, finite budgets, evidence non-reopening, canonical output, and zero external side effects.
+    interface_compatible_replacement: Preserve exact frozen-contract semantics, atomic patch preconditions, caller cancellation checkpoints, validation and review set closure, recurrence fingerprint fields and exclusions, finite budgets, evidence non-reopening, canonical output, and zero external side effects.
     interface_incompatible_change: Requires a new aggregate interface version and explicit revalidation of blueprint-compiler and future durable-orchestrator consumers.
   rollback_contract:
     rollback_identity: tool-system@0b5110a2eea79ebde650e1088b787c781ddab171:development_loop@absent
     method: Revert through a separately audited pull request while preserving P14E, repository history, and P14F acceptance evidence.
   replacement_contract:
-    activation_rule: Replace only after structured patch, exact-scope, precondition, validation, diagnosis, bounded repair, independent review, recurrence, finite-budget, resume, evidence non-reopening, and no-side-effect tests pass.
+    activation_rule: Replace only after structured patch, exact-scope, precondition, validation, diagnosis, bounded repair, independent review, cancellation before dispatch and before patch application, invalid cancellation, recurrence, finite-budget, resume, evidence non-reopening, and no-side-effect tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true

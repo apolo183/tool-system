@@ -28,6 +28,9 @@ P14E_ACCEPTANCE_REPORT = (
 P14F_ACCEPTANCE_REPORT = (
     ROOT / "docs" / "reports" / "p14f_development_loop_acceptance.md"
 )
+P14F_CANCELLATION_REPORT = (
+    ROOT / "docs" / "reports" / "p14f_cancellation_correction_acceptance.md"
+)
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
@@ -223,6 +226,19 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert p14e["generated_documents_grant_authority"] is False
     assert p14e["real_downstream_repository_accessed"] is False
     assert p14e["stage_accepted"] is True
+    p14f = project_state["p14f"]
+    assert p14f["module_version"] == "1.1.0"
+    assert p14f["public_interface_version"] == "1.1.0"
+    assert p14f["accepted_fixture_evidence"][
+        "caller_cancellation_before_worker_dispatch"
+    ] is True
+    assert p14f["accepted_fixture_evidence"][
+        "caller_cancellation_before_patch_application"
+    ] is True
+    assert p14f["accepted_fixture_evidence"][
+        "cancelled_worker_patch_discarded"
+    ] is True
+    assert p14f["cancellation_correction"]["authority_effect"] == "none"
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["state_file_grants_authority"] is False
     assert boundaries["live_model_provider_execution_authorized"] is False
@@ -243,6 +259,9 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     )
     assert "P14F_ACCEPTED_ISOLATED_FIXTURE_ONLY" in (
         P14F_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+    )
+    assert "P14F_CANCELLATION_CORRECTION_ACCEPTED_FIXTURE_ONLY" in (
+        P14F_CANCELLATION_REPORT.read_text(encoding="utf-8")
     )
     for public_contract in (agents_text, readme_text, principles_text):
         assert "docs/tool_system_project_state_v1.yaml" in public_contract

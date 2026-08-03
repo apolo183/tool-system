@@ -259,6 +259,86 @@ def test_resume_of_sealed_state_does_not_call_worker_again() -> None:
     assert calls == 1
 
 
+def test_cancellation_before_worker_call_preserves_candidate() -> None:
+    calls = 0
+
+    def worker(_: dict[str, object]) -> dict[str, object]:
+        nonlocal calls
+        calls += 1
+        raise AssertionError("cancelled run must not call worker")
+
+    result = run_development_loop(
+        contract=_contract(),
+        baseline_files={"src/app.py": "return 1\n"},
+        worker=worker,
+        validator=_pass_validation,
+        code_reviewer=_clean_review,
+        contract_reviewer=_clean_review,
+        cancellation_requested=lambda: True,
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "CANCELLED_BY_CALLER"
+    assert result["candidate_files"] == {"src/app.py": "return 1\n"}
+    assert result["worker_call_count"] == 0
+    assert result["cycles"] == []
+    assert calls == 0
+
+
+def test_cancellation_after_worker_discards_unapplied_patch() -> None:
+    cancellation_checks = iter((False, True))
+
+    result = run_development_loop(
+        contract=_contract(),
+        baseline_files={"src/app.py": "return 1\n"},
+        worker=lambda _: {
+            "operations": [
+                {
+                    "op": "replace",
+                    "path": "src/app.py",
+                    "expected_sha256": _sha("return 1\n"),
+                    "content": "return 2\n",
+                }
+            ]
+        },
+        validator=lambda _: (_ for _ in ()).throw(
+            AssertionError("cancelled patch must not be validated")
+        ),
+        code_reviewer=_clean_review,
+        contract_reviewer=_clean_review,
+        cancellation_requested=lambda: next(cancellation_checks),
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "CANCELLED_BY_CALLER"
+    assert result["candidate_files"] == {"src/app.py": "return 1\n"}
+    assert result["worker_call_count"] == 1
+    assert result["cycles"] == []
+
+
+def test_invalid_cancellation_signal_fails_closed_without_worker_call() -> None:
+    for signal in (object(), lambda: 1, lambda: (_ for _ in ()).throw(RuntimeError("secret"))):
+        result = run_development_loop(
+            contract=_contract(),
+            baseline_files={"src/app.py": "return 1\n"},
+            worker=lambda _: (_ for _ in ()).throw(
+                AssertionError("invalid signal must stop before worker")
+            ),
+            validator=_pass_validation,
+            code_reviewer=_clean_review,
+            contract_reviewer=_clean_review,
+            cancellation_requested=signal,  # type: ignore[arg-type]
+        )
+
+        assert result["status"] == "BLOCK"
+        assert result["terminal_code"] == "INVALID_CANCELLATION_SIGNAL"
+        assert result["worker_call_count"] == 0
+        assert result["candidate_files"] in (
+            None,
+            {"src/app.py": "return 1\n"},
+        )
+
+
 def test_worker_cannot_redefine_frozen_acceptance() -> None:
     result = run_development_loop(
         contract=_contract(), baseline_files={"src/app.py": "return 1\n"},

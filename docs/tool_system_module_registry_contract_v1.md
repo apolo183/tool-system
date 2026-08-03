@@ -267,9 +267,9 @@ mapping_contract:
       rollback_identity: tool-system@00793ad07bba2e3fe3bd29882e83788d32697da6:blueprint_compiler@absent
     - current_module_id: development_loop
       canonical_module_id: development-loop
-      current_module_version: 1.0.0
+      current_module_version: 1.1.0
       aggregate_interface_id: development-loop-api
-      aggregate_interface_version: 1.0.0
+      aggregate_interface_version: 1.1.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.development_loop}

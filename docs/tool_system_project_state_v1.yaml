@@ -204,9 +204,9 @@ p14e:
 p14f:
   implementation_authorization_packet: P14F-DEVELOPMENT-LOOP-LIFECYCLE-v1
   module_id: development-loop
-  module_version: 1.0.0
+  module_version: 1.1.0
   public_interface_id: development-loop-api
-  public_interface_version: 1.0.0
+  public_interface_version: 1.1.0
   acceptance_record: docs/reports/p14f_development_loop_acceptance.md
   acceptance_status: accepted
   accepted_at: 2026-08-03 UTC+09:00
@@ -228,6 +228,10 @@ p14f:
     repeated_state_and_no_progress_termination: true
     sealed_candidate_evidence_non_reopening: true
     sealed_resume_does_not_repeat_worker_call: true
+    caller_cancellation_before_worker_dispatch: true
+    caller_cancellation_before_patch_application: true
+    cancelled_worker_patch_discarded: true
+    invalid_cancellation_signal_blocks: true
     filesystem_operations: 0
     git_operations: 0
     network_operations: 0
@@ -235,6 +239,11 @@ p14f:
     credential_accesses: 0
     downstream_repository_operations: 0
   durable_state_and_local_git_owned_by_p14g: true
+  cancellation_correction:
+    authorization_packet: P14H-PREREQUISITE-CORRECTIONS-v1
+    acceptance_record: docs/reports/p14f_cancellation_correction_acceptance.md
+    acceptance_status: accepted_fixture_only
+    authority_effect: none
   real_downstream_repository_accessed: false
   stage_accepted: true
 p14g:
