@@ -13,7 +13,7 @@ This is a tool-system-owned implementation and validation contract. It grants
 no execution, downstream-repository, cleanup, provider, or production
 authority, and it records no external policy state.
 
-## Fifteen-row identity and aggregate-interface mapping
+## Nineteen-row identity and aggregate-interface mapping
 
 The canonical registry IDs use hyphens while Python package and import names
 remain unchanged. The mapping below is the local identity owner used by the
@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 18
+  module_count: 19
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -88,9 +88,21 @@ mapping_contract:
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.ai_worker}
-      direct_consumer_module_ids: []
+      direct_consumer_module_ids:
+        - adaptive_model_portfolio_and_economics
       change_risk: "critical: committed source-sealed operator entry can consume a durably burned process-authority grant and invoke the one-attempt DeepSeek V4 Flash recovery adapter with an owner-only local credential file; credential whitespace is rejected and HTTP 401/403 remain distinctly redacted while default execution remains fixture-only"
       rollback_identity: tool-system@d9c211324487e3bfd31c1276763ed2ed781cc085:ai_worker_runtime@1.5.1
+    - current_module_id: adaptive_model_portfolio_and_economics
+      canonical_module_id: adaptive-model-portfolio-and-economics
+      current_module_version: 1.0.0
+      aggregate_interface_id: adaptive-model-portfolio-and-economics-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.provider_portfolio}
+      direct_consumer_module_ids: []
+      change_risk: "medium: isolated fixture profiling, hard-floor routing, failure disposition, and non-authorizing economic evidence boundary"
+      rollback_identity: tool-system@f912add44845be9d60021333c6792e4ecf6a142b:adaptive_model_portfolio_and_economics@absent
     - current_module_id: durable_orchestrator
       canonical_module_id: durable-orchestrator
       current_module_version: 1.1.0
@@ -321,7 +333,9 @@ static_import_dag:
     agent_worker_runtime:
       - role_runtime
       - worker_adapter
-    ai_worker_runtime: []
+    ai_worker_runtime:
+      - adaptive_model_portfolio_and_economics
+    adaptive_model_portfolio_and_economics: []
     durable_orchestrator:
       - process_authority
       - local_git
@@ -357,7 +371,7 @@ static_import_dag:
     local_git: []
   zero_consumer_modules:
     - architecture_registry
-    - ai_worker_runtime
+    - adaptive_model_portfolio_and_economics
     - durable_orchestrator
     - worker_adapter
     - cli_frontend

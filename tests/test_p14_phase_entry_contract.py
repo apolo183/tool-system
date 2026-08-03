@@ -118,11 +118,11 @@ def test_p14a_manifest_authorized_specification_but_not_implementation() -> None
     assert project_state["p14i"]["acceptance_status"] == "accepted_and_closed"
     assert project_state["current_phase"]["id"] == "P15_MULTI_PROJECT_BENCHMARK"
     assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
     assert project_state["current_phase"]["status"] == "active"
     assert project_state["current_phase"]["next_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
     assert project_state["current_phase"]["next_stage_authorized"] is False
     assert project_state["current_phase"]["next_phase_entry_authorized"] is False

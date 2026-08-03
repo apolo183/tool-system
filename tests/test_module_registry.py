@@ -30,18 +30,19 @@ CONTRACT_DIR = ROOT / "docs/modules"
 BLUEPRINT = ROOT / "blueprint/tool_system_v0.yaml"
 
 EXPECTED_RAW_SHA256 = (
-    "68493f9e029f361e2f8b86da313f7d4b5162ca9e028fb0efeb9fe5df900eb4e1"
+    "b9859dd41de8013f27cf228b07f4b864fbfaea93586ebdf264f92b9329539c08"
 )
-EXPECTED_BYTE_LENGTH = 98_410
+EXPECTED_BYTE_LENGTH = 102_556
 EXPECTED_SEMANTIC_SHA256 = (
-    "ff59fd551473353827b8d43bceb1be22cfd869e2854299cc2393638b8f744647"
+    "cf8bedf6048fd37f823dedfee29028cc130da540c11deb70cf1f8aba37aa7dd6"
 )
-EXPECTED_MANAGED_PYTHON_FILE_COUNT = 101
+EXPECTED_MANAGED_PYTHON_FILE_COUNT = 103
 EXPECTED_MODULE_IDS = {
     "architecture_registry",
     "manifest_validation",
     "agent_worker_runtime",
     "ai_worker_runtime",
+    "adaptive_model_portfolio_and_economics",
     "durable_orchestrator",
     "repository_controller",
     "process_authority",
@@ -72,6 +73,7 @@ TEST_SELECTORS = {
     "manifest_validation": "tests/test_task_manifest_policy.py",
     "agent_worker_runtime": "tests/test_agent_worker_interface.py",
     "ai_worker_runtime": "tests/test_ai_worker_contract.py",
+    "adaptive_model_portfolio_and_economics": "tests/test_provider_portfolio_fixtures.py",
     "durable_orchestrator": "tests/test_durable_orchestrator_state.py",
     "repository_controller": "tests/test_repo_controller.py",
     "process_authority": "tests/test_process_authority.py",
@@ -172,7 +174,7 @@ def authority_code_paths() -> dict[str, list[str]]:
         for current_id, contract in contracts.items()
     }
     flattened = [path for paths in result.values() for path in paths]
-    assert len(flattened) == len(set(flattened)) == 109
+    assert len(flattened) == len(set(flattened)) == 111
     python_owners = target_python_owner_by_path()
     assert {
         path: current_id
@@ -396,13 +398,13 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert len(raw) == EXPECTED_BYTE_LENGTH
     assert hashlib.sha256(raw).hexdigest() == EXPECTED_RAW_SHA256
     assert hashlib.sha256(normalized).hexdigest() == EXPECTED_SEMANTIC_SHA256
-    assert len(registry["modules"]) == len(registry["interfaces"]) == 18
-    assert sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 109
-    assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 20
+    assert len(registry["modules"]) == len(registry["interfaces"]) == 19
+    assert sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 111
+    assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 21
     assert sum(len(module["permitted_side_effects"]) for module in registry["modules"]) == 43
-    assert len(list(_iter_contract_references(registry))) == 187
+    assert len(list(_iter_contract_references(registry))) == 195
     assert sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
-    assert len(target_python_owner_by_path()) == 101
+    assert len(target_python_owner_by_path()) == 103
     assert_effect_oracle(registry)
 
 
@@ -422,7 +424,7 @@ def test_current_current_registry_is_authority_and_tmp_copy_is_not(
     assert current["current_registry_authority"] is True
     assert current["validation_scope"] == "tool_system_current_module_registry"
     assert current["compatibility_adapter"]["applied"] is False
-    assert current["contract_reference_count"] == 187
+    assert current["contract_reference_count"] == 195
     assert current["external_provider_count"] == 0
     assert compatibility["status"] == "PASS"
     assert compatibility["current_registry_authority"] is False
@@ -495,7 +497,7 @@ def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
         edge_count += len(expected_dependencies)
         key = (row["aggregate_interface_id"], row["aggregate_interface_version"])
         assert interfaces[key]["provider_module_id"] == canonical
-    assert edge_count == 30
+    assert edge_count == 31
     assert_effect_oracle(registry)
 
 

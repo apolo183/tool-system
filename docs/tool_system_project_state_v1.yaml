@@ -11,9 +11,9 @@ current_phase:
   status: active
   entry_record: docs/reports/p15a_provider_portfolio_qualification_specification.md
   entry_authorized: true
-  last_accepted_stage: P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION
-  last_accepted_stage_record: docs/reports/p15a_provider_portfolio_qualification_specification.md
-  next_stage: P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES
+  last_accepted_stage: P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES
+  last_accepted_stage_record: docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md
+  next_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
   next_stage_authorized: false
   next_phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   next_phase_entry_authorized: false
@@ -396,6 +396,66 @@ p15a:
   blueprint_changes: 0
   runtime_source_changes: 0
   p15b_authorized: false
+  stage_accepted: true
+p15b:
+  authorization_packet: P15B-ADAPTER-ROUTER-AND-PROFILER-FIXTURES-LIFECYCLE-v1
+  baseline_commit: f912add44845be9d60021333c6792e4ecf6a142b
+  baseline_tree: 493c5563cf4d95b1cc3e236e1453c8c9db5e3423
+  fixture_acceptance_record: docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md
+  implementation_status: accepted_isolated_fixture_no_live_provider
+  accepted_at: 2026-08-03 UTC+09:00
+  module:
+    current_module_id: adaptive_model_portfolio_and_economics
+    canonical_module_id: adaptive-model-portfolio-and-economics
+    module_version: 1.0.0
+    aggregate_interface_id: adaptive-model-portfolio-and-economics-api
+    aggregate_interface_version: 1.0.0
+    upstream_interface_id: ai-worker-runtime-api
+    upstream_interface_version: 1.0.0
+    natural_owner_paths:
+      - src/tool_system/provider_portfolio/__init__.py
+      - src/tool_system/provider_portfolio/fixtures.py
+  task_profile_builder: build_task_profile_fixture
+  routing_policy_version: p15b-fixture-routing-policy-v1
+  catalog_fixture_version: p15b-fixture-catalog-v1
+  evidence_snapshot_fixture_version: p15b-fixture-evidence-v1
+  hard_floors_evaluated_before_economics: true
+  economics_arithmetic: non_negative_integer_microunits_without_float_scoring
+  selectable_qualification_states:
+    - ELIGIBLE
+    - PRIMARY
+  failure_dispositions:
+    - AVAILABILITY_FAILOVER
+    - SAME_ROUTE_REPAIR_THEN_ESCALATE
+    - BLOCK_NO_PROVIDER_BYPASS
+    - STOP
+  fixture_adapter:
+    protocol_path: src/tool_system/ai_worker/contract.py
+    protocol_symbol: AIWorkerProvider
+    provider_kind: deterministic_fixture
+    execution_mode: fixture
+    structural_compatibility_tested: true
+    calls_external_provider: false
+    uses_credentials: false
+    network_access: false
+  module_source_files_added: 2
+  existing_ai_worker_source_changes: 0
+  live_provider_adapters_added_or_modified: 0
+  provider_candidates_enabled_for_live_execution: 0
+  benchmark_results_created: 0
+  benchmark_executions: 0
+  provider_invocations: 0
+  provider_network_operations: 0
+  credential_resolver_invocations: 0
+  credential_value_accesses: 0
+  real_downstream_repository_accesses: 0
+  remote_fixture_operations: 0
+  target_mutations: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+  blueprint_changes: 0
+  p15c_authorized: false
   stage_accepted: true
 authorization_boundaries:
   state_file_grants_authority: false

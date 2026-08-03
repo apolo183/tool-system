@@ -399,14 +399,14 @@ def test_p14d_exact_task_pair_and_descriptive_acceptance_state_validate() -> Non
     current = state["current_phase"]
     assert current["id"] == "P15_MULTI_PROJECT_BENCHMARK"
     assert current["last_accepted_stage"] == (
-        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
     assert current["last_accepted_stage_record"] == (
-        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
+        "docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md"
     )
     assert current["status"] == "active"
     assert current["next_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
     assert current["next_stage_authorized"] is False
     assert current["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"

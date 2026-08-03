@@ -45,7 +45,8 @@ module_compound_contract:
     direction: provider-to-direct-consumer
     direct_provider_module_ids:
       - process_authority
-    direct_consumer_module_ids: []
+    direct_consumer_module_ids:
+      - adaptive_model_portfolio_and_economics
   input_contract:
     registered_inputs:
       - AIWorkerRequest_v1

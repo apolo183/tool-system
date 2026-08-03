@@ -97,6 +97,47 @@ P15A_FILES = {
     "tests/test_p14c_execution_contract.py",
     "tests/test_repository_context_builder.py",
 }
+P15B_ACCEPTANCE_REPORT = (
+    ROOT
+    / "docs"
+    / "reports"
+    / "p15b_adapter_router_profiler_fixture_acceptance.md"
+)
+P15B_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml"
+)
+P15B_CHANGE_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml"
+)
+P15B_FILES = {
+    "REPO_MANIFEST.md",
+    "config/module_registry_v1.yaml",
+    "docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md",
+    "docs/modules/ai-worker-runtime-contract-v1.md",
+    "docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml",
+    "examples/task_manifests/tool_system_p15b_adapter_router_profiler_fixtures_v1.yaml",
+    "src/tool_system/provider_portfolio/__init__.py",
+    "src/tool_system/provider_portfolio/fixtures.py",
+    "tests/test_milestone_module_invariant.py",
+    "tests/test_model_provider_portfolio_contract.py",
+    "tests/test_module_contracts.py",
+    "tests/test_module_registry.py",
+    "tests/test_p14_phase_entry_contract.py",
+    "tests/test_p14c_execution_contract.py",
+    "tests/test_phase_alignment.py",
+    "tests/test_provider_portfolio_fixtures.py",
+    "tests/test_repo_manifest.py",
+    "tests/test_repository_context_builder.py",
+}
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
@@ -154,13 +195,13 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     )
     assert project_state["current_phase"]["entry_authorized"] is True
     assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
     assert project_state["current_phase"]["last_accepted_stage_record"] == (
-        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
+        "docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md"
     )
     assert project_state["current_phase"]["next_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
     assert project_state["current_phase"]["next_stage_authorized"] is False
     assert project_state["current_phase"]["next_phase"] == (
@@ -457,6 +498,80 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     )
     assert p15a["p15b_authorized"] is False
     assert p15a["stage_accepted"] is True
+    p15b = project_state["p15b"]
+    assert p15b["authorization_packet"] == (
+        "P15B-ADAPTER-ROUTER-AND-PROFILER-FIXTURES-LIFECYCLE-v1"
+    )
+    assert p15b["baseline_commit"] == (
+        "f912add44845be9d60021333c6792e4ecf6a142b"
+    )
+    assert p15b["baseline_tree"] == (
+        "493c5563cf4d95b1cc3e236e1453c8c9db5e3423"
+    )
+    assert p15b["implementation_status"] == (
+        "accepted_isolated_fixture_no_live_provider"
+    )
+    assert p15b["module"] == {
+        "current_module_id": "adaptive_model_portfolio_and_economics",
+        "canonical_module_id": "adaptive-model-portfolio-and-economics",
+        "module_version": "1.0.0",
+        "aggregate_interface_id": "adaptive-model-portfolio-and-economics-api",
+        "aggregate_interface_version": "1.0.0",
+        "upstream_interface_id": "ai-worker-runtime-api",
+        "upstream_interface_version": "1.0.0",
+        "natural_owner_paths": [
+            "src/tool_system/provider_portfolio/__init__.py",
+            "src/tool_system/provider_portfolio/fixtures.py",
+        ],
+    }
+    assert p15b["task_profile_builder"] == "build_task_profile_fixture"
+    assert p15b["routing_policy_version"] == "p15b-fixture-routing-policy-v1"
+    assert p15b["catalog_fixture_version"] == "p15b-fixture-catalog-v1"
+    assert p15b["hard_floors_evaluated_before_economics"] is True
+    assert p15b["economics_arithmetic"] == (
+        "non_negative_integer_microunits_without_float_scoring"
+    )
+    assert p15b["selectable_qualification_states"] == ["ELIGIBLE", "PRIMARY"]
+    assert p15b["failure_dispositions"] == [
+        "AVAILABILITY_FAILOVER",
+        "SAME_ROUTE_REPAIR_THEN_ESCALATE",
+        "BLOCK_NO_PROVIDER_BYPASS",
+        "STOP",
+    ]
+    assert p15b["fixture_adapter"] == {
+        "protocol_path": "src/tool_system/ai_worker/contract.py",
+        "protocol_symbol": "AIWorkerProvider",
+        "provider_kind": "deterministic_fixture",
+        "execution_mode": "fixture",
+        "structural_compatibility_tested": True,
+        "calls_external_provider": False,
+        "uses_credentials": False,
+        "network_access": False,
+    }
+    assert p15b["module_source_files_added"] == 2
+    assert p15b["existing_ai_worker_source_changes"] == 0
+    assert p15b["p15c_authorized"] is False
+    assert p15b["stage_accepted"] is True
+    assert all(
+        p15b[key] == 0
+        for key in (
+            "live_provider_adapters_added_or_modified",
+            "provider_candidates_enabled_for_live_execution",
+            "benchmark_results_created",
+            "benchmark_executions",
+            "provider_invocations",
+            "provider_network_operations",
+            "credential_resolver_invocations",
+            "credential_value_accesses",
+            "real_downstream_repository_accesses",
+            "remote_fixture_operations",
+            "target_mutations",
+            "production_operations",
+            "cleanup_operations",
+            "rollback_operations",
+            "blueprint_changes",
+        )
+    )
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["state_file_grants_authority"] is False
     assert boundaries["live_model_provider_execution_authorized"] is False
@@ -500,6 +615,10 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     assert "Locked provider/model qualification record" in p15a_report
     assert "expected_total_economic_cost_per_accepted_module" in p15a_report
     assert "P15B remains separately unauthorized" in normalized_p15a_report
+    p15b_report = P15B_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+    assert "P15B_ACCEPTED_ISOLATED_FIXTURE_NO_LIVE_PROVIDER" in p15b_report
+    assert "hard-floor order" in p15b_report
+    assert "P15C_authorized: false" in p15b_report
     for public_contract in (agents_text, readme_text, principles_text):
         assert "docs/tool_system_project_state_v1.yaml" in public_contract
         assert "authority" in public_contract
@@ -553,7 +672,7 @@ def test_p14i_closes_only_bounded_p14_and_stops_before_p15() -> None:
     assert project_state["p14i"]["p15_entry_authorized"] is False
     assert project_state["current_phase"]["id"] == EXPECTED_PHASE
     assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION"
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
     for marker in (
         "P14 output acceptance matrix",
@@ -604,7 +723,7 @@ def test_p15a_manifest_and_change_plan_freeze_exact_governance_scope() -> None:
     )
 
 
-def test_p15a_enters_only_governance_specification_and_stops_before_p15b() -> None:
+def test_p15a_specification_remains_the_direct_parent_of_p15b() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     project_state = load_yaml_file(PROJECT_STATE)
     report = P15A_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
@@ -619,8 +738,11 @@ def test_p15a_enters_only_governance_specification_and_stops_before_p15b() -> No
         "execution_boundary"
     ] == "governance_only"
     assert project_state["current_phase"]["id"] == EXPECTED_PHASE
-    assert project_state["current_phase"]["next_stage"] == (
+    assert project_state["current_phase"]["last_accepted_stage"] == (
         "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+    )
+    assert project_state["current_phase"]["next_stage"] == (
+        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     )
     assert project_state["current_phase"]["next_stage_authorized"] is False
     assert project_state["p15a"]["p15b_authorized"] is False
@@ -634,6 +756,90 @@ def test_p15a_enters_only_governance_specification_and_stops_before_p15b() -> No
         "provider_invocations: 0",
         "benchmark_executions: 0",
         "P15B_authorized: false",
+    ):
+        assert marker in report
+
+
+def test_p15b_manifest_and_change_plan_freeze_exact_one_module_scope() -> None:
+    manifest_result = validate_task_manifest(
+        P15B_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(P15B_CHANGE_PLAN)
+    manifest = load_yaml_file(P15B_MANIFEST)
+    plan = load_yaml_file(P15B_CHANGE_PLAN)
+    closure = manifest["bounded_closure"]["frozen_before_execution"]
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == P15B_FILES
+    assert set(manifest["scope"]["in_scope"]) == P15B_FILES
+    assert set(plan["changed_files"]) == P15B_FILES
+    assert len(P15B_FILES) == 21
+    assert closure["task_identity"] == (
+        "P15B-ADAPTER-ROUTER-AND-PROFILER-FIXTURES-LIFECYCLE-v1"
+    )
+    assert closure["baseline_commit"] == (
+        "f912add44845be9d60021333c6792e4ecf6a142b"
+    )
+    assert closure["baseline_tree"] == (
+        "493c5563cf4d95b1cc3e236e1453c8c9db5e3423"
+    )
+    assert closure["allowed_scope"] == "exact_21_paths_listed_below"
+    assert closure["finite_budgets"]["provider_invocations"] == 0
+    assert closure["finite_budgets"]["benchmark_executions"] == 0
+    assert closure["finite_budgets"]["credential_value_accesses"] == 0
+    assert closure["finite_budgets"]["real_downstream_repository_accesses"] == 0
+    assert manifest["publication"]["retain_feature_branch"] is True
+    assert manifest["publication"]["branch_deletion_authorized"] is False
+    assert "blueprint/tool_system_v0.yaml" not in P15B_FILES
+    assert "docs/model_provider_portfolio_and_economics_contract_v1.md" not in (
+        P15B_FILES
+    )
+    assert {
+        "src/tool_system/provider_portfolio/__init__.py",
+        "src/tool_system/provider_portfolio/fixtures.py",
+    } <= P15B_FILES
+    assert all(
+        not path.startswith("src/tool_system/ai_worker/") for path in P15B_FILES
+    )
+
+
+def test_p15b_accepts_only_isolated_fixtures_and_stops_before_p15c() -> None:
+    blueprint = load_yaml_file(BLUEPRINT)
+    project_state = load_yaml_file(PROJECT_STATE)
+    report = P15B_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+    p15 = blueprint["milestones"][EXPECTED_PHASE]
+    stages = {stage["stage"]: stage for stage in p15["stage_plan"]}
+
+    assert stages["P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"][
+        "entry_requires"
+    ] == ["P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION accepted"]
+    assert stages["P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"][
+        "execution_boundary"
+    ] == "isolated_fixture_no_live_provider"
+    assert stages["P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"][
+        "execution_boundary"
+    ] == "separately_authorized_live_provider_read_only_repositories"
+    assert project_state["current_phase"]["last_accepted_stage"] == (
+        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
+    )
+    assert project_state["current_phase"]["next_stage"] == (
+        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
+    )
+    assert project_state["current_phase"]["next_stage_authorized"] is False
+    assert project_state["p15b"]["p15c_authorized"] is False
+    for marker in (
+        "Advisory task-profile fixture",
+        "Catalog, hard floors, and deterministic routing",
+        "Provider-neutral fixture adapter",
+        "Failure-classification fixture",
+        "provider_invocations: 0",
+        "credential_value_accesses: 0",
+        "P15C_authorized: false",
     ):
         assert marker in report
 
