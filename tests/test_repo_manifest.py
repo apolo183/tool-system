@@ -13,8 +13,8 @@ from tool_system.architecture.repo_manifest import (
     LEGACY_COLUMNS,
     LEGACY_FORMAL_PARSER_MODE,
     LEGACY_SECTION,
-    _git_environment,
     _expand_tracked_pattern,
+    _git_environment,
     _table_rows,
     _tracked_paths,
     parse_manifest_formal_rows,
@@ -119,7 +119,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
     assert legacy_reasons == []
-    assert len(rows) == 240
+    assert len(rows) == 242
     assert EXACT_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
     assert all(
         not any(character in row["path"] for character in "*?[]{}") for row in rows
@@ -127,7 +127,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_file_count"] == 240
+    assert result["formal_file_count"] == 242
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == len(retained_paths)

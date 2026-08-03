@@ -457,6 +457,70 @@ p15b:
   blueprint_changes: 0
   p15c_authorized: false
   stage_accepted: true
+p15c_packet_freeze:
+  authorization_packet: P15C-EXECUTION-PACKET-FREEZE-v1
+  evidence_completion_source: chat_user_message:2026-08-03-provider-repository-budget-and-read-only-research-scope
+  baseline_commit: 81be20f8cdf2d588993347fa11ca090dc9f17135
+  baseline_tree: 23addb451399ae89cc99e2c740115596f5e763c0
+  packet_catalog: config/p15c_execution_packet_freeze_v1.yaml
+  acceptance_record: docs/reports/p15c_execution_packet_freeze.md
+  status: accepted_pre_entry_freeze_no_execution_authority
+  frozen_at: 2026-08-03 UTC+09:00
+  provider_packets:
+    deepseek:
+      packet_id: P15C-DEEPSEEK-V4-FLASH-READONLY-v1
+      model_id: deepseek-v4-flash
+      exact_model_version: DeepSeek-V4-Flash-0731
+      qualification_state: QUARANTINED
+      packet_status: FROZEN_NOT_ACTIVATED
+    openai:
+      packet_id: P15C-OPENAI-GPT-5.6-LUNA-READONLY-v1
+      model_id: gpt-5.6-luna
+      exact_model_version: gpt-5.6-luna
+      qualification_state: QUARANTINED
+      packet_status: FROZEN_NOT_ACTIVATED
+    qwen:
+      packet_id: P15C-QWEN-3.7-PLUS-READONLY-v1
+      model_id: qwen3.7-plus-2026-05-26
+      exact_model_version: qwen3.7-plus-2026-05-26
+      qualification_state: QUARANTINED
+      packet_status: BLOCKED_NOT_FUNDED
+  provider_packets_enabled_for_live_execution: 0
+  public_authorization_ceiling_micro_usd: 20000000
+  private_execution_policy_reference: private-control:p15c-execution-policy
+  private_credential_store_reference: private-control:credentials
+  private_target_packet_reference: private-control:p15c-target-packet
+  private_usage_ledger_reference: private-state:p15c-usage-ledger
+  secret_policy_target_and_usage_state_separated: true
+  deterministic_corpus:
+    file_count: 12
+    aggregate_sha256: 8b527c193fee4970516a5d7794c13db0a3b6b25770ef3d85c6b4d5ccc4234953
+    benchmark_results_created: 0
+  private_target_candidate_contract:
+    binding_mode: operator_private_runtime_input
+    downstream_identity_serialized: false
+    exact_commit_serialized: false
+    exact_file_allowlist_serialized: false
+    content_digest_serialized: false
+    prepared_target_attestation: present_outside_repository
+    exact_snapshot_required_before_execution: true
+    benchmark_read_authorized: false
+    provider_transfer_authorized: false
+    mutation_authorized: false
+  official_public_document_reads: bounded_to_named_sources
+  credential_resolver_invocations: 0
+  credential_value_accesses: 0
+  provider_invocations: 0
+  benchmark_executions: 0
+  private_repository_provider_transfers: 0
+  target_mutations: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+  blueprint_changes: 0
+  runtime_source_changes: 0
+  p15c_authorized: false
+  p15c_stage_accepted: false
 authorization_boundaries:
   state_file_grants_authority: false
   live_model_provider_execution_authorized: false
