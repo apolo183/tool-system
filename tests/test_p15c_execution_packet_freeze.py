@@ -4,6 +4,8 @@ import hashlib
 import re
 from pathlib import Path
 
+import yaml
+
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
 from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
 from tool_system.manifest.task_manifest import load_yaml_file
@@ -26,6 +28,21 @@ PLAN = (
 )
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
+REFREEZE_REPORT = (
+    ROOT / "docs" / "reports" / "p15c_packet_canonical_refreeze_acceptance.md"
+)
+REFREEZE_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p15c_packet_canonical_refreeze_v1.yaml"
+)
+REFREEZE_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p15c_packet_canonical_refreeze_v1.yaml"
+)
 
 EXACT_FILES = {
     "REPO_MANIFEST.md",
@@ -37,6 +54,21 @@ EXACT_FILES = {
     "tests/test_p15c_execution_packet_freeze.py",
     "tests/test_repo_manifest.py",
 }
+
+REFREEZE_EXACT_FILES = {
+    "config/p15c_execution_packet_freeze_v1.yaml",
+    "docs/reports/p15c_execution_packet_freeze.md",
+    "docs/reports/p15c_packet_canonical_refreeze_acceptance.md",
+    "docs/reports/target_identity_decoupling_acceptance.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p15c_packet_canonical_refreeze_v1.yaml",
+    "examples/task_manifests/tool_system_p15c_packet_canonical_refreeze_v1.yaml",
+    "tests/test_p15c_execution_packet_freeze.py",
+    "tests/test_target_identity_decoupling.py",
+}
+PACKET_SEMANTICS_SHA256 = (
+    "03f99a7e43ce7f3a381d59231c8a9d31ec1a9324922639126fa2268ff6d42626"
+)
 
 
 def _aggregate_sha256(files: list[dict[str, str]]) -> str:
@@ -84,6 +116,57 @@ def test_exact_task_pair_and_pre_entry_state_validate() -> None:
     assert freeze["p15c_authorized"] is False
     assert freeze["p15c_stage_accepted"] is False
     assert state["authority_effect"] == "none"
+
+
+def test_canonical_refreeze_task_pair_baseline_and_state_validate() -> None:
+    manifest_result = validate_task_manifest(
+        REFREEZE_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(REFREEZE_PLAN)
+    manifest = load_yaml_file(REFREEZE_MANIFEST)
+    plan = load_yaml_file(REFREEZE_PLAN)
+    packets = load_yaml_file(PACKETS)
+    state = load_yaml_file(PROJECT_STATE)
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == REFREEZE_EXACT_FILES
+    assert set(manifest["scope"]["in_scope"]) == REFREEZE_EXACT_FILES
+    assert set(plan["changed_files"]) == REFREEZE_EXACT_FILES
+    assert len(REFREEZE_EXACT_FILES) == 9
+
+    baseline = packets["tool_system_baseline"]
+    assert baseline["commit"] == "1ede788b8b1c36bcc224cde15a5f6462c9b51938"
+    assert baseline["tree"] == "7abd3b555d5c05f8bdf719c18619459ae9e06645"
+    assert baseline["previous_commit"] == (
+        "81be20f8cdf2d588993347fa11ca090dc9f17135"
+    )
+    assert baseline["provider_model_economics_corpus_and_limit_semantics_changed"] is False
+    assert baseline["p15c_execution_authority_added"] is False
+
+    refreeze = state["p15c_packet_freeze"]["canonical_refreeze"]
+    assert refreeze["status"] == "accepted_on_guarded_squash_merge"
+    assert refreeze["packet_semantics_excluding_tool_system_baseline_sha256"] == (
+        PACKET_SEMANTICS_SHA256
+    )
+    assert refreeze["provider_invocations"] == 0
+    assert refreeze["credential_value_accesses"] == 0
+    assert refreeze["target_repository_accesses"] == 0
+    assert refreeze["benchmark_executions"] == 0
+    assert refreeze["p15c_authorized"] is False
+    assert refreeze["p15c_stage_accepted"] is False
+
+
+def test_canonical_refreeze_preserves_all_non_baseline_packet_semantics() -> None:
+    packets = load_yaml_file(PACKETS)
+    packets.pop("tool_system_baseline")
+    normalized = yaml.safe_dump(packets, sort_keys=True).encode("utf-8")
+
+    assert hashlib.sha256(normalized).hexdigest() == PACKET_SEMANTICS_SHA256
 
 
 def test_private_secret_policy_and_usage_state_are_separated() -> None:
@@ -255,3 +338,10 @@ def test_report_records_zero_operation_stop_boundary() -> None:
     assert "benchmark_executions: 0" in report
     assert "private_repository_provider_transfers: 0" in report
     assert "runtime_source_changes: 0" in report
+
+    refreeze_report = REFREEZE_REPORT.read_text(encoding="utf-8")
+    assert "ACCEPTED_ON_GUARDED_SQUASH_MERGE_NO_P15C_AUTHORITY" in refreeze_report
+    assert "P15C_authorized: false" in refreeze_report
+    assert "provider_invocations: 0" in refreeze_report
+    assert "target_repository_accesses: 0" in refreeze_report
+    assert "benchmark_executions: 0" in refreeze_report

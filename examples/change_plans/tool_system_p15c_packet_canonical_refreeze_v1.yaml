@@ -1,0 +1,50 @@
+plan_id: tool-system-p15c-packet-canonical-refreeze-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+changed_files:
+  - config/p15c_execution_packet_freeze_v1.yaml
+  - docs/reports/p15c_execution_packet_freeze.md
+  - docs/reports/p15c_packet_canonical_refreeze_acceptance.md
+  - docs/reports/target_identity_decoupling_acceptance.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+  - examples/task_manifests/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+  - tests/test_p15c_execution_packet_freeze.py
+  - tests/test_target_identity_decoupling.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+    section_or_key: bounded_closure.frozen_before_modification.acceptance_set
+    scope: Close only the canonical-baseline re-freeze and preceding governance terminal evidence.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve generic reusable tooling and keep live cross-provider benchmarking separately gated.
+implementation_order:
+  - Freeze this exact nine-path task and change-plan pair before modifying the existing packet or state.
+  - Re-anchor only the packet tool-system baseline and add a semantic-preservation test.
+  - Synchronize PR 171 terminal evidence in the descriptive report, state, and consistency test.
+  - Record the correction acceptance without declaring P15C entry or execution authority.
+  - Run local validation, publish one Draft PR, verify Hosted CI and no drift, then squash merge and retain the branch.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_p15c_execution_packet_freeze.py tests/test_target_identity_decoupling.py tests/test_repository_context_builder.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m ruff check tests/test_p15c_execution_packet_freeze.py tests/test_target_identity_decoupling.py
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p15c-packet-canonical-refreeze-v1
+  retain_feature_branch: true
+  exact_base: 1ede788b8b1c36bcc224cde15a5f6462c9b51938
+  exact_base_tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
+rollback:
+  method: git_revert
+  reference: Revert a merged correction only through a separately audited pull request; preserve the retained branch and historical evidence.
+  execution_authorized: false
