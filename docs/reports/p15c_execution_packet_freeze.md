@@ -22,9 +22,9 @@ USD budget and cannot be selected by availability failover.
 - Direct accepted parent:
   `docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md`.
 - Current compatible canonical tool-system baseline:
-  `1ede788b8b1c36bcc224cde15a5f6462c9b51938`.
+  `f30f43512acfa497afd9f27dcce7cf4a0ebeb101`.
 - Current compatible canonical baseline tree:
-  `7abd3b555d5c05f8bdf719c18619459ae9e06645`.
+  `1c6b29bdcb9b823e7e063d5050587df45cd2f126`.
 - Original packet-freeze baseline:
   `81be20f8cdf2d588993347fa11ca090dc9f17135` / tree
   `23addb451399ae89cc99e2c740115596f5e763c0`.
@@ -35,13 +35,16 @@ USD budget and cannot be selected by availability failover.
   read-only evidence scope.
 
 Canonical main compared identical to the original frozen baseline before the
-original branch was created. It later advanced only through the accepted
-target-identity decoupling governance correction. The
-`P15C-PACKET-CANONICAL-REFREEZE-v1` task verified current canonical main at the
-compatible commit above and re-anchored only `tool_system_baseline`. The stable
-blueprint, runtime source,
-provider packets, credential boundary, target packet, economics, limits, and
-fixture corpus remain unchanged, and P15C remains unauthorized.
+original branch was created. It later advanced through the accepted
+target-identity decoupling governance correction and packet canonical re-freeze.
+Official-source revalidation then found that the DeepSeek row had mistaken
+`Json Output` for an OpenAI Responses API execution surface and had serialized
+an unsupported dated model-version suffix. The separately bounded
+`P15C-DEEPSEEK-PACKET-EVIDENCE-CORRECTION-v1` re-anchors the packet to the
+compatible commit above and corrects only those two DeepSeek evidence fields.
+The blueprint, runtime source, provider ID, model ID, credential boundary,
+target packet, economics, limits, fixture corpus, and zero-execution boundary
+remain unchanged, and this correction grants no P15C execution authority.
 
 ## Secret, policy, and usage-state separation
 
@@ -84,7 +87,7 @@ The packet catalog is
 
 | Packet | Exact model and surface | Frozen disposition | Per-attempt envelope |
 | --- | --- | --- | --- |
-| `P15C-DEEPSEEK-V4-FLASH-READONLY-v1` | `deepseek-v4-flash` / `DeepSeek-V4-Flash-0731`, Responses API at `https://api.deepseek.com` | `QUARANTINED`, not activated; private-repository transfer and retention review block | 65,536 input, 8,192 output, one attempt, no retry, 90-second request, 120-second wall clock, 25,000 microUSD |
+| `P15C-DEEPSEEK-V4-FLASH-READONLY-v1` | `deepseek-v4-flash` / `DeepSeek-V4-Flash`, OpenAI-compatible Chat Completions at `https://api.deepseek.com/chat/completions` | `QUARANTINED`, not activated; private-repository transfer and retention review block | 65,536 input, 8,192 output, one attempt, no retry, 90-second request, 120-second wall clock, 25,000 microUSD |
 | `P15C-OPENAI-GPT-5.6-LUNA-READONLY-v1` | `gpt-5.6-luna`, Responses API at `https://api.openai.com/v1` | `QUARANTINED`, not activated; private-repository transfer block | 65,536 input, 8,192 output, one attempt, no retry, 90-second request, 120-second wall clock, 25,000 microUSD |
 | `P15C-QWEN-3.7-PLUS-READONLY-v1` | `qwen3.7-plus-2026-05-26`, OpenAI-compatible Chat surface at the Beijing DashScope endpoint | `QUARANTINED`, `BLOCKED_NOT_FUNDED`, zero USD allocation | same token/time/attempt envelope; 250,000 microCNY request cap remains inert while blocked |
 
@@ -107,12 +110,13 @@ provider endpoint was called.
 
 ### DeepSeek
 
-- The official API catalog identifies `deepseek-v4-flash`, exact version
-  `DeepSeek-V4-Flash-0731`, a 1M context, a 384K output maximum, Responses API
-  support, and the current price schedule:
+- The official API catalog identifies `deepseek-v4-flash`, model version
+  `DeepSeek-V4-Flash`, a 1M context, a 384K output maximum, Json Output support,
+  and the current price schedule:
   <https://api-docs.deepseek.com/quick_start/pricing/>.
-- The official Responses guide fixes the base URL and records `store: false`:
-  <https://api-docs.deepseek.com/guides/responses_api/>.
+- The official API reference fixes the OpenAI-compatible
+  `POST /chat/completions` request and response surface:
+  <https://api-docs.deepseek.com/api/create-chat-completion>.
 - The official status page reported all systems operating on the retrieval date:
   <https://status.deepseek.com/>.
 - The applicable privacy policy permits service-improvement processing and
@@ -217,6 +221,23 @@ The normalized SHA-256 of the entire packet after removing only the
 That lock proves the provider/model choices, official evidence snapshot,
 economics, corpus, private-control separation, target-packet contract, limits,
 activation gates, and zero-authority boundary are semantically preserved.
+
+## DeepSeek packet evidence-correction addendum
+
+The later `P15C-DEEPSEEK-PACKET-EVIDENCE-CORRECTION-v1` supersedes only the
+DeepSeek model-version and execution-surface claims above the historical
+re-freeze addendum. It binds the current packet to
+`main@f30f43512acfa497afd9f27dcce7cf4a0ebeb101`, tree
+`1c6b29bdcb9b823e7e063d5050587df45cd2f126`, changes
+`DeepSeek-V4-Flash-0731` to the official `DeepSeek-V4-Flash`, and changes the
+unsupported `responses.create` surface to the official
+`chat.completions.create` surface. Its acceptance record is
+`docs/reports/p15c_deepseek_packet_evidence_correction.md`.
+
+No provider endpoint, credential value, private target, or benchmark is read or
+executed by that correction. OpenAI and Qwen packets, prices, limits, corpus,
+private-control separation, target-packet contract, and every denial remain
+unchanged.
 
 ## Acceptance and stop condition
 

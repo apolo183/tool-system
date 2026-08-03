@@ -460,8 +460,8 @@ p15b:
 p15c_packet_freeze:
   authorization_packet: P15C-EXECUTION-PACKET-FREEZE-v1
   evidence_completion_source: chat_user_message:2026-08-03-provider-repository-budget-and-read-only-research-scope
-  baseline_commit: 1ede788b8b1c36bcc224cde15a5f6462c9b51938
-  baseline_tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
+  baseline_commit: f30f43512acfa497afd9f27dcce7cf4a0ebeb101
+  baseline_tree: 1c6b29bdcb9b823e7e063d5050587df45cd2f126
   packet_catalog: config/p15c_execution_packet_freeze_v1.yaml
   acceptance_record: docs/reports/p15c_execution_packet_freeze.md
   status: accepted_pre_entry_freeze_no_execution_authority
@@ -486,11 +486,39 @@ p15c_packet_freeze:
     benchmark_executions: 0
     p15c_authorized: false
     p15c_stage_accepted: false
+  deepseek_packet_evidence_correction:
+    authorization_packet: P15C-DEEPSEEK-PACKET-EVIDENCE-CORRECTION-v1
+    task_manifest: examples/task_manifests/tool_system_p15c_deepseek_packet_evidence_correction_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15c_deepseek_packet_evidence_correction_v1.yaml
+    acceptance_record: docs/reports/p15c_deepseek_packet_evidence_correction.md
+    status: accepted_on_guarded_squash_merge
+    baseline_commit: f30f43512acfa497afd9f27dcce7cf4a0ebeb101
+    baseline_tree: 1c6b29bdcb9b823e7e063d5050587df45cd2f126
+    corrected_fields:
+      exact_model_version:
+        previous: DeepSeek-V4-Flash-0731
+        current: DeepSeek-V4-Flash
+      execution_surface_id:
+        previous: deepseek-responses-api
+        current: deepseek-openai-compatible-chat
+      operation:
+        previous: responses.create
+        current: chat.completions.create
+    provider_model_id_changed: false
+    economics_limits_corpus_or_private_boundaries_changed: false
+    packet_semantics_excluding_tool_system_baseline_sha256: 27dc75dc1644518aee2717a1a0150a86c55be38d09a2d8c753c0a8bdf1bfc483
+    execution_authority_added: false
+    provider_invocations: 0
+    credential_value_accesses: 0
+    target_repository_accesses: 0
+    benchmark_executions: 0
   provider_packets:
     deepseek:
       packet_id: P15C-DEEPSEEK-V4-FLASH-READONLY-v1
       model_id: deepseek-v4-flash
-      exact_model_version: DeepSeek-V4-Flash-0731
+      exact_model_version: DeepSeek-V4-Flash
+      execution_surface_id: deepseek-openai-compatible-chat
+      operation: chat.completions.create
       qualification_state: QUARANTINED
       packet_status: FROZEN_NOT_ACTIVATED
     openai:

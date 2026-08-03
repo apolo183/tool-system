@@ -43,6 +43,21 @@ REFREEZE_PLAN = (
     / "change_plans"
     / "tool_system_p15c_packet_canonical_refreeze_v1.yaml"
 )
+CORRECTION_REPORT = (
+    ROOT / "docs" / "reports" / "p15c_deepseek_packet_evidence_correction.md"
+)
+CORRECTION_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p15c_deepseek_packet_evidence_correction_v1.yaml"
+)
+CORRECTION_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p15c_deepseek_packet_evidence_correction_v1.yaml"
+)
 
 EXACT_FILES = {
     "REPO_MANIFEST.md",
@@ -66,8 +81,20 @@ REFREEZE_EXACT_FILES = {
     "tests/test_p15c_execution_packet_freeze.py",
     "tests/test_target_identity_decoupling.py",
 }
-PACKET_SEMANTICS_SHA256 = (
+CORRECTION_EXACT_FILES = {
+    "config/p15c_execution_packet_freeze_v1.yaml",
+    "docs/reports/p15c_deepseek_packet_evidence_correction.md",
+    "docs/reports/p15c_execution_packet_freeze.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p15c_deepseek_packet_evidence_correction_v1.yaml",
+    "examples/task_manifests/tool_system_p15c_deepseek_packet_evidence_correction_v1.yaml",
+    "tests/test_p15c_execution_packet_freeze.py",
+}
+REFREEZE_PACKET_SEMANTICS_SHA256 = (
     "03f99a7e43ce7f3a381d59231c8a9d31ec1a9324922639126fa2268ff6d42626"
+)
+CORRECTED_PACKET_SEMANTICS_SHA256 = (
+    "27dc75dc1644518aee2717a1a0150a86c55be38d09a2d8c753c0a8bdf1bfc483"
 )
 
 
@@ -139,19 +166,10 @@ def test_canonical_refreeze_task_pair_baseline_and_state_validate() -> None:
     assert set(plan["changed_files"]) == REFREEZE_EXACT_FILES
     assert len(REFREEZE_EXACT_FILES) == 9
 
-    baseline = packets["tool_system_baseline"]
-    assert baseline["commit"] == "1ede788b8b1c36bcc224cde15a5f6462c9b51938"
-    assert baseline["tree"] == "7abd3b555d5c05f8bdf719c18619459ae9e06645"
-    assert baseline["previous_commit"] == (
-        "81be20f8cdf2d588993347fa11ca090dc9f17135"
-    )
-    assert baseline["provider_model_economics_corpus_and_limit_semantics_changed"] is False
-    assert baseline["p15c_execution_authority_added"] is False
-
     refreeze = state["p15c_packet_freeze"]["canonical_refreeze"]
     assert refreeze["status"] == "accepted_on_guarded_squash_merge"
     assert refreeze["packet_semantics_excluding_tool_system_baseline_sha256"] == (
-        PACKET_SEMANTICS_SHA256
+        REFREEZE_PACKET_SEMANTICS_SHA256
     )
     assert refreeze["provider_invocations"] == 0
     assert refreeze["credential_value_accesses"] == 0
@@ -161,12 +179,61 @@ def test_canonical_refreeze_task_pair_baseline_and_state_validate() -> None:
     assert refreeze["p15c_stage_accepted"] is False
 
 
-def test_canonical_refreeze_preserves_all_non_baseline_packet_semantics() -> None:
+def test_deepseek_packet_correction_pair_and_current_baseline_validate() -> None:
+    manifest_result = validate_task_manifest(
+        CORRECTION_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(CORRECTION_PLAN)
+    manifest = load_yaml_file(CORRECTION_MANIFEST)
+    plan = load_yaml_file(CORRECTION_PLAN)
+    packets = load_yaml_file(PACKETS)
+    state = load_yaml_file(PROJECT_STATE)
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == CORRECTION_EXACT_FILES
+    assert set(manifest["scope"]["in_scope"]) == CORRECTION_EXACT_FILES
+    assert set(plan["changed_files"]) == CORRECTION_EXACT_FILES
+    assert len(CORRECTION_EXACT_FILES) == 7
+
+    baseline = packets["tool_system_baseline"]
+    assert baseline["commit"] == "f30f43512acfa497afd9f27dcce7cf4a0ebeb101"
+    assert baseline["tree"] == "1c6b29bdcb9b823e7e063d5050587df45cd2f126"
+    assert baseline["previous_commit"] == (
+        "1ede788b8b1c36bcc224cde15a5f6462c9b51938"
+    )
+    assert baseline["provider_model_economics_corpus_and_limit_semantics_changed"] is True
+    assert baseline["execution_surface_corrected"] is True
+    assert baseline["p15c_execution_authority_added"] is False
+
+    correction = state["p15c_packet_freeze"][
+        "deepseek_packet_evidence_correction"
+    ]
+    assert correction["status"] == "accepted_on_guarded_squash_merge"
+    assert correction["packet_semantics_excluding_tool_system_baseline_sha256"] == (
+        CORRECTED_PACKET_SEMANTICS_SHA256
+    )
+    assert correction["provider_model_id_changed"] is False
+    assert correction["execution_authority_added"] is False
+    assert correction["provider_invocations"] == 0
+    assert correction["credential_value_accesses"] == 0
+    assert correction["target_repository_accesses"] == 0
+    assert correction["benchmark_executions"] == 0
+
+
+def test_corrected_packet_semantics_are_content_addressed() -> None:
     packets = load_yaml_file(PACKETS)
     packets.pop("tool_system_baseline")
     normalized = yaml.safe_dump(packets, sort_keys=True).encode("utf-8")
 
-    assert hashlib.sha256(normalized).hexdigest() == PACKET_SEMANTICS_SHA256
+    assert (
+        hashlib.sha256(normalized).hexdigest()
+        == CORRECTED_PACKET_SEMANTICS_SHA256
+    )
 
 
 def test_private_secret_policy_and_usage_state_are_separated() -> None:
@@ -228,8 +295,16 @@ def test_provider_packets_are_exact_bounded_and_not_activated() -> None:
     )
     assert providers["deepseek"]["model_id"] == "deepseek-v4-flash"
     assert providers["deepseek"]["exact_model_version"] == (
-        "DeepSeek-V4-Flash-0731"
+        "DeepSeek-V4-Flash"
     )
+    assert providers["deepseek"]["execution_surface_id"] == (
+        "deepseek-openai-compatible-chat"
+    )
+    assert providers["deepseek"]["operation"] == "chat.completions.create"
+    assert providers["deepseek"]["official_evidence"][
+        "chat_completions_surface"
+    ] == "https://api-docs.deepseek.com/api/create-chat-completion"
+    assert "responses_surface" not in providers["deepseek"]["official_evidence"]
     assert providers["openai"]["packet_id"] == (
         "P15C-OPENAI-GPT-5.6-LUNA-READONLY-v1"
     )
@@ -345,3 +420,12 @@ def test_report_records_zero_operation_stop_boundary() -> None:
     assert "provider_invocations: 0" in refreeze_report
     assert "target_repository_accesses: 0" in refreeze_report
     assert "benchmark_executions: 0" in refreeze_report
+
+    correction_report = CORRECTION_REPORT.read_text(encoding="utf-8")
+    assert "ACCEPTED_ON_GUARDED_SQUASH_MERGE_NO_EXECUTION" in correction_report
+    assert "DeepSeek-V4-Flash-0731" in correction_report
+    assert "DeepSeek-V4-Flash" in correction_report
+    assert "POST /chat/completions" in correction_report
+    assert "credential_value_accesses: 0" in correction_report
+    assert "provider_invocations: 0" in correction_report
+    assert "benchmark_executions: 0" in correction_report
