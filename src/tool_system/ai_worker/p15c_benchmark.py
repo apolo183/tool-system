@@ -815,6 +815,7 @@ class P15CBenchmarkExecutor:
             "status": "PASS",
             "authorization_id": policy.authorization_id,
             "policy_sha256": policy.policy_sha256,
+            "total_budget_micro_usd": policy.total_budget_micro_usd,
             "source_seal": source_seal.audit_record(),
             "packet_count": len(packet_tuple),
             "case_count": len(case_tuple),

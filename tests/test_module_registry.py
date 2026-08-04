@@ -30,11 +30,11 @@ CONTRACT_DIR = ROOT / "docs/modules"
 BLUEPRINT = ROOT / "blueprint/tool_system_v0.yaml"
 
 EXPECTED_RAW_SHA256 = (
-    "778a9a41f2e633525f3422a7fd44f1a54b6da3444a198f019bd692aa27b6f166"
+    "4f28a841ffb928f4a8f6405d4b4c2426bc439c1b0b39e635a8185cbbc2d7759a"
 )
-EXPECTED_BYTE_LENGTH = 104_235
+EXPECTED_BYTE_LENGTH = 104_561
 EXPECTED_SEMANTIC_SHA256 = (
-    "c58e5e7443a150cb4fc6666001294faccad84c36b2ab0e4537fa3787b8b3e108"
+    "b951f8116afbe4ebd3e6116029f9ef215cc82bb5f1ecb0b3c9ec02cfaf265b9c"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 106
 EXPECTED_MODULE_IDS = {
@@ -95,6 +95,7 @@ ADDITIONAL_TEST_SELECTORS = {
         "tests/test_ai_worker_p15c_benchmark.py",
         "tests/test_ai_worker_p15c_controls.py",
         "tests/test_ai_worker_p15c_entry.py",
+        "tests/test_p15c_local_operator_config.py",
     ),
     "process_authority": ("tests/test_p14c_live_issuer.py",),
 }
@@ -405,7 +406,7 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert hashlib.sha256(normalized).hexdigest() == EXPECTED_SEMANTIC_SHA256
     assert len(registry["modules"]) == len(registry["interfaces"]) == 19
     assert sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 114
-    assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 24
+    assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 25
     assert sum(len(module["permitted_side_effects"]) for module in registry["modules"]) == 45
     assert len(list(_iter_contract_references(registry))) == 197
     assert sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0

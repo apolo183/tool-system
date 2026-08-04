@@ -7,6 +7,12 @@ import pytest
 import yaml
 
 from tool_system.ai_worker import p15c_entry
+from tool_system.ai_worker.p15c_controls import (
+    P15C_DEFAULT_CREDENTIALS_PATH,
+    P15C_DEFAULT_LEDGER_PATH,
+    P15C_DEFAULT_SETTINGS_PATH,
+    P15C_DEFAULT_TARGET_PACKET_PATH,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKET_CONFIG = ROOT / "config" / "p15c_execution_packet_freeze_v1.yaml"
@@ -62,9 +68,12 @@ def test_packet_only_is_public_and_performs_zero_private_or_live_operations(
         assert record[field] == 0
 
 
-def test_private_modes_fail_closed_without_all_explicit_paths(
+def test_private_modes_fail_closed_when_local_default_files_are_absent(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path))
     result = p15c_entry.main(
         [
             "--preflight",
@@ -79,13 +88,29 @@ def test_private_modes_fail_closed_without_all_explicit_paths(
     assert result == 2
     assert record == {
         "credential_values_recorded": 0,
-        "failure_code": "PRIVATE_ARGUMENT_MISSING",
+        "failure_code": "PRIVATE_FILE_UNAVAILABLE",
         "private_target_identity_recorded": False,
         "private_target_paths_recorded": False,
         "raw_provider_outputs_recorded": 0,
         "status": "BENCHMARK_BLOCKED",
         "target_mutations": 0,
     }
+
+
+def test_parser_defaults_to_repository_external_operator_files() -> None:
+    arguments = p15c_entry.build_parser().parse_args(["--preflight"])
+
+    assert arguments.settings == str(P15C_DEFAULT_SETTINGS_PATH)
+    assert arguments.credentials == str(P15C_DEFAULT_CREDENTIALS_PATH)
+    assert arguments.target_packet == str(P15C_DEFAULT_TARGET_PACKET_PATH)
+    assert arguments.ledger == str(P15C_DEFAULT_LEDGER_PATH)
+    for value in (
+        arguments.settings,
+        arguments.credentials,
+        arguments.target_packet,
+        arguments.ledger,
+    ):
+        assert str(value).startswith("~/")
 
 
 def test_parser_requires_one_explicit_mode() -> None:
@@ -137,7 +162,7 @@ def test_source_stage_state_and_exact_scope_remain_non_accepting_and_generic() -
     runtime = state["p15c_runtime_control_plane"]
     assert current["next_stage_authorized"] is True
     assert current["active_stage"] == "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
-    assert runtime["module"]["module_version"] == "1.7.0"
+    assert runtime["module"]["module_version"] == "1.8.0"
     assert runtime["enabled_provider_ids"] == ["deepseek", "openai"]
     assert runtime["qwen_enabled"] is False
     assert runtime["p15c_stage_accepted"] is False

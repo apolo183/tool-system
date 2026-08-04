@@ -447,6 +447,7 @@ def test_preflight_resolves_references_but_performs_no_transport(tmp_path: Path)
     record = executor.preflight(packets, cases)
 
     assert record["status"] == "PASS"
+    assert record["total_budget_micro_usd"] == 100_000
     assert record["planned_provider_invocations"] == 4
     assert record["provider_invocations"] == 0
     assert record["network_operations"] == 0
