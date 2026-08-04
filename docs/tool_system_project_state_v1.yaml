@@ -16,7 +16,7 @@ current_phase:
   next_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
   next_stage_authorized: true
   active_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
-  active_stage_status: runtime_control_plane_source_implemented_pending_publication_private_preflight_and_benchmark
+  active_stage_status: local_operator_configuration_source_implemented_fake_io_only_pending_publication_private_preflight_and_benchmark
   next_phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   next_phase_entry_authorized: false
 prior_acceptance:
@@ -585,7 +585,7 @@ p15c_runtime_control_plane:
   module:
     current_module_id: ai_worker_runtime
     canonical_module_id: ai-worker-runtime
-    module_version: 1.7.0
+    module_version: 1.8.0
     aggregate_interface_id: ai-worker-runtime-api
     aggregate_interface_version: 1.0.0
     natural_owner_paths_added:
@@ -602,12 +602,21 @@ p15c_runtime_control_plane:
     - private-target
   max_provider_invocations: 4
   max_retries: 0
-  public_authorization_ceiling_micro_usd: 20000000
+  operator_private_configured_budget_example_micro_usd: 20000000
+  runtime_literal_budget_ceiling_present: false
   private_control_references:
-    execution_policy: private-control:p15c-execution-policy
-    credentials: private-control:credentials
-    target_packet: private-control:p15c-target-packet
-    usage_ledger: private-state:p15c-usage-ledger
+    settings:
+      reference: private-control:p15c-execution-policy
+      default_path: ~/.config/tool-system/settings.toml
+    credentials:
+      reference: private-control:credentials
+      default_path: ~/.config/tool-system/credentials.toml
+    target_packet:
+      reference: private-control:p15c-target-packet
+      default_path: ~/.config/tool-system/p15c-target-packet.json
+    usage_ledger:
+      reference: private-state:p15c-usage-ledger
+      default_path: ~/.local/state/tool-system/p15c-usage.sqlite3
   private_repository_transfer_authorized_by_user:
     deepseek: true
     openai: true
@@ -631,6 +640,52 @@ p15c_runtime_control_plane:
   blueprint_changes: 0
   adaptive_portfolio_source_changes: 0
   live_execution_pending: true
+  p15c_stage_accepted: false
+  p15d_authorized: false
+  authority_effect: none
+p15c_local_operator_configuration:
+  authorization_source: chat_user_message:2026-08-04-agreed-local-operator-configuration
+  canonical_source_baseline_commit: 432ab42b56e45a4fc469301cef17b7c35324e0f8
+  task_manifest: examples/task_manifests/tool_system_p15c_local_operator_config_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15c_local_operator_config_v1.yaml
+  implementation_record: docs/reports/p15c_local_operator_configuration.md
+  implementation_status: source_implemented_fake_io_only_pending_publication
+  superseded_hosted_live_bridge:
+    pull_request: 175
+    state: closed_unmerged
+    branch: agent/p15c-hosted-benchmark-bridge-v1
+    branch_retained: true
+  public_repository_boundary:
+    disabled_settings_example: examples/operator_config/tool_system_settings.example.toml
+    empty_credentials_example: examples/operator_config/tool_system_credentials.example.toml
+    credential_values_present: false
+    target_identity_present: false
+  per_installation_private_defaults:
+    settings: ~/.config/tool-system/settings.toml
+    credentials: ~/.config/tool-system/credentials.toml
+    target_packet: ~/.config/tool-system/p15c-target-packet.json
+    usage_ledger: ~/.local/state/tool-system/p15c-usage.sqlite3
+    settings_and_credentials_separate: true
+    owner_only_non_symlink_required: true
+  hosted_ci:
+    synthetic_inputs_only: true
+    injected_fake_transport_only: true
+    real_provider_secrets_consumed: false
+    private_target_bundle_consumed: false
+    live_execute_command_present: false
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_repository_provider_transfers: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
   p15c_stage_accepted: false
   p15d_authorized: false
   authority_effect: none

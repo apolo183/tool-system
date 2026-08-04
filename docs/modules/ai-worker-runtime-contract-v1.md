@@ -5,8 +5,11 @@ This file defines the module contract owned by the current
 in-memory fixture. P14C adds a bounded live-provider adapter behind an exact
 process-authority grant and single-use execution capability. P15C adds a
 separate, generic, source-sealed read-only benchmark control plane for exact
-operator-private policy, credential-reference, target-packet, snapshot, and
-usage-ledger inputs. It fixes the only live routes to OpenAI Responses and
+repository-external operator settings, credential-reference, target-packet,
+snapshot, and usage-ledger inputs. The settings and credentials are separate
+owner-only files under each installation's local configuration root; the
+public repository contains disabled examples only. It fixes the only live
+routes to OpenAI Responses and
 DeepSeek Chat Completions, keeps Qwen disabled, and never serializes credential
 values, private target identity or paths, target bytes, or raw provider output
 into public evidence. The contract describes these capabilities but grants no
@@ -21,20 +24,20 @@ module_compound_contract:
   identity:
     canonical_module_id: ai-worker-runtime
     current_module_id: ai_worker_runtime
-    module_version: 1.7.0
+    module_version: 1.8.0
     aggregate_interface:
       interface_id: ai-worker-runtime-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@1019b719547fe0b38341821e968dcae57a1f3697:ai_worker_runtime@1.6.0
+    rollback_identity: tool-system@432ab42b56e45a4fc469301cef17b7c35324e0f8:ai_worker_runtime@1.7.0
     python_import_identities:
       - kind: prefix
         name: tool_system.ai_worker
   role:
-    summary: provide a provider-neutral structured AI worker contract, deterministic fixture, bounded P14C adapter, and generic source-sealed P15C read-only benchmark control plane
-    responsibility_boundary: Preserve the P14C exact public synthetic proof while validating owner-only P15C policy, opaque credential references, caller-supplied content-addressed target packets and snapshots, a clean canonical execution tree, an atomic cumulative cost ledger, the exact two-provider by two-case matrix, fixed direct-TLS routes, structured JSON responses, cancellation, conservative cost settlement, and public evidence redaction. The P15C path performs no repository mutation, tools, provider web search, retry, fallback, proxy, response storage, production, cleanup, or rollback.
+    summary: provide a provider-neutral structured AI worker contract, deterministic fixture, bounded P14C adapter, and generic source-sealed P15C read-only benchmark control plane with repository-external per-installation settings and credentials
+    responsibility_boundary: Preserve the P14C exact public synthetic proof while validating owner-only P15C settings, separately stored opaque credential references, caller-supplied content-addressed target packets and snapshots, a clean canonical execution tree, an atomic cumulative cost ledger, the exact two-provider by two-case matrix, fixed direct-TLS routes, structured JSON responses, cancellation, conservative cost settlement, and public evidence redaction. Public examples remain disabled and contain no credential values; Hosted CI uses fake I/O only. The P15C path performs no repository mutation, tools, provider web search, retry, fallback, proxy, response storage, production, cleanup, or rollback.
   natural_owner_evidence_paths:
     - src/tool_system/ai_worker/__init__.py
     - src/tool_system/ai_worker/contract.py
@@ -57,10 +60,11 @@ module_compound_contract:
       - AIWorkerRequest_v1
       - opaque_single_use_P14CLiveExecutionCapability
       - explicit_P14C_repository_ledger_and_positive_owner_comment_id
-      - owner_only_P15C_execution_policy_and_credential_references
+      - owner_only_repository_external_P15C_settings
+      - separately_stored_owner_only_P15C_credential_references
       - caller_supplied_content_addressed_P15C_target_packet_and_snapshot
       - owner_only_P15C_atomic_usage_ledger
-    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, and mandatory no-mutation flags. P14C additionally accepts its exact hardened approval inputs. P15C accepts only an owner-only, expiring policy at or below the public 20 USD ceiling; exact opaque OpenAI and DeepSeek credential references; a caller-supplied exact commit and sorted content-addressed UTF-8 allowlist; an owner-only snapshot root; and an owner-only SQLite ledger. Qwen, mutation, retries, tools, provider web search, fallback, proxies, and response storage remain disabled.
+    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, and mandatory no-mutation flags. P14C additionally accepts its exact hardened approval inputs. P15C accepts only an owner-only repository-external settings file whose local operator controls expiry, positive total and per-provider budgets, provider switches, transfer switches, and source and target bindings; exact opaque OpenAI and DeepSeek credential references resolve from a separate owner-only repository-external credentials file; a caller-supplied exact commit and sorted content-addressed UTF-8 allowlist; an owner-only snapshot root; and an owner-only SQLite ledger. The public example is disabled, Qwen remains disabled, and mutation, retries, tools, provider web search, fallback, proxies, and response storage remain disabled.
   output_contract:
     registered_outputs:
       - AIWorkerResult_v1
@@ -103,8 +107,8 @@ module_compound_contract:
     interface_compatible_replacement: Preserve request validation, stable redacted errors, deterministic fixture defaults, all P14C authority and replay bindings, and every P15C source seal, owner-only input, opaque reference, target safety, private transfer, exact route/model/matrix, Qwen-disablement, cancellation, budget reservation, conservative failure charging, no-retry, no-tool, no-proxy, no-storage, and public-redaction invariant.
     interface_incompatible_change: Requires a new aggregate interface version and a separately authorized provider qualification or migration stage.
   rollback_contract:
-    rollback_identity: tool-system@1019b719547fe0b38341821e968dcae57a1f3697:ai_worker_runtime@1.6.0
-    method: Revert through a separately audited pull request and rerun contract, fixture-provider, P14C operator-entry and adapter, P15C private-control, fake-transport, cancellation, ledger, source-seal, budget, redaction, and packet-only no-I/O tests. This contract grants no rollback authority.
+    rollback_identity: tool-system@432ab42b56e45a4fc469301cef17b7c35324e0f8:ai_worker_runtime@1.7.0
+    method: Revert through a separately audited pull request and rerun contract, fixture-provider, P14C operator-entry and adapter, P15C repository-external settings and credentials, private-control, Hosted fake-I/O, cancellation, ledger, source-seal, budget, redaction, and packet-only no-I/O tests. This contract grants no rollback authority.
   replacement_contract:
     activation_rule: Replace only after provider-neutral and deterministic behavior, the complete P14C contract, and the complete P15C source seal, owner-only controls, exact matrix, injected fake transport, cancellation, replay block, atomic ledger, conservative budget, structured response, and redaction suites pass with no real I/O.
     parallel_active_mainlines_allowed: false
@@ -168,7 +172,7 @@ module_compound_contract:
         boundary_parameters:
           - path
           - snapshot_root
-        constraint: Each caller-supplied private path must resolve to an owner-only, non-symlink boundary. Credential values are read only through exact opaque references and never written or serialized; target files are exact content-addressed UTF-8 regular files; only the separate usage ledger is writable.
+        constraint: Default settings, credentials, and target-packet paths resolve under ~/.config/tool-system while the default usage ledger resolves under ~/.local/state/tool-system; callers may select other repository-external paths. Each private path must resolve to an owner-only, non-symlink boundary. Settings and credentials remain separate files, credential values are read only through exact opaque references and never written or serialized, target files are exact content-addressed UTF-8 regular files, and only the separate usage ledger is writable. Public examples are disabled and contain no credential values; Hosted CI may exercise only synthetic or injected fake I/O.
   external_system_contracts:
     declaration: declared
     systems:

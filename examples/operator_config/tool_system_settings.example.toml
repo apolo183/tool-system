@@ -1,0 +1,31 @@
+# Copy this file outside the repository to ~/.config/tool-system/settings.toml.
+# Keep the copied directory mode 0700 and file mode 0600.
+# One USD equals 1_000_000 microUSD. This disabled template spends nothing.
+
+[p15c]
+schema_version = 1
+authorization_id = "P15C-CROSS-PROVIDER-READ-ONLY-BENCHMARK-LIFECYCLE-v1"
+enabled = false
+total_budget_micro_usd = 20_000_000
+expires_at_utc = "1970-01-01T00:00:00Z"
+expected_tool_system_commit = "0000000000000000000000000000000000000000"
+expected_tool_system_tree = "0000000000000000000000000000000000000000"
+expected_target_packet_sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+private_repository_transfer_enabled = false
+allowed_case_ids = ["deterministic-corpus", "private-target"]
+max_provider_invocations = 4
+
+[p15c.provider_enabled]
+deepseek = false
+openai = false
+qwen = false
+
+[p15c.provider_budget_micro_usd]
+deepseek = 0
+openai = 0
+qwen = 0
+
+[p15c.provider_transfer_enabled]
+deepseek = false
+openai = false
+qwen = false

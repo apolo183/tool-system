@@ -34,6 +34,64 @@ def _owner_json(path: Path, value: object) -> Path:
     return path
 
 
+def _owner_policy_toml(path: Path, record: dict[str, object]) -> Path:
+    provider_enabled = record["provider_enabled"]
+    provider_budget = record["provider_budget_micro_usd"]
+    provider_transfer = record["provider_transfer_enabled"]
+    assert isinstance(provider_enabled, dict)
+    assert isinstance(provider_budget, dict)
+    assert isinstance(provider_transfer, dict)
+
+    def boolean(value: object) -> str:
+        assert isinstance(value, bool)
+        return "true" if value else "false"
+
+    path.write_text(
+        "\n".join(
+            (
+                "[p15c]",
+                f'schema_version = {record["schema_version"]}',
+                f'authorization_id = "{record["authorization_id"]}"',
+                f'enabled = {boolean(record["enabled"])}',
+                f'total_budget_micro_usd = {record["total_budget_micro_usd"]}',
+                f'expires_at_utc = "{record["expires_at_utc"]}"',
+                "expected_tool_system_commit = "
+                f'"{record["expected_tool_system_commit"]}"',
+                "expected_tool_system_tree = "
+                f'"{record["expected_tool_system_tree"]}"',
+                "expected_target_packet_sha256 = "
+                f'"{record["expected_target_packet_sha256"]}"',
+                "private_repository_transfer_enabled = "
+                f'{boolean(record["private_repository_transfer_enabled"])}',
+                'allowed_case_ids = ["deterministic-corpus", "private-target"]',
+                f'max_provider_invocations = {record["max_provider_invocations"]}',
+                "",
+                "[p15c.provider_enabled]",
+                *(
+                    f"{name} = {boolean(provider_enabled[name])}"
+                    for name in ("deepseek", "openai", "qwen")
+                ),
+                "",
+                "[p15c.provider_budget_micro_usd]",
+                *(
+                    f"{name} = {provider_budget[name]}"
+                    for name in ("deepseek", "openai", "qwen")
+                ),
+                "",
+                "[p15c.provider_transfer_enabled]",
+                *(
+                    f"{name} = {boolean(provider_transfer[name])}"
+                    for name in ("deepseek", "openai", "qwen")
+                ),
+                "",
+            )
+        ),
+        encoding="utf-8",
+    )
+    path.chmod(0o600)
+    return path
+
+
 def _git_blob_sha(content: bytes) -> str:
     return hashlib.sha1(f"blob {len(content)}\0".encode("ascii") + content).hexdigest()
 
@@ -128,7 +186,7 @@ def _source_repository(root: Path) -> tuple[str, str]:
 
 def test_policy_is_exact_bounded_and_qwen_disabled(tmp_path: Path) -> None:
     private = _owner_directory(tmp_path / "private")
-    policy_path = _owner_json(private / "policy.json", _policy_record())
+    policy_path = _owner_policy_toml(private / "settings.toml", _policy_record())
 
     policy = load_execution_policy(policy_path)
 
@@ -146,16 +204,14 @@ def test_policy_is_exact_bounded_and_qwen_disabled(tmp_path: Path) -> None:
         policy.assert_active(now=datetime(2099, 1, 1, tzinfo=timezone.utc))
     assert caught.value.code == "POLICY_EXPIRED"
 
-    over_budget = _policy_record()
-    over_budget["total_budget_micro_usd"] = 20_000_001
-    _owner_json(policy_path, over_budget)
-    with pytest.raises(P15CControlError, match="public authorization ceiling") as caught:
-        load_execution_policy(policy_path)
-    assert caught.value.code == "POLICY_BUDGET_ABOVE_PUBLIC_CEILING"
+    adjusted_budget = _policy_record()
+    adjusted_budget["total_budget_micro_usd"] = 20_000_001
+    _owner_policy_toml(policy_path, adjusted_budget)
+    assert load_execution_policy(policy_path).total_budget_micro_usd == 20_000_001
 
     qwen_enabled = _policy_record()
     qwen_enabled["provider_enabled"]["qwen"] = True  # type: ignore[index]
-    _owner_json(policy_path, qwen_enabled)
+    _owner_policy_toml(policy_path, qwen_enabled)
     with pytest.raises(P15CControlError) as caught:
         load_execution_policy(policy_path)
     assert caught.value.code == "QWEN_NOT_DISABLED"
@@ -163,13 +219,25 @@ def test_policy_is_exact_bounded_and_qwen_disabled(tmp_path: Path) -> None:
 
 def test_private_controls_reject_permissive_permissions(tmp_path: Path) -> None:
     private = _owner_directory(tmp_path / "private")
-    policy_path = _owner_json(private / "policy.json", _policy_record())
+    policy_path = _owner_policy_toml(private / "settings.toml", _policy_record())
     policy_path.chmod(0o640)
 
     with pytest.raises(P15CControlError) as caught:
         load_execution_policy(policy_path)
 
     assert caught.value.code == "PRIVATE_FILE_PERMISSIONS"
+
+
+def test_operator_settings_require_an_exact_p15c_table(tmp_path: Path) -> None:
+    private = _owner_directory(tmp_path / "private")
+    settings = private / "settings.toml"
+    settings.write_text("[other]\nenabled = false\n", encoding="utf-8")
+    settings.chmod(0o600)
+
+    with pytest.raises(P15CControlError) as caught:
+        load_execution_policy(settings)
+
+    assert caught.value.code == "POLICY_SETTINGS_SECTION"
 
 
 def test_target_packet_loads_only_content_addressed_safe_snapshot(tmp_path: Path) -> None:

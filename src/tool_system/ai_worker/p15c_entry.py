@@ -15,6 +15,10 @@ from tool_system.ai_worker.p15c_benchmark import (
 )
 from tool_system.ai_worker.p15c_controls import (
     OwnerOnlyCredentialResolver,
+    P15C_DEFAULT_CREDENTIALS_PATH,
+    P15C_DEFAULT_LEDGER_PATH,
+    P15C_DEFAULT_SETTINGS_PATH,
+    P15C_DEFAULT_TARGET_PACKET_PATH,
     P15CControlError,
     P15CUsageLedger,
     load_target_packet,
@@ -47,10 +51,28 @@ def build_parser() -> argparse.ArgumentParser:
         "--packet-config",
         default="config/p15c_execution_packet_freeze_v1.yaml",
     )
-    parser.add_argument("--policy")
-    parser.add_argument("--credentials")
-    parser.add_argument("--target-packet")
-    parser.add_argument("--ledger")
+    parser.add_argument(
+        "--settings",
+        "--policy",
+        dest="settings",
+        default=str(P15C_DEFAULT_SETTINGS_PATH),
+        help="Owner-only operator settings TOML; --policy remains a compatible alias.",
+    )
+    parser.add_argument(
+        "--credentials",
+        default=str(P15C_DEFAULT_CREDENTIALS_PATH),
+        help="Owner-only provider credential TOML.",
+    )
+    parser.add_argument(
+        "--target-packet",
+        default=str(P15C_DEFAULT_TARGET_PACKET_PATH),
+        help="Owner-only content-addressed target packet JSON.",
+    )
+    parser.add_argument(
+        "--ledger",
+        default=str(P15C_DEFAULT_LEDGER_PATH),
+        help="Owner-only cumulative usage ledger.",
+    )
     return parser
 
 
@@ -82,17 +104,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             return 0
         private_paths = {
-            "policy": arguments.policy,
+            "settings": arguments.settings,
             "credentials": arguments.credentials,
             "target_packet": arguments.target_packet,
             "ledger": arguments.ledger,
         }
-        missing = sorted(name for name, value in private_paths.items() if not value)
-        if missing:
-            raise P15CBenchmarkError(
-                "PRIVATE_ARGUMENT_MISSING",
-                "required private-control argument is missing",
-            )
         target_packet = load_target_packet(private_paths["target_packet"])
         target_snapshot = load_target_snapshot(target_packet)
         deterministic_case = load_p15c_deterministic_case(
@@ -106,7 +122,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         executor = P15CBenchmarkExecutor(
             repository_root=repository_root,
             packet_config_path=packet_config,
-            policy_path=private_paths["policy"],
+            policy_path=private_paths["settings"],
             credential_resolver=resolver,
             ledger=ledger,
             transport=P15CDirectTLSTransport(),
@@ -143,7 +159,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "provider_invocations": len(outcomes),
                 "benchmark_executions": len(outcomes),
                 "charged_micro_usd": total_charge,
-                "public_budget_ceiling_micro_usd": 20_000_000,
+                "configured_budget_micro_usd": preflight[
+                    "total_budget_micro_usd"
+                ],
                 "credential_values_recorded": 0,
                 "raw_provider_outputs_recorded": 0,
                 "private_target_identity_recorded": False,

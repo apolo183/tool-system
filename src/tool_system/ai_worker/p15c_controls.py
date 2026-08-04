@@ -25,7 +25,12 @@ P15C_AUTHORIZATION_ID = (
 P15C_POLICY_SCHEMA_VERSION = 1
 P15C_TARGET_PACKET_SCHEMA_VERSION = 1
 P15C_LEDGER_SCHEMA_VERSION = 1
-P15C_PUBLIC_BUDGET_CEILING_MICRO_USD = 20_000_000
+P15C_DEFAULT_SETTINGS_PATH = Path("~/.config/tool-system/settings.toml")
+P15C_DEFAULT_CREDENTIALS_PATH = Path("~/.config/tool-system/credentials.toml")
+P15C_DEFAULT_TARGET_PACKET_PATH = Path(
+    "~/.config/tool-system/p15c-target-packet.json"
+)
+P15C_DEFAULT_LEDGER_PATH = Path("~/.local/state/tool-system/p15c-usage.sqlite3")
 P15C_PROVIDER_IDS = ("deepseek", "openai", "qwen")
 P15C_ENABLED_PROVIDER_IDS = ("deepseek", "openai")
 P15C_CASE_IDS = ("deterministic-corpus", "private-target")
@@ -213,7 +218,17 @@ class P15CLedgerAttempt:
 
 
 def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
-    source = _load_owner_only_json(path, label="execution policy")
+    selected = Path(path).expanduser()
+    if selected.suffix.lower() == ".toml":
+        settings = _load_owner_only_toml(selected, label="operator settings")
+        source = settings.get("p15c")
+        if not isinstance(source, dict):
+            raise P15CControlError(
+                "POLICY_SETTINGS_SECTION",
+                "operator settings must contain one P15C table",
+            )
+    else:
+        source = _load_owner_only_json(selected, label="execution policy")
     expected_fields = {
         "schema_version",
         "authorization_id",
@@ -248,11 +263,6 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
         "total_budget_micro_usd",
         minimum=1,
     )
-    if budget > P15C_PUBLIC_BUDGET_CEILING_MICRO_USD:
-        raise P15CControlError(
-            "POLICY_BUDGET_ABOVE_PUBLIC_CEILING",
-            "execution policy budget exceeds the public authorization ceiling",
-        )
     expires_at = source["expires_at_utc"]
     if not isinstance(expires_at, str):
         raise P15CControlError("POLICY_EXPIRY", "execution policy expiry is invalid")
@@ -639,11 +649,6 @@ class P15CUsageLedger:
         provider_budget = _require_int(
             provider_budget_micro_usd, "provider_budget_micro_usd", minimum=1
         )
-        if total_budget > P15C_PUBLIC_BUDGET_CEILING_MICRO_USD:
-            raise P15CControlError(
-                "LEDGER_PUBLIC_CEILING",
-                "ledger budget exceeds the public ceiling",
-            )
         with self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             existing = connection.execute(
@@ -1040,6 +1045,24 @@ def _load_owner_only_json(path: str | Path, *, label: str) -> dict[str, Any]:
         ) from exc
     if not isinstance(value, dict):
         raise P15CControlError("PRIVATE_CONTROL_INVALID", f"{label} must be an object")
+    return value
+
+
+def _load_owner_only_toml(path: str | Path, *, label: str) -> dict[str, Any]:
+    resolved = _owner_only_file(path, label)
+    try:
+        with resolved.open("rb") as handle:
+            value = tomllib.load(handle)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise P15CControlError(
+            "PRIVATE_CONTROL_INVALID",
+            f"{label} is unavailable or invalid",
+        ) from exc
+    if not isinstance(value, dict):
+        raise P15CControlError(
+            "PRIVATE_CONTROL_INVALID",
+            f"{label} must be a table",
+        )
     return value
 
 
