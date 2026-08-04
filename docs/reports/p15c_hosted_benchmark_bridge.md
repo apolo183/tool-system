@@ -1,6 +1,6 @@
 # P15C Hosted Benchmark Bridge
 
-Status: `P15C_HOSTED_BRIDGE_SOURCE_IMPLEMENTED_PENDING_DRAFT_PR_BINDING_PRIVATE_BUNDLE_AND_PUBLICATION`
+Status: `P15C_HOSTED_BRIDGE_DRAFT_PR_175_OPEN_PENDING_PRIVATE_BUNDLE_HOSTED_CI_AND_PUBLICATION`
 
 This record describes the generic Hosted execution bridge required to run the
 already authorized P15C two-provider by two-case read-only matrix. It is source
@@ -50,8 +50,8 @@ to have already existed on the default branch. The only executing job requires:
 - the squash title bound to this one Draft PR; and
 - activation identifier `c5336d4bd331a747c00547f7b7d99558`.
 
-The Draft PR number is bound after the PR is created and before Ready. A
-no-drift merge is therefore the only ordinary event that can satisfy the job.
+The workflow is bound to exact Draft PR `#175`. A no-drift merge of that PR is
+therefore the only ordinary event that can satisfy the job.
 The source seal includes the workflow and Hosted helper, and the checkout uses
 the pushed canonical SHA with persistent checkout credentials disabled.
 
@@ -107,9 +107,8 @@ closure.
 
 ## Remaining gate
 
-Before Ready, the Draft PR number must replace the disabled `#0` workflow
-binding, every local and Hosted check must pass on an unchanged main, and the
-operator must add the generated one-line value as repository Secret
+Before Ready, every local and Hosted check must pass on an unchanged main, and
+the operator must add the generated one-line value as repository Secret
 `P15C_PRIVATE_BUNDLE_B64`. The exact squash message then activates one Hosted
 run. Any missing Secret, drift, validation failure, provider failure, or
 non-PASS redacted receipt leaves P15C unaccepted and stops before P15D.

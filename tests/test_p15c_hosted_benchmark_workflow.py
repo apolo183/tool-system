@@ -75,7 +75,7 @@ def test_workflow_is_one_exact_non_replayable_main_push() -> None:
     assert "github.run_attempt == 1" in condition
     assert f"github.event.before == '{EXPECTED_BASE}'" in condition
     assert "github.event.deleted == false" in condition
-    assert "p15c: add hosted benchmark bridge (#0)" in condition
+    assert "p15c: add hosted benchmark bridge (#175)" in condition
     assert f"P15C-ACTIVATION-ID: {ACTIVATION_ID}" in condition
     assert workflow["permissions"] == {"contents": "read"}
     assert workflow["concurrency"] == {

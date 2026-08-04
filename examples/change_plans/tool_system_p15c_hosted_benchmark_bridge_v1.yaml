@@ -44,6 +44,10 @@ verification:
 publication:
   method: github_app_draft_pr_guarded_ready_squash_merge_then_exact_one_attempt_main_push_run
   branch: agent/p15c-hosted-benchmark-bridge-v1
+  pull_request_number: 175
+  activation_before_commit: 432ab42b56e45a4fc469301cef17b7c35324e0f8
+  activation_merge_title: 'p15c: add hosted benchmark bridge (#175)'
+  activation_id: c5336d4bd331a747c00547f7b7d99558
   retain_feature_branch: true
   exact_base: 432ab42b56e45a4fc469301cef17b7c35324e0f8
   exact_base_tree: 283337d4429787d1cfe302ca7a7e37351d1fb15a

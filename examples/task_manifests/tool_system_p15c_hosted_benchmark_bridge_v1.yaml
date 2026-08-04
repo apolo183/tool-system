@@ -149,6 +149,10 @@ verification:
     - no credential value target content raw provider response or downstream project identity appears in public source logs evidence or Git diff
 publication:
   draft_pr_required: true
+  pull_request_number: 175
+  activation_before_commit: 432ab42b56e45a4fc469301cef17b7c35324e0f8
+  activation_merge_title: 'p15c: add hosted benchmark bridge (#175)'
+  activation_id: c5336d4bd331a747c00547f7b7d99558
   ready_authorized: true
   review_authorized: false
   squash_merge_authorized: true

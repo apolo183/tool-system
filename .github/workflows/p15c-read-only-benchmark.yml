@@ -18,7 +18,7 @@ jobs:
       github.run_attempt == 1 &&
       github.event.deleted == false &&
       github.event.before == '432ab42b56e45a4fc469301cef17b7c35324e0f8' &&
-      startsWith(github.event.head_commit.message, 'p15c: add hosted benchmark bridge (#0)') &&
+      startsWith(github.event.head_commit.message, 'p15c: add hosted benchmark bridge (#175)') &&
       contains(github.event.head_commit.message, 'P15C-ACTIVATION-ID: c5336d4bd331a747c00547f7b7d99558')
     runs-on: ubuntu-latest
     timeout-minutes: 20

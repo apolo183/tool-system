@@ -625,13 +625,14 @@ p15c_runtime_control_plane:
     task_manifest: examples/task_manifests/tool_system_p15c_hosted_benchmark_bridge_v1.yaml
     change_plan: examples/change_plans/tool_system_p15c_hosted_benchmark_bridge_v1.yaml
     implementation_record: docs/reports/p15c_hosted_benchmark_bridge.md
-    implementation_status: source_implemented_locally_pending_draft_pr_binding_private_bundle_secret_and_publication
+    implementation_status: draft_pr_175_open_exact_binding_frozen_pending_private_bundle_secret_hosted_ci_and_publication
     branch: agent/p15c-hosted-benchmark-bridge-v1
     workflow: .github/workflows/p15c-read-only-benchmark.yml
     trigger: exact_one_attempt_main_push_from_no_drift_squash_merge
     trigger_before_commit: 432ab42b56e45a4fc469301cef17b7c35324e0f8
     activation_id: c5336d4bd331a747c00547f7b7d99558
-    pull_request_number_binding: pending_draft_pr_creation
+    pull_request_number_binding: 175
+    initial_remote_commit: 9079ab482c33c7e15f3198f187c8af80c2a98570
     exact_changed_file_count: 17
     existing_provider_secret_references:
       deepseek: DEEPSEEK_API_KEY
