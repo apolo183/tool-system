@@ -8,6 +8,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+import yaml
 
 from tool_system.ai_worker.p15c_benchmark import (
     P15CBenchmarkCase,
@@ -16,6 +17,7 @@ from tool_system.ai_worker.p15c_benchmark import (
     P15CDirectTLSTransport,
     P15CHTTPResponse,
     P15CTransportFailure,
+    assert_p15c_provider_packets_execution_eligible,
     build_p15c_metrics,
     build_p15c_private_case,
     build_p15c_request,
@@ -216,6 +218,11 @@ class _Cancelled:
         return True
 
 
+class _ForbiddenPrivateBoundary:
+    def __getattr__(self, _: str) -> object:
+        raise AssertionError("exact-version blocker crossed a private boundary")
+
+
 def _git(root: Path, *args: str) -> str:
     completed = subprocess.run(
         ("git", *args),
@@ -239,6 +246,19 @@ def _sealed_repository(root: Path) -> tuple[Path, str, str]:
         destination = root / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, destination)
+    packet_config = root / "config/p15c_execution_packet_freeze_v1.yaml"
+    packet_source = yaml.safe_load(packet_config.read_text(encoding="utf-8"))
+    deepseek = next(
+        packet
+        for packet in packet_source["provider_packets"]
+        if packet["provider_id"] == "deepseek"
+    )
+    deepseek["packet_status"] = "FROZEN_NOT_ACTIVATED"
+    deepseek.pop("execution_blocker")
+    packet_config.write_text(
+        yaml.safe_dump(packet_source, sort_keys=False),
+        encoding="utf-8",
+    )
     shutil.copytree(
         ROOT / "tests" / "fixtures" / "p14h",
         root / "tests" / "fixtures" / "p14h",
@@ -323,7 +343,7 @@ def _executor_fixture(tmp_path: Path, transport: object):
     return executor, packets, cases, resolver, ledger
 
 
-def test_frozen_packets_enable_only_exact_openai_and_deepseek_routes() -> None:
+def test_frozen_packets_expose_exact_routes_and_block_unpinnable_deepseek() -> None:
     packets = load_p15c_provider_packets(PACKET_CONFIG)
 
     assert tuple(packet.provider_id for packet in packets) == ("deepseek", "openai")
@@ -333,7 +353,47 @@ def test_frozen_packets_enable_only_exact_openai_and_deepseek_routes() -> None:
     ]
     assert all(packet.per_attempt_hard_cap_micro_usd == 25_000 for packet in packets)
     assert all(packet.public_record()["max_retries"] == 0 for packet in packets)
+    assert packets[0].exact_model_version == "DeepSeek-V4-Flash-0731"
+    assert packets[0].packet_status == "BLOCKED_EXACT_VERSION_UNPINNABLE"
+    assert packets[0].execution_blocker == "EXACT_MODEL_VERSION_UNPINNABLE"
+    assert packets[1].packet_status == "FROZEN_NOT_ACTIVATED"
+    assert packets[1].execution_blocker is None
     assert "qwen" not in json.dumps([packet.public_record() for packet in packets])
+
+
+def test_canonical_packet_set_blocks_execution_on_unpinnable_exact_version() -> None:
+    with pytest.raises(P15CBenchmarkError) as caught:
+        assert_p15c_provider_packets_execution_eligible(
+            load_p15c_provider_packets(PACKET_CONFIG)
+        )
+
+    assert caught.value.code == "PROVIDER_EXACT_VERSION_UNPINNABLE"
+
+
+def test_direct_executor_blocks_before_policy_ledger_credentials_or_transport(
+    tmp_path: Path,
+) -> None:
+    packets = load_p15c_provider_packets(PACKET_CONFIG)
+    cases = _cases()
+    target = _target_packet(cases[1], tmp_path)
+    forbidden = _ForbiddenPrivateBoundary()
+    executor = P15CBenchmarkExecutor(
+        repository_root=ROOT,
+        packet_config_path=PACKET_CONFIG,
+        policy_path=tmp_path / "must-not-be-read.json",
+        credential_resolver=forbidden,  # type: ignore[arg-type]
+        ledger=forbidden,  # type: ignore[arg-type]
+        transport=forbidden,  # type: ignore[arg-type]
+        target_packet=target,
+    )
+
+    with pytest.raises(P15CBenchmarkError) as caught:
+        executor.preflight(packets, cases)
+    assert caught.value.code == "PROVIDER_EXACT_VERSION_UNPINNABLE"
+
+    with pytest.raises(P15CBenchmarkError) as caught:
+        executor.execute(packets[1], cases[0])
+    assert caught.value.code == "PROVIDER_EXACT_VERSION_UNPINNABLE"
 
 
 def test_deterministic_corpus_is_exact_content_addressed_twelve_file_set() -> None:

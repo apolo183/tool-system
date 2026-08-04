@@ -162,9 +162,10 @@ provider_packets:
     provider_id: deepseek
     execution_surface_id: deepseek-openai-compatible-chat
     model_id: deepseek-v4-flash
-    exact_model_version: DeepSeek-V4-Flash
+    exact_model_version: DeepSeek-V4-Flash-0731
     qualification_state: QUARANTINED
-    packet_status: FROZEN_NOT_ACTIVATED
+    packet_status: BLOCKED_EXACT_VERSION_UNPINNABLE
+    execution_blocker: EXACT_MODEL_VERSION_UNPINNABLE
     base_url: https://api.deepseek.com
     operation: chat.completions.create
     credential_reference: private-control:credentials#providers.deepseek.api_key
