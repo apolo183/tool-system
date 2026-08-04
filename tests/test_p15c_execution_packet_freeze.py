@@ -58,6 +58,21 @@ CORRECTION_PLAN = (
     / "change_plans"
     / "tool_system_p15c_deepseek_packet_evidence_correction_v1.yaml"
 )
+EXACT_VERSION_BLOCK_REPORT = (
+    ROOT / "docs" / "reports" / "p15c_deepseek_exact_version_block.md"
+)
+EXACT_VERSION_BLOCK_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p15c_deepseek_exact_version_block_v1.yaml"
+)
+EXACT_VERSION_BLOCK_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p15c_deepseek_exact_version_block_v1.yaml"
+)
 
 EXACT_FILES = {
     "REPO_MANIFEST.md",
@@ -90,11 +105,30 @@ CORRECTION_EXACT_FILES = {
     "examples/task_manifests/tool_system_p15c_deepseek_packet_evidence_correction_v1.yaml",
     "tests/test_p15c_execution_packet_freeze.py",
 }
+EXACT_VERSION_BLOCK_FILES = {
+    "config/module_registry_v1.yaml",
+    "config/p15c_execution_packet_freeze_v1.yaml",
+    "docs/modules/ai-worker-runtime-contract-v1.md",
+    "docs/reports/p15c_deepseek_exact_version_block.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p15c_deepseek_exact_version_block_v1.yaml",
+    "examples/task_manifests/tool_system_p15c_deepseek_exact_version_block_v1.yaml",
+    "src/tool_system/ai_worker/p15c_benchmark.py",
+    "src/tool_system/ai_worker/p15c_entry.py",
+    "tests/test_ai_worker_p15c_benchmark.py",
+    "tests/test_ai_worker_p15c_entry.py",
+    "tests/test_module_registry.py",
+    "tests/test_p15c_execution_packet_freeze.py",
+}
 REFREEZE_PACKET_SEMANTICS_SHA256 = (
     "03f99a7e43ce7f3a381d59231c8a9d31ec1a9324922639126fa2268ff6d42626"
 )
 CORRECTED_PACKET_SEMANTICS_SHA256 = (
     "27dc75dc1644518aee2717a1a0150a86c55be38d09a2d8c753c0a8bdf1bfc483"
+)
+BLOCKED_PACKET_SEMANTICS_SHA256 = (
+    "9d856fe6821f340b4ae372572f42bf4da4c45c318f7cbd0ba1c6a42b8aaa3d4b"
 )
 
 
@@ -225,14 +259,51 @@ def test_deepseek_packet_correction_pair_and_current_baseline_validate() -> None
     assert correction["benchmark_executions"] == 0
 
 
-def test_corrected_packet_semantics_are_content_addressed() -> None:
+def test_exact_version_block_pair_and_fail_closed_state_validate() -> None:
+    manifest_result = validate_task_manifest(
+        EXACT_VERSION_BLOCK_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(EXACT_VERSION_BLOCK_PLAN)
+    manifest = load_yaml_file(EXACT_VERSION_BLOCK_MANIFEST)
+    plan = load_yaml_file(EXACT_VERSION_BLOCK_PLAN)
+    state = load_yaml_file(PROJECT_STATE)
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == EXACT_VERSION_BLOCK_FILES
+    assert set(manifest["scope"]["in_scope"]) == EXACT_VERSION_BLOCK_FILES
+    assert set(plan["changed_files"]) == EXACT_VERSION_BLOCK_FILES
+    assert len(EXACT_VERSION_BLOCK_FILES) == 14
+
+    block = state["p15c_packet_freeze"]["deepseek_exact_version_block"]
+    assert block["status"] == "accepted_only_on_guarded_squash_merge_no_execution"
+    assert block["official_catalog_model_version"] == "DeepSeek-V4-Flash-0731"
+    assert block["request_api_model_id"] == "deepseek-v4-flash"
+    assert block["exact_version_request_binding_evidenced"] is False
+    assert block["execution_blocker"] == "PROVIDER_EXACT_VERSION_UNPINNABLE"
+    assert block["packet_semantics_excluding_tool_system_baseline_sha256"] == (
+        BLOCKED_PACKET_SEMANTICS_SHA256
+    )
+    assert block["provider_invocations"] == 0
+    assert block["credential_value_accesses"] == 0
+    assert block["target_repository_accesses"] == 0
+    assert block["benchmark_executions"] == 0
+    assert block["p15c_stage_accepted"] is False
+    assert block["p15d_authorized"] is False
+
+
+def test_current_blocked_packet_semantics_are_content_addressed() -> None:
     packets = load_yaml_file(PACKETS)
     packets.pop("tool_system_baseline")
     normalized = yaml.safe_dump(packets, sort_keys=True).encode("utf-8")
 
     assert (
         hashlib.sha256(normalized).hexdigest()
-        == CORRECTED_PACKET_SEMANTICS_SHA256
+        == BLOCKED_PACKET_SEMANTICS_SHA256
     )
 
 
@@ -295,7 +366,7 @@ def test_provider_packets_are_exact_bounded_and_not_activated() -> None:
     )
     assert providers["deepseek"]["model_id"] == "deepseek-v4-flash"
     assert providers["deepseek"]["exact_model_version"] == (
-        "DeepSeek-V4-Flash"
+        "DeepSeek-V4-Flash-0731"
     )
     assert providers["deepseek"]["execution_surface_id"] == (
         "deepseek-openai-compatible-chat"
@@ -305,6 +376,12 @@ def test_provider_packets_are_exact_bounded_and_not_activated() -> None:
         "chat_completions_surface"
     ] == "https://api-docs.deepseek.com/api/create-chat-completion"
     assert "responses_surface" not in providers["deepseek"]["official_evidence"]
+    assert providers["deepseek"]["packet_status"] == (
+        "BLOCKED_EXACT_VERSION_UNPINNABLE"
+    )
+    assert providers["deepseek"]["execution_blocker"] == (
+        "EXACT_MODEL_VERSION_UNPINNABLE"
+    )
     assert providers["openai"]["packet_id"] == (
         "P15C-OPENAI-GPT-5.6-LUNA-READONLY-v1"
     )
@@ -321,10 +398,12 @@ def test_provider_packets_are_exact_bounded_and_not_activated() -> None:
         == 0
     )
 
+    assert providers["openai"]["packet_status"] == "FROZEN_NOT_ACTIVATED"
+    assert "execution_blocker" not in providers["openai"]
+
     for provider_id in ("deepseek", "openai"):
         packet = providers[provider_id]
         assert packet["qualification_state"] == "QUARANTINED"
-        assert packet["packet_status"] == "FROZEN_NOT_ACTIVATED"
         assert packet["credential_value_inspected"] is False
         assert packet["private_repository_policy_fit"] == (
             "blocked_pending_explicit_provider_transfer_authorization"
@@ -429,3 +508,17 @@ def test_report_records_zero_operation_stop_boundary() -> None:
     assert "credential_value_accesses: 0" in correction_report
     assert "provider_invocations: 0" in correction_report
     assert "benchmark_executions: 0" in correction_report
+
+    exact_version_block_report = EXACT_VERSION_BLOCK_REPORT.read_text(
+        encoding="utf-8"
+    )
+    assert (
+        "ACCEPTED_ONLY_ON_GUARDED_SQUASH_MERGE_NO_EXECUTION"
+        in exact_version_block_report
+    )
+    assert "DeepSeek-V4-Flash-0731" in exact_version_block_report
+    assert "deepseek-v4-flash" in exact_version_block_report
+    assert "PROVIDER_EXACT_VERSION_UNPINNABLE" in exact_version_block_report
+    assert "credential_value_accesses: 0" in exact_version_block_report
+    assert "provider_invocations: 0" in exact_version_block_report
+    assert "benchmark_executions: 0" in exact_version_block_report

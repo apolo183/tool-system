@@ -9,6 +9,7 @@ from tool_system.ai_worker.p15c_benchmark import (
     P15CBenchmarkError,
     P15CBenchmarkExecutor,
     P15CDirectTLSTransport,
+    assert_p15c_provider_packets_execution_eligible,
     build_p15c_private_case,
     load_p15c_deterministic_case,
     load_p15c_provider_packets,
@@ -103,6 +104,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 }
             )
             return 0
+        assert_p15c_provider_packets_execution_eligible(packets)
         private_paths = {
             "settings": arguments.settings,
             "credentials": arguments.credentials,
@@ -188,17 +190,28 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 130
     except (P15CControlError, P15CBenchmarkError) as exc:
-        _print_json(
-            {
-                "status": "BENCHMARK_BLOCKED",
-                "failure_code": exc.code,
-                "credential_values_recorded": 0,
-                "raw_provider_outputs_recorded": 0,
-                "private_target_identity_recorded": False,
-                "private_target_paths_recorded": False,
-                "target_mutations": 0,
-            }
-        )
+        record = {
+            "status": "BENCHMARK_BLOCKED",
+            "failure_code": exc.code,
+            "credential_values_recorded": 0,
+            "raw_provider_outputs_recorded": 0,
+            "private_target_identity_recorded": False,
+            "private_target_paths_recorded": False,
+            "target_mutations": 0,
+        }
+        if exc.code == "PROVIDER_EXACT_VERSION_UNPINNABLE":
+            record.update(
+                {
+                    "credential_resolver_invocations": 0,
+                    "credential_value_accesses": 0,
+                    "target_packet_reads": 0,
+                    "target_snapshot_reads": 0,
+                    "provider_invocations": 0,
+                    "network_operations": 0,
+                    "benchmark_executions": 0,
+                }
+            )
+        _print_json(record)
         return 2
 
 

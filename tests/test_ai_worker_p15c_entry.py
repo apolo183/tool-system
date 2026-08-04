@@ -53,6 +53,15 @@ def test_packet_only_is_public_and_performs_zero_private_or_live_operations(
         "deepseek",
         "openai",
     ]
+    assert record["packets"][0]["exact_model_version"] == (
+        "DeepSeek-V4-Flash-0731"
+    )
+    assert record["packets"][0]["packet_status"] == (
+        "BLOCKED_EXACT_VERSION_UNPINNABLE"
+    )
+    assert record["packets"][0]["execution_blocker"] == (
+        "EXACT_MODEL_VERSION_UNPINNABLE"
+    )
     for field in (
         "provider_invocations",
         "network_operations",
@@ -68,12 +77,18 @@ def test_packet_only_is_public_and_performs_zero_private_or_live_operations(
         assert record[field] == 0
 
 
-def test_private_modes_fail_closed_when_local_default_files_are_absent(
-    tmp_path: Path,
+def test_private_modes_block_before_private_inputs_on_unpinnable_exact_version(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setenv("HOME", str(tmp_path))
+    def forbidden(*_: object, **__: object) -> None:
+        raise AssertionError("exact-version blocker crossed a private boundary")
+
+    monkeypatch.setattr(p15c_entry, "load_target_packet", forbidden)
+    monkeypatch.setattr(p15c_entry, "load_target_snapshot", forbidden)
+    monkeypatch.setattr(p15c_entry, "OwnerOnlyCredentialResolver", forbidden)
+    monkeypatch.setattr(p15c_entry, "P15CUsageLedger", forbidden)
+    monkeypatch.setattr(p15c_entry, "P15CDirectTLSTransport", forbidden)
     result = p15c_entry.main(
         [
             "--preflight",
@@ -87,12 +102,19 @@ def test_private_modes_fail_closed_when_local_default_files_are_absent(
 
     assert result == 2
     assert record == {
+        "benchmark_executions": 0,
+        "credential_resolver_invocations": 0,
+        "credential_value_accesses": 0,
         "credential_values_recorded": 0,
-        "failure_code": "PRIVATE_FILE_UNAVAILABLE",
+        "failure_code": "PROVIDER_EXACT_VERSION_UNPINNABLE",
+        "network_operations": 0,
         "private_target_identity_recorded": False,
         "private_target_paths_recorded": False,
+        "provider_invocations": 0,
         "raw_provider_outputs_recorded": 0,
         "status": "BENCHMARK_BLOCKED",
+        "target_packet_reads": 0,
+        "target_snapshot_reads": 0,
         "target_mutations": 0,
     }
 
@@ -162,8 +184,11 @@ def test_source_stage_state_and_exact_scope_remain_non_accepting_and_generic() -
     runtime = state["p15c_runtime_control_plane"]
     assert current["next_stage_authorized"] is True
     assert current["active_stage"] == "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
-    assert runtime["module"]["module_version"] == "1.8.0"
-    assert runtime["enabled_provider_ids"] == ["deepseek", "openai"]
+    assert runtime["module"]["module_version"] == "1.8.1"
+    assert runtime["configured_provider_ids"] == ["deepseek", "openai"]
+    assert runtime["execution_eligible_provider_ids"] == ["openai"]
+    assert runtime["exact_matrix_execution_eligible"] is False
+    assert runtime["execution_blocker"] == "PROVIDER_EXACT_VERSION_UNPINNABLE"
     assert runtime["qwen_enabled"] is False
     assert runtime["p15c_stage_accepted"] is False
     assert runtime["p15d_authorized"] is False

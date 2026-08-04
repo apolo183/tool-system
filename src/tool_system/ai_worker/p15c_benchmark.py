@@ -76,6 +76,8 @@ class P15CProviderPacket:
     execution_surface_id: str
     model_id: str
     exact_model_version: str
+    packet_status: str
+    execution_blocker: str | None
     host: str
     path: str
     credential_reference: str
@@ -94,6 +96,8 @@ class P15CProviderPacket:
             "execution_surface_id": self.execution_surface_id,
             "model_id": self.model_id,
             "exact_model_version": self.exact_model_version,
+            "packet_status": self.packet_status,
+            "execution_blocker": self.execution_blocker,
             "host": self.host,
             "path": self.path,
             "credential_reference": self.credential_reference,
@@ -326,7 +330,7 @@ def load_p15c_provider_packets(
             "packet_id": "P15C-DEEPSEEK-V4-FLASH-READONLY-v1",
             "execution_surface_id": "deepseek-openai-compatible-chat",
             "model_id": "deepseek-v4-flash",
-            "exact_model_version": "DeepSeek-V4-Flash",
+            "exact_model_version": "DeepSeek-V4-Flash-0731",
             "base_url": "https://api.deepseek.com",
             "operation": "chat.completions.create",
             "credential_reference": (
@@ -365,6 +369,22 @@ def load_p15c_provider_packets(
                     "PACKET_FIELD_DRIFT",
                     f"P15C {provider_id} packet field {field} changed",
                 )
+        disposition = (item.get("packet_status"), item.get("execution_blocker"))
+        allowed_dispositions = {
+            "deepseek": {
+                (
+                    "BLOCKED_EXACT_VERSION_UNPINNABLE",
+                    "EXACT_MODEL_VERSION_UNPINNABLE",
+                ),
+                ("FROZEN_NOT_ACTIVATED", None),
+            },
+            "openai": {("FROZEN_NOT_ACTIVATED", None)},
+        }
+        if disposition not in allowed_dispositions[provider_id]:
+            raise P15CBenchmarkError(
+                "PACKET_DISPOSITION_DRIFT",
+                f"P15C {provider_id} packet disposition changed",
+            )
         if item.get("attempt_limits") != expected_limits:
             raise P15CBenchmarkError(
                 "PACKET_LIMIT_DRIFT",
@@ -404,6 +424,12 @@ def load_p15c_provider_packets(
                 execution_surface_id=str(item["execution_surface_id"]),
                 model_id=str(item["model_id"]),
                 exact_model_version=str(item["exact_model_version"]),
+                packet_status=str(item["packet_status"]),
+                execution_blocker=(
+                    str(item["execution_blocker"])
+                    if item.get("execution_blocker") is not None
+                    else None
+                ),
                 host=parsed_url.hostname,
                 path=str(expected["path"]),
                 credential_reference=str(item["credential_reference"]),
@@ -423,6 +449,22 @@ def load_p15c_provider_packets(
             )
         )
     return tuple(result)
+
+
+def assert_p15c_provider_packets_execution_eligible(
+    packets: Sequence[P15CProviderPacket],
+) -> None:
+    for packet in packets:
+        if packet.execution_blocker == "EXACT_MODEL_VERSION_UNPINNABLE":
+            raise P15CBenchmarkError(
+                "PROVIDER_EXACT_VERSION_UNPINNABLE",
+                "provider request API cannot bind the packet's exact model version",
+            )
+        if packet.packet_status != "FROZEN_NOT_ACTIVATED":
+            raise P15CBenchmarkError(
+                "PROVIDER_PACKET_BLOCKED",
+                "provider packet is not eligible for execution",
+            )
 
 
 def load_p15c_deterministic_case(
@@ -788,6 +830,9 @@ class P15CBenchmarkExecutor:
         packets: Sequence[P15CProviderPacket],
         cases: Sequence[P15CBenchmarkCase],
     ) -> dict[str, object]:
+        assert_p15c_provider_packets_execution_eligible(
+            load_p15c_provider_packets(self._packet_config_path)
+        )
         policy = load_execution_policy(self._policy_path)
         policy.assert_active()
         packet_tuple = tuple(packets)
@@ -838,6 +883,9 @@ class P15CBenchmarkExecutor:
         *,
         cancellation: P15CCancellationSignal | None = None,
     ) -> P15CAttemptOutcome:
+        assert_p15c_provider_packets_execution_eligible(
+            load_p15c_provider_packets(self._packet_config_path)
+        )
         policy = load_execution_policy(self._policy_path)
         policy.assert_active()
         self._assert_route(policy, packet, case)

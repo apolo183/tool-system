@@ -16,7 +16,7 @@ current_phase:
   next_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
   next_stage_authorized: true
   active_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
-  active_stage_status: local_operator_configuration_source_implemented_fake_io_only_pending_publication_private_preflight_and_benchmark
+  active_stage_status: blocked_deepseek_exact_version_unpinnable_no_execution
   next_phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   next_phase_entry_authorized: false
 prior_acceptance:
@@ -514,15 +514,45 @@ p15c_packet_freeze:
     credential_value_accesses: 0
     target_repository_accesses: 0
     benchmark_executions: 0
+  deepseek_exact_version_block:
+    task_identity: P15C-DEEPSEEK-EXACT-VERSION-BLOCK-v1
+    authorization_source: chat_user_message:2026-08-05-option-1-preserve-exact-version-invariant
+    task_manifest: examples/task_manifests/tool_system_p15c_deepseek_exact_version_block_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15c_deepseek_exact_version_block_v1.yaml
+    acceptance_record: docs/reports/p15c_deepseek_exact_version_block.md
+    status: accepted_only_on_guarded_squash_merge_no_execution
+    baseline_commit: 7e371b8e5f14c64cbe3ff06f6c3476fc166e01b1
+    baseline_tree: 802e32725c371907ff367ff7fd31ddcd3d502887
+    official_catalog_model_version: DeepSeek-V4-Flash-0731
+    request_api_model_id: deepseek-v4-flash
+    exact_version_request_binding_evidenced: false
+    execution_blocker: PROVIDER_EXACT_VERSION_UNPINNABLE
+    packet_semantics_excluding_tool_system_baseline_sha256: 9d856fe6821f340b4ae372572f42bf4da4c45c318f7cbd0ba1c6a42b8aaa3d4b
+    ai_worker_runtime_module_version: 1.8.1
+    aggregate_interface_version_changed: false
+    provider_model_id_changed: false
+    provider_route_changed: false
+    economics_limits_corpus_or_private_boundaries_changed: false
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    private_target_packet_reads: 0
+    private_target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    target_repository_accesses: 0
+    benchmark_executions: 0
+    p15c_stage_accepted: false
+    p15d_authorized: false
   provider_packets:
     deepseek:
       packet_id: P15C-DEEPSEEK-V4-FLASH-READONLY-v1
       model_id: deepseek-v4-flash
-      exact_model_version: DeepSeek-V4-Flash
+      exact_model_version: DeepSeek-V4-Flash-0731
       execution_surface_id: deepseek-openai-compatible-chat
       operation: chat.completions.create
       qualification_state: QUARANTINED
-      packet_status: FROZEN_NOT_ACTIVATED
+      packet_status: BLOCKED_EXACT_VERSION_UNPINNABLE
+      execution_blocker: EXACT_MODEL_VERSION_UNPINNABLE
     openai:
       packet_id: P15C-OPENAI-GPT-5.6-LUNA-READONLY-v1
       model_id: gpt-5.6-luna
@@ -581,11 +611,11 @@ p15c_runtime_control_plane:
   task_manifest: examples/task_manifests/tool_system_p15c_runtime_control_plane_v1.yaml
   change_plan: examples/change_plans/tool_system_p15c_runtime_control_plane_v1.yaml
   implementation_record: docs/reports/p15c_runtime_control_plane_implementation.md
-  implementation_status: source_implemented_fake_transport_only_pending_publication
+  implementation_status: blocked_deepseek_exact_version_unpinnable_no_execution
   module:
     current_module_id: ai_worker_runtime
     canonical_module_id: ai-worker-runtime
-    module_version: 1.8.0
+    module_version: 1.8.1
     aggregate_interface_id: ai-worker-runtime-api
     aggregate_interface_version: 1.0.0
     natural_owner_paths_added:
@@ -593,9 +623,13 @@ p15c_runtime_control_plane:
       - src/tool_system/ai_worker/p15c_controls.py
       - src/tool_system/ai_worker/p15c_entry.py
   packet_catalog: config/p15c_execution_packet_freeze_v1.yaml
-  enabled_provider_ids:
+  configured_provider_ids:
     - deepseek
     - openai
+  execution_eligible_provider_ids:
+    - openai
+  exact_matrix_execution_eligible: false
+  execution_blocker: PROVIDER_EXACT_VERSION_UNPINNABLE
   qwen_enabled: false
   case_ids:
     - deterministic-corpus
@@ -639,7 +673,8 @@ p15c_runtime_control_plane:
   raw_provider_outputs_recorded: false
   blueprint_changes: 0
   adaptive_portfolio_source_changes: 0
-  live_execution_pending: true
+  live_execution_pending: false
+  live_execution_blocked: true
   p15c_stage_accepted: false
   p15d_authorized: false
   authority_effect: none
