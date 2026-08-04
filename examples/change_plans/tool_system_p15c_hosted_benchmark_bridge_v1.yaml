@@ -1,0 +1,55 @@
+plan_id: tool-system-p15c-hosted-benchmark-bridge-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p15c_hosted_benchmark_bridge_v1.yaml
+changed_files:
+  - .github/workflows/p15c-read-only-benchmark.yml
+  - REPO_MANIFEST.md
+  - config/module_registry_v1.yaml
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/reports/p15c_hosted_benchmark_bridge.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p15c_hosted_benchmark_bridge_v1.yaml
+  - examples/task_manifests/tool_system_p15c_hosted_benchmark_bridge_v1.yaml
+  - src/tool_system/ai_worker/p15c_benchmark.py
+  - src/tool_system/ai_worker/p15c_hosted.py
+  - tests/test_ai_worker_p15c_benchmark.py
+  - tests/test_ai_worker_p15c_entry.py
+  - tests/test_ai_worker_p15c_hosted.py
+  - tests/test_module_registry.py
+  - tests/test_p15c_hosted_benchmark_workflow.py
+  - tests/test_repo_manifest.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p15c_hosted_benchmark_bridge_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Add only the exact guarded Hosted bridge, private bundle materializer, source-seal extension, tests, and descriptive governance closure.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Execute only the separately authorized read-only P15C provider matrix with caller-supplied private target context and no target mutation.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_ai_worker_p15c_hosted.py tests/test_p15c_hosted_benchmark_workflow.py tests/test_ai_worker_p15c_benchmark.py tests/test_ai_worker_p15c_entry.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15c_hosted_benchmark_bridge_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15c_hosted_benchmark_bridge_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -B -m tool_system.ai_worker.p15c_entry --packet-only
+publication:
+  method: github_app_draft_pr_guarded_ready_squash_merge_then_exact_one_attempt_main_push_run
+  branch: agent/p15c-hosted-benchmark-bridge-v1
+  retain_feature_branch: true
+  exact_base: 432ab42b56e45a4fc469301cef17b7c35324e0f8
+  exact_base_tree: 283337d4429787d1cfe302ca7a7e37351d1fb15a
+  live_execution_on_pull_request: false
+  live_execution_on_exact_one_attempt_main_push: true
+rollback:
+  method: git_revert
+  reference: tool-system@432ab42b56e45a4fc469301cef17b7c35324e0f8
+  execution_authorized: false

@@ -1,0 +1,85 @@
+name: p15c-read-only-benchmark
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p15c-read-only-benchmark-v1
+  cancel-in-progress: false
+
+jobs:
+  execute-once:
+    if: >-
+      github.run_attempt == 1 &&
+      github.event.deleted == false &&
+      github.event.before == '432ab42b56e45a4fc469301cef17b7c35324e0f8' &&
+      startsWith(github.event.head_commit.message, 'p15c: add hosted benchmark bridge (#0)') &&
+      contains(github.event.head_commit.message, 'P15C-ACTIVATION-ID: c5336d4bd331a747c00547f7b7d99558')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      P15C_PRIVATE_BUNDLE_B64: ${{ secrets.P15C_PRIVATE_BUNDLE_B64 }}
+      P15C_DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      P15C_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      P15C_PRIVATE_ROOT: ${{ runner.temp }}/p15c-private
+      P15C_PUBLIC_ROOT: ${{ runner.temp }}/p15c-public
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONPATH: ${{ github.workspace }}/src:${{ runner.temp }}/p15c-deps
+
+    steps:
+      - name: Checkout exact canonical merge
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install runtime dependency outside source tree
+        run: |
+          python -m pip install --target "$RUNNER_TEMP/p15c-deps" "PyYAML>=6.0"
+
+      - name: Materialize owner-only private inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$P15C_PUBLIC_ROOT"
+          python -m tool_system.ai_worker.p15c_hosted \
+            --private-root "$P15C_PRIVATE_ROOT" \
+            --expected-commit "$(git rev-parse HEAD)" \
+            --expected-tree "$(git rev-parse 'HEAD^{tree}')" \
+            > "$P15C_PUBLIC_ROOT/materialization.json"
+
+      - name: Execute exact read-only benchmark matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          python -m tool_system.ai_worker.p15c_entry \
+            --execute \
+            --repository-root "$GITHUB_WORKSPACE" \
+            --policy "$P15C_PRIVATE_ROOT/execution_policy.json" \
+            --credentials "$P15C_PRIVATE_ROOT/credentials.toml" \
+            --target-packet "$P15C_PRIVATE_ROOT/target_packet.json" \
+            --ledger "$P15C_PRIVATE_ROOT/usage.sqlite3" \
+            > "$P15C_PUBLIC_ROOT/benchmark.json"
+
+      - name: Upload redacted public receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p15c-public-receipts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/p15c-public/*.json
+          if-no-files-found: error
+          retention-days: 14

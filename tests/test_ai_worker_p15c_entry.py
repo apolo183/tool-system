@@ -137,7 +137,7 @@ def test_source_stage_state_and_exact_scope_remain_non_accepting_and_generic() -
     runtime = state["p15c_runtime_control_plane"]
     assert current["next_stage_authorized"] is True
     assert current["active_stage"] == "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
-    assert runtime["module"]["module_version"] == "1.7.0"
+    assert runtime["module"]["module_version"] == "1.8.0"
     assert runtime["enabled_provider_ids"] == ["deepseek", "openai"]
     assert runtime["qwen_enabled"] is False
     assert runtime["p15c_stage_accepted"] is False

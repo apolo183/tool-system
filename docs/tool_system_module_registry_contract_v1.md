@@ -82,7 +82,7 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:agent_worker_runtime@1.0.0
     - current_module_id: ai_worker_runtime
       canonical_module_id: ai-worker-runtime
-      current_module_version: 1.7.0
+      current_module_version: 1.8.0
       aggregate_interface_id: ai-worker-runtime-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
@@ -90,8 +90,8 @@ mapping_contract:
         - {kind: prefix, name: tool_system.ai_worker}
       direct_consumer_module_ids:
         - adaptive_model_portfolio_and_economics
-      change_risk: "critical: the default remains fixture-only, P14C retains its grant-bound proof, and P15C adds source-sealed owner-only controls, private target transfer gates, atomic budget accounting, and fixed direct-TLS OpenAI and DeepSeek routes with Qwen disabled and redacted public evidence"
-      rollback_identity: tool-system@1019b719547fe0b38341821e968dcae57a1f3697:ai_worker_runtime@1.6.0
+      change_risk: "critical: the default remains fixture-only, P14C retains its grant-bound proof, and P15C adds a one-attempt Hosted bridge over source-sealed owner-only controls, private target transfer gates, atomic budget accounting, and fixed direct-TLS OpenAI and DeepSeek routes with Qwen and GLM disabled and redacted public evidence"
+      rollback_identity: tool-system@432ab42b56e45a4fc469301cef17b7c35324e0f8:ai_worker_runtime@1.7.0
     - current_module_id: adaptive_model_portfolio_and_economics
       canonical_module_id: adaptive-model-portfolio-and-economics
       current_module_version: 1.0.0

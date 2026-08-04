@@ -16,7 +16,7 @@ current_phase:
   next_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
   next_stage_authorized: true
   active_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
-  active_stage_status: runtime_control_plane_source_implemented_pending_publication_private_preflight_and_benchmark
+  active_stage_status: runtime_control_plane_merged_hosted_bridge_source_pending_publication_private_bundle_and_one_shot_benchmark
   next_phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   next_phase_entry_authorized: false
 prior_acceptance:
@@ -581,17 +581,26 @@ p15c_runtime_control_plane:
   task_manifest: examples/task_manifests/tool_system_p15c_runtime_control_plane_v1.yaml
   change_plan: examples/change_plans/tool_system_p15c_runtime_control_plane_v1.yaml
   implementation_record: docs/reports/p15c_runtime_control_plane_implementation.md
-  implementation_status: source_implemented_fake_transport_only_pending_publication
+  implementation_status: source_merged_hosted_ci_validated_live_execution_pending
+  source_publication:
+    branch: agent/p15c-runtime-control-plane-v1
+    pull_request: 174
+    feature_commit: d155fd5a1da5db8e804dab29c2fefadfbc954ce5
+    merge_commit: 432ab42b56e45a4fc469301cef17b7c35324e0f8
+    merge_tree: 283337d4429787d1cfe302ca7a7e37351d1fb15a
+    hosted_ci_status: success
+    branch_retained: true
   module:
     current_module_id: ai_worker_runtime
     canonical_module_id: ai-worker-runtime
-    module_version: 1.7.0
+    module_version: 1.8.0
     aggregate_interface_id: ai-worker-runtime-api
     aggregate_interface_version: 1.0.0
     natural_owner_paths_added:
       - src/tool_system/ai_worker/p15c_benchmark.py
       - src/tool_system/ai_worker/p15c_controls.py
       - src/tool_system/ai_worker/p15c_entry.py
+      - src/tool_system/ai_worker/p15c_hosted.py
   packet_catalog: config/p15c_execution_packet_freeze_v1.yaml
   enabled_provider_ids:
     - deepseek
@@ -612,6 +621,34 @@ p15c_runtime_control_plane:
     deepseek: true
     openai: true
     qwen: false
+  hosted_benchmark_bridge:
+    task_manifest: examples/task_manifests/tool_system_p15c_hosted_benchmark_bridge_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15c_hosted_benchmark_bridge_v1.yaml
+    implementation_record: docs/reports/p15c_hosted_benchmark_bridge.md
+    implementation_status: source_implemented_locally_pending_draft_pr_binding_private_bundle_secret_and_publication
+    branch: agent/p15c-hosted-benchmark-bridge-v1
+    workflow: .github/workflows/p15c-read-only-benchmark.yml
+    trigger: exact_one_attempt_main_push_from_no_drift_squash_merge
+    trigger_before_commit: 432ab42b56e45a4fc469301cef17b7c35324e0f8
+    activation_id: c5336d4bd331a747c00547f7b7d99558
+    pull_request_number_binding: pending_draft_pr_creation
+    exact_changed_file_count: 17
+    existing_provider_secret_references:
+      deepseek: DEEPSEEK_API_KEY
+      openai: OPENAI_API_KEY
+    private_bundle_secret_reference: P15C_PRIVATE_BUNDLE_B64
+    qwen_secret_referenced: false
+    glm_secret_referenced: false
+    target_repository_checkout: false
+    public_target_identity_serialized: false
+    public_target_paths_serialized: false
+    credential_values_recorded: false
+    raw_provider_outputs_recorded: false
+    private_bundle_secret_present: pending_operator_action
+    source_stage_provider_invocations: 0
+    source_stage_network_operations: 0
+    source_stage_benchmark_executions: 0
+    live_execution_pending: true
   source_stage_evidence:
     credential_resolver_invocations: 0
     credential_value_accesses: 0

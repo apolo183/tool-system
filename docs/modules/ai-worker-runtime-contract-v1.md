@@ -9,8 +9,11 @@ operator-private policy, credential-reference, target-packet, snapshot, and
 usage-ledger inputs. It fixes the only live routes to OpenAI Responses and
 DeepSeek Chat Completions, keeps Qwen disabled, and never serializes credential
 values, private target identity or paths, target bytes, or raw provider output
-into public evidence. The contract describes these capabilities but grants no
-execution authority.
+into public evidence. A generic GitHub Hosted bridge may materialize one bounded
+operator bundle supplied through an encrypted GitHub repository Secret and the
+existing OpenAI and DeepSeek Secret references into an ephemeral owner-only root, then upload only redacted
+receipts. The contract describes these capabilities but grants no execution
+authority.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -21,21 +24,22 @@ module_compound_contract:
   identity:
     canonical_module_id: ai-worker-runtime
     current_module_id: ai_worker_runtime
-    module_version: 1.7.0
+    module_version: 1.8.0
     aggregate_interface:
       interface_id: ai-worker-runtime-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@1019b719547fe0b38341821e968dcae57a1f3697:ai_worker_runtime@1.6.0
+    rollback_identity: tool-system@432ab42b56e45a4fc469301cef17b7c35324e0f8:ai_worker_runtime@1.7.0
     python_import_identities:
       - kind: prefix
         name: tool_system.ai_worker
   role:
     summary: provide a provider-neutral structured AI worker contract, deterministic fixture, bounded P14C adapter, and generic source-sealed P15C read-only benchmark control plane
-    responsibility_boundary: Preserve the P14C exact public synthetic proof while validating owner-only P15C policy, opaque credential references, caller-supplied content-addressed target packets and snapshots, a clean canonical execution tree, an atomic cumulative cost ledger, the exact two-provider by two-case matrix, fixed direct-TLS routes, structured JSON responses, cancellation, conservative cost settlement, and public evidence redaction. The P15C path performs no repository mutation, tools, provider web search, retry, fallback, proxy, response storage, production, cleanup, or rollback.
+    responsibility_boundary: Preserve the P14C exact public synthetic proof while validating owner-only P15C policy, opaque credential references, caller-supplied content-addressed target packets and snapshots, one bounded Hosted input bundle supplied through an encrypted GitHub Secret, a clean canonical execution tree, an atomic cumulative cost ledger, the exact two-provider by two-case matrix, fixed direct-TLS routes, structured JSON responses, cancellation, conservative cost settlement, and public evidence redaction. The P15C path performs no target-repository access or mutation, tools, provider web search, retry, fallback, proxy, raw-response storage, production, cleanup, or rollback.
   natural_owner_evidence_paths:
+    - .github/workflows/p15c-read-only-benchmark.yml
     - src/tool_system/ai_worker/__init__.py
     - src/tool_system/ai_worker/contract.py
     - src/tool_system/ai_worker/fixture_provider.py
@@ -44,6 +48,7 @@ module_compound_contract:
     - src/tool_system/ai_worker/p15c_benchmark.py
     - src/tool_system/ai_worker/p15c_controls.py
     - src/tool_system/ai_worker/p15c_entry.py
+    - src/tool_system/ai_worker/p15c_hosted.py
     - src/tool_system/ai_worker/runtime.py
   dependency_contract:
     basis: tool-system-static-python-import-dag
@@ -60,13 +65,16 @@ module_compound_contract:
       - owner_only_P15C_execution_policy_and_credential_references
       - caller_supplied_content_addressed_P15C_target_packet_and_snapshot
       - owner_only_P15C_atomic_usage_ledger
-    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, and mandatory no-mutation flags. P14C additionally accepts its exact hardened approval inputs. P15C accepts only an owner-only, expiring policy at or below the public 20 USD ceiling; exact opaque OpenAI and DeepSeek credential references; a caller-supplied exact commit and sorted content-addressed UTF-8 allowlist; an owner-only snapshot root; and an owner-only SQLite ledger. Qwen, mutation, retries, tools, provider web search, fallback, proxies, and response storage remain disabled.
+      - encrypted_GitHub_Secret_containing_bounded_P15C_Hosted_control_and_snapshot_bundle
+      - separately_named_OpenAI_and_DeepSeek_Hosted_Secret_references
+    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, and mandatory no-mutation flags. P14C additionally accepts its exact hardened approval inputs. P15C accepts only an owner-only, expiring policy at or below the public 20 USD ceiling; exact opaque OpenAI and DeepSeek credential references; a caller-supplied exact commit and sorted content-addressed UTF-8 allowlist; an owner-only snapshot root; and an owner-only SQLite ledger. The Hosted bridge additionally accepts one bounded base64 gzip-tar Secret containing only an exact private control object and its content-addressed snapshot, plus the existing separately named provider Secrets. Qwen, GLM, mutation, retries, tools, provider web search, fallback, proxies, and response storage remain disabled.
   output_contract:
     registered_outputs:
       - AIWorkerResult_v1
       - P14C_exact_approval_body_and_redacted_execution_receipt
       - P15C_public_preflight_and_aggregate_benchmark_receipts
-    boundary: Return structured output, stable errors, bounded usage and cost evidence, output hashes, exact public P14C approval material, and redacted P14C or P15C receipts. P15C public records contain no credential value, private repository identity, private commit, private path, target content, or raw provider response.
+      - P15C_Hosted_redacted_materialization_receipt
+    boundary: Return structured output, stable errors, bounded usage and cost evidence, output hashes, exact public P14C approval material, and redacted P14C or P15C receipts. P15C public records and Hosted artifacts contain no credential value, private repository identity, private commit, private path, target content, raw provider response, private bundle, private policy, credential store, target packet, or usage ledger.
   error_contract:
     registered_error_semantics:
       - stable_redacted_provider_neutral_errors
@@ -88,11 +96,16 @@ module_compound_contract:
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
           - src/tool_system/ai_worker/p15c_benchmark.py
-        boundary: P15C submits supplied snapshot bytes only when both the public lifecycle and exact private policy and per-provider transfer switches authorize it. Requests use the frozen model and surface, structured JSON, no tools, no provider web search, no retry or fallback, and no raw-response persistence.
+          - .github/workflows/p15c-read-only-benchmark.yml
+        boundary: P15C submits supplied snapshot bytes only when both the public lifecycle and exact private policy and per-provider transfer switches authorize it. Requests use the frozen model and surface, structured JSON, no tools, no provider web search, no retry or fallback, and no raw-response persistence. The one-attempt workflow may additionally upload only the two redacted public JSON receipts to a 14-day GitHub Actions artifact; it never uploads the private root, target bytes, credential values, raw responses, or ledger.
       - effect_class: data_write
         evidence_paths:
           - src/tool_system/ai_worker/p15c_controls.py
         boundary: P15C writes only reservation, settlement, release, or conservative uncertain-cost state to the caller-selected owner-only usage ledger; it never writes the credential store, policy, target packet, snapshot, target repository, or tool-system source.
+      - effect_class: data_write
+        evidence_paths:
+          - src/tool_system/ai_worker/p15c_hosted.py
+        boundary: The Hosted bridge creates exactly one new owner-only ephemeral root and writes only the validated policy, provider credential store, caller-supplied target packet and snapshot, plus the not-yet-created ledger path. It rejects unsafe archives and never writes the checkout or target repository.
       - effect_class: database_write
         evidence_paths:
           - src/tool_system/ai_worker/p15c_controls.py
@@ -103,8 +116,8 @@ module_compound_contract:
     interface_compatible_replacement: Preserve request validation, stable redacted errors, deterministic fixture defaults, all P14C authority and replay bindings, and every P15C source seal, owner-only input, opaque reference, target safety, private transfer, exact route/model/matrix, Qwen-disablement, cancellation, budget reservation, conservative failure charging, no-retry, no-tool, no-proxy, no-storage, and public-redaction invariant.
     interface_incompatible_change: Requires a new aggregate interface version and a separately authorized provider qualification or migration stage.
   rollback_contract:
-    rollback_identity: tool-system@1019b719547fe0b38341821e968dcae57a1f3697:ai_worker_runtime@1.6.0
-    method: Revert through a separately audited pull request and rerun contract, fixture-provider, P14C operator-entry and adapter, P15C private-control, fake-transport, cancellation, ledger, source-seal, budget, redaction, and packet-only no-I/O tests. This contract grants no rollback authority.
+    rollback_identity: tool-system@432ab42b56e45a4fc469301cef17b7c35324e0f8:ai_worker_runtime@1.7.0
+    method: Revert through a separately audited pull request and rerun contract, fixture-provider, P14C operator-entry and adapter, P15C private-control, Hosted-bundle, workflow, fake-transport, cancellation, ledger, source-seal, budget, redaction, and packet-only no-I/O tests. This contract grants no rollback authority.
   replacement_contract:
     activation_rule: Replace only after provider-neutral and deterministic behavior, the complete P14C contract, and the complete P15C source seal, owner-only controls, exact matrix, injected fake transport, cancellation, replay block, atomic ledger, conservative budget, structured response, and redaction suites pass with no real I/O.
     parallel_active_mainlines_allowed: false
@@ -122,8 +135,8 @@ module_compound_contract:
       mode: in-memory-plus-owner-only-p15c-ledger
       contract: Requests, fixture scenarios, packets, target bytes, source seals, capabilities, results, credentials, and raw responses remain process memory only. Durable P14C replay remains owned by durable-orchestrator; P15C writes only sanitized aggregate usage and cost state to its caller-selected owner-only SQLite ledger.
     artifact:
-      mode: stdout-only-redacted-json
-      contract: Operator entries emit exact public approval JSON or redacted receipts to stdout. P15C emits hashes and aggregate metrics only and creates no receipt file, cache, target projection, raw response artifact, or private-target serialization.
+      mode: stdout-and-bounded-hosted-redacted-json
+      contract: Operator entries emit exact public approval JSON or redacted receipts to stdout. The guarded Hosted job redirects only the redacted P15C materialization and aggregate benchmark receipts to two public JSON files and uploads those files for 14 days. It creates no public target projection, raw response artifact, credential serialization, policy serialization, private-target serialization, or ledger artifact.
     database:
       mode: delegated-p14c-ledger-plus-direct-owner-only-p15c-usage-ledger
       contract: P14C retains its process-authority ledger boundary. P15C owns one versioned single-host SQLite usage schema solely for atomic attempt reservation and settlement; exact shape drift blocks and no multi-host exactly-once guarantee is claimed.
@@ -149,9 +162,11 @@ module_compound_contract:
           - src/tool_system/ai_worker/p15c_benchmark.py
           - src/tool_system/ai_worker/p15c_controls.py
           - src/tool_system/ai_worker/p15c_entry.py
+          - src/tool_system/ai_worker/p15c_hosted.py
         evidence_symbols:
           - build_execution_source_seal
           - P15CBenchmarkExecutor
+          - materialize_hosted_private_inputs
         boundary_parameters:
           - repository_root
         constraint: Require canonical tool-system origin, an exact canonical tree, clean worktree, and content hashes for the frozen packet config and all P15C execution modules before credential resolution and again immediately before every transport attempt.
@@ -159,6 +174,7 @@ module_compound_contract:
         access: read-write
         evidence_paths:
           - src/tool_system/ai_worker/p15c_controls.py
+          - src/tool_system/ai_worker/p15c_hosted.py
         evidence_symbols:
           - load_execution_policy
           - OwnerOnlyCredentialResolver
@@ -168,7 +184,7 @@ module_compound_contract:
         boundary_parameters:
           - path
           - snapshot_root
-        constraint: Each caller-supplied private path must resolve to an owner-only, non-symlink boundary. Credential values are read only through exact opaque references and never written or serialized; target files are exact content-addressed UTF-8 regular files; only the separate usage ledger is writable.
+        constraint: Each caller-supplied private path must resolve to an owner-only, non-symlink boundary. The Hosted bridge writes provider Secret values only into its ephemeral owner-only credential store and never prints or uploads them; subsequent resolution uses exact opaque references. Target files are exact content-addressed UTF-8 regular files and the separate usage ledger is the only mutable execution state.
   external_system_contracts:
     declaration: declared
     systems:
@@ -182,6 +198,12 @@ module_compound_contract:
         evidence_paths:
           - src/tool_system/ai_worker/p15c_benchmark.py
         boundary: P15C may use exact model gpt-5.6-luna at POST https://api.openai.com/v1/responses with strict JSON schema output, store false, 2048 requested output tokens, a 25000 microUSD hard cap, one attempt, and no tools, redirects, proxy environment, retry, storage, or fallback. Only the exact private-control credential reference may resolve after all checks.
+      - system_id: github-actions-hosted-runner
+        mode: exact-one-attempt-p15c-bridge
+        evidence_paths:
+          - .github/workflows/p15c-read-only-benchmark.yml
+          - src/tool_system/ai_worker/p15c_hosted.py
+        boundary: One push to main may execute only when run attempt one, the event before SHA equals the frozen baseline, and the squash message contains the bound PR title and activation identifier. It checks out that exact SHA without persistent credentials, materializes Secrets outside the checkout, performs no target-repository checkout, and uploads only redacted receipts.
   non_claims:
     provider_execution_authorized: false
     target_repo_mutation_authorized: false

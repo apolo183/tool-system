@@ -44,10 +44,12 @@ P15C_FINDING_CATEGORIES = (
 )
 P15C_FINDING_SEVERITIES = ("critical", "high", "low", "medium")
 P15C_CRITICAL_SOURCE_PATHS = (
+    ".github/workflows/p15c-read-only-benchmark.yml",
     "config/p15c_execution_packet_freeze_v1.yaml",
     "src/tool_system/ai_worker/p15c_benchmark.py",
     "src/tool_system/ai_worker/p15c_controls.py",
     "src/tool_system/ai_worker/p15c_entry.py",
+    "src/tool_system/ai_worker/p15c_hosted.py",
 )
 P15C_DETERMINISTIC_EXPECTED_FINDING_PATHS = frozenset(
     {

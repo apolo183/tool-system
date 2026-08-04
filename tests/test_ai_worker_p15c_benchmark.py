@@ -231,10 +231,12 @@ def _git(root: Path, *args: str) -> str:
 def _sealed_repository(root: Path) -> tuple[Path, str, str]:
     root.mkdir()
     for relative in (
+        ".github/workflows/p15c-read-only-benchmark.yml",
         "config/p15c_execution_packet_freeze_v1.yaml",
         "src/tool_system/ai_worker/p15c_benchmark.py",
         "src/tool_system/ai_worker/p15c_controls.py",
         "src/tool_system/ai_worker/p15c_entry.py",
+        "src/tool_system/ai_worker/p15c_hosted.py",
     ):
         destination = root / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
