@@ -24,7 +24,7 @@ bounded_closure:
   frozen_before_execution:
     task_identity: PROVIDER-MODE-AI-WORKER-RUNTIME-REALIGNMENT-v1
     baseline_commit: 149296ff5e87e6b18a4982a9046012fd3edeb1b0
-    allowed_scope: exact_7_paths_listed_below
+    allowed_scope: exact_9_paths_listed_below
     acceptance_set:
       - API mode is disabled unless repository-external configuration explicitly enables it
       - key presence is not an activation or authorization input
@@ -68,6 +68,7 @@ scope:
     - src/tool_system/ai_worker/__init__.py
     - src/tool_system/ai_worker/runtime.py
     - tests/test_ai_worker_provider_mode.py
+    - tests/test_repo_manifest.py
   out_of_scope:
     - adaptive-model-portfolio source or contract
     - provider packets operator credentials CI workflows process authority and replay snapshots
@@ -103,7 +104,7 @@ verification:
     - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
     - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
   pass_conditions:
-    - exact eight-file diff and zero forbidden-path change
+    - exact nine-file diff and zero forbidden-path change
     - default-disabled key-non-authority skip no-available-provider exact-selection and zero-I/O tests pass
     - no external operation P15 acceptance or P16 entry
 publication:
