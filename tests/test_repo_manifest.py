@@ -118,7 +118,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
         )
     )
 
-    assert result["status"] == "PASS"
+    assert result["status"] == "PASS", result["reasons"]
     assert result["reasons"] == []
     assert result["parser_mode"] == EXACT_FORMAL_PARSER_MODE
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
@@ -335,7 +335,7 @@ def test_exact_manifest_blocks_missing_module_registry_row() -> None:
 def test_current_exact_parser_mode_is_active_in_local_validator() -> None:
     result = validate_repo_manifest(MANIFEST, ROOT)
 
-    assert result["status"] == "PASS"
+    assert result["status"] == "PASS", result["reasons"]
     assert result["parser_mode"] == EXACT_FORMAL_PARSER_MODE
     assert not any("parse-only" in reason for reason in result["reasons"])
 
