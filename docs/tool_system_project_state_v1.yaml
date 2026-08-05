@@ -741,6 +741,63 @@ p15c_qwen_runtime_adapter:
   p15c_stage_accepted: false
   p15d_authorized: false
   authority_effect: none
+p15c_qwen_economics_consistency_correction:
+  task_identity: P15C-QWEN-ECONOMICS-CONSISTENCY-CORRECTION-v1
+  authorization_source: standing_small_milestone_authorization_and_chat_user_message:2026-08-05-agreed-two-stage-openai-qwen-plan
+  canonical_source_baseline_commit: 20686afbef73d5985f4aac0d542eabe7f3fdadff
+  canonical_source_baseline_tree: 0eca08ed3e32850d93b39dfdb151ca86962e59fa
+  task_manifest: examples/task_manifests/tool_system_p15c_qwen_economics_consistency_correction_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15c_qwen_economics_consistency_correction_v1.yaml
+  correction_record: docs/reports/p15c_qwen_economics_consistency_correction.md
+  status: accepted_only_on_guarded_squash_merge_no_execution
+  module:
+    current_module_id: ai_worker_runtime
+    canonical_module_id: ai-worker-runtime
+    previous_module_version: 1.9.0
+    module_version: 1.9.1
+    aggregate_interface_id: ai-worker-runtime-api
+    aggregate_interface_version: 1.0.0
+  corrected_invariant:
+    provider_id: qwen
+    exact_model_version: qwen3.7-plus-2026-05-26
+    max_input_tokens: 65536
+    input_micro_cny_per_token: 2
+    max_output_tokens: 8192
+    output_micro_cny_per_token: 8
+    previous_calculated_worst_case_micro_cny: 192000
+    current_calculated_worst_case_micro_cny: 196608
+    per_attempt_hard_cap_micro_cny: 250000
+    applies_to_selected_execution_packet: true
+    stale_selected_packet_failure_code: PACKET_PRICE_DRIFT
+  canonical_packet_catalog_sha256: 509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962
+  canonical_packet_catalog_changed: false
+  qwen_selected_in_canonical_matrix: false
+  qwen_funding_attested: false
+  local_validation:
+    focused_pytest: 122_passed
+    full_pytest: 687_passed
+    python_compilation: passed
+    ruff_0_16_0: passed
+    governance_validators: passed
+    packet_only_zero_io: passed
+    default_preflight_before_private_input: PROVIDER_EXACT_VERSION_UNPINNABLE
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    target_packet_reads: 0
+    target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_repository_provider_transfers: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  p15c_stage_accepted: false
+  p15d_authorized: false
+  authority_effect: none
 p15c_local_operator_configuration:
   authorization_source: chat_user_message:2026-08-04-agreed-local-operator-configuration
   canonical_source_baseline_commit: 432ab42b56e45a4fc469301cef17b7c35324e0f8

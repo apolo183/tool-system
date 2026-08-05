@@ -37,6 +37,17 @@ QWEN_ADAPTER_MANIFEST = (
 QWEN_ADAPTER_PLAN = (
     ROOT / "examples/change_plans/tool_system_p15c_qwen_runtime_adapter_v1.yaml"
 )
+QWEN_ECONOMICS_REPORT = (
+    ROOT / "docs/reports/p15c_qwen_economics_consistency_correction.md"
+)
+QWEN_ECONOMICS_MANIFEST = (
+    ROOT
+    / "examples/task_manifests/tool_system_p15c_qwen_economics_consistency_correction_v1.yaml"
+)
+QWEN_ECONOMICS_PLAN = (
+    ROOT
+    / "examples/change_plans/tool_system_p15c_qwen_economics_consistency_correction_v1.yaml"
+)
 PROJECT_STATE = ROOT / "docs/tool_system_project_state_v1.yaml"
 REPO_WRITE_POLICY = ROOT / "policy/repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy/autonomy_policy.yaml"
@@ -58,14 +69,26 @@ QWEN_ADAPTER_FILES = {
     "tests/test_module_registry.py",
     "tests/test_p15c_local_operator_config.py",
 }
+QWEN_ECONOMICS_FILES = {
+    "config/module_registry_v1.yaml",
+    "docs/modules/ai-worker-runtime-contract-v1.md",
+    "docs/reports/p15c_qwen_economics_consistency_correction.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p15c_qwen_economics_consistency_correction_v1.yaml",
+    "examples/task_manifests/tool_system_p15c_qwen_economics_consistency_correction_v1.yaml",
+    "src/tool_system/ai_worker/p15c_benchmark.py",
+    "tests/test_ai_worker_p15c_benchmark.py",
+    "tests/test_module_registry.py",
+}
 CANONICAL_PACKET_SHA256 = (
     "509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962"
 )
 
-EXPECTED_RAW_SHA256 = "b9154a0b24121b2c8340040e81ad12399cff4b2d8bd7af50ff881b4632435c4f"
-EXPECTED_BYTE_LENGTH = 104_851
+EXPECTED_RAW_SHA256 = "d80e752f8780d84d9fba40230f257a179957ef4da66feafe37447c0468cbecba"
+EXPECTED_BYTE_LENGTH = 105_068
 EXPECTED_SEMANTIC_SHA256 = (
-    "6a1d447e1cf5e26527ea9a56ab6704ae3ac161912bba21145defa178999bfcb1"
+    "59a86fa0792d2ab593c8738dedf0326a35f00816ec4516e324bb93475e5f7d8c"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 106
 EXPECTED_MODULE_IDS = {
@@ -449,6 +472,47 @@ def test_qwen_runtime_adapter_pair_scope_and_zero_io_state_validate() -> None:
     assert state["p15d_authorized"] is False
     assert "ACCEPTED_ONLY_ON_GUARDED_SQUASH_MERGE_NO_EXECUTION" in report
     assert "qwen3.7-plus-2026-05-26" in report
+    assert "provider_invocations: 0" in report
+
+
+def test_qwen_economics_correction_pair_scope_and_zero_io_state_validate() -> None:
+    manifest_result = validate_task_manifest(
+        QWEN_ECONOMICS_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(QWEN_ECONOMICS_PLAN)
+    manifest = load_yaml_file(QWEN_ECONOMICS_MANIFEST)
+    plan = load_yaml_file(QWEN_ECONOMICS_PLAN)
+    state = load_yaml_file(PROJECT_STATE)["p15c_qwen_economics_consistency_correction"]
+    report = QWEN_ECONOMICS_REPORT.read_text(encoding="utf-8")
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == QWEN_ECONOMICS_FILES
+    assert set(manifest["scope"]["in_scope"]) == QWEN_ECONOMICS_FILES
+    assert set(plan["changed_files"]) == QWEN_ECONOMICS_FILES
+    assert len(QWEN_ECONOMICS_FILES) == 10
+    assert hashlib.sha256(PACKET_CONFIG.read_bytes()).hexdigest() == (
+        CANONICAL_PACKET_SHA256
+    )
+    assert state["module"]["previous_module_version"] == "1.9.0"
+    assert state["module"]["module_version"] == "1.9.1"
+    assert (
+        state["corrected_invariant"]["current_calculated_worst_case_micro_cny"]
+        == 196_608
+    )
+    assert state["corrected_invariant"]["per_attempt_hard_cap_micro_cny"] == (250_000)
+    assert state["canonical_packet_catalog_changed"] is False
+    assert state["qwen_selected_in_canonical_matrix"] is False
+    assert state["qwen_funding_attested"] is False
+    assert set(state["source_stage_evidence"].values()) == {0}
+    assert state["p15c_stage_accepted"] is False
+    assert state["p15d_authorized"] is False
+    assert "ACCEPTED_ONLY_ON_GUARDED_SQUASH_MERGE_NO_EXECUTION" in report
+    assert "196608 microCNY" in report
     assert "provider_invocations: 0" in report
 
 

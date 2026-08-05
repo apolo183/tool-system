@@ -390,7 +390,7 @@ def load_p15c_provider_packets(
             "path": "/compatible-mode/v1/chat/completions",
             "base_path": "/compatible-mode/v1",
             "billing_currency": "CNY",
-            "calculated_worst_case_native_microunits": 192_000,
+            "calculated_worst_case_native_microunits": 196_608,
             "per_attempt_hard_cap_native_microunits": 250_000,
             "calculated_worst_case_field": "calculated_worst_case_micro_cny",
             "per_attempt_hard_cap_field": "per_attempt_hard_cap_micro_cny",
@@ -443,10 +443,13 @@ def load_p15c_provider_packets(
         if (
             not isinstance(price, dict)
             or price.get("currency") != expected["billing_currency"]
-            or price.get(str(expected["calculated_worst_case_field"]))
-            != expected["calculated_worst_case_native_microunits"]
             or price.get(str(expected["per_attempt_hard_cap_field"]))
             != expected["per_attempt_hard_cap_native_microunits"]
+            or (
+                provider_id in execution_provider_ids
+                and price.get(str(expected["calculated_worst_case_field"]))
+                != expected["calculated_worst_case_native_microunits"]
+            )
         ):
             raise P15CBenchmarkError(
                 "PACKET_PRICE_DRIFT",

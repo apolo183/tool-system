@@ -82,7 +82,7 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:agent_worker_runtime@1.0.0
     - current_module_id: ai_worker_runtime
       canonical_module_id: ai-worker-runtime
-      current_module_version: 1.9.0
+      current_module_version: 1.9.1
       aggregate_interface_id: ai-worker-runtime-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
@@ -90,8 +90,8 @@ mapping_contract:
         - {kind: prefix, name: tool_system.ai_worker}
       direct_consumer_module_ids:
         - adaptive_model_portfolio_and_economics
-      change_risk: "critical: the default remains fixture-only, P14C retains its grant-bound proof, P15C adds a dormant exact Qwen route and conservative native-currency accounting, and the unchanged canonical matrix still fails closed before private input; Hosted CI remains fake-I/O only"
-      rollback_identity: tool-system@c4f7527a8a9f859c1f3ed64bfcc93393331dfc14:ai_worker_runtime@1.8.1
+      change_risk: "critical: the default remains fixture-only, P14C retains its grant-bound proof, selected Qwen packets require the corrected 196608 microCNY ceiling, and the unchanged canonical matrix still fails closed before private input; Hosted CI remains fake-I/O only"
+      rollback_identity: tool-system@20686afbef73d5985f4aac0d542eabe7f3fdadff:ai_worker_runtime@1.9.0
     - current_module_id: adaptive_model_portfolio_and_economics
       canonical_module_id: adaptive-model-portfolio-and-economics
       current_module_version: 1.0.0
