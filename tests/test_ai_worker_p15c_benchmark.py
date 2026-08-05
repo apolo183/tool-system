@@ -244,7 +244,7 @@ class _Cancelled:
 
 class _ForbiddenPrivateBoundary:
     def __getattr__(self, _: str) -> object:
-        raise AssertionError("exact-version blocker crossed a private boundary")
+        raise AssertionError("provider-packet blocker crossed a private boundary")
 
 
 def _git(root: Path, *args: str) -> str:
@@ -409,35 +409,35 @@ def _executor_fixture(
     return executor, packets, cases, resolver, ledger
 
 
-def test_frozen_packets_expose_exact_routes_and_block_unpinnable_deepseek() -> None:
+def test_frozen_packets_expose_exact_openai_qwen_routes_and_funding_block() -> None:
     packets = load_p15c_provider_packets(PACKET_CONFIG)
 
-    assert tuple(packet.provider_id for packet in packets) == ("deepseek", "openai")
+    assert tuple(packet.provider_id for packet in packets) == ("openai", "qwen")
     assert [(packet.host, packet.path) for packet in packets] == [
-        ("api.deepseek.com", "/chat/completions"),
         ("api.openai.com", "/v1/responses"),
+        ("dashscope.aliyuncs.com", "/compatible-mode/v1/chat/completions"),
     ]
-    assert all(
-        packet.billing_currency == "USD"
-        and packet.per_attempt_hard_cap_native_microunits == 25_000
-        for packet in packets
-    )
+    assert packets[0].billing_currency == "USD"
+    assert packets[0].per_attempt_hard_cap_native_microunits == 25_000
+    assert packets[1].billing_currency == "CNY"
+    assert packets[1].per_attempt_hard_cap_native_microunits == 250_000
     assert all(packet.public_record()["max_retries"] == 0 for packet in packets)
-    assert packets[0].exact_model_version == "DeepSeek-V4-Flash-0731"
-    assert packets[0].packet_status == "BLOCKED_EXACT_VERSION_UNPINNABLE"
-    assert packets[0].execution_blocker == "EXACT_MODEL_VERSION_UNPINNABLE"
-    assert packets[1].packet_status == "FROZEN_NOT_ACTIVATED"
+    assert packets[0].exact_model_version == "gpt-5.6-luna"
+    assert packets[0].packet_status == "FROZEN_NOT_ACTIVATED"
+    assert packets[0].execution_blocker is None
+    assert packets[1].exact_model_version == "qwen3.7-plus-2026-05-26"
+    assert packets[1].packet_status == "BLOCKED_NOT_FUNDED"
     assert packets[1].execution_blocker is None
-    assert "qwen" not in json.dumps([packet.public_record() for packet in packets])
+    assert "deepseek" not in json.dumps([packet.public_record() for packet in packets])
 
 
-def test_canonical_packet_set_blocks_execution_on_unpinnable_exact_version() -> None:
+def test_canonical_packet_set_blocks_execution_on_unfunded_qwen() -> None:
     with pytest.raises(P15CBenchmarkError) as caught:
         assert_p15c_provider_packets_execution_eligible(
             load_p15c_provider_packets(PACKET_CONFIG)
         )
 
-    assert caught.value.code == "PROVIDER_EXACT_VERSION_UNPINNABLE"
+    assert caught.value.code == "PROVIDER_PACKET_BLOCKED"
 
 
 def test_direct_executor_blocks_before_policy_ledger_credentials_or_transport(
@@ -459,11 +459,11 @@ def test_direct_executor_blocks_before_policy_ledger_credentials_or_transport(
 
     with pytest.raises(P15CBenchmarkError) as caught:
         executor.preflight(packets, cases)
-    assert caught.value.code == "PROVIDER_EXACT_VERSION_UNPINNABLE"
+    assert caught.value.code == "PROVIDER_PACKET_BLOCKED"
 
     with pytest.raises(P15CBenchmarkError) as caught:
         executor.execute(packets[1], cases[0])
-    assert caught.value.code == "PROVIDER_EXACT_VERSION_UNPINNABLE"
+    assert caught.value.code == "PROVIDER_PACKET_BLOCKED"
 
 
 def test_deterministic_corpus_is_exact_content_addressed_twelve_file_set() -> None:
@@ -504,21 +504,21 @@ def test_requests_use_provider_specific_structured_json_and_no_tools() -> None:
     packets = load_p15c_provider_packets(PACKET_CONFIG)
     case = _cases()[0]
 
-    deepseek = json.loads(build_p15c_request(packets[0], case)[0])
-    openai = json.loads(build_p15c_request(packets[1], case)[0])
+    openai = json.loads(build_p15c_request(packets[0], case)[0])
+    qwen = json.loads(build_p15c_request(packets[1], case)[0])
 
-    assert deepseek["model"] == "deepseek-v4-flash"
-    assert deepseek["response_format"] == {"type": "json_object"}
-    assert deepseek["thinking"] == {"type": "disabled"}
-    assert deepseek["stream"] is False
-    assert deepseek["tools"] == []
     assert openai["model"] == "gpt-5.6-luna"
     assert openai["store"] is False
     assert openai["tools"] == []
     assert openai["text"]["format"]["type"] == "json_schema"
     assert openai["text"]["format"]["strict"] is True
-    assert "operator/private-target" not in json.dumps(deepseek)
+    assert qwen["model"] == "qwen3.7-plus-2026-05-26"
+    assert qwen["response_format"] == {"type": "json_object"}
+    assert qwen["enable_thinking"] is False
+    assert qwen["stream"] is False
+    assert qwen["tools"] == []
     assert "operator/private-target" not in json.dumps(openai)
+    assert "operator/private-target" not in json.dumps(qwen)
 
 
 def test_qwen_exact_snapshot_request_response_and_cny_cost_are_bounded(
@@ -576,6 +576,12 @@ def test_selected_qwen_rejects_stale_worst_case_native_ceiling(
         "case_ids": ["deterministic-corpus", "private-target"],
         "max_provider_invocations": 4,
     }
+    qwen = next(
+        packet
+        for packet in source["provider_packets"]
+        if packet["provider_id"] == "qwen"
+    )
+    qwen["pricing_snapshot"]["calculated_worst_case_micro_cny"] = 192_000
     candidate = tmp_path / "stale-qwen-price.yaml"
     candidate.write_text(yaml.safe_dump(source, sort_keys=False), encoding="utf-8")
 
@@ -628,14 +634,18 @@ def test_provider_response_parsing_metrics_and_cost_are_redacted_and_bounded(
         packet, _provider_response(packet.provider_id, next(iter(case.allowed_paths)))
     )
     metrics = build_p15c_metrics(parsed.output, case)
-    cost = calculate_p15c_cost_micro_usd(packet, parsed)
+    cost = calculate_p15c_cost_micro_usd(
+        packet,
+        parsed,
+        cny_to_micro_usd_ceiling=(1_000_000 if packet.provider_id == "qwen" else None),
+    )
 
     assert parsed.input_tokens == 100
     assert parsed.output_tokens == 10
     assert metrics["schema_valid"] is True
     assert metrics["grounded_path_ratio_micros"] == 1_000_000
     assert metrics["expected_path_recall_micros"] == 1_000_000
-    assert cost == (34 if packet.provider_id == "deepseek" else 29)
+    assert cost == (29 if packet.provider_id == "openai" else 280)
 
     drifted = json.loads(
         _provider_response(packet.provider_id, next(iter(case.allowed_paths))).body

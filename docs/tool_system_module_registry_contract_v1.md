@@ -94,15 +94,15 @@ mapping_contract:
       rollback_identity: tool-system@20686afbef73d5985f4aac0d542eabe7f3fdadff:ai_worker_runtime@1.9.0
     - current_module_id: adaptive_model_portfolio_and_economics
       canonical_module_id: adaptive-model-portfolio-and-economics
-      current_module_version: 1.0.0
+      current_module_version: 1.1.0
       aggregate_interface_id: adaptive-model-portfolio-and-economics-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.provider_portfolio}
       direct_consumer_module_ids: []
-      change_risk: "medium: isolated fixture profiling, hard-floor routing, failure disposition, and non-authorizing economic evidence boundary"
-      rollback_identity: tool-system@f912add44845be9d60021333c6792e4ecf6a142b:adaptive_model_portfolio_and_economics@absent
+      change_risk: "medium: isolated fixture profiling plus one exact non-executing OpenAI/Qwen catalog and matrix record; Qwen remains funding-blocked and runtime consumption remains fail-closed"
+      rollback_identity: tool-system@0908a1d2ed8e88554fa4bd1e73bb7c4c4a88807b:adaptive_model_portfolio_and_economics@1.0.0
     - current_module_id: durable_orchestrator
       canonical_module_id: durable-orchestrator
       current_module_version: 1.1.0

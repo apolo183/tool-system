@@ -1,16 +1,23 @@
 schema_version: 1
 packet_set_id: p15c-execution-packet-freeze-v1
-status: P15C_PACKET_FROZEN_PRE_ENTRY_NO_EXECUTION_AUTHORITY
-frozen_on: 2026-08-03
+status: P15C_OPENAI_QWEN_MATRIX_FROZEN_BLOCKED_NOT_FUNDED
+frozen_on: 2026-08-05
 authority:
-  packet: P15C-EXECUTION-PACKET-FREEZE-v1
-  evidence_completion_source: chat_user_message:2026-08-03-provider-repository-budget-and-read-only-research-scope
+  packet: P15C-OPENAI-QWEN-MATRIX-REFREEZE-v1
+  evidence_completion_source: chat_user_message:2026-08-05-agreed-two-stage-openai-qwen-plan
+  lifecycle_authorization_id: P15C-CROSS-PROVIDER-READ-ONLY-BENCHMARK-LIFECYCLE-v1
+  lifecycle_authorization_recorded: true
   execution_authorized: false
   p15c_stage_entry_authorized: false
   provider_invocations_authorized: 0
   benchmark_executions_authorized: 0
   credential_value_access_authorized: false
   private_repository_provider_transfer_authorized: false
+  private_repository_provider_transfer_authorized_by_provider:
+    deepseek: false
+    openai: true
+    qwen: true
+  catalog_record_grants_runtime_transfer: false
   target_mutation_authorized: false
   production_authorized: false
   cleanup_authorized: false
@@ -19,14 +26,16 @@ authority:
 tool_system_baseline:
   repository: apolo183/tool-system
   branch: main
-  commit: f30f43512acfa497afd9f27dcce7cf4a0ebeb101
-  tree: 1c6b29bdcb9b823e7e063d5050587df45cd2f126
-  reanchored_by: P15C-DEEPSEEK-PACKET-EVIDENCE-CORRECTION-v1
-  previous_commit: 1ede788b8b1c36bcc224cde15a5f6462c9b51938
-  previous_tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
-  compatibility_basis: exact_deepseek_model_version_and_execution_surface_evidence_correction
+  commit: 0908a1d2ed8e88554fa4bd1e73bb7c4c4a88807b
+  tree: c053dd93999c5ef2f9112a7638b5fd2c00acb676
+  reanchored_by: P15C-OPENAI-QWEN-MATRIX-REFREEZE-v1
+  previous_commit: 20686afbef73d5985f4aac0d542eabe7f3fdadff
+  previous_tree: 0eca08ed3e32850d93b39dfdb151ca86962e59fa
+  compatibility_basis: accepted_qwen_runtime_adapter_economics_correction_and_exact_openai_qwen_matrix_refreeze
   provider_model_economics_corpus_and_limit_semantics_changed: true
-  execution_surface_corrected: true
+  execution_surface_corrected: false
+  execution_matrix_changed: true
+  runtime_source_changed: false
   p15c_execution_authority_added: false
 
 private_control_plane:
@@ -131,6 +140,11 @@ private_target_packet_contract:
     - mutation_authority
   benchmark_read_authorized: false
   provider_transfer_authorized: false
+  provider_transfer_authorization_recorded_by_provider:
+    deepseek: false
+    openai: true
+    qwen: true
+  provider_transfer_still_requires_private_runtime_gates: true
   mutation_authorized: false
   redaction_and_context_rules:
     exact_file_allowlist_required: true
@@ -157,6 +171,15 @@ common_attempt_limits: &common_attempt_limits
   provider_web_search_enabled: false
   response_storage_requested: false
 
+execution_matrix:
+  provider_ids:
+    - openai
+    - qwen
+  case_ids:
+    - deterministic-corpus
+    - private-target
+  max_provider_invocations: 4
+
 provider_packets:
   - packet_id: P15C-DEEPSEEK-V4-FLASH-READONLY-v1
     provider_id: deepseek
@@ -172,7 +195,7 @@ provider_packets:
     credential_value_inspected: false
     operator_availability_attestation: available
     official_health_snapshot: operational_on_2026-08-03
-    private_repository_policy_fit: blocked_pending_explicit_provider_transfer_authorization
+    private_repository_policy_fit: excluded_from_selected_execution_matrix
     official_limits:
       context_tokens: 1000000
       max_output_tokens: 384000
@@ -210,7 +233,7 @@ provider_packets:
     credential_value_inspected: false
     operator_availability_attestation: available
     official_health_snapshot: operational_on_2026-08-03
-    private_repository_policy_fit: blocked_pending_explicit_provider_transfer_authorization
+    private_repository_policy_fit: transfer_authorized_but_private_runtime_gates_required
     official_limits:
       context_tokens: 1050000
       max_output_tokens: 128000
@@ -224,7 +247,7 @@ provider_packets:
       calculated_worst_case_micro_usd: 22400
       per_attempt_hard_cap_micro_usd: 25000
     data_policy:
-      repository_content_transfer_allowed: false
+      repository_content_transfer_allowed: true
       api_training_default: false
       default_abuse_monitoring_retention_days_max: 30
       response_storage_requested: false
@@ -245,10 +268,10 @@ provider_packets:
     credential_reference: private-control:credentials#providers.qwen.api_key
     credential_value_inspected: false
     operator_availability_attestation: not_funded
-    private_repository_policy_fit: blocked_pending_explicit_provider_transfer_authorization
+    private_repository_policy_fit: transfer_authorized_but_blocked_not_funded_and_private_runtime_gates_required
     official_limits:
       context_tokens: 1000000
-      max_output_tokens: 65536
+      max_output_tokens: 131072
       snapshot_rpm: 600
       snapshot_tpm: 1000000
     attempt_limits: *common_attempt_limits
@@ -257,18 +280,18 @@ provider_packets:
       input_range_max_tokens: 256000
       per_million_input: 2
       per_million_output: 8
-      calculated_worst_case_micro_cny: 192000
+      calculated_worst_case_micro_cny: 196608
       per_attempt_hard_cap_micro_cny: 250000
       shared_usd_budget_allocation_micro_usd: 0
     data_policy:
-      repository_content_transfer_allowed: false
+      repository_content_transfer_allowed: true
       provider_declares_customer_data_used_for_training: false
       transport_encryption_declared: true
     unblock_requires:
       - funded balance or quota evidence without recording a credential value
       - current currency conversion policy if a USD allocation is assigned
       - fresh health and availability preflight
-      - explicit private repository provider-transfer authorization
+      - owner-private policy and target-packet provider-transfer switches matching the recorded OpenAI and Qwen authorization
       - separately authorized P15C execution
     official_evidence:
       model_price_limits: https://help.aliyun.com/zh/model-studio/qwen3-7-plus

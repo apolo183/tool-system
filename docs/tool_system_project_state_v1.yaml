@@ -16,7 +16,7 @@ current_phase:
   next_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
   next_stage_authorized: true
   active_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
-  active_stage_status: blocked_deepseek_exact_version_unpinnable_no_execution
+  active_stage_status: openai_qwen_matrix_frozen_blocked_qwen_not_funded_no_execution
   next_phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   next_phase_entry_authorized: false
 prior_acceptance:
@@ -907,6 +907,83 @@ target_identity_decoupling:
   cleanup_operations: 0
   rollback_operations: 0
   p15c_authorized: false
+p15c_openai_qwen_matrix_refreeze:
+  task_identity: P15C-OPENAI-QWEN-MATRIX-REFREEZE-v1
+  authorization_source: chat_user_message:2026-08-05-agreed-two-stage-openai-qwen-plan
+  canonical_source_baseline_commit: 0908a1d2ed8e88554fa4bd1e73bb7c4c4a88807b
+  canonical_source_baseline_tree: c053dd93999c5ef2f9112a7638b5fd2c00acb676
+  task_manifest: examples/task_manifests/tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml
+  acceptance_record: docs/reports/p15c_openai_qwen_matrix_refreeze.md
+  status: accepted_only_on_guarded_squash_merge_blocked_not_funded_no_execution
+  module:
+    current_module_id: adaptive_model_portfolio_and_economics
+    canonical_module_id: adaptive-model-portfolio-and-economics
+    previous_module_version: 1.0.0
+    module_version: 1.1.0
+    aggregate_interface_id: adaptive-model-portfolio-and-economics-api
+    aggregate_interface_version: 1.0.0
+  execution_matrix:
+    provider_ids:
+      - openai
+      - qwen
+    case_ids:
+      - deterministic-corpus
+      - private-target
+    max_provider_invocations: 4
+  provider_dispositions:
+    deepseek:
+      packet_status: BLOCKED_EXACT_VERSION_UNPINNABLE
+      selected: false
+      bypass_allowed: false
+    openai:
+      exact_model_version: gpt-5.6-luna
+      packet_status: FROZEN_NOT_ACTIVATED
+      selected: true
+    qwen:
+      exact_model_version: qwen3.7-plus-2026-05-26
+      packet_status: BLOCKED_NOT_FUNDED
+      selected: true
+      funding_attested: false
+      official_max_output_tokens: 131072
+      calculated_worst_case_micro_cny: 196608
+      per_attempt_hard_cap_micro_cny: 250000
+      shared_usd_budget_allocation_micro_usd: 0
+  provider_transfer_authorization_record:
+    deepseek: false
+    openai: true
+    qwen: true
+    grants_runtime_transfer: false
+    private_policy_and_target_packet_match_required: true
+  local_validation:
+    focused_pytest: 152_passed
+    full_pytest: 689_passed
+    python_compilation: passed
+    ruff_0_16_0: passed
+    governance_validators: passed
+    exact_twelve_path_and_forbidden_diff: passed
+    secret_and_project_neutrality_scans: passed
+    packet_only_zero_io: passed
+    default_preflight_before_private_input: PROVIDER_PACKET_BLOCKED
+  source_stage_evidence:
+    runtime_source_changes: 0
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    target_packet_reads: 0
+    target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_repository_provider_transfers: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  qwen_funding_attested: false
+  p15c_stage_accepted: false
+  p15d_authorized: false
+  authority_effect: none
 authorization_boundaries:
   state_file_grants_authority: false
   live_model_provider_execution_authorized: true

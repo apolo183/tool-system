@@ -73,6 +73,21 @@ EXACT_VERSION_BLOCK_PLAN = (
     / "change_plans"
     / "tool_system_p15c_deepseek_exact_version_block_v1.yaml"
 )
+OPENAI_QWEN_MATRIX_REPORT = (
+    ROOT / "docs" / "reports" / "p15c_openai_qwen_matrix_refreeze.md"
+)
+OPENAI_QWEN_MATRIX_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml"
+)
+OPENAI_QWEN_MATRIX_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml"
+)
 
 EXACT_FILES = {
     "REPO_MANIFEST.md",
@@ -121,6 +136,20 @@ EXACT_VERSION_BLOCK_FILES = {
     "tests/test_module_registry.py",
     "tests/test_p15c_execution_packet_freeze.py",
 }
+OPENAI_QWEN_MATRIX_FILES = {
+    "config/module_registry_v1.yaml",
+    "config/p15c_execution_packet_freeze_v1.yaml",
+    "docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md",
+    "docs/reports/p15c_openai_qwen_matrix_refreeze.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml",
+    "examples/task_manifests/tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml",
+    "tests/test_ai_worker_p15c_benchmark.py",
+    "tests/test_ai_worker_p15c_entry.py",
+    "tests/test_module_registry.py",
+    "tests/test_p15c_execution_packet_freeze.py",
+}
 REFREEZE_PACKET_SEMANTICS_SHA256 = (
     "03f99a7e43ce7f3a381d59231c8a9d31ec1a9324922639126fa2268ff6d42626"
 )
@@ -129,6 +158,9 @@ CORRECTED_PACKET_SEMANTICS_SHA256 = (
 )
 BLOCKED_PACKET_SEMANTICS_SHA256 = (
     "9d856fe6821f340b4ae372572f42bf4da4c45c318f7cbd0ba1c6a42b8aaa3d4b"
+)
+OPENAI_QWEN_MATRIX_PACKET_SEMANTICS_SHA256 = (
+    "9c0170c83143ed99d759f9932d42b8d407417f50af19f1a52d61e5417c9cbf95"
 )
 
 
@@ -188,7 +220,6 @@ def test_canonical_refreeze_task_pair_baseline_and_state_validate() -> None:
     plan_result = validate_change_plan(REFREEZE_PLAN)
     manifest = load_yaml_file(REFREEZE_MANIFEST)
     plan = load_yaml_file(REFREEZE_PLAN)
-    packets = load_yaml_file(PACKETS)
     state = load_yaml_file(PROJECT_STATE)
 
     assert manifest_result["status"] == "PASS"
@@ -213,7 +244,7 @@ def test_canonical_refreeze_task_pair_baseline_and_state_validate() -> None:
     assert refreeze["p15c_stage_accepted"] is False
 
 
-def test_deepseek_packet_correction_pair_and_current_baseline_validate() -> None:
+def test_deepseek_packet_correction_pair_and_historical_baseline_validate() -> None:
     manifest_result = validate_task_manifest(
         CORRECTION_MANIFEST,
         REPO_WRITE_POLICY,
@@ -222,7 +253,6 @@ def test_deepseek_packet_correction_pair_and_current_baseline_validate() -> None
     plan_result = validate_change_plan(CORRECTION_PLAN)
     manifest = load_yaml_file(CORRECTION_MANIFEST)
     plan = load_yaml_file(CORRECTION_PLAN)
-    packets = load_yaml_file(PACKETS)
     state = load_yaml_file(PROJECT_STATE)
 
     assert manifest_result["status"] == "PASS"
@@ -234,20 +264,10 @@ def test_deepseek_packet_correction_pair_and_current_baseline_validate() -> None
     assert set(plan["changed_files"]) == CORRECTION_EXACT_FILES
     assert len(CORRECTION_EXACT_FILES) == 7
 
-    baseline = packets["tool_system_baseline"]
-    assert baseline["commit"] == "f30f43512acfa497afd9f27dcce7cf4a0ebeb101"
-    assert baseline["tree"] == "1c6b29bdcb9b823e7e063d5050587df45cd2f126"
-    assert baseline["previous_commit"] == (
-        "1ede788b8b1c36bcc224cde15a5f6462c9b51938"
-    )
-    assert baseline["provider_model_economics_corpus_and_limit_semantics_changed"] is True
-    assert baseline["execution_surface_corrected"] is True
-    assert baseline["p15c_execution_authority_added"] is False
-
-    correction = state["p15c_packet_freeze"][
-        "deepseek_packet_evidence_correction"
-    ]
+    correction = state["p15c_packet_freeze"]["deepseek_packet_evidence_correction"]
     assert correction["status"] == "accepted_on_guarded_squash_merge"
+    assert correction["baseline_commit"] == ("f30f43512acfa497afd9f27dcce7cf4a0ebeb101")
+    assert correction["baseline_tree"] == ("1c6b29bdcb9b823e7e063d5050587df45cd2f126")
     assert correction["packet_semantics_excluding_tool_system_baseline_sha256"] == (
         CORRECTED_PACKET_SEMANTICS_SHA256
     )
@@ -296,14 +316,52 @@ def test_exact_version_block_pair_and_fail_closed_state_validate() -> None:
     assert block["p15d_authorized"] is False
 
 
-def test_current_blocked_packet_semantics_are_content_addressed() -> None:
+def test_openai_qwen_matrix_pair_current_baseline_and_state_validate() -> None:
+    manifest_result = validate_task_manifest(
+        OPENAI_QWEN_MATRIX_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(OPENAI_QWEN_MATRIX_PLAN)
+    manifest = load_yaml_file(OPENAI_QWEN_MATRIX_MANIFEST)
+    plan = load_yaml_file(OPENAI_QWEN_MATRIX_PLAN)
+    packets = load_yaml_file(PACKETS)
+    state = load_yaml_file(PROJECT_STATE)["p15c_openai_qwen_matrix_refreeze"]
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == OPENAI_QWEN_MATRIX_FILES
+    assert set(manifest["scope"]["in_scope"]) == OPENAI_QWEN_MATRIX_FILES
+    assert set(plan["changed_files"]) == OPENAI_QWEN_MATRIX_FILES
+    assert len(OPENAI_QWEN_MATRIX_FILES) == 12
+
+    baseline = packets["tool_system_baseline"]
+    assert baseline["commit"] == "0908a1d2ed8e88554fa4bd1e73bb7c4c4a88807b"
+    assert baseline["tree"] == "c053dd93999c5ef2f9112a7638b5fd2c00acb676"
+    assert baseline["previous_commit"] == ("20686afbef73d5985f4aac0d542eabe7f3fdadff")
+    assert baseline["execution_matrix_changed"] is True
+    assert baseline["runtime_source_changed"] is False
+    assert baseline["p15c_execution_authority_added"] is False
+    assert state["module"]["previous_module_version"] == "1.0.0"
+    assert state["module"]["module_version"] == "1.1.0"
+    assert state["execution_matrix"]["provider_ids"] == ["openai", "qwen"]
+    assert state["execution_matrix"]["max_provider_invocations"] == 4
+    assert state["qwen_funding_attested"] is False
+    assert set(state["source_stage_evidence"].values()) == {0}
+    assert state["p15c_stage_accepted"] is False
+    assert state["p15d_authorized"] is False
+
+
+def test_current_openai_qwen_matrix_semantics_are_content_addressed() -> None:
     packets = load_yaml_file(PACKETS)
     packets.pop("tool_system_baseline")
     normalized = yaml.safe_dump(packets, sort_keys=True).encode("utf-8")
 
     assert (
         hashlib.sha256(normalized).hexdigest()
-        == BLOCKED_PACKET_SEMANTICS_SHA256
+        == OPENAI_QWEN_MATRIX_PACKET_SEMANTICS_SHA256
     )
 
 
@@ -343,7 +401,16 @@ def test_private_secret_policy_and_usage_state_are_separated() -> None:
 
     combined = "\n".join(
         path.read_text(encoding="utf-8")
-        for path in (PACKETS, REPORT, PROJECT_STATE, MANIFEST, PLAN)
+        for path in (
+            PACKETS,
+            REPORT,
+            PROJECT_STATE,
+            MANIFEST,
+            PLAN,
+            OPENAI_QWEN_MATRIX_REPORT,
+            OPENAI_QWEN_MATRIX_MANIFEST,
+            OPENAI_QWEN_MATRIX_PLAN,
+        )
     )
     for forbidden in (
         r"OPENAI_API_KEY\s*=",
@@ -361,20 +428,17 @@ def test_provider_packets_are_exact_bounded_and_not_activated() -> None:
     }
 
     assert set(providers) == {"deepseek", "openai", "qwen"}
-    assert providers["deepseek"]["packet_id"] == (
-        "P15C-DEEPSEEK-V4-FLASH-READONLY-v1"
-    )
+    assert providers["deepseek"]["packet_id"] == ("P15C-DEEPSEEK-V4-FLASH-READONLY-v1")
     assert providers["deepseek"]["model_id"] == "deepseek-v4-flash"
-    assert providers["deepseek"]["exact_model_version"] == (
-        "DeepSeek-V4-Flash-0731"
-    )
+    assert providers["deepseek"]["exact_model_version"] == ("DeepSeek-V4-Flash-0731")
     assert providers["deepseek"]["execution_surface_id"] == (
         "deepseek-openai-compatible-chat"
     )
     assert providers["deepseek"]["operation"] == "chat.completions.create"
-    assert providers["deepseek"]["official_evidence"][
-        "chat_completions_surface"
-    ] == "https://api-docs.deepseek.com/api/create-chat-completion"
+    assert (
+        providers["deepseek"]["official_evidence"]["chat_completions_surface"]
+        == "https://api-docs.deepseek.com/api/create-chat-completion"
+    )
     assert "responses_surface" not in providers["deepseek"]["official_evidence"]
     assert providers["deepseek"]["packet_status"] == (
         "BLOCKED_EXACT_VERSION_UNPINNABLE"
@@ -382,32 +446,54 @@ def test_provider_packets_are_exact_bounded_and_not_activated() -> None:
     assert providers["deepseek"]["execution_blocker"] == (
         "EXACT_MODEL_VERSION_UNPINNABLE"
     )
-    assert providers["openai"]["packet_id"] == (
-        "P15C-OPENAI-GPT-5.6-LUNA-READONLY-v1"
+    assert providers["deepseek"]["private_repository_policy_fit"] == (
+        "excluded_from_selected_execution_matrix"
     )
-    assert providers["openai"]["model_id"] == "gpt-5.6-luna"
-    assert providers["qwen"]["packet_id"] == (
-        "P15C-QWEN-3.7-PLUS-READONLY-v1"
-    )
-    assert providers["qwen"]["model_id"] == "qwen3.7-plus-2026-05-26"
-    assert providers["qwen"]["packet_status"] == "BLOCKED_NOT_FUNDED"
     assert (
-        providers["qwen"]["pricing_snapshot"][
-            "shared_usd_budget_allocation_micro_usd"
-        ]
+        providers["deepseek"]["data_policy"]["repository_content_transfer_allowed"]
+        is False
+    )
+    assert providers["openai"]["packet_id"] == ("P15C-OPENAI-GPT-5.6-LUNA-READONLY-v1")
+    assert providers["openai"]["model_id"] == "gpt-5.6-luna"
+    assert providers["openai"]["packet_status"] == "FROZEN_NOT_ACTIVATED"
+    assert providers["openai"]["private_repository_policy_fit"] == (
+        "transfer_authorized_but_private_runtime_gates_required"
+    )
+    assert (
+        providers["openai"]["data_policy"]["repository_content_transfer_allowed"]
+        is True
+    )
+    assert providers["qwen"]["packet_id"] == ("P15C-QWEN-3.7-PLUS-READONLY-v1")
+    assert providers["qwen"]["model_id"] == "qwen3.7-plus-2026-05-26"
+    assert providers["qwen"]["exact_model_version"] == ("qwen3.7-plus-2026-05-26")
+    assert providers["qwen"]["packet_status"] == "BLOCKED_NOT_FUNDED"
+    assert providers["qwen"]["operator_availability_attestation"] == "not_funded"
+    assert providers["qwen"]["official_limits"]["max_output_tokens"] == 131_072
+    assert (
+        providers["qwen"]["pricing_snapshot"]["calculated_worst_case_micro_cny"]
+        == 196_608
+    )
+    assert (
+        providers["qwen"]["pricing_snapshot"]["per_attempt_hard_cap_micro_cny"]
+        == 250_000
+    )
+    assert (
+        providers["qwen"]["pricing_snapshot"]["shared_usd_budget_allocation_micro_usd"]
         == 0
     )
+    assert providers["qwen"]["private_repository_policy_fit"] == (
+        "transfer_authorized_but_blocked_not_funded_and_private_runtime_gates_required"
+    )
+    assert (
+        providers["qwen"]["data_policy"]["repository_content_transfer_allowed"] is True
+    )
 
-    assert providers["openai"]["packet_status"] == "FROZEN_NOT_ACTIVATED"
     assert "execution_blocker" not in providers["openai"]
 
-    for provider_id in ("deepseek", "openai"):
+    for provider_id in ("deepseek", "openai", "qwen"):
         packet = providers[provider_id]
         assert packet["qualification_state"] == "QUARANTINED"
         assert packet["credential_value_inspected"] is False
-        assert packet["private_repository_policy_fit"] == (
-            "blocked_pending_explicit_provider_transfer_authorization"
-        )
         limits = packet["attempt_limits"]
         assert limits == {
             "max_input_tokens": 65_536,
@@ -424,20 +510,30 @@ def test_provider_packets_are_exact_bounded_and_not_activated() -> None:
             "provider_web_search_enabled": False,
             "response_storage_requested": False,
         }
-        assert packet["pricing_snapshot"]["calculated_worst_case_micro_usd"] == (
-            22_400
-        )
-        assert packet["pricing_snapshot"]["per_attempt_hard_cap_micro_usd"] == (
-            25_000
-        )
+        if provider_id != "qwen":
+            assert (
+                packet["pricing_snapshot"]["calculated_worst_case_micro_usd"] == 22_400
+            )
+            assert (
+                packet["pricing_snapshot"]["per_attempt_hard_cap_micro_usd"] == 25_000
+            )
+
+    assert packets["execution_matrix"] == {
+        "provider_ids": ["openai", "qwen"],
+        "case_ids": ["deterministic-corpus", "private-target"],
+        "max_provider_invocations": 4,
+    }
 
     assert packets["authority"]["execution_authorized"] is False
     assert packets["authority"]["provider_invocations_authorized"] == 0
     assert packets["authority"]["benchmark_executions_authorized"] == 0
     assert (
-        packets["authority"]["private_repository_provider_transfer_authorized"]
-        is False
+        packets["authority"]["private_repository_provider_transfer_authorized"] is False
     )
+    assert packets["authority"][
+        "private_repository_provider_transfer_authorized_by_provider"
+    ] == {"deepseek": False, "openai": True, "qwen": True}
+    assert packets["authority"]["catalog_record_grants_runtime_transfer"] is False
 
 
 def test_corpus_and_private_target_contract_are_project_neutral() -> None:
@@ -455,9 +551,7 @@ def test_corpus_and_private_target_contract_are_project_neutral() -> None:
     assert target["public_commit_serialized"] is False
     assert target["public_path_allowlist_serialized"] is False
     assert target["public_content_digest_serialized"] is False
-    assert target["prepared_target_attestation"] == (
-        "present_outside_repository"
-    )
+    assert target["prepared_target_attestation"] == ("present_outside_repository")
     assert target["exact_snapshot_required_before_execution"] is True
     assert set(target["required_private_fields"]) == {
         "repository_identity",
@@ -475,6 +569,12 @@ def test_corpus_and_private_target_contract_are_project_neutral() -> None:
     assert not ({"repository", "commit", "files", "aggregate_sha256"} & set(target))
     assert target["benchmark_read_authorized"] is False
     assert target["provider_transfer_authorized"] is False
+    assert target["provider_transfer_authorization_recorded_by_provider"] == {
+        "deepseek": False,
+        "openai": True,
+        "qwen": True,
+    }
+    assert target["provider_transfer_still_requires_private_runtime_gates"] is True
     assert target["mutation_authorized"] is False
 
 
@@ -484,9 +584,7 @@ def test_report_records_zero_operation_stop_boundary() -> None:
 
     assert "P15C_PACKET_FREEZE_ACCEPTED_PRE_ENTRY_NO_EXECUTION" in report
     assert "budget and manual switches belong together" in normalized_report
-    assert (
-        "they do not belong in the credential file" in normalized_report
-    )
+    assert "they do not belong in the credential file" in normalized_report
     assert "P15C_authorized: false" in report
     assert "provider_invocations: 0" in report
     assert "benchmark_executions: 0" in report
@@ -509,9 +607,7 @@ def test_report_records_zero_operation_stop_boundary() -> None:
     assert "provider_invocations: 0" in correction_report
     assert "benchmark_executions: 0" in correction_report
 
-    exact_version_block_report = EXACT_VERSION_BLOCK_REPORT.read_text(
-        encoding="utf-8"
-    )
+    exact_version_block_report = EXACT_VERSION_BLOCK_REPORT.read_text(encoding="utf-8")
     assert (
         "ACCEPTED_ONLY_ON_GUARDED_SQUASH_MERGE_NO_EXECUTION"
         in exact_version_block_report
@@ -522,3 +618,16 @@ def test_report_records_zero_operation_stop_boundary() -> None:
     assert "credential_value_accesses: 0" in exact_version_block_report
     assert "provider_invocations: 0" in exact_version_block_report
     assert "benchmark_executions: 0" in exact_version_block_report
+
+    matrix_report = OPENAI_QWEN_MATRIX_REPORT.read_text(encoding="utf-8")
+    assert (
+        "ACCEPTED_ONLY_ON_GUARDED_SQUASH_MERGE_BLOCKED_NOT_FUNDED_NO_EXECUTION"
+        in matrix_report
+    )
+    assert "gpt-5.6-luna" in matrix_report
+    assert "qwen3.7-plus-2026-05-26" in matrix_report
+    assert "196,608 microCNY" in matrix_report
+    assert "PROVIDER_PACKET_BLOCKED" in matrix_report
+    assert "provider_invocations: 0" in matrix_report
+    assert "benchmark_executions: 0" in matrix_report
+    assert "p15d_authorized: false" in matrix_report

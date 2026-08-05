@@ -48,6 +48,14 @@ QWEN_ECONOMICS_PLAN = (
     ROOT
     / "examples/change_plans/tool_system_p15c_qwen_economics_consistency_correction_v1.yaml"
 )
+OPENAI_QWEN_MATRIX_REPORT = ROOT / "docs/reports/p15c_openai_qwen_matrix_refreeze.md"
+OPENAI_QWEN_MATRIX_MANIFEST = (
+    ROOT
+    / "examples/task_manifests/tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml"
+)
+OPENAI_QWEN_MATRIX_PLAN = (
+    ROOT / "examples/change_plans/tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml"
+)
 PROJECT_STATE = ROOT / "docs/tool_system_project_state_v1.yaml"
 REPO_WRITE_POLICY = ROOT / "policy/repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy/autonomy_policy.yaml"
@@ -81,14 +89,31 @@ QWEN_ECONOMICS_FILES = {
     "tests/test_ai_worker_p15c_benchmark.py",
     "tests/test_module_registry.py",
 }
-CANONICAL_PACKET_SHA256 = (
+OPENAI_QWEN_MATRIX_FILES = {
+    "config/module_registry_v1.yaml",
+    "config/p15c_execution_packet_freeze_v1.yaml",
+    "docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md",
+    "docs/reports/p15c_openai_qwen_matrix_refreeze.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml",
+    "examples/task_manifests/tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml",
+    "tests/test_ai_worker_p15c_benchmark.py",
+    "tests/test_ai_worker_p15c_entry.py",
+    "tests/test_module_registry.py",
+    "tests/test_p15c_execution_packet_freeze.py",
+}
+PRE_MATRIX_CANONICAL_PACKET_SHA256 = (
     "509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962"
 )
+OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
+    "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
+)
 
-EXPECTED_RAW_SHA256 = "d80e752f8780d84d9fba40230f257a179957ef4da66feafe37447c0468cbecba"
-EXPECTED_BYTE_LENGTH = 105_068
+EXPECTED_RAW_SHA256 = "e45603911a32206c309c75d682a2719bc659ed7c1a08f29e9f024c9b610be1da"
+EXPECTED_BYTE_LENGTH = 105_208
 EXPECTED_SEMANTIC_SHA256 = (
-    "59a86fa0792d2ab593c8738dedf0326a35f00816ec4516e324bb93475e5f7d8c"
+    "64ea31048ba84b0e5454da338165b7a6c3a2b454e4264a9dbb21c5441201f96c"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 106
 EXPECTED_MODULE_IDS = {
@@ -454,8 +479,8 @@ def test_qwen_runtime_adapter_pair_scope_and_zero_io_state_validate() -> None:
     assert set(manifest["scope"]["in_scope"]) == QWEN_ADAPTER_FILES
     assert set(plan["changed_files"]) == QWEN_ADAPTER_FILES
     assert len(QWEN_ADAPTER_FILES) == 15
-    assert hashlib.sha256(PACKET_CONFIG.read_bytes()).hexdigest() == (
-        CANONICAL_PACKET_SHA256
+    assert state["canonical_packet_catalog_sha256"] == (
+        PRE_MATRIX_CANONICAL_PACKET_SHA256
     )
     assert state["module"]["module_version"] == "1.9.0"
     assert state["exact_qwen_adapter"]["exact_model_version"] == (
@@ -495,8 +520,8 @@ def test_qwen_economics_correction_pair_scope_and_zero_io_state_validate() -> No
     assert set(manifest["scope"]["in_scope"]) == QWEN_ECONOMICS_FILES
     assert set(plan["changed_files"]) == QWEN_ECONOMICS_FILES
     assert len(QWEN_ECONOMICS_FILES) == 10
-    assert hashlib.sha256(PACKET_CONFIG.read_bytes()).hexdigest() == (
-        CANONICAL_PACKET_SHA256
+    assert state["canonical_packet_catalog_sha256"] == (
+        PRE_MATRIX_CANONICAL_PACKET_SHA256
     )
     assert state["module"]["previous_module_version"] == "1.9.0"
     assert state["module"]["module_version"] == "1.9.1"
@@ -513,6 +538,59 @@ def test_qwen_economics_correction_pair_scope_and_zero_io_state_validate() -> No
     assert state["p15d_authorized"] is False
     assert "ACCEPTED_ONLY_ON_GUARDED_SQUASH_MERGE_NO_EXECUTION" in report
     assert "196608 microCNY" in report
+    assert "provider_invocations: 0" in report
+
+
+def test_openai_qwen_matrix_pair_scope_module_and_zero_io_state_validate() -> None:
+    manifest_result = validate_task_manifest(
+        OPENAI_QWEN_MATRIX_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(OPENAI_QWEN_MATRIX_PLAN)
+    manifest = load_yaml_file(OPENAI_QWEN_MATRIX_MANIFEST)
+    plan = load_yaml_file(OPENAI_QWEN_MATRIX_PLAN)
+    state = load_yaml_file(PROJECT_STATE)["p15c_openai_qwen_matrix_refreeze"]
+    packet = load_yaml_file(PACKET_CONFIG)
+    report = OPENAI_QWEN_MATRIX_REPORT.read_text(encoding="utf-8")
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == OPENAI_QWEN_MATRIX_FILES
+    assert set(manifest["scope"]["in_scope"]) == OPENAI_QWEN_MATRIX_FILES
+    assert set(plan["changed_files"]) == OPENAI_QWEN_MATRIX_FILES
+    assert len(OPENAI_QWEN_MATRIX_FILES) == 12
+    assert hashlib.sha256(PACKET_CONFIG.read_bytes()).hexdigest() == (
+        OPENAI_QWEN_MATRIX_PACKET_SHA256
+    )
+    assert state["module"]["previous_module_version"] == "1.0.0"
+    assert state["module"]["module_version"] == "1.1.0"
+    assert state["module"]["aggregate_interface_version"] == "1.0.0"
+    assert state["execution_matrix"]["provider_ids"] == ["openai", "qwen"]
+    assert packet["execution_matrix"]["provider_ids"] == ["openai", "qwen"]
+    assert state["provider_dispositions"]["deepseek"]["selected"] is False
+    assert state["provider_dispositions"]["qwen"]["funding_attested"] is False
+    assert state["provider_transfer_authorization_record"] == {
+        "deepseek": False,
+        "openai": True,
+        "qwen": True,
+        "grants_runtime_transfer": False,
+        "private_policy_and_target_packet_match_required": True,
+    }
+    assert state["local_validation"]["packet_only_zero_io"] == "passed"
+    assert state["local_validation"]["default_preflight_before_private_input"] == (
+        "PROVIDER_PACKET_BLOCKED"
+    )
+    assert set(state["source_stage_evidence"].values()) == {0}
+    assert state["qwen_funding_attested"] is False
+    assert state["p15c_stage_accepted"] is False
+    assert state["p15d_authorized"] is False
+    assert (
+        "ACCEPTED_ONLY_ON_GUARDED_SQUASH_MERGE_BLOCKED_NOT_FUNDED_NO_EXECUTION"
+        in report
+    )
     assert "provider_invocations: 0" in report
 
 
