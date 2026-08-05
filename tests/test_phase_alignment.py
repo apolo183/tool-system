@@ -890,3 +890,69 @@ def test_stable_rule_owners_delegate_transient_progress_to_project_state() -> No
             assert re.search(pattern, text, flags=re.IGNORECASE) is None, (
                 f"{owner.relative_to(ROOT)} contains {label}"
             )
+
+
+def test_p15_non_live_multi_project_matrix_is_isolated_and_zero_external() -> None:
+    matrix = load_yaml_file(
+        ROOT / "docs" / "reports" / "p15_non_live_multi_project_matrix_v1.yaml"
+    )
+    p14h_source = (
+        ROOT / "tests" / "test_p14h_multi_stack_e2e.py"
+    ).read_text(encoding="utf-8")
+
+    assert matrix["schema_version"] == 1
+    assert matrix["authority_effect"] == "none"
+    assert matrix["execution_boundary"] == "isolated_committed_fixtures_only"
+
+    projects = matrix["projects"]
+    assert len(projects) == 2
+    assert {project["language_stack"] for project in projects} == {
+        "python",
+        "typescript",
+    }
+    assert len({project["project_id"] for project in projects}) == len(projects)
+    assert len({project["fixture_root"] for project in projects}) == len(projects)
+    assert all(project["isolated_repository"] is True for project in projects)
+    assert all((ROOT / project["fixture_root"]).is_dir() for project in projects)
+    assert all(
+        f'def {project["acceptance_test"]}(' in p14h_source
+        for project in projects
+    )
+
+    assert matrix["cross_project_controls"] == {
+        "unique_repository_roots_required": True,
+        "unique_orchestrator_state_required": True,
+        "caller_supplied_project_identity_required": True,
+        "shared_candidate_tree_forbidden": True,
+        "shared_branch_identity_forbidden": True,
+        "downstream_repository_access_allowed": False,
+    }
+
+    cases = matrix["generalization_cases"]
+    assert len(cases) == 3
+    assert len({case["case_id"] for case in cases}) == len(cases)
+    assert all(
+        f'def {case["acceptance_test"]}(' in p14h_source for case in cases
+    )
+
+    metrics = matrix["metrics"]
+    assert metrics["quality"]["accepted_project_count"] == 2
+    assert metrics["quality"]["rejected_out_of_scope_case_count"] == 1
+    assert metrics["time"]["critical_path_measure"] == (
+        "logical_development_cycles"
+    )
+    assert metrics["economics"]["unit"] == "integer_microunits"
+    assert metrics["economics"]["private_value_required"] is False
+    assert metrics["economics"]["double_counting_allowed"] is False
+    assert set(metrics["recovery"].values()) == {1}
+    assert set(metrics["policy"].values()) == {0}
+
+    provider = matrix["provider_boundary"]
+    assert provider["daily_route"] == "chatgpt_codex_subscription"
+    assert provider["all_large_model_apis_default_disabled"] is True
+    assert provider["provider_model_selection_source"] == (
+        "repository_external_operator_configuration"
+    )
+    assert provider["adapter_fake_io_evidence_required"] is True
+    assert provider["live_smoke_executed"] is False
+    assert set(matrix["acceptance_boundary"].values()) == {False}
