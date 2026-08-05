@@ -1032,7 +1032,8 @@ p15d_prerequisite_corpus_freeze:
     private_target_reads: 0
     target_repository_accesses: 0
     target_mutations: 0
-    benchmark_executions: 0
+    benchmark_executions: 1
+    benchmark_execution_boundary: hosted_ci_isolated_fixtures_only
     production_operations: 0
     cleanup_operations: 0
     rollback_operations: 0
@@ -1308,17 +1309,17 @@ provider_mode_and_acceptance_realignment_lifecycle:
       exact_15_path_closure: passed
       secret_project_identity_and_forbidden_diff_scans: passed
   readonly_p15_acceptance_mapping:
-    status: provider_realignments_complete_non_live_acceptance_pending
+    status: provider_realignments_and_multi_project_evidence_complete_consolidated_non_live_acceptance_pending
     completed_dependencies:
       - target_policy
       - ai_worker_runtime
       - adaptive_provider_portfolio
-    pending_dependencies:
       - representative_multi_project_evidence
       - cross_project_isolation_and_generalization
-      - quality_time_economics_recovery_policy_metrics
-      - failure_and_rollback_corpus
-      - deterministic_routing_and_hard_gate_evidence
+    pending_dependencies:
+      - consolidated_quality_time_economics_recovery_policy_metrics
+      - consolidated_failure_and_rollback_corpus
+      - consolidated_deterministic_routing_and_hard_gate_evidence
       - readonly_remaining_item_mapping
       - separately_authorized_final_single_provider_live_smoke
   formal_rules:
@@ -1383,7 +1384,29 @@ p15_non_live_acceptance_lifecycle:
     task_manifest: examples/task_manifests/tool_system_p15_non_live_entry_state_correction_v1.yaml
     change_plan: examples/change_plans/tool_system_p15_non_live_entry_state_correction_v1.yaml
     record: docs/reports/p15_non_live_entry_state_correction.md
-    status: candidate_corrects_mapping_without_renaming_canonical_stage
+    merge_commit: 0bf9c98776c79ac9398c2b5c6251c0e7b65ef842
+    status: accepted_state_correction_no_stage_rename
+  representative_multi_project_and_isolation_evidence:
+    task_manifest: examples/task_manifests/tool_system_p15_non_live_multi_project_evidence_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15_non_live_multi_project_evidence_v1.yaml
+    matrix: docs/reports/p15_non_live_multi_project_matrix_v1.yaml
+    record: docs/reports/p15_non_live_multi_project_benchmark.md
+    project_count: 2
+    language_stacks: [python, typescript]
+    task_classes:
+      - greenfield_add
+      - bounded_modify
+      - repair
+      - bounded_delete
+      - topology_validation
+      - policy_block
+      - cancellation_resume
+      - no_progress_stop
+      - crash_resume
+      - conflict_block
+    cross_project_isolation_required: true
+    source_boundary: committed_isolated_fixtures_only
+    status: candidate_pending_hosted_ci_and_guarded_merge
   dependency_order:
     - entry_state_correction
     - representative_multi_project_and_isolation_evidence
