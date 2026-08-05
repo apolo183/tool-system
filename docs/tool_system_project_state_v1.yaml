@@ -1421,11 +1421,14 @@ p15_non_live_acceptance_lifecycle:
     smoke_packet_schema: docs/reports/p15_final_smoke_control_packet_schema_v1.yaml
     record: docs/reports/p15_non_live_consolidated_acceptance.md
     all_non_live_p15_evidence_complete_on_guarded_merge: true
+    merge_commit: 579dde4718fb80ae0dc9c16d796e825c62aba189
+    hosted_ci_run: 31057953768
+    hosted_ci_conclusion: success
     live_smoke_authorized: false
     live_smoke_executed: false
     p15_stage_accepted: false
     p16_stage_entered: false
-    status: candidate_pending_hosted_ci_and_guarded_merge
+    status: accepted_all_non_live_p15_evidence_stopped_before_final_smoke
   dependency_order:
     - entry_state_correction
     - representative_multi_project_and_isolation_evidence
@@ -1444,6 +1447,20 @@ p15_non_live_acceptance_lifecycle:
   p15_stage_accepted: false
   p16_stage_entered: false
   final_live_smoke_executed: false
+  lifecycle_closeout:
+    task_manifest: examples/task_manifests/tool_system_p15_non_live_lifecycle_closeout_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15_non_live_lifecycle_closeout_v1.yaml
+    record: docs/reports/p15_non_live_lifecycle_closeout.md
+    dependency_merges:
+      - 0bf9c98776c79ac9398c2b5c6251c0e7b65ef842
+      - 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+      - 579dde4718fb80ae0dc9c16d796e825c62aba189
+    dependency_hosted_ci_runs:
+      - 31057074087
+      - 31057595127
+      - 31057953768
+    feature_branches_retained: true
+    status: candidate_post_merge_fact_correction_only
   source_stage_evidence:
     credential_resolver_invocations: 0
     credential_value_accesses: 0
