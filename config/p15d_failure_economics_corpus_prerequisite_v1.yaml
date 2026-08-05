@@ -1,0 +1,188 @@
+schema_version: 1
+packet_id: P15D-PREREQUISITE-CORPUS-FREEZE-v1
+role: non_authorizing_pre_entry_failure_rollback_isolation_and_economics_corpus
+authority_effect: none
+
+blueprint_binding:
+  phase: P15_MULTI_PROJECT_BENCHMARK
+  stage: P15D_FAILURE_ROLLBACK_ISOLATION_AND_ECONOMICS_CORPUS
+  objective: prove bounded failover repair escalation cancellation no-progress isolation rollback and total-economic-cost decisions
+  execution_boundary: isolated_fixture_and_read_only_evidence
+  entry_requires:
+    - P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK accepted
+  entry_condition_satisfied: false
+  p15d_stage_entry_authorized: false
+
+canonical_baseline:
+  repository: apolo183/tool-system
+  commit: 4ce30b432fedd80f7e4ff40c182cdace4e51244a
+  tree: 1a8ceff8a365df183db433398a03f51ae2b48cc1
+
+module_binding:
+  current_module_id: adaptive_model_portfolio_and_economics
+  canonical_module_id: adaptive-model-portfolio-and-economics
+  module_version: 1.2.0
+  aggregate_interface_id: adaptive-model-portfolio-and-economics-api
+  aggregate_interface_version: 1.0.0
+  runtime_source_changed: false
+
+evidence_inputs:
+  accepted_fixture_sources:
+    - path: docs/reports/p14f_development_loop_acceptance.md
+      sha256: acad38908822954b724f430e2f9e5048c3692e8db52b3dcd2105453bf1d52945
+      role: bounded_repair_cancellation_and_no_progress_source_only
+    - path: docs/reports/p14g_durable_local_git_acceptance.md
+      sha256: 481b42c02101697c43998e967e2ecb1579ae408b604d6074d6e6b0b5d1278981
+      role: non_executing_rollback_plan_and_isolated_local_git_source_only
+    - path: docs/reports/p14h_multi_stack_fixture_acceptance.md
+      sha256: 28709e4a1b9448de7c647dd5c34ed0895829fa8fe3d6ae5e7b533095ab02f317
+      role: cross_stack_isolation_repair_cancellation_and_resume_source_only
+    - path: docs/reports/p15a_provider_portfolio_qualification_specification.md
+      sha256: 98f92e6bbfbb3e4728dd4ca9ecd6aa873ef7dc5ab8597564f0e096c5f76dac51
+      role: economics_and_qualification_contract_source_only
+    - path: docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md
+      sha256: ac73cf93aa56886b30f6a3ba73929e1d275a646b8db66a963a8a15a23d0e461f
+      role: deterministic_failure_disposition_and_route_source_only
+  current_non_accepting_p15c_sources:
+    - path: config/p15c_execution_packet_freeze_v1.yaml
+      sha256: cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a
+      role: exact_openai_qwen_matrix_and_stop_gate_source_only
+    - path: docs/reports/p15c_openai_qwen_matrix_refreeze.md
+      sha256: 36e5b755cff482281c237318b2744712936990ff32aff5db405e484276a1b774
+      role: non_executing_matrix_evidence_not_p15c_acceptance
+  missing_required_p15c_inputs:
+    - accepted_cross_provider_read_only_benchmark_record
+    - exact_redacted_openai_qwen_benchmark_evidence
+    - accepted_real_repository_read_only_benchmark_evidence
+
+source_test_catalog:
+  - path: tests/test_provider_portfolio_fixtures.py
+    sha256: 5fddc3a80ff1b9a760b59b46e3b2c7641d78eefcc88794b3679b5dfc76052901
+  - path: tests/test_development_loop.py
+    sha256: dd9792d134eeed3b74c1bd2ff66f8a5bc4b42982237d38f624a769d9dfb265bc
+  - path: tests/test_local_git_orchestrator.py
+    sha256: b039ee551bcafd6e95f664da65dd9d7f9067803cd58289cf00a151e91b7f0202
+  - path: tests/test_p14h_multi_stack_e2e.py
+    sha256: 6028fba31215c8c0db1224d4e517c14b207f608584a4a92bf1594b87abc76b07
+
+case_catalog:
+  - case_id: availability-failover
+    source_test_path: tests/test_provider_portfolio_fixtures.py
+    source_test_symbol: test_failure_classification_keeps_failover_repair_block_and_stop_distinct
+    failure_class: RATE_LIMIT
+    expected_disposition: AVAILABILITY_FAILOVER
+    provider_switch_allowed: true
+    same_route_repair_allowed: false
+    terminal: false
+  - case_id: quality-repair-then-escalation
+    source_test_path: tests/test_provider_portfolio_fixtures.py
+    source_test_symbol: test_failure_classification_keeps_failover_repair_block_and_stop_distinct
+    failure_class: QUALITY_REJECTED
+    expected_disposition: SAME_ROUTE_REPAIR_THEN_ESCALATE
+    provider_switch_allowed: true
+    same_route_repair_allowed: true
+    stronger_route_escalation_allowed: true
+    terminal: false
+  - case_id: policy-block-no-provider-bypass
+    source_test_path: tests/test_provider_portfolio_fixtures.py
+    source_test_symbol: test_failure_classification_keeps_failover_repair_block_and_stop_distinct
+    failure_class: DATA_POLICY_DENIED
+    expected_disposition: BLOCK_NO_PROVIDER_BYPASS
+    provider_switch_allowed: false
+    terminal: true
+  - case_id: cancellation-before-dispatch-and-before-application
+    source_test_path: tests/test_development_loop.py
+    source_test_symbol:
+      - test_cancellation_before_worker_call_preserves_candidate
+      - test_cancellation_after_worker_discards_unapplied_patch
+    expected_terminal_code: CANCELLED_BY_CALLER
+    candidate_mutation_allowed: false
+    terminal: true
+  - case_id: repeated-or-two-cycle-no-progress-stop
+    source_test_path: tests/test_development_loop.py
+    source_test_symbol:
+      - test_repeated_fingerprint_stops_without_attempt_number_escape
+      - test_two_distinct_no_progress_cycles_stop_even_without_recurrence
+    expected_terminal_codes:
+      - STOPPED_NO_PROGRESS_REPEATED_FINGERPRINT
+      - STOPPED_NO_PROGRESS_TWO_CYCLES
+    provider_switch_allowed: false
+    terminal: true
+  - case_id: affected-module-isolation
+    source_test_path: tests/test_p14h_multi_stack_e2e.py
+    source_test_symbol: test_ambiguous_blueprint_out_of_scope_patch_and_invented_milestone_block
+    expected_rule: stop_affected_output_pause_dependents_preserve_unrelated_evidence
+    machine_lifecycle_status_added: false
+    target_mutation_allowed: false
+  - case_id: rollback-plan-remains-non-executing
+    source_test_path: tests/test_local_git_orchestrator.py
+    source_test_symbol: test_records_one_isolated_local_branch_and_commit
+    expected_rollback_plan_authorized: false
+    rollback_execution_allowed: false
+    cleanup_execution_allowed: false
+  - case_id: hard-floors-before-total-economics
+    source_test_path: tests/test_provider_portfolio_fixtures.py
+    source_test_symbol: test_router_applies_hard_floors_before_integer_economics_deterministically
+    expected_rule: capability_safety_data_quality_authorization_and_preconditions_precede_cost
+    cheaper_unqualified_route_selectable: false
+
+economic_record_schema:
+  currency: microUSD
+  arithmetic: non_negative_integers_only
+  aggregation: sum_without_double_counting
+  critical_path_time_is_configurable_largest_soft_cost_driver: true
+  required_components:
+    - provider_usage
+    - subscription_or_renewal_allocation
+    - critical_path_time
+    - local_compute_and_electricity
+    - verification
+    - retry
+    - rework
+    - recovery
+    - rollback
+    - opportunity_cost
+  synthetic_fixture:
+    provider_usage: 3000
+    subscription_or_renewal_allocation: 1000
+    critical_path_time: 7000
+    local_compute_and_electricity: 500
+    verification: 1500
+    retry: 0
+    rework: 1000
+    recovery: 750
+    rollback: 250
+    opportunity_cost: 2000
+    expected_total: 17000
+  private_economic_values_recorded: false
+
+isolation_and_rollback_contract:
+  affected_module_output_stops_on_failure_or_evidence_loss: true
+  dependent_consumption_pauses_until_revalidation: true
+  unrelated_modules_and_evidence_remain_valid: true
+  hidden_dependency_is_a_governance_defect: true
+  rollback_is_evidence_or_plan_only: true
+  rollback_execution_authorized: false
+  cleanup_execution_authorized: false
+
+zero_operation_boundary:
+  provider_invocations: 0
+  credential_resolver_invocations: 0
+  credential_value_accesses: 0
+  network_operations: 0
+  private_target_reads: 0
+  target_repository_accesses: 0
+  target_mutations: 0
+  benchmark_executions: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+
+terminal_boundary:
+  prerequisite_packet_frozen: true
+  p15c_stage_accepted: false
+  p15d_stage_entered: false
+  p15d_stage_accepted: false
+  p15e_authorized: false
+  funding_or_live_execution_required_for_this_freeze: false
+  next_action: continue_only_with_separately_scoped_non_authorizing_prerequisite_work_or_wait_for_p15c_acceptance

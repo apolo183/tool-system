@@ -984,6 +984,64 @@ p15c_openai_qwen_matrix_refreeze:
   p15c_stage_accepted: false
   p15d_authorized: false
   authority_effect: none
+p15d_prerequisite_corpus_freeze:
+  task_identity: P15D-PREREQUISITE-CORPUS-FREEZE-v1
+  authorization_source: chat_user_message:2026-08-05-defer-funding-and-continue-offline-development
+  canonical_source_baseline_commit: 4ce30b432fedd80f7e4ff40c182cdace4e51244a
+  canonical_source_baseline_tree: 1a8ceff8a365df183db433398a03f51ae2b48cc1
+  task_manifest: examples/task_manifests/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml
+  prerequisite_packet: config/p15d_failure_economics_corpus_prerequisite_v1.yaml
+  record: docs/reports/p15d_failure_economics_corpus_prerequisite_freeze.md
+  status: accepted_only_on_guarded_squash_merge_non_executing_preentry_freeze
+  module:
+    current_module_id: adaptive_model_portfolio_and_economics
+    canonical_module_id: adaptive-model-portfolio-and-economics
+    previous_module_version: 1.1.0
+    module_version: 1.2.0
+    aggregate_interface_id: adaptive-model-portfolio-and-economics-api
+    aggregate_interface_version: 1.0.0
+  frozen_case_ids:
+    - availability-failover
+    - quality-repair-then-escalation
+    - policy-block-no-provider-bypass
+    - cancellation-before-dispatch-and-before-application
+    - repeated-or-two-cycle-no-progress-stop
+    - affected-module-isolation
+    - rollback-plan-remains-non-executing
+    - hard-floors-before-total-economics
+  source_evidence_role: accepted_historical_fixture_and_current_non_accepting_p15c_sources_only
+  missing_required_p15c_inputs:
+    - accepted_cross_provider_read_only_benchmark_record
+    - exact_redacted_openai_qwen_benchmark_evidence
+    - accepted_real_repository_read_only_benchmark_evidence
+  local_validation:
+    focused_pytest: 119_passed
+    full_pytest: 693_passed
+    python_compilation: passed
+    ruff_0_16_0: passed
+    governance_validators: passed
+    exact_twelve_path_and_forbidden_diff: passed
+    secret_and_project_neutrality_scans: passed
+  source_stage_evidence:
+    runtime_source_changes: 0
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    provider_invocations: 0
+    network_operations: 0
+    private_target_reads: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    benchmark_executions: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  funding_or_live_execution_required_for_this_freeze: false
+  p15c_stage_accepted: false
+  p15d_stage_entered: false
+  p15d_stage_accepted: false
+  p15e_authorized: false
+  authority_effect: none
 authorization_boundaries:
   state_file_grants_authority: false
   live_model_provider_execution_authorized: true

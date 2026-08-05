@@ -56,6 +56,18 @@ OPENAI_QWEN_MATRIX_MANIFEST = (
 OPENAI_QWEN_MATRIX_PLAN = (
     ROOT / "examples/change_plans/tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml"
 )
+P15D_PREREQUISITE_REPORT = (
+    ROOT / "docs/reports/p15d_failure_economics_corpus_prerequisite_freeze.md"
+)
+P15D_PREREQUISITE_MANIFEST = (
+    ROOT / "examples/task_manifests/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml"
+)
+P15D_PREREQUISITE_PLAN = (
+    ROOT / "examples/change_plans/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml"
+)
+P15D_PREREQUISITE_CONFIG = (
+    ROOT / "config/p15d_failure_economics_corpus_prerequisite_v1.yaml"
+)
 PROJECT_STATE = ROOT / "docs/tool_system_project_state_v1.yaml"
 REPO_WRITE_POLICY = ROOT / "policy/repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy/autonomy_policy.yaml"
@@ -103,6 +115,20 @@ OPENAI_QWEN_MATRIX_FILES = {
     "tests/test_module_registry.py",
     "tests/test_p15c_execution_packet_freeze.py",
 }
+P15D_PREREQUISITE_FILES = {
+    "REPO_MANIFEST.md",
+    "config/module_registry_v1.yaml",
+    "config/p15d_failure_economics_corpus_prerequisite_v1.yaml",
+    "docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md",
+    "docs/reports/p15d_failure_economics_corpus_prerequisite_freeze.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml",
+    "examples/task_manifests/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml",
+    "tests/test_module_registry.py",
+    "tests/test_p15d_failure_economics_corpus_prerequisite.py",
+    "tests/test_repo_manifest.py",
+}
 PRE_MATRIX_CANONICAL_PACKET_SHA256 = (
     "509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962"
 )
@@ -110,10 +136,10 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
     "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
 )
 
-EXPECTED_RAW_SHA256 = "e45603911a32206c309c75d682a2719bc659ed7c1a08f29e9f024c9b610be1da"
-EXPECTED_BYTE_LENGTH = 105_208
+EXPECTED_RAW_SHA256 = "3126d5f0ab98dcc12cbbbbd6d5f234fcfb70b2e11443d6b2b1c54e8aca148b32"
+EXPECTED_BYTE_LENGTH = 105_705
 EXPECTED_SEMANTIC_SHA256 = (
-    "64ea31048ba84b0e5454da338165b7a6c3a2b454e4264a9dbb21c5441201f96c"
+    "d779aff15282ec17ac7cd5a074e3e721fe17ca5d247acbe50858ded581b0af18"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 106
 EXPECTED_MODULE_IDS = {
@@ -169,6 +195,9 @@ TEST_SELECTORS = {
     "local_git": "tests/test_local_git_orchestrator.py",
 }
 ADDITIONAL_TEST_SELECTORS = {
+    "adaptive_model_portfolio_and_economics": (
+        "tests/test_p15d_failure_economics_corpus_prerequisite.py",
+    ),
     "ai_worker_runtime": (
         "tests/test_ai_worker_live_provider.py",
         "tests/test_ai_worker_p15c_benchmark.py",
@@ -594,6 +623,43 @@ def test_openai_qwen_matrix_pair_scope_module_and_zero_io_state_validate() -> No
     assert "provider_invocations: 0" in report
 
 
+def test_p15d_prerequisite_scope_module_and_stage_stop_validate() -> None:
+    manifest_result = validate_task_manifest(
+        P15D_PREREQUISITE_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(P15D_PREREQUISITE_PLAN)
+    manifest = load_yaml_file(P15D_PREREQUISITE_MANIFEST)
+    plan = load_yaml_file(P15D_PREREQUISITE_PLAN)
+    state = load_yaml_file(PROJECT_STATE)["p15d_prerequisite_corpus_freeze"]
+    corpus = load_yaml_file(P15D_PREREQUISITE_CONFIG)
+    report = P15D_PREREQUISITE_REPORT.read_text(encoding="utf-8")
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == P15D_PREREQUISITE_FILES
+    assert set(manifest["scope"]["in_scope"]) == P15D_PREREQUISITE_FILES
+    assert set(plan["changed_files"]) == P15D_PREREQUISITE_FILES
+    assert len(P15D_PREREQUISITE_FILES) == 12
+    assert state["module"]["previous_module_version"] == "1.1.0"
+    assert state["module"]["module_version"] == "1.2.0"
+    assert state["module"]["aggregate_interface_version"] == "1.0.0"
+    assert state["frozen_case_ids"] == [
+        case["case_id"] for case in corpus["case_catalog"]
+    ]
+    assert set(state["source_stage_evidence"].values()) == {0}
+    assert state["funding_or_live_execution_required_for_this_freeze"] is False
+    assert state["p15c_stage_accepted"] is False
+    assert state["p15d_stage_entered"] is False
+    assert state["p15d_stage_accepted"] is False
+    assert state["p15e_authorized"] is False
+    assert "NON_EXECUTING_PREENTRY_FREEZE" in report
+    assert "provider_invocations: 0" in report
+
+
 def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     raw = REGISTRY.read_bytes()
     registry = load_yaml_file(REGISTRY)
@@ -618,7 +684,7 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
         sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 114
     )
     assert (
-        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 25
+        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 26
     )
     assert (
         sum(len(module["permitted_side_effects"]) for module in registry["modules"])
