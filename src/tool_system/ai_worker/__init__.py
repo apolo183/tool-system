@@ -50,8 +50,12 @@ from tool_system.ai_worker.p15c_controls import (
 from tool_system.ai_worker.runtime import (
     AIWorkerRuntime,
     CancellationToken,
+    DefaultDisabledAPIExecutionGuard,
     InMemoryReplayStore,
+    ProviderRouteConfig,
+    ProviderRouteSelection,
     ReplayEntry,
+    select_enabled_provider,
 )
 
 __all__ = [
@@ -66,6 +70,7 @@ __all__ = [
     "AIWorkerUsage",
     "CancellationSignal",
     "CancellationToken",
+    "DefaultDisabledAPIExecutionGuard",
     "ContentAddressedInput",
     "DeterministicFixtureProvider",
     "FixtureScenario",
@@ -79,6 +84,8 @@ __all__ = [
     "P15CProviderPacket",
     "P15CTargetPacket",
     "P15CUsageLedger",
+    "ProviderRouteConfig",
+    "ProviderRouteSelection",
     "PromptSpec",
     "ProviderResponse",
     "ReplayEntry",
@@ -98,4 +105,5 @@ __all__ = [
     "validate_ai_worker_request",
     "validate_structured_output",
     "validate_usage",
+    "select_enabled_provider",
 ]
