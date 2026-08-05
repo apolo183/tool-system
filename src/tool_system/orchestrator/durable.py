@@ -196,13 +196,24 @@ class DurableOrchestratorStore:
     @staticmethod
     def _require_regular_single_link(path: Path, label: str) -> os.stat_result:
         metadata = path.lstat()
+        DurableOrchestratorStore._require_regular_single_link_metadata(metadata, label)
+        return metadata
+
+    @staticmethod
+    def _require_regular_single_link_metadata(
+        metadata: os.stat_result,
+        label: str,
+        *,
+        allow_unlinked: bool = False,
+    ) -> None:
         if stat.S_ISLNK(metadata.st_mode):
             raise StateConflict(f"{label} must not be a symlink")
         if not stat.S_ISREG(metadata.st_mode):
             raise StateConflict(f"{label} must be a regular file")
+        if allow_unlinked and metadata.st_nlink == 0:
+            return
         if metadata.st_nlink != 1:
             raise StateConflict(f"{label} must have exactly one hard link")
-        return metadata
 
     def _validate_database_path(self) -> None:
         try:
@@ -239,10 +250,18 @@ class DurableOrchestratorStore:
 
         for suffix in ("-wal", "-shm", "-journal"):
             sidecar = Path(f"{self.database_path}{suffix}")
-            if sidecar.exists() or sidecar.is_symlink():
-                self._require_regular_single_link(
-                    sidecar, f"database sidecar {suffix}"
-                )
+            try:
+                metadata = sidecar.lstat()
+            except FileNotFoundError:
+                # SQLite may remove an optional sidecar after another process
+                # closes its last connection.  Absence is valid; every
+                # observed sidecar still receives the full no-link check.
+                continue
+            self._require_regular_single_link_metadata(
+                metadata,
+                f"database sidecar {suffix}",
+                allow_unlinked=True,
+            )
 
     def _connect(self) -> sqlite3.Connection:
         self._validate_database_path()

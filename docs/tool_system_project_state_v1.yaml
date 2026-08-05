@@ -1111,6 +1111,67 @@ p15d_prerequisite_failure_control_fixture:
   p15d_stage_accepted: false
   p15e_authorized: false
   authority_effect: none
+durable_orchestrator_sqlite_sidecar_race_correction:
+  task_identity: DURABLE-ORCHESTRATOR-SQLITE-SIDECAR-RACE-CORRECTION-v1
+  authorization_source: chat_user_message:2026-08-05-defer-funding-and-continue-offline-development
+  canonical_source_baseline_commit: 783a1bf16c48e717da281d9fefc134e68bf879c4
+  canonical_source_baseline_tree: 5d3651587e973b8ac226298bf7c1b65f51838059
+  task_manifest: examples/task_manifests/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml
+  change_plan: examples/change_plans/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml
+  record: docs/reports/durable_orchestrator_sqlite_sidecar_race_correction.md
+  status: accepted_only_on_guarded_squash_merge_reliability_correction
+  module:
+    current_module_id: durable_orchestrator
+    canonical_module_id: durable-orchestrator
+    previous_module_version: 1.1.0
+    module_version: 1.2.0
+    aggregate_interface_id: durable-orchestrator-api
+    aggregate_interface_version: 1.1.0
+    sqlite_schema_version: 3
+    implementation_source_path: src/tool_system/orchestrator/durable.py
+  correction:
+    optional_sidecars:
+      - -wal
+      - -shm
+      - -journal
+    missing_before_atomic_lstat_is_valid_absence: true
+    observed_regular_zero_link_metadata_is_valid_absence: true
+    observed_symlink_blocked: true
+    observed_nonregular_blocked: true
+    observed_multilink_blocked: true
+    database_file_exactly_one_link_required: true
+    database_identity_binding_preserved: true
+    public_interface_modified: false
+    sqlite_schema_modified: false
+  local_validation:
+    deterministic_reproduction_before_fix: passed
+    durable_reliability_pytest: 16_passed
+    independent_process_stress_iterations: 25_passed
+    focused_pytest: 226_passed
+    full_pytest: 703_passed
+    python_compilation: passed
+    ruff_0_16_0: passed_no_new_diagnostics_against_baseline
+    governance_validators: passed
+    exact_twelve_path_and_forbidden_diff: passed
+    secret_and_project_neutrality_scans: passed
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    provider_invocations: 0
+    network_operations: 0
+    private_target_reads: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    benchmark_executions: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  funding_or_live_execution_required_for_this_correction: false
+  p15c_stage_accepted: false
+  p15d_stage_entered: false
+  p15d_stage_accepted: false
+  p15e_authorized: false
+  authority_effect: none
 authorization_boundaries:
   state_file_grants_authority: false
   live_model_provider_execution_authorized: true

@@ -202,6 +202,84 @@ def test_database_hardlink_and_sidecar_symlink_are_detected(tmp_path: Path) -> N
     with pytest.raises(StateConflict, match="sidecar.*symlink"):
         store.get_run("run")
 
+    sidecar.unlink()
+    sidecar.touch()
+    sidecar_hardlink = tmp_path / "sidecar-hardlink"
+    os.link(sidecar, sidecar_hardlink)
+    with pytest.raises(StateConflict, match="sidecar.*exactly one hard link"):
+        store._validate_database_path()
+
+    sidecar_hardlink.unlink()
+    sidecar.unlink()
+    sidecar.mkdir()
+    with pytest.raises(StateConflict, match="sidecar.*regular file"):
+        store._validate_database_path()
+
+
+def test_transient_sidecar_disappearance_is_treated_as_valid_absence(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    database = tmp_path / "state.sqlite3"
+    store = _store(tmp_path)
+    sidecar = Path(f"{database}-wal")
+    sidecar.touch()
+    original_lstat = Path.lstat
+    disappear_once = True
+
+    def transient_lstat(path: Path) -> os.stat_result:
+        nonlocal disappear_once
+        if path == sidecar and disappear_once:
+            disappear_once = False
+            raise FileNotFoundError(2, "No such file or directory", str(path))
+        return original_lstat(path)
+
+    monkeypatch.setattr(Path, "lstat", transient_lstat)
+
+    store._validate_database_path()
+
+    assert disappear_once is False
+
+
+def test_unlinked_regular_sidecar_metadata_is_treated_as_valid_absence(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    database = tmp_path / "state.sqlite3"
+    store = _store(tmp_path)
+    sidecar = Path(f"{database}-shm")
+    sidecar.touch()
+    original_lstat = Path.lstat
+    observed = original_lstat(sidecar)
+    unlinked = os.stat_result(
+        (
+            observed.st_mode,
+            observed.st_ino,
+            observed.st_dev,
+            0,
+            observed.st_uid,
+            observed.st_gid,
+            observed.st_size,
+            observed.st_atime,
+            observed.st_mtime,
+            observed.st_ctime,
+        )
+    )
+    return_unlinked_once = True
+
+    def transient_lstat(path: Path) -> os.stat_result:
+        nonlocal return_unlinked_once
+        if path == sidecar and return_unlinked_once:
+            return_unlinked_once = False
+            return unlinked
+        return original_lstat(path)
+
+    monkeypatch.setattr(Path, "lstat", transient_lstat)
+
+    store._validate_database_path()
+
+    assert return_unlinked_once is False
+
 
 def test_database_parent_identity_substitution_is_detected(tmp_path: Path) -> None:
     parent = tmp_path / "state"

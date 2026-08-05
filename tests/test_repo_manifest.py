@@ -30,6 +30,11 @@ BOUNDED_CLOSURE_PAIR = {
     "examples/task_manifests/tool_system_bounded_closure_no_progress_contract_v1.yaml",
     "examples/change_plans/tool_system_bounded_closure_no_progress_contract_v1.yaml",
 }
+DURABLE_SIDECAR_CORRECTION_RETAINED_FILES = {
+    "docs/reports/durable_orchestrator_sqlite_sidecar_race_correction.md",
+    "examples/change_plans/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml",
+    "examples/task_manifests/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml",
+}
 
 
 def _exact_row(path: str, upstream: str = "ROOT") -> str:
@@ -132,6 +137,19 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == len(retained_paths)
     assert BOUNDED_CLOSURE_PAIR <= retained_paths
+    assert DURABLE_SIDECAR_CORRECTION_RETAINED_FILES <= retained_paths
+    rows_by_path = {row["path"]: row for row in rows}
+    assert rows_by_path["src/tool_system/orchestrator/durable.py"]["owner"] == (
+        "durable-orchestrator module"
+    )
+    assert (
+        "race-safe optional-sidecar validation"
+        in rows_by_path["src/tool_system/orchestrator/durable.py"]["purpose"]
+    )
+    assert (
+        rows_by_path["tests/test_durable_orchestrator_reliability.py"]["owner"]
+        == "durable-orchestrator module"
+    )
     assert result["unclassified_path_count"] == 0
     assert result["retained_inputs_are_current_authority"] is False
     assert result["cleanup_authorized"] is False

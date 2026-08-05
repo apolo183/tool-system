@@ -4,7 +4,9 @@ This file defines the module contract owned by the current
 `durable_orchestrator` module. Its persistent boundary is a caller-selected
 single-host SQLite database outside protected roots.
 Version 1.1 also owns a generic burn-on-claim authorization-consumption ledger;
-it does not claim multi-host global exactly-once delivery.
+version 1.2 treats only SQLite-owned optional sidecars that disappear during
+validation as absent while preserving every observed unsafe-object rejection.
+It does not claim multi-host global exactly-once delivery.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -15,20 +17,20 @@ module_compound_contract:
   identity:
     canonical_module_id: durable-orchestrator
     current_module_id: durable_orchestrator
-    module_version: 1.1.0
+    module_version: 1.2.0
     aggregate_interface:
       interface_id: durable-orchestrator-api
       interface_version: 1.1.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:durable_orchestrator@1.0.0
+    rollback_identity: tool-system@783a1bf16c48e717da281d9fefc134e68bf879c4:durable_orchestrator@1.1.0
     python_import_identities:
       - kind: prefix
         name: tool_system.orchestrator
   role:
     summary: persist and reconcile single-host task state, side-effect evidence, and one-time authorization consumption
-    responsibility_boundary: Own one hardened local SQLite state store for task, lease, checkpoint, side-effect, outbox, recovery, integrity, immutable ledger identity, and burn-on-claim authorization records.
+    responsibility_boundary: Own one hardened local SQLite state store for task, lease, checkpoint, side-effect, outbox, recovery, integrity, immutable ledger identity, burn-on-claim authorization records, and race-safe validation of SQLite-owned optional sidecars.
   natural_owner_evidence_paths:
     - src/tool_system/orchestrator/__init__.py
     - src/tool_system/orchestrator/durable.py
@@ -53,7 +55,7 @@ module_compound_contract:
     registered_error_semantics:
       - lease_retry_recovery_and_terminal_error_states
       - authorization_replay_is_terminal
-    boundary: Invalid paths, unsafe permissions, identity substitution, stale lease, precondition drift, retry exhaustion, ambiguous replay, duplicate authorization consumption, wrong ledger identity, expiry, corruption, or integrity failure blocks.
+    boundary: Invalid paths, unsafe permissions, identity substitution, observed sidecar symlinks, nonregular or multi-link sidecars, stale lease, precondition drift, retry exhaustion, ambiguous replay, duplicate authorization consumption, wrong ledger identity, expiry, corruption, or integrity failure blocks. An optional SQLite sidecar that disappears during validation is valid absence rather than a state conflict.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -73,7 +75,7 @@ module_compound_contract:
       - effect_class: database_write
         evidence_paths:
           - src/tool_system/orchestrator/durable.py
-        boundary: Create, migrate through schema v3, transact with BEGIN IMMEDIATE, checkpoint, and integrity-check one local SQLite database and its SQLite sidecars.
+        boundary: Create, migrate through schema v3, transact with BEGIN IMMEDIATE, checkpoint, and integrity-check one local SQLite database and its SQLite sidecars while tolerating only a sidecar that atomically disappears during observation.
     delegated_effects:
       - capability_id: caller-supplied-outbox-delivery-sink
         capability_state: conditional-delegated-maximum
@@ -93,13 +95,13 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve schema migration, state machine, leases, attempts, idempotency, preconditions, transactions, outbox, recovery, integrity, immutable ledger identity, burn-on-claim uniqueness, and record shapes.
+    interface_compatible_replacement: Preserve schema migration, state machine, leases, attempts, idempotency, preconditions, transactions, outbox, recovery, integrity, immutable ledger identity, burn-on-claim uniqueness, record shapes, database-file single-link identity, and fail-closed validation of every observed unsafe sidecar.
     interface_incompatible_change: Requires a new aggregate interface version, explicit database migration contract, and recovery evidence.
   rollback_contract:
-    rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:durable_orchestrator@1.0.0
+    rollback_identity: tool-system@783a1bf16c48e717da281d9fefc134e68bf879c4:durable_orchestrator@1.1.0
     method: Revert through a separately audited pull request while retaining the prior database and applying no destructive data rollback without separate authorization.
   replacement_contract:
-    activation_rule: Replace only after schema v2-to-v3 migration, cross-process authorization races, reopen and crash-burn replay, lease, side-effect, outbox, recovery, corruption, and integrity tests pass against temporary fixture stores.
+    activation_rule: Replace only after schema v2-to-v3 migration, deterministic optional-sidecar disappearance, repeated cross-process authorization races, unsafe sidecar, reopen and crash-burn replay, lease, side-effect, outbox, recovery, corruption, and integrity tests pass against temporary fixture stores.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -119,7 +121,7 @@ module_compound_contract:
       contract: The module owns durable database state, not a separate report, projection, cache, or authority artifact.
     database:
       mode: sqlite-read-write
-      contract: One regular non-symlink SQLite file with controlled parent permissions, identity checks, WAL, foreign keys, synchronous writes, BEGIN IMMEDIATE transactions, schema v3, and an immutable random ledger instance identity.
+      contract: One regular non-symlink SQLite file with controlled parent permissions, identity checks, WAL, foreign keys, synchronous writes, BEGIN IMMEDIATE transactions, schema v3, and an immutable random ledger instance identity. Optional WAL, SHM, and journal files may disappear during validation; every sidecar that remains observed must be regular, non-symlink, and single-link.
   external_root_contracts:
     declaration: declared
     roots:
@@ -132,7 +134,7 @@ module_compound_contract:
         boundary_parameters:
           - database_path
           - forbidden_roots
-        constraint: Use a secure existing parent outside forbidden roots; reject symlinks, hard links, substitutions, unsafe permissions, and unsupported suffixes.
+        constraint: Use a secure existing parent outside forbidden roots; reject symlinks, hard links, substitutions, unsafe permissions, and unsupported suffixes. Treat only FileNotFoundError or regular zero-link metadata observed for an optional SQLite sidecar as concurrent disappearance.
   external_system_contracts:
     declaration: declared
     systems:
