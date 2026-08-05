@@ -1308,19 +1308,24 @@ provider_mode_and_acceptance_realignment_lifecycle:
       exact_15_path_closure: passed
       secret_project_identity_and_forbidden_diff_scans: passed
   readonly_p15_acceptance_mapping:
-    status: provider_realignments_and_multi_project_evidence_complete_consolidated_non_live_acceptance_pending
+    status: all_non_live_p15_evidence_complete_stopped_before_final_smoke
     completed_dependencies:
       - target_policy
       - ai_worker_runtime
       - adaptive_provider_portfolio
       - representative_multi_project_evidence
       - cross_project_isolation_and_generalization
-    pending_dependencies:
-      - consolidated_quality_time_economics_recovery_policy_metrics
-      - consolidated_failure_and_rollback_corpus
-      - consolidated_deterministic_routing_and_hard_gate_evidence
+      - quality_time_economics_recovery_policy_metrics
+      - failure_and_rollback_plan_corpus
+      - deterministic_routing_and_hard_gate_evidence
       - readonly_remaining_item_mapping
-      - separately_authorized_final_single_provider_live_smoke
+    remaining_dependencies:
+      - separately_authorized_single_provider_live_smoke_on_then_canonical_main
+      - explicit_p15_acceptance_decision_after_smoke
+    false_completion_gates:
+      simultaneous_multi_provider_availability: false
+      qwen_funding: false
+      moving_alias_exact_version: false
   formal_rules:
     daily_development_route: chatgpt_codex_subscription
     all_large_model_apis_default_disabled: true
@@ -1405,6 +1410,21 @@ p15_non_live_acceptance_lifecycle:
       - conflict_block
     cross_project_isolation_required: true
     source_boundary: committed_isolated_fixtures_only
+    merge_commit: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    hosted_ci_run: 31057595127
+    hosted_ci_conclusion: success
+    status: accepted_isolated_multi_project_evidence
+  consolidated_non_live_acceptance_evidence:
+    task_manifest: examples/task_manifests/tool_system_p15_non_live_consolidated_evidence_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15_non_live_consolidated_evidence_v1.yaml
+    matrix: docs/reports/p15_non_live_consolidated_evidence_v1.yaml
+    smoke_packet_schema: docs/reports/p15_final_smoke_control_packet_schema_v1.yaml
+    record: docs/reports/p15_non_live_consolidated_acceptance.md
+    all_non_live_p15_evidence_complete_on_guarded_merge: true
+    live_smoke_authorized: false
+    live_smoke_executed: false
+    p15_stage_accepted: false
+    p16_stage_entered: false
     status: candidate_pending_hosted_ci_and_guarded_merge
   dependency_order:
     - entry_state_correction

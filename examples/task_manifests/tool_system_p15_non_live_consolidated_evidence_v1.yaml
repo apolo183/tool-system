@@ -1,0 +1,134 @@
+task_id: tool-system-p15-non-live-consolidated-evidence-v1
+task_type: implementation
+target_repo: apolo183/tool-system
+target_branch: agent/p15-non-live-consolidated-evidence-v1
+phase: P15_MULTI_PROJECT_BENCHMARK
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P15_MULTI_PROJECT_BENCHMARK
+alignment:
+  parent:
+    document: docs/reports/p15_non_live_multi_project_benchmark.md
+    section_or_key: Acceptance effect
+    scope: Consolidate the accepted multi-project evidence with provider fake-I-O, routing, failure, recovery, isolation, and economics evidence.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Complete all non-live P15 evidence and stop before the separately authorized single-provider smoke and P15 acceptance.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P15-NON-LIVE-CONSOLIDATED-EVIDENCE-v1
+    baseline_commit: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    baseline_tree: canonical_main_tree_at_32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    allowed_scope: exact_7_paths_listed_below
+    acceptance_set:
+      - current sources bind representative projects fake-I-O adapters deterministic routing hard gates failure recovery isolation and integer economics
+      - quality logical-time economics recovery and policy metrics are explicit and contain no private values
+      - a non-authorizing final-smoke packet schema contains only external references placeholders and default-disabled controls
+      - remaining items are only separately authorized final smoke and subsequent explicit P15 acceptance decision
+      - multi-provider availability named-provider funding and moving-alias exact versions are not completion gates
+      - no credential value provider network real downstream production cleanup rollback P15 acceptance P16 entry or final smoke occurs
+    validation_set:
+      - exact task pair consolidated matrix smoke schema report state and phase-alignment tests
+      - focused provider mode fake-I-O failure-control P15D phase alignment and full tests
+      - successful Hosted CI before Ready and squash merge with unchanged base head scope comments and reviews
+    terminal_predicate: exact seven-path Draft PR passes Hosted CI, moves without drift to Ready, squash-merges, retains its branch, emits the read-only remaining-item mapping, and stops before final smoke.
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 1
+      review_cycles: 1
+      wall_clock_hours: 6
+      credential_resolver_invocations: 0
+      credential_value_accesses: 0
+      provider_invocations: 0
+      live_provider_network_operations: 0
+      real_downstream_accesses: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+      final_live_smoke_executions: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Consolidate all non-live P15 evidence and freeze the stop before final smoke.
+  in_scope: &consolidated_files
+    - docs/reports/p15_final_smoke_control_packet_schema_v1.yaml
+    - docs/reports/p15_non_live_consolidated_acceptance.md
+    - docs/reports/p15_non_live_consolidated_evidence_v1.yaml
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_p15_non_live_consolidated_evidence_v1.yaml
+    - examples/task_manifests/tool_system_p15_non_live_consolidated_evidence_v1.yaml
+    - tests/test_phase_alignment.py
+  out_of_scope:
+    - blueprint AGENTS README global principles runtime provider configuration frozen corpus fixture module registry repository manifest or workflow modification
+    - credential value provider network private target real downstream investment benchmark production cleanup rollback P15 acceptance P16 entry or final smoke
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p15_non_live_multi_project_matrix_v1.yaml
+    commit_sha: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    why_relevant: Accepted parent evidence covers representative projects and cross-project isolation.
+  - repo: apolo183/tool-system
+    path: config/p15d_failure_economics_corpus_prerequisite_v1.yaml
+    commit_sha: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    why_relevant: Frozen corpus covers failure recovery isolation rollback planning and integer synthetic economics.
+  - repo: apolo183/tool-system
+    path: tests/test_ai_worker_p15c_benchmark.py
+    commit_sha: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    why_relevant: Hosted tests cover all provider-specific adapters through fake I-O.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: current_main_consumed_at_task_start
+    why_relevant: Current central governance requires bounded exact evidence and no authority expansion.
+allowed_files: *consolidated_files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/**
+  - .github/workflows/**
+  - config/**
+  - docs/model_provider_portfolio_and_economics_contract_v1.md
+  - docs/modules/**
+  - docs/tool_system_global_development_principles_v1.md
+  - examples/operator_config/**
+  - policy/**
+  - src/**
+  - tests/fixtures/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_phase_alignment.py tests/test_ai_worker_p15c_benchmark.py tests/test_provider_portfolio_provider_mode.py tests/test_provider_portfolio_failure_control.py tests/test_p15d_failure_economics_corpus_prerequisite.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15_non_live_consolidated_evidence_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15_non_live_consolidated_evidence_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - exact seven-file diff and zero forbidden-path change
+    - all non-live evidence categories map to current source or Hosted CI
+    - smoke schema remains disabled and non-authorizing with no credential value
+    - P15 remains unaccepted P16 unentered and final smoke unexecuted
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@32ad304576d5e38405313fbddc0c519dd9bc8b1a
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-06-p15-non-live-acceptance-lifecycle-v1
+  approved_at: 2026-08-06 UTC+09:00

@@ -1,0 +1,114 @@
+schema_version: 1
+evidence_id: p15-non-live-consolidated-evidence-v1
+authority_effect: none
+canonical_base: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+source_snapshots:
+  - path: docs/reports/p15_non_live_multi_project_matrix_v1.yaml
+    commit: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    role: representative_multi_project_cross_project_isolation_and_generalization
+  - path: config/p15d_failure_economics_corpus_prerequisite_v1.yaml
+    commit: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    role: failure_repair_escalation_cancellation_no_progress_isolation_rollback_plan_and_synthetic_economics
+  - path: src/tool_system/provider_portfolio/provider_mode.py
+    commit: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    role: deterministic_default_off_repository_external_route_selection
+  - path: tests/test_ai_worker_p15c_benchmark.py
+    commit: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    role: all_provider_fake_io_runtime_contracts
+  - path: tests/test_provider_portfolio_provider_mode.py
+    commit: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    role: provider_mode_hard_gate_and_skip_contracts
+  - path: tests/test_provider_portfolio_failure_control.py
+    commit: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    role: bounded_failure_recovery_isolation_and_integer_economics
+representative_coverage:
+  isolated_project_count: 2
+  language_stacks: [python, typescript]
+  task_classes:
+    - greenfield_add
+    - bounded_modify
+    - repair
+    - bounded_delete
+    - topology_validation
+    - policy_block
+    - cancellation_resume
+    - no_progress_stop
+    - crash_resume
+    - conflict_block
+  cross_project_isolation_proven: true
+  generalization_proven_within_committed_fixture_boundary: true
+provider_coverage:
+  daily_route: chatgpt_codex_subscription
+  all_large_model_apis_default_disabled: true
+  key_presence_grants_call_authority: false
+  provider_model_selection_source: repository_external_operator_configuration
+  fake_io_adapter_contracts:
+    openai: passed_in_hosted_ci
+    deepseek: passed_in_hosted_ci
+    qwen: passed_in_hosted_ci
+  unavailable_provider_may_skip: true
+  no_available_provider_code: NO_AVAILABLE_PROVIDER
+  single_success_stop: true
+  simultaneous_multi_provider_availability_required: false
+  named_provider_funding_required: false
+  moving_alias_exact_version_required: false
+hard_gates:
+  safety_bypass_allowed: false
+  quality_floor_bypass_allowed: false
+  data_transfer_bypass_allowed: false
+  authorization_bypass_allowed: false
+  hard_budget_bypass_allowed: false
+  expiry_bypass_allowed: false
+  stale_precondition_bypass_allowed: false
+  cancellation_bypass_allowed: false
+failure_and_recovery:
+  frozen_case_count: 8
+  availability_failover_bounded: true
+  same_route_quality_repair_bounded: true
+  stronger_route_escalation_evidence_required: true
+  policy_block_has_no_provider_bypass: true
+  cancellation_before_dispatch_and_application: true
+  finite_attempt_stop: true
+  repeated_no_progress_stop: true
+  affected_module_isolation: true
+  rollback_is_plan_only: true
+metrics:
+  quality:
+    accepted_isolated_project_count: 2
+    rejected_out_of_scope_case_count: 1
+    provider_fake_io_adapter_count: 3
+  time:
+    measure: logical_development_and_attempt_cycles
+    finite_budget_required: true
+    hosted_ci_wall_clock_role: advisory_observation
+  economics:
+    unit: integer_microunits
+    private_inputs_committed: false
+    hard_floors_precede_economics: true
+    double_counting_allowed: false
+  recovery:
+    failure_corpus_case_count: 8
+    cancellation_case_present: true
+    no_progress_case_present: true
+    crash_resume_case_present: true
+    conflict_block_case_present: true
+  policy:
+    external_operation_count: 0
+    credential_value_access_count: 0
+    live_provider_invocation_count: 0
+    real_downstream_access_count: 0
+    production_operation_count: 0
+    cleanup_operation_count: 0
+    rollback_execution_count: 0
+hosted_ci_evidence:
+  entry_state_run: 31057074087
+  multi_project_run: 31057595127
+  conclusions: [success, success]
+remaining_items:
+  - separately_authorized_single_provider_live_smoke_on_then_canonical_main
+  - explicit_p15_acceptance_decision_after_smoke
+acceptance_boundary:
+  all_non_live_p15_evidence_complete_on_guarded_merge: true
+  p15_stage_accepted: false
+  p16_stage_entered: false
+  final_live_smoke_executed: false
