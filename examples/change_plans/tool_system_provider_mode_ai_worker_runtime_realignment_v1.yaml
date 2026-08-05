@@ -10,6 +10,7 @@ changed_files:
   - src/tool_system/ai_worker/__init__.py
   - src/tool_system/ai_worker/runtime.py
   - tests/test_ai_worker_provider_mode.py
+  - tests/test_repo_manifest.py
 alignment:
   parent:
     document: examples/task_manifests/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
