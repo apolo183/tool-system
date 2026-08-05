@@ -956,3 +956,107 @@ def test_p15_non_live_multi_project_matrix_is_isolated_and_zero_external() -> No
     assert provider["adapter_fake_io_evidence_required"] is True
     assert provider["live_smoke_executed"] is False
     assert set(matrix["acceptance_boundary"].values()) == {False}
+
+
+def test_p15_consolidated_non_live_evidence_stops_before_final_smoke() -> None:
+    evidence = load_yaml_file(
+        ROOT / "docs" / "reports" / "p15_non_live_consolidated_evidence_v1.yaml"
+    )
+    smoke = load_yaml_file(
+        ROOT / "docs" / "reports" / "p15_final_smoke_control_packet_schema_v1.yaml"
+    )
+
+    assert evidence["schema_version"] == 1
+    assert evidence["authority_effect"] == "none"
+    assert all(
+        (ROOT / source["path"]).is_file()
+        and source["commit"] == "32ad304576d5e38405313fbddc0c519dd9bc8b1a"
+        for source in evidence["source_snapshots"]
+    )
+
+    representative = evidence["representative_coverage"]
+    assert representative["isolated_project_count"] == 2
+    assert set(representative["language_stacks"]) == {"python", "typescript"}
+    assert representative["cross_project_isolation_proven"] is True
+    assert (
+        representative["generalization_proven_within_committed_fixture_boundary"]
+        is True
+    )
+
+    provider = evidence["provider_coverage"]
+    assert provider["daily_route"] == "chatgpt_codex_subscription"
+    assert provider["all_large_model_apis_default_disabled"] is True
+    assert provider["key_presence_grants_call_authority"] is False
+    assert provider["provider_model_selection_source"] == (
+        "repository_external_operator_configuration"
+    )
+    assert set(provider["fake_io_adapter_contracts"]) == {
+        "openai",
+        "deepseek",
+        "qwen",
+    }
+    assert set(provider["fake_io_adapter_contracts"].values()) == {
+        "passed_in_hosted_ci"
+    }
+    assert provider["no_available_provider_code"] == "NO_AVAILABLE_PROVIDER"
+    assert provider["single_success_stop"] is True
+    assert provider["simultaneous_multi_provider_availability_required"] is False
+    assert provider["named_provider_funding_required"] is False
+    assert provider["moving_alias_exact_version_required"] is False
+
+    assert set(evidence["hard_gates"].values()) == {False}
+    failure = evidence["failure_and_recovery"]
+    assert failure["frozen_case_count"] == 8
+    assert failure["rollback_is_plan_only"] is True
+    assert all(value is True for key, value in failure.items() if key != "frozen_case_count")
+
+    metrics = evidence["metrics"]
+    assert metrics["quality"] == {
+        "accepted_isolated_project_count": 2,
+        "rejected_out_of_scope_case_count": 1,
+        "provider_fake_io_adapter_count": 3,
+    }
+    assert metrics["time"]["measure"] == "logical_development_and_attempt_cycles"
+    assert metrics["economics"]["unit"] == "integer_microunits"
+    assert metrics["economics"]["private_inputs_committed"] is False
+    assert metrics["economics"]["hard_floors_precede_economics"] is True
+    assert metrics["economics"]["double_counting_allowed"] is False
+    assert set(metrics["policy"].values()) == {0}
+
+    assert evidence["remaining_items"] == [
+        "separately_authorized_single_provider_live_smoke_on_then_canonical_main",
+        "explicit_p15_acceptance_decision_after_smoke",
+    ]
+    assert evidence["acceptance_boundary"] == {
+        "all_non_live_p15_evidence_complete_on_guarded_merge": True,
+        "p15_stage_accepted": False,
+        "p16_stage_entered": False,
+        "final_live_smoke_executed": False,
+    }
+
+    assert smoke["role"] == "non_authorizing_repository_template_only"
+    assert smoke["authority_effect"] == "none"
+    assert smoke["api_mode_enabled"] is False
+    assert smoke["provider"]["enabled"] is False
+    assert smoke["credential"]["value_present_in_packet"] is False
+    assert smoke["credential"]["key_presence_grants_call_authority"] is False
+    assert smoke["network"]["authorized"] is False
+    assert smoke["budget"]["authorized"] is False
+    assert smoke["budget"]["hard_ceiling_microunits"] == 0
+    assert smoke["authorization"]["final_smoke_authorized"] is False
+    assert (
+        smoke["authorization"]["separate_current_user_authorization_required"]
+        is True
+    )
+    assert smoke["data_transfer"]["authorized"] is False
+    assert smoke["retry_and_cancellation"] == {
+        "max_attempts": 1,
+        "max_retries": 0,
+        "cancellation_token_required": True,
+    }
+    assert smoke["current_state"] == {
+        "executable": False,
+        "live_smoke_executed": False,
+        "p15_accepted": False,
+        "p16_entered": False,
+    }
