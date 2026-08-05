@@ -1,0 +1,120 @@
+task_id: tool-system-p15-non-live-lifecycle-closeout-v1
+task_type: documentation
+target_repo: apolo183/tool-system
+target_branch: agent/p15-non-live-lifecycle-closeout-v1
+phase: P15_MULTI_PROJECT_BENCHMARK
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P15_MULTI_PROJECT_BENCHMARK
+alignment:
+  parent:
+    document: docs/reports/p15_non_live_consolidated_acceptance.md
+    section_or_key: Read-only remaining-item mapping
+    scope: Correct only post-merge descriptive status and record the lifecycle stop.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve all completed non-live evidence and stop before final smoke P15 acceptance and P16.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P15-NON-LIVE-LIFECYCLE-CLOSEOUT-v1
+    baseline_commit: 579dde4718fb80ae0dc9c16d796e825c62aba189
+    baseline_tree: canonical_main_tree_at_579dde4718fb80ae0dc9c16d796e825c62aba189
+    allowed_scope: exact_4_paths_listed_below
+    acceptance_set:
+      - all three dependent merge commits and successful Hosted CI runs are recorded
+      - consolidated candidate status is corrected to accepted non-live evidence
+      - all feature branches are retained
+      - read-only mapping remains stopped before separately authorized final smoke and explicit P15 acceptance
+      - no live external downstream production cleanup rollback P15 acceptance or P16 operation occurs
+    validation_set:
+      - exact task pair report and descriptive state consistency
+      - phase alignment repository manifest and full tests
+      - successful Hosted CI before Ready and squash merge with unchanged base head scope comments and reviews
+    terminal_predicate: exact four-path Draft PR passes Hosted CI, moves without drift to Ready, squash-merges, its branch is restored if auto-deleted, and execution stops.
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 1
+      review_cycles: 1
+      wall_clock_hours: 4
+      credential_value_accesses: 0
+      provider_invocations: 0
+      network_operations: 0
+      real_downstream_accesses: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+      final_live_smoke_executions: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Correct only final descriptive lifecycle status and record the stop.
+  in_scope: &closeout_files
+    - docs/reports/p15_non_live_lifecycle_closeout.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_p15_non_live_lifecycle_closeout_v1.yaml
+    - examples/task_manifests/tool_system_p15_non_live_lifecycle_closeout_v1.yaml
+  out_of_scope:
+    - all source tests fixtures configs blueprint governance runtime provider workflow module and repository manifest files
+    - credential value provider network downstream production cleanup rollback P15 acceptance P16 entry or final smoke
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p15_non_live_consolidated_acceptance.md
+    commit_sha: 579dde4718fb80ae0dc9c16d796e825c62aba189
+    why_relevant: The accepted dependency defines the final non-live mapping and stop.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: current_main_consumed_at_task_start
+    why_relevant: Current governance requires accurate descriptive claims and exact bounded closure.
+allowed_files: *closeout_files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/**
+  - .github/workflows/**
+  - config/**
+  - docs/model_provider_portfolio_and_economics_contract_v1.md
+  - docs/modules/**
+  - docs/tool_system_global_development_principles_v1.md
+  - examples/operator_config/**
+  - policy/**
+  - src/**
+  - tests/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_phase_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15_non_live_lifecycle_closeout_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15_non_live_lifecycle_closeout_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - exact four-file diff and zero forbidden-path change
+    - canonical evidence chain and stop state agree
+    - P15 remains unaccepted P16 unentered and final smoke unexecuted
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@579dde4718fb80ae0dc9c16d796e825c62aba189
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-06-p15-non-live-acceptance-lifecycle-v1
+  approved_at: 2026-08-06 UTC+09:00
