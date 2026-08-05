@@ -1042,6 +1042,75 @@ p15d_prerequisite_corpus_freeze:
   p15d_stage_accepted: false
   p15e_authorized: false
   authority_effect: none
+p15d_prerequisite_failure_control_fixture:
+  task_identity: P15D-PREREQUISITE-FAILURE-CONTROL-FIXTURE-v1
+  authorization_source: chat_user_message:2026-08-05-defer-funding-and-continue-offline-development
+  canonical_source_baseline_commit: ca04839ec96009fe6a4205b8a0d99794c7531cce
+  canonical_source_baseline_tree: da1ce6dd7885a96a0bc1dc3a405a351debef0366
+  task_manifest: examples/task_manifests/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml
+  frozen_prerequisite_packet: config/p15d_failure_economics_corpus_prerequisite_v1.yaml
+  record: docs/reports/p15d_prerequisite_failure_control_fixture_implementation.md
+  status: accepted_only_on_guarded_squash_merge_non_executing_prerequisite_fixture
+  module:
+    current_module_id: adaptive_model_portfolio_and_economics
+    canonical_module_id: adaptive-model-portfolio-and-economics
+    previous_module_version: 1.2.0
+    module_version: 1.3.0
+    aggregate_interface_id: adaptive-model-portfolio-and-economics-api
+    aggregate_interface_version: 1.0.0
+    implementation_source_paths:
+      - src/tool_system/provider_portfolio/__init__.py
+      - src/tool_system/provider_portfolio/failure_control.py
+  implementation:
+    execution_mode: pure_in_memory_non_executing_fixture
+    failure_actions:
+      - AVAILABILITY_FAILOVER
+      - SAME_ROUTE_REPAIR
+      - QUALITY_ESCALATION
+      - BLOCK_NO_PROVIDER_BYPASS
+      - STOP
+    recurrence_fingerprint_fields:
+      - task_digest_sha256
+      - candidate_tree_sha256
+      - acceptance_digest_sha256
+      - blocker_ids
+      - validation_results
+    repeated_fingerprint_stop: STOPPED_NO_PROGRESS_REPEATED_FINGERPRINT
+    two_cycle_stop: STOPPED_NO_PROGRESS_TWO_CYCLES
+    isolation_adds_machine_lifecycle_status: false
+    rollback_or_cleanup_execution_authorized: false
+    economics_currency: microUSD
+    economics_arithmetic: non_negative_integers_only
+    frozen_synthetic_total_micro_usd: 17000
+    hard_floors_evaluated_before_economics: true
+    frozen_prerequisite_packet_modified: false
+  local_validation:
+    focused_pytest: 149_passed
+    full_pytest: 700_passed
+    python_compilation: passed
+    ruff_0_16_0: passed
+    governance_validators: passed
+    exact_thirteen_path_and_forbidden_diff: passed
+    secret_and_project_neutrality_scans: passed
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    provider_invocations: 0
+    network_operations: 0
+    private_target_reads: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    benchmark_executions: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  funding_or_live_execution_required_for_this_fixture: false
+  p15c_stage_accepted: false
+  p15d_stage_entered: false
+  p15d_stage_accepted: false
+  p15e_authorized: false
+  authority_effect: none
 authorization_boundaries:
   state_file_grants_authority: false
   live_model_provider_execution_authorized: true
