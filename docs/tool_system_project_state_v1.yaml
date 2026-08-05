@@ -8,15 +8,15 @@ blueprint:
   process_state_allowed_in_blueprint: false
 current_phase:
   id: P15_MULTI_PROJECT_BENCHMARK
-  status: active_non_live_acceptance
-  entry_record: docs/reports/p15_non_live_entry_state_correction.md
+  status: active
+  entry_record: docs/reports/p15a_provider_portfolio_qualification_specification.md
   entry_authorized: true
   last_accepted_stage: P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES
   last_accepted_stage_record: docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md
-  next_stage: P15_NON_LIVE_MULTI_PROJECT_EVIDENCE
+  next_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
   next_stage_authorized: true
-  active_stage: P15_NON_LIVE_MULTI_PROJECT_EVIDENCE
-  active_stage_status: authorized_pending_dependent_package
+  active_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
+  active_stage_status: provider_mode_acceptance_realignment_policy_package_no_execution
   next_phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   next_phase_entry_authorized: false
 prior_acceptance:
@@ -1383,7 +1383,7 @@ p15_non_live_acceptance_lifecycle:
     task_manifest: examples/task_manifests/tool_system_p15_non_live_entry_state_correction_v1.yaml
     change_plan: examples/change_plans/tool_system_p15_non_live_entry_state_correction_v1.yaml
     record: docs/reports/p15_non_live_entry_state_correction.md
-    status: candidate_pending_hosted_ci_and_guarded_merge
+    status: candidate_corrects_mapping_without_renaming_canonical_stage
   dependency_order:
     - entry_state_correction
     - representative_multi_project_and_isolation_evidence
