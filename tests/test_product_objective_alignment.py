@@ -5,7 +5,6 @@ from pathlib import Path
 
 from tool_system.manifest.task_manifest import load_yaml_file
 
-
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
 BLUEPRINT_SCHEMA = (
@@ -163,6 +162,16 @@ def test_completion_and_non_goals_prevent_false_product_claims() -> None:
         "model_selection_uses_task_class_evidence_and_expected_total_economic_cost",
         "safety_quality_data_and_authorization_floors_override_economics",
         "credentials_and_private_economic_values_remain_outside_public_repository",
+        "chatgpt_codex_subscription_is_the_daily_development_route",
+        "every_large_model_api_is_disabled_by_default",
+        "api_key_presence_never_grants_call_authority",
+        "live_provider_and_model_selection_is_repository_external",
+        "unavailable_or_unfunded_api_providers_may_be_skipped",
+        "every_provider_specific_adapter_passes_fake_io_contract_tests",
+        "one_enabled_usable_api_key_smoke_proves_the_backup_path",
+        "simultaneous_multi_provider_availability_is_not_a_completion_gate",
+        "named_provider_funding_is_not_a_completion_gate",
+        "moving_model_alias_exact_version_is_not_a_completion_gate",
     }
     assert set(objective["non_goals"]) >= {
         "unrestricted_remote_repository_mutation",
@@ -203,8 +212,9 @@ def test_successor_chain_builds_product_before_benchmark_and_operations() -> Non
         p15["entry_requires"]
     )
     assert (
-        "each live provider benchmark has a named "
-        "provider-model-network-credential-reference-limit execution packet"
+        "the final live API backup smoke has one named provider-model-network-"
+        "credential-reference-limit execution packet for the single provider "
+        "selected by repository-external operator configuration"
     ) in p15["entry_requires"]
     assert "deterministic policy-owned routing decisions and hard capability floors" in (
         p15["outputs"]
@@ -212,6 +222,14 @@ def test_successor_chain_builds_product_before_benchmark_and_operations() -> Non
     assert (
         "quality, time-to-acceptance, expected total economic cost, recovery, "
         "and policy metrics"
+    ) in p15["outputs"]
+    assert (
+        "one controlled backup-API smoke through any single explicitly enabled "
+        "usable key on the then-canonical main"
+    ) in p15["outputs"]
+    assert (
+        "explicit proof that simultaneous multi-provider availability Qwen "
+        "funding and moving-alias exact versions are not completion gates"
     ) in p15["outputs"]
     assert [stage["stage"] for stage in p15["stage_plan"]] == [
         "P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION",
@@ -225,12 +243,20 @@ def test_successor_chain_builds_product_before_benchmark_and_operations() -> Non
     assert "production deployment remains separately approved only" in (
         p16["entry_requires"]
     )
-    assert "daily lightweight availability, critical-path, and economic recomputation" in (
-        p16["outputs"]
+    assert (
+        "operator-configured availability critical-path and economic "
+        "recomputation when API mode is enabled"
+    ) in p16["outputs"]
+    assert (
+        "operator-configured changed-route incremental benchmarks when API mode is enabled"
+        in p16["outputs"]
     )
-    assert "changed-model incremental benchmark at a default 72-hour cadence" in (
-        p16["outputs"]
-    )
+    rules = blueprint["role_control_rules"]
+    assert rules["chatgpt_codex_subscription_is_daily_default_route"] is True
+    assert rules["every_large_model_api_is_default_disabled"] is True
+    assert rules["api_key_presence_grants_call_authority"] is False
+    assert rules["one_enabled_usable_api_smoke_satisfies_backup_path_proof"] is True
+    assert rules["simultaneous_multi_provider_availability_required_for_completion"] is False
 
 
 def test_p14f_and_p14h_freeze_bounded_terminal_semantics_without_new_stage() -> None:

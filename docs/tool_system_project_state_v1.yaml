@@ -16,7 +16,7 @@ current_phase:
   next_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
   next_stage_authorized: true
   active_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
-  active_stage_status: openai_qwen_matrix_frozen_blocked_qwen_not_funded_no_execution
+  active_stage_status: provider_mode_acceptance_realignment_policy_package_no_execution
   next_phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   next_phase_entry_authorized: false
 prior_acceptance:
@@ -1171,6 +1171,69 @@ durable_orchestrator_sqlite_sidecar_race_correction:
   p15d_stage_entered: false
   p15d_stage_accepted: false
   p15e_authorized: false
+  authority_effect: none
+provider_mode_and_acceptance_realignment_lifecycle:
+  task_identity: PROVIDER-MODE-AND-ACCEPTANCE-REALIGNMENT-LIFECYCLE-v1
+  authorization_source: chat_user_message:2026-08-06-provider-mode-and-acceptance-realignment-lifecycle-v1
+  canonical_source_baseline_commit: c4120a8275f6eb8bc8aaa660282b8875b013f1f6
+  canonical_source_baseline_tree: b6268cb92b54d46d5166466a87bf6def01fb2c62
+  dependency_order:
+    - target_policy
+    - ai_worker_runtime
+    - adaptive_provider_portfolio
+    - readonly_p15_acceptance_mapping
+  target_policy_package:
+    task_identity: PROVIDER-MODE-AND-ACCEPTANCE-POLICY-REALIGNMENT-v1
+    task_manifest: examples/task_manifests/tool_system_provider_mode_and_acceptance_policy_realignment_v1.yaml
+    change_plan: examples/change_plans/tool_system_provider_mode_and_acceptance_policy_realignment_v1.yaml
+    record: docs/reports/provider_mode_and_acceptance_policy_realignment.md
+    status: accepted_only_on_guarded_squash_merge_policy_realignment_no_execution
+    local_validation:
+      focused_pytest: 72_passed
+      full_pytest: 704_passed
+      python_compilation: passed
+      ruff_0_16_0: passed
+      governance_validators: passed
+      exact_13_path_closure: passed
+  formal_rules:
+    daily_development_route: chatgpt_codex_subscription
+    all_large_model_apis_default_disabled: true
+    provider_ids_explicitly_included:
+      - openai
+      - deepseek
+      - qwen
+      - future_providers
+    api_key_presence_grants_call_authority: false
+    provider_and_model_selection_source: repository_external_operator_configuration
+    unavailable_unfunded_invalid_expired_or_unconfigured_provider_may_skip: true
+    provider_specific_fake_io_contract_required: true
+    final_backup_path_live_proof: one_explicitly_enabled_usable_key_on_then_canonical_main
+    simultaneous_multi_provider_availability_required: false
+    qwen_funding_required: false
+    moving_alias_exact_version_required: false
+  preserved_controls:
+    - api_default_disabled
+    - credentials_external
+    - budgets_and_expiry
+    - authorization_and_data_transfer
+    - retry_and_cancellation
+    - redacted_audit
+    - hosted_ci_fake_io_only
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_target_reads: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  p15_stage_accepted: false
+  p16_stage_entered: false
+  final_live_smoke_executed: false
   authority_effect: none
 authorization_boundaries:
   state_file_grants_authority: false

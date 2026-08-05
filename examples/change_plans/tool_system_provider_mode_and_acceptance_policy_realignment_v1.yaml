@@ -1,0 +1,49 @@
+plan_id: tool-system-provider-mode-and-acceptance-policy-realignment-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_provider_mode_and_acceptance_policy_realignment_v1.yaml
+changed_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/tool_system_v0.yaml
+  - docs/model_provider_portfolio_and_economics_contract_v1.md
+  - docs/reports/provider_mode_and_acceptance_policy_realignment.md
+  - docs/tool_system_global_development_principles_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_provider_mode_and_acceptance_policy_realignment_v1.yaml
+  - examples/task_manifests/tool_system_provider_mode_and_acceptance_policy_realignment_v1.yaml
+  - tests/test_model_provider_portfolio_contract.py
+  - tests/test_phase_alignment.py
+  - tests/test_product_objective_alignment.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_provider_mode_and_acceptance_policy_realignment_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Correct only the stable product target policy descriptive state and direct machine alignment tests before either runtime module is changed.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded blueprint-driven development and every safety gate while making subscription mode primary and all metered APIs default-disabled backups.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_model_provider_portfolio_contract.py tests/test_phase_alignment.py tests/test_product_objective_alignment.py tests/test_global_principles.py tests/test_central_governance_consumption.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_provider_mode_and_acceptance_policy_realignment_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_provider_mode_and_acceptance_policy_realignment_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/provider-mode-acceptance-policy-realignment-v1
+  retain_feature_branch: true
+  exact_base: c4120a8275f6eb8bc8aaa660282b8875b013f1f6
+  exact_base_tree: b6268cb92b54d46d5166466a87bf6def01fb2c62
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@c4120a8275f6eb8bc8aaa660282b8875b013f1f6
+  execution_authorized: false

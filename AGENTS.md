@@ -5,7 +5,7 @@ role: agent governance contract
 purpose: define how agents inspect, modify, test, and publish tool-system changes  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-30 UTC+09:00
+updated_at: 2026-08-06 00:21 UTC+09:00
 
 ## 1. Mission
 
@@ -103,17 +103,21 @@ tool-system may offer tools and recommendations to a downstream repository under
 
 ## 6. Provider portfolio and economics rule
 
-Provider integrations are independently replaceable adapters behind the versioned `AIWorkerProvider` interface. Candidate adapters are not enabled providers. Every live provider call requires an authorized exact provider/model, supported authorization surface, credential reference, network route, data policy, token/time/cost envelope, retry/cancellation controls, and redacted audit contract. ChatGPT/Codex subscription access must not be treated as API credit, automated through browser-session scraping, or used to extract authentication material.
+Supported ChatGPT/Codex subscription mode is the ordinary development route. It is separate from every metered API surface and must not be treated as API credit, automated through browser-session scraping, or used to extract authentication material.
 
-The task-complexity assessor is advisory. A deterministic policy engine owns the final route decision from the exact task profile, authorization envelope, and provider/model catalog snapshot. Complexity, risk, data sensitivity, capability floors, verification burden, and critical-path impact remain separate. Safety, quality, data, authorization, and precondition controls cannot be weakened for cost or speed.
+Every large-model API is a dormant backup route and is disabled by default, including OpenAI, DeepSeek, Qwen, and any future provider. A key's presence never grants call authority. A live API call requires repository-external operator configuration that explicitly enables API mode and one provider, selects the provider/model available at that time, and supplies the existing budget, expiry, data-transfer, retry, cancellation, credential-reference, network, and redacted-audit controls. Provider and model choice must not be hard-coded in public runtime source or made a project-completion dependency.
 
-Availability failures may use bounded failover only among already eligible authorized routes. Quality failures may use bounded same-route repair and evidence-backed escalation. Policy, data, hard-budget, authorization, or stale-precondition failures block and must not be bypassed by switching providers. All attempts, failovers, escalations, and stop decisions require redacted reproducible evidence.
+Provider integrations are independently replaceable adapters behind the versioned `AIWorkerProvider` interface. Every provider-specific adapter must pass injected fake-I/O contract tests. An unconfigured, unfunded, invalid, expired, or unavailable provider may be skipped without making another eligible provider or the subscription route fail. If API mode is explicitly enabled but no eligible provider remains, the runtime returns a stable no-available-provider result; it never silently enables an API or bypasses policy.
 
-Model qualification is per task class and uses exact version IDs plus dated price, policy, availability, reliability, and benchmark evidence. Discovery does not activate a model. A new version does not replace an accepted route until qualification and atomic publication pass. Repeated task-class failures cause scoped demotion; unrelated eligible classes need not be discarded.
+The task-complexity assessor is advisory. A deterministic policy engine owns the final route decision from the exact task profile, authorization envelope, and repository-external enabled-route snapshot. Complexity, risk, data sensitivity, capability floors, verification burden, and critical-path impact remain separate. Safety, quality, data, authorization, and precondition controls cannot be weakened for cost or speed.
 
-Optimize expected total economic cost per accepted module, with critical-path time as the largest configurable soft cost driver. Include provider usage, avoidable future renewals, critical-path personnel/rent/operating burn, local compute/electricity, verification, retry, rework, recovery, rollback, and opportunity cost without double counting. Never commit private salaries, rent, rates, billing details, renewal dates, revenue assumptions, credentials, or secret values to the public repository.
+Availability failures may use bounded failover only among already enabled, eligible, and authorized routes. Quality failures may use bounded same-route repair and evidence-backed escalation. Policy, data, hard-budget, authorization, or stale-precondition failures block and must not be bypassed by switching providers. All attempts, skips, failovers, escalations, and stop decisions require redacted reproducible evidence that records the provider/model actually requested without committing credential values.
 
-This rule is a product and roadmap contract. It grants no live-provider execution, credential, P15/P16 phase entry, target-repository mutation, cleanup, or production authority.
+The backup API path is finally accepted when one explicitly enabled and currently usable key completes one controlled smoke test on the then-canonical main. Simultaneous availability of multiple providers, Qwen funding, or a provider's ability to expose a date-pinned model version is not a project-completion gate. Provider-specific fake-I/O coverage remains mandatory even when a provider is skipped live.
+
+Optimize expected total economic cost per accepted module, with critical-path time as the largest configurable soft cost driver. Include subscription capacity and avoidable renewals, enabled-provider usage, critical-path personnel/rent/operating burn, local compute/electricity, verification, retry, rework, recovery, rollback, and opportunity cost without double counting. Never commit private salaries, rent, rates, billing details, renewal dates, revenue assumptions, credentials, or secret values to the public repository.
+
+This rule is a product and roadmap contract. It grants no live-provider execution, credential access, P15/P16 phase entry, target-repository mutation, cleanup, or production authority.
 
 ## 7. Evidence-first rule
 

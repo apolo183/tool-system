@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from tool_system.manifest.task_manifest import load_yaml_file
+import tomllib
 
+from tool_system.manifest.task_manifest import load_yaml_file
 
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
@@ -12,6 +13,9 @@ MODEL_CONTRACT = ROOT / "docs" / "model_provider_portfolio_and_economics_contrac
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 README = ROOT / "README.md"
 AGENTS = ROOT / "AGENTS.md"
+OPERATOR_SETTINGS = (
+    ROOT / "examples" / "operator_config" / "tool_system_settings.example.toml"
+)
 P15A_REPORT = (
     ROOT
     / "docs"
@@ -52,6 +56,9 @@ def test_provider_portfolio_contract_is_product_control_not_runtime_authority() 
         "docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md"
     )
     assert current_phase["status"] == "active"
+    assert current_phase["active_stage_status"] == (
+        "provider_mode_acceptance_realignment_policy_package_no_execution"
+    )
     assert current_phase["entry_record"] == (
         "docs/reports/p15a_provider_portfolio_qualification_specification.md"
     )
@@ -115,6 +122,55 @@ def test_credentials_and_private_economics_stay_out_of_public_contracts() -> Non
     assert "OPENAI_API_KEY=" not in combined
 
 
+def test_subscription_primary_and_all_api_default_disabled_rules_are_locked() -> None:
+    blueprint = load_yaml_file(BLUEPRINT)
+    project_state = load_yaml_file(PROJECT_STATE)
+    rules = blueprint["role_control_rules"]
+    completion = set(blueprint["product_objective"]["completion_definition"])
+    settings = tomllib.loads(OPERATOR_SETTINGS.read_text(encoding="utf-8"))
+    combined = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in (MODEL_CONTRACT, PRINCIPLES, README, AGENTS)
+    )
+
+    assert rules["chatgpt_codex_subscription_is_daily_default_route"] is True
+    assert rules["every_large_model_api_is_default_disabled"] is True
+    assert rules["api_key_presence_grants_call_authority"] is False
+    assert rules["live_provider_and_model_are_repository_external_configuration"]
+    assert rules["unavailable_providers_may_be_skipped"] is True
+    assert rules["provider_specific_fake_io_contract_tests_required"] is True
+    assert rules["one_enabled_usable_api_smoke_satisfies_backup_path_proof"] is True
+    assert rules["simultaneous_multi_provider_availability_required_for_completion"] is False
+    assert rules["named_provider_funding_required_for_completion"] is False
+    assert rules["moving_alias_exact_version_required_for_completion"] is False
+    assert {
+        "chatgpt_codex_subscription_is_the_daily_development_route",
+        "every_large_model_api_is_disabled_by_default",
+        "api_key_presence_never_grants_call_authority",
+        "live_provider_and_model_selection_is_repository_external",
+        "unavailable_or_unfunded_api_providers_may_be_skipped",
+        "every_provider_specific_adapter_passes_fake_io_contract_tests",
+        "one_enabled_usable_api_key_smoke_proves_the_backup_path",
+    } <= completion
+    assert settings["p15c"]["enabled"] is False
+    assert settings["p15c"]["provider_enabled"] == {
+        "deepseek": False,
+        "openai": False,
+        "qwen": False,
+    }
+    assert set(settings["p15c"]["provider_budget_micro_usd"].values()) == {0}
+    assert "ordinary development route" in combined
+    assert "disabled by default" in combined
+    assert "one controlled smoke test" in combined
+    lifecycle = project_state["provider_mode_and_acceptance_realignment_lifecycle"]
+    assert lifecycle["formal_rules"]["all_large_model_apis_default_disabled"]
+    assert lifecycle["formal_rules"]["api_key_presence_grants_call_authority"] is False
+    assert lifecycle["final_live_smoke_executed"] is False
+    assert lifecycle["p15_stage_accepted"] is False
+    assert lifecycle["p16_stage_entered"] is False
+    assert set(lifecycle["source_stage_evidence"].values()) == {0}
+
+
 def test_task_assessment_is_advisory_and_policy_route_is_deterministic() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     agents = blueprint["agents"]
@@ -147,27 +203,35 @@ def test_failure_classes_lifecycle_and_economics_are_explicit() -> None:
     assert "DISCOVERED -> QUARANTINED -> BENCHMARKING -> SHADOW -> CANARY" in contract
     assert "ELIGIBLE -> PRIMARY" in contract
     assert "DEGRADED -> RETIRED" in contract
-    assert "exact provider/version identifiers" in normalized
+    assert "provider/model actually requested" in normalized
+    assert "NO_AVAILABLE_PROVIDER" in contract
     assert "expected_total_economic_cost_per_accepted_module" in contract
     assert "avoidable future subscription renewal" in normalized
     assert "critical-path delay" in normalized
     assert "local compute depreciation allocation, electricity" in normalized
 
 
-def test_recalculation_cadence_and_roadmap_owners_are_locked() -> None:
+def test_conditional_api_maintenance_and_roadmap_owners_are_locked() -> None:
     contract = MODEL_CONTRACT.read_text(encoding="utf-8")
     blueprint = load_yaml_file(BLUEPRINT)
     p15 = blueprint["milestones"]["P15_MULTI_PROJECT_BENCHMARK"]
     p16 = blueprint["milestones"]["P16_PRODUCTION_OPERATIONS_ACCEPTANCE"]
 
-    assert "every 24 hours" in contract
-    assert "every 72 hours" in contract
-    assert "weekly" in contract
-    assert "before each billing renewal and at least monthly" in contract
-    assert "provider-adapter qualification" in contract
-    assert "continuous discovery" in contract
+    assert "only when API mode is explicitly enabled" in contract
+    assert "does not impose a 24-hour, 72-hour, weekly, or" in contract
+    assert "monthly live-call requirement" in contract
+    assert "provider-specific fake-I/O adapter" in contract
+    assert "one final" in contract
+    assert "single explicitly enabled usable API key" in contract
     assert p15["stage_plan"][-1]["stage"] == "P15F_BENCHMARK_ACCEPTANCE_CLOSURE"
-    assert "versioned atomic portfolio publication and rollback" in p16["outputs"]
+    assert (
+        "versioned atomic enabled-route publication and rollback when API mode is enabled"
+        in p16["outputs"]
+    )
+    assert (
+        "proof that disabled or unavailable API providers do not block production-operations acceptance"
+        in p16["outputs"]
+    )
 
 
 def test_public_contracts_point_to_the_detailed_contract() -> None:
