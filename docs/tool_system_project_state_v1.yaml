@@ -678,6 +678,69 @@ p15c_runtime_control_plane:
   p15c_stage_accepted: false
   p15d_authorized: false
   authority_effect: none
+p15c_qwen_runtime_adapter:
+  authorization_source: chat_user_message:2026-08-05-approved-openai-qwen-exact-matrix-recommendation
+  canonical_source_baseline_commit: c4f7527a8a9f859c1f3ed64bfcc93393331dfc14
+  canonical_source_baseline_tree: 6104fa710311cda019741d3c0d103a30af51fb9e
+  task_manifest: examples/task_manifests/tool_system_p15c_qwen_runtime_adapter_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15c_qwen_runtime_adapter_v1.yaml
+  implementation_record: docs/reports/p15c_qwen_runtime_adapter.md
+  implementation_status: accepted_only_on_guarded_squash_merge_no_execution
+  module:
+    current_module_id: ai_worker_runtime
+    canonical_module_id: ai-worker-runtime
+    module_version: 1.9.0
+    aggregate_interface_id: ai-worker-runtime-api
+    aggregate_interface_version: 1.0.0
+  exact_qwen_adapter:
+    provider_id: qwen
+    model_id: qwen3.7-plus-2026-05-26
+    exact_model_version: qwen3.7-plus-2026-05-26
+    host: dashscope.aliyuncs.com
+    path: /compatible-mode/v1/chat/completions
+    billing_currency: CNY
+    per_attempt_hard_cap_micro_cny: 250000
+    requested_output_tokens: 2048
+    thinking_enabled: false
+    streaming_enabled: false
+    tools_enabled: false
+    provider_web_search_enabled: false
+  currency_accounting:
+    ledger_currency: microUSD
+    operator_private_field: cny_to_micro_usd_ceiling
+    minimum_micro_usd_per_cny: 1000000
+    maximum_micro_usd_per_cny: 20000000
+    integer_ceiling_arithmetic: true
+    network_exchange_rate_lookup: false
+  public_budget_ceiling_micro_usd: 20000000
+  canonical_packet_catalog_sha256: 509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962
+  canonical_packet_catalog_changed: false
+  canonical_provider_ids:
+    - deepseek
+    - openai
+  synthetic_qwen_matrix_provider_ids:
+    - openai
+    - qwen
+  synthetic_matrix_only: true
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    target_packet_reads: 0
+    target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_repository_provider_transfers: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  qwen_funding_attested: false
+  canonical_matrix_changed: false
+  p15c_stage_accepted: false
+  p15d_authorized: false
+  authority_effect: none
 p15c_local_operator_configuration:
   authorization_source: chat_user_message:2026-08-04-agreed-local-operator-configuration
   canonical_source_baseline_commit: 432ab42b56e45a4fc469301cef17b7c35324e0f8

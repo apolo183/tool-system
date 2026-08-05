@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 
 from tool_system.ai_worker.p15c_controls import (
-    OwnerOnlyCredentialResolver,
     P15C_AUTHORIZATION_ID,
+    OwnerOnlyCredentialResolver,
     P15CControlError,
     P15CUsageLedger,
     build_execution_source_seal,
@@ -46,25 +46,40 @@ def _owner_policy_toml(path: Path, record: dict[str, object]) -> Path:
         assert isinstance(value, bool)
         return "true" if value else "false"
 
+    currency_lines = (
+        (f"cny_to_micro_usd_ceiling = {record['cny_to_micro_usd_ceiling']}",)
+        if "cny_to_micro_usd_ceiling" in record
+        else ()
+    )
+
     path.write_text(
         "\n".join(
             (
                 "[p15c]",
-                f'schema_version = {record["schema_version"]}',
+                f"schema_version = {record['schema_version']}",
                 f'authorization_id = "{record["authorization_id"]}"',
-                f'enabled = {boolean(record["enabled"])}',
-                f'total_budget_micro_usd = {record["total_budget_micro_usd"]}',
+                f"enabled = {boolean(record['enabled'])}",
+                f"total_budget_micro_usd = {record['total_budget_micro_usd']}",
                 f'expires_at_utc = "{record["expires_at_utc"]}"',
-                "expected_tool_system_commit = "
-                f'"{record["expected_tool_system_commit"]}"',
-                "expected_tool_system_tree = "
-                f'"{record["expected_tool_system_tree"]}"',
-                "expected_target_packet_sha256 = "
-                f'"{record["expected_target_packet_sha256"]}"',
-                "private_repository_transfer_enabled = "
-                f'{boolean(record["private_repository_transfer_enabled"])}',
+                (
+                    "expected_tool_system_commit = "
+                    f'"{record["expected_tool_system_commit"]}"'
+                ),
+                (
+                    "expected_tool_system_tree = "
+                    f'"{record["expected_tool_system_tree"]}"'
+                ),
+                (
+                    "expected_target_packet_sha256 = "
+                    f'"{record["expected_target_packet_sha256"]}"'
+                ),
+                (
+                    "private_repository_transfer_enabled = "
+                    f"{boolean(record['private_repository_transfer_enabled'])}"
+                ),
                 'allowed_case_ids = ["deterministic-corpus", "private-target"]',
-                f'max_provider_invocations = {record["max_provider_invocations"]}',
+                f"max_provider_invocations = {record['max_provider_invocations']}",
+                *currency_lines,
                 "",
                 "[p15c.provider_enabled]",
                 *(
@@ -96,9 +111,11 @@ def _git_blob_sha(content: bytes) -> str:
     return hashlib.sha1(f"blob {len(content)}\0".encode("ascii") + content).hexdigest()
 
 
-def _policy_record(*, commit: str = "1" * 40, tree: str = "2" * 40) -> dict[str, object]:
+def _policy_record(
+    *, commit: str = "1" * 40, tree: str = "2" * 40
+) -> dict[str, object]:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "authorization_id": P15C_AUTHORIZATION_ID,
         "enabled": True,
         "total_budget_micro_usd": 20_000_000,
@@ -120,6 +137,7 @@ def _policy_record(*, commit: str = "1" * 40, tree: str = "2" * 40) -> dict[str,
         },
         "allowed_case_ids": ["deterministic-corpus", "private-target"],
         "max_provider_invocations": 4,
+        "cny_to_micro_usd_ceiling": 1_000_000,
     }
 
 
@@ -151,7 +169,7 @@ def _target_packet_record(snapshot: Path, content: bytes) -> dict[str, object]:
         "provider_transfer_authority_by_provider": {
             "deepseek": True,
             "openai": True,
-            "qwen": False,
+            "qwen": True,
         },
         "mutation_authority": False,
         "snapshot_root": str(snapshot),
@@ -164,8 +182,7 @@ def _git(root: Path, *args: str) -> str:
         cwd=root,
         check=True,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
     )
     return result.stdout.strip()
 
@@ -184,7 +201,7 @@ def _source_repository(root: Path) -> tuple[str, str]:
     return _git(root, "rev-parse", "HEAD"), _git(root, "rev-parse", "HEAD^{tree}")
 
 
-def test_policy_is_exact_bounded_and_qwen_disabled(tmp_path: Path) -> None:
+def test_policy_is_exact_bounded_and_qwen_capable(tmp_path: Path) -> None:
     private = _owner_directory(tmp_path / "private")
     policy_path = _owner_policy_toml(private / "settings.toml", _policy_record())
 
@@ -197,6 +214,7 @@ def test_policy_is_exact_bounded_and_qwen_disabled(tmp_path: Path) -> None:
         "qwen": False,
     }
     assert policy.provider_budget_micro_usd["qwen"] == 0
+    assert policy.cny_to_micro_usd_ceiling == 1_000_000
     assert policy.max_provider_invocations == 4
     assert len(policy.policy_sha256) == 64
     policy.assert_active(now=datetime(2098, 12, 31, tzinfo=timezone.utc))
@@ -207,14 +225,44 @@ def test_policy_is_exact_bounded_and_qwen_disabled(tmp_path: Path) -> None:
     adjusted_budget = _policy_record()
     adjusted_budget["total_budget_micro_usd"] = 20_000_001
     _owner_policy_toml(policy_path, adjusted_budget)
-    assert load_execution_policy(policy_path).total_budget_micro_usd == 20_000_001
+    with pytest.raises(P15CControlError) as caught:
+        load_execution_policy(policy_path)
+    assert caught.value.code == "POLICY_BUDGET_ABOVE_AUTHORIZATION"
 
     qwen_enabled = _policy_record()
     qwen_enabled["provider_enabled"]["qwen"] = True  # type: ignore[index]
+    qwen_enabled["provider_budget_micro_usd"]["qwen"] = 500_000  # type: ignore[index]
+    qwen_enabled["provider_transfer_enabled"]["qwen"] = True  # type: ignore[index]
     _owner_policy_toml(policy_path, qwen_enabled)
+    qwen_policy = load_execution_policy(policy_path)
+    assert qwen_policy.provider_enabled["qwen"] is True
+    assert qwen_policy.provider_transfer_enabled["qwen"] is True
+    assert qwen_policy.provider_budget_micro_usd["qwen"] == 500_000
+
+    unsafe_conversion = _policy_record()
+    unsafe_conversion["cny_to_micro_usd_ceiling"] = 999_999
+    _owner_policy_toml(policy_path, unsafe_conversion)
     with pytest.raises(P15CControlError) as caught:
         load_execution_policy(policy_path)
-    assert caught.value.code == "QWEN_NOT_DISABLED"
+    assert caught.value.code == "INTEGER_FIELD"
+
+
+def test_legacy_policy_remains_readable_only_with_qwen_disabled(tmp_path: Path) -> None:
+    private = _owner_directory(tmp_path / "private")
+    policy_path = private / "settings.toml"
+    legacy = _policy_record()
+    legacy["schema_version"] = 1
+    legacy.pop("cny_to_micro_usd_ceiling")
+    _owner_policy_toml(policy_path, legacy)
+
+    policy = load_execution_policy(policy_path)
+    assert policy.cny_to_micro_usd_ceiling == 1_000_000
+
+    legacy["provider_enabled"]["qwen"] = True  # type: ignore[index]
+    _owner_policy_toml(policy_path, legacy)
+    with pytest.raises(P15CControlError) as caught:
+        load_execution_policy(policy_path)
+    assert caught.value.code == "LEGACY_QWEN_NOT_DISABLED"
 
 
 def test_private_controls_reject_permissive_permissions(tmp_path: Path) -> None:
@@ -240,7 +288,9 @@ def test_operator_settings_require_an_exact_p15c_table(tmp_path: Path) -> None:
     assert caught.value.code == "POLICY_SETTINGS_SECTION"
 
 
-def test_target_packet_loads_only_content_addressed_safe_snapshot(tmp_path: Path) -> None:
+def test_target_packet_loads_only_content_addressed_safe_snapshot(
+    tmp_path: Path,
+) -> None:
     private = _owner_directory(tmp_path / "private")
     snapshot = _owner_directory(private / "snapshot")
     source = snapshot / "src" / "example.py"
@@ -271,7 +321,7 @@ def test_target_snapshot_blocks_secret_like_material(tmp_path: Path) -> None:
     source = snapshot / "src" / "example.py"
     source.parent.mkdir()
     key_field = "api_" + "key"
-    content = f'{key_field} = "unit-test-secret-value"\n'.encode("utf-8")
+    content = f'{key_field} = "unit-test-secret-value"\n'.encode()
     source.write_bytes(content)
     packet_path = _owner_json(
         private / "target.json", _target_packet_record(snapshot, content)
@@ -284,13 +334,16 @@ def test_target_snapshot_blocks_secret_like_material(tmp_path: Path) -> None:
     assert caught.value.code == "TARGET_SECRET_MATERIAL"
 
 
-def test_credential_resolver_accepts_only_opaque_exact_references(tmp_path: Path) -> None:
+def test_credential_resolver_accepts_only_opaque_exact_references(
+    tmp_path: Path,
+) -> None:
     private = _owner_directory(tmp_path / "private")
     store = private / "credentials.toml"
     key_field = "api_" + "key"
     store.write_text(
         f"[providers.deepseek]\n{key_field} = 'deepseek-unit-value'\n"
-        f"[providers.openai]\n{key_field} = 'openai-unit-value'\n",
+        f"[providers.openai]\n{key_field} = 'openai-unit-value'\n"
+        f"[providers.qwen]\n{key_field} = 'qwen-unit-value'\n",
         encoding="utf-8",
     )
     store.chmod(0o600)
@@ -301,13 +354,20 @@ def test_credential_resolver_accepts_only_opaque_exact_references(tmp_path: Path
     )
     assert value == "openai-unit-value"
 
+    qwen_value = resolver.resolve(
+        "private-control:credentials#providers.qwen.api_key", "qwen"
+    )
+    assert qwen_value == "qwen-unit-value"
+
     with pytest.raises(P15CControlError) as caught:
         resolver.resolve("env:OPENAI_API_KEY", "openai")
     assert caught.value.code == "CREDENTIAL_REFERENCE_NOT_ALLOWED"
     assert "openai-unit-value" not in str(caught.value)
 
 
-def test_usage_ledger_reserves_settles_releases_and_blocks_replay(tmp_path: Path) -> None:
+def test_usage_ledger_reserves_settles_releases_and_blocks_replay(
+    tmp_path: Path,
+) -> None:
     private = _owner_directory(tmp_path / "private")
     ledger = P15CUsageLedger(private / "usage.sqlite3")
     digest = hashlib.sha256(b"request").hexdigest()

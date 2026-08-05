@@ -18,8 +18,10 @@ def test_public_templates_are_disabled_empty_and_project_neutral() -> None:
     credentials = tomllib.loads(CREDENTIALS.read_text(encoding="utf-8"))
     p15c = settings["p15c"]
 
+    assert p15c["schema_version"] == 2
     assert p15c["enabled"] is False
     assert p15c["total_budget_micro_usd"] == 20_000_000
+    assert p15c["cny_to_micro_usd_ceiling"] == 1_000_000
     assert set(p15c["provider_enabled"].values()) == {False}
     assert set(p15c["provider_transfer_enabled"].values()) == {False}
     assert set(p15c["provider_budget_micro_usd"].values()) == {0}
@@ -31,8 +33,7 @@ def test_public_templates_are_disabled_empty_and_project_neutral() -> None:
         }
     }
     public = (
-        SETTINGS.read_text(encoding="utf-8")
-        + CREDENTIALS.read_text(encoding="utf-8")
+        SETTINGS.read_text(encoding="utf-8") + CREDENTIALS.read_text(encoding="utf-8")
     ).lower()
     assert "finance" + "-us" not in public
     assert "github.com/" not in public

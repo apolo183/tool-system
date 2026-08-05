@@ -15,9 +15,12 @@ from urllib.parse import urlsplit
 import yaml
 
 from tool_system.ai_worker.p15c_controls import (
-    OwnerOnlyCredentialResolver,
     P15C_CASE_IDS,
-    P15C_ENABLED_PROVIDER_IDS,
+    P15C_DEFAULT_EXECUTION_PROVIDER_IDS,
+    P15C_MAX_CNY_TO_MICRO_USD_CEILING,
+    P15C_MIN_CNY_TO_MICRO_USD_CEILING,
+    P15C_PROVIDER_IDS,
+    OwnerOnlyCredentialResolver,
     P15CControlError,
     P15CExecutionPolicy,
     P15CSnapshotFile,
@@ -65,8 +68,7 @@ class P15CBenchmarkError(ValueError):
 
 
 class P15CCancellationSignal(Protocol):
-    def is_cancelled(self) -> bool:
-        ...
+    def is_cancelled(self) -> bool: ...
 
 
 @dataclass(frozen=True)
@@ -86,8 +88,23 @@ class P15CProviderPacket:
     max_total_tokens: int
     request_timeout_seconds: int
     wall_clock_timeout_seconds: int
-    per_attempt_hard_cap_micro_usd: int
+    billing_currency: str
+    per_attempt_hard_cap_native_microunits: int
     packet_sha256: str
+
+    def reservation_micro_usd(self, policy: P15CExecutionPolicy) -> int:
+        if self.billing_currency == "USD":
+            return self.per_attempt_hard_cap_native_microunits
+        if self.billing_currency == "CNY":
+            return _ceil_div(
+                self.per_attempt_hard_cap_native_microunits
+                * policy.cny_to_micro_usd_ceiling,
+                1_000_000,
+            )
+        raise P15CBenchmarkError(
+            "PACKET_CURRENCY_INVALID",
+            "P15C provider packet currency is invalid",
+        )
 
     def public_record(self) -> dict[str, object]:
         return {
@@ -107,7 +124,10 @@ class P15CProviderPacket:
             "request_timeout_seconds": self.request_timeout_seconds,
             "wall_clock_timeout_seconds": self.wall_clock_timeout_seconds,
             "requested_output_tokens": P15C_REQUESTED_OUTPUT_TOKENS,
-            "per_attempt_hard_cap_micro_usd": self.per_attempt_hard_cap_micro_usd,
+            "billing_currency": self.billing_currency,
+            "per_attempt_hard_cap_native_microunits": (
+                self.per_attempt_hard_cap_native_microunits
+            ),
             "max_attempts": 1,
             "max_retries": 0,
             "streaming": False,
@@ -149,8 +169,7 @@ class P15CTransport(Protocol):
         headers: Mapping[str, str],
         body: bytes,
         timeout_seconds: float,
-    ) -> P15CHTTPResponse:
-        ...
+    ) -> P15CHTTPResponse: ...
 
 
 class P15CTransportFailure(RuntimeError):
@@ -167,6 +186,10 @@ class P15CDirectTLSTransport:
         {
             ("api.deepseek.com", "/chat/completions"),
             ("api.openai.com", "/v1/responses"),
+            (
+                "dashscope.aliyuncs.com",
+                "/compatible-mode/v1/chat/completions",
+            ),
         }
     )
 
@@ -302,6 +325,7 @@ def load_p15c_provider_packets(
             "PACKET_LIMIT_DRIFT",
             "P15C common attempt limits changed",
         )
+    execution_provider_ids = _execution_provider_ids(root)
     raw_packets = root.get("provider_packets")
     if not isinstance(raw_packets, list) or len(raw_packets) != 3:
         raise P15CBenchmarkError(
@@ -316,15 +340,6 @@ def load_p15c_provider_packets(
             "PACKET_PROVIDER_SET",
             "P15C provider packet set is invalid",
         )
-    qwen = by_provider["qwen"]
-    if (
-        qwen.get("packet_status") != "BLOCKED_NOT_FUNDED"
-        or qwen.get("pricing_snapshot", {}).get(
-            "shared_usd_budget_allocation_micro_usd"
-        )
-        != 0
-    ):
-        raise P15CBenchmarkError("QWEN_NOT_DISABLED", "Qwen packet is not disabled")
     exact = {
         "deepseek": {
             "packet_id": "P15C-DEEPSEEK-V4-FLASH-READONLY-v1",
@@ -337,6 +352,12 @@ def load_p15c_provider_packets(
                 "private-control:credentials#providers.deepseek.api_key"
             ),
             "path": "/chat/completions",
+            "base_path": "",
+            "billing_currency": "USD",
+            "calculated_worst_case_native_microunits": 22_400,
+            "per_attempt_hard_cap_native_microunits": 25_000,
+            "calculated_worst_case_field": "calculated_worst_case_micro_usd",
+            "per_attempt_hard_cap_field": "per_attempt_hard_cap_micro_usd",
         },
         "openai": {
             "packet_id": "P15C-OPENAI-GPT-5.6-LUNA-READONLY-v1",
@@ -349,10 +370,34 @@ def load_p15c_provider_packets(
                 "private-control:credentials#providers.openai.api_key"
             ),
             "path": "/v1/responses",
+            "base_path": "/v1",
+            "billing_currency": "USD",
+            "calculated_worst_case_native_microunits": 22_400,
+            "per_attempt_hard_cap_native_microunits": 25_000,
+            "calculated_worst_case_field": "calculated_worst_case_micro_usd",
+            "per_attempt_hard_cap_field": "per_attempt_hard_cap_micro_usd",
+        },
+        "qwen": {
+            "packet_id": "P15C-QWEN-3.7-PLUS-READONLY-v1",
+            "execution_surface_id": "qwen-openai-compatible-chat",
+            "model_id": "qwen3.7-plus-2026-05-26",
+            "exact_model_version": "qwen3.7-plus-2026-05-26",
+            "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            "operation": "chat.completions.create",
+            "credential_reference": (
+                "private-control:credentials#providers.qwen.api_key"
+            ),
+            "path": "/compatible-mode/v1/chat/completions",
+            "base_path": "/compatible-mode/v1",
+            "billing_currency": "CNY",
+            "calculated_worst_case_native_microunits": 192_000,
+            "per_attempt_hard_cap_native_microunits": 250_000,
+            "calculated_worst_case_field": "calculated_worst_case_micro_cny",
+            "per_attempt_hard_cap_field": "per_attempt_hard_cap_micro_cny",
         },
     }
-    result: list[P15CProviderPacket] = []
-    for provider_id in P15C_ENABLED_PROVIDER_IDS:
+    parsed_packets: dict[str, P15CProviderPacket] = {}
+    for provider_id in P15C_PROVIDER_IDS:
         item = by_provider[provider_id]
         expected = exact[provider_id]
         for field in (
@@ -379,6 +424,10 @@ def load_p15c_provider_packets(
                 ("FROZEN_NOT_ACTIVATED", None),
             },
             "openai": {("FROZEN_NOT_ACTIVATED", None)},
+            "qwen": {
+                ("BLOCKED_NOT_FUNDED", None),
+                ("FROZEN_NOT_ACTIVATED", None),
+            },
         }
         if disposition not in allowed_dispositions[provider_id]:
             raise P15CBenchmarkError(
@@ -393,8 +442,11 @@ def load_p15c_provider_packets(
         price = item.get("pricing_snapshot")
         if (
             not isinstance(price, dict)
-            or price.get("calculated_worst_case_micro_usd") != 22_400
-            or price.get("per_attempt_hard_cap_micro_usd") != 25_000
+            or price.get("currency") != expected["billing_currency"]
+            or price.get(str(expected["calculated_worst_case_field"]))
+            != expected["calculated_worst_case_native_microunits"]
+            or price.get(str(expected["per_attempt_hard_cap_field"]))
+            != expected["per_attempt_hard_cap_native_microunits"]
         ):
             raise P15CBenchmarkError(
                 "PACKET_PRICE_DRIFT",
@@ -404,6 +456,7 @@ def load_p15c_provider_packets(
         if (
             parsed_url.scheme != "https"
             or parsed_url.hostname is None
+            or parsed_url.path != expected["base_path"]
             or parsed_url.query
             or parsed_url.fragment
         ):
@@ -417,38 +470,71 @@ def load_p15c_provider_packets(
             "runtime_prompt_version": P15C_PROMPT_VERSION,
             "requested_output_tokens": P15C_REQUESTED_OUTPUT_TOKENS,
         }
-        result.append(
-            P15CProviderPacket(
-                packet_id=str(item["packet_id"]),
-                provider_id=provider_id,
-                execution_surface_id=str(item["execution_surface_id"]),
-                model_id=str(item["model_id"]),
-                exact_model_version=str(item["exact_model_version"]),
-                packet_status=str(item["packet_status"]),
-                execution_blocker=(
-                    str(item["execution_blocker"])
-                    if item.get("execution_blocker") is not None
-                    else None
-                ),
-                host=parsed_url.hostname,
-                path=str(expected["path"]),
-                credential_reference=str(item["credential_reference"]),
-                max_input_tokens=int(expected_limits["max_input_tokens"]),
-                max_output_tokens=int(expected_limits["max_output_tokens"]),
-                max_total_tokens=int(expected_limits["max_total_tokens"]),
-                request_timeout_seconds=int(
-                    expected_limits["request_timeout_seconds"]
-                ),
-                wall_clock_timeout_seconds=int(
-                    expected_limits["wall_clock_timeout_seconds"]
-                ),
-                per_attempt_hard_cap_micro_usd=int(
-                    price["per_attempt_hard_cap_micro_usd"]
-                ),
-                packet_sha256=_canonical_sha256(packet_record),
-            )
+        parsed_packets[provider_id] = P15CProviderPacket(
+            packet_id=str(item["packet_id"]),
+            provider_id=provider_id,
+            execution_surface_id=str(item["execution_surface_id"]),
+            model_id=str(item["model_id"]),
+            exact_model_version=str(item["exact_model_version"]),
+            packet_status=str(item["packet_status"]),
+            execution_blocker=(
+                str(item["execution_blocker"])
+                if item.get("execution_blocker") is not None
+                else None
+            ),
+            host=parsed_url.hostname,
+            path=str(expected["path"]),
+            credential_reference=str(item["credential_reference"]),
+            max_input_tokens=int(expected_limits["max_input_tokens"]),
+            max_output_tokens=int(expected_limits["max_output_tokens"]),
+            max_total_tokens=int(expected_limits["max_total_tokens"]),
+            request_timeout_seconds=int(expected_limits["request_timeout_seconds"]),
+            wall_clock_timeout_seconds=int(
+                expected_limits["wall_clock_timeout_seconds"]
+            ),
+            billing_currency=str(expected["billing_currency"]),
+            per_attempt_hard_cap_native_microunits=int(
+                expected["per_attempt_hard_cap_native_microunits"]
+            ),
+            packet_sha256=_canonical_sha256(packet_record),
         )
-    return tuple(result)
+    return tuple(parsed_packets[provider_id] for provider_id in execution_provider_ids)
+
+
+def _execution_provider_ids(root: Mapping[str, object]) -> tuple[str, ...]:
+    raw = root.get("execution_matrix")
+    if raw is None:
+        return P15C_DEFAULT_EXECUTION_PROVIDER_IDS
+    if not isinstance(raw, dict) or set(raw) != {
+        "provider_ids",
+        "case_ids",
+        "max_provider_invocations",
+    }:
+        raise P15CBenchmarkError(
+            "PACKET_MATRIX_INVALID",
+            "P15C execution matrix is invalid",
+        )
+    provider_ids = raw["provider_ids"]
+    case_ids = raw["case_ids"]
+    max_invocations = raw["max_provider_invocations"]
+    if (
+        not isinstance(provider_ids, list)
+        or any(not isinstance(provider_id, str) for provider_id in provider_ids)
+        or tuple(provider_ids)
+        not in {
+            P15C_DEFAULT_EXECUTION_PROVIDER_IDS,
+            ("openai", "qwen"),
+        }
+        or not isinstance(case_ids, list)
+        or tuple(case_ids) != P15C_CASE_IDS
+        or type(max_invocations) is not int
+        or max_invocations != len(provider_ids) * len(case_ids)
+    ):
+        raise P15CBenchmarkError(
+            "PACKET_MATRIX_INVALID",
+            "P15C execution matrix is invalid",
+        )
+    return tuple(str(provider_id) for provider_id in provider_ids)
 
 
 def assert_p15c_provider_packets_execution_eligible(
@@ -571,12 +657,6 @@ def build_p15c_private_case(
             "PRIVATE_CASE_FILE_SET",
             "private benchmark snapshot does not match its packet",
         )
-    for provider_id in P15C_ENABLED_PROVIDER_IDS:
-        if packet.provider_transfer_authority_by_provider[provider_id] is not True:
-            raise P15CBenchmarkError(
-                "PRIVATE_CASE_TRANSFER_AUTHORITY",
-                "private benchmark transfer authority is incomplete",
-            )
     case_record = {
         "case_id": "private-target",
         "target_packet_sha256": packet.packet_sha256,
@@ -661,6 +741,19 @@ def build_p15c_request(
             "stream": False,
             "tools": [],
         }
+    elif packet.provider_id == "qwen":
+        request = {
+            "model": packet.model_id,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "max_completion_tokens": P15C_REQUESTED_OUTPUT_TOKENS,
+            "response_format": {"type": "json_object"},
+            "enable_thinking": False,
+            "stream": False,
+            "tools": [],
+        }
     else:
         raise P15CBenchmarkError(
             "PROVIDER_NOT_ENABLED",
@@ -670,7 +763,10 @@ def build_p15c_request(
     # Byte count is a deliberately conservative tokenizer-independent ceiling:
     # byte-fallback tokenizers cannot consume more than one token per byte.
     estimated_input_tokens = len(body)
-    if len(body) > P15C_MAX_PROMPT_BYTES or estimated_input_tokens > packet.max_input_tokens:
+    if (
+        len(body) > P15C_MAX_PROMPT_BYTES
+        or estimated_input_tokens > packet.max_input_tokens
+    ):
         raise P15CBenchmarkError(
             "REQUEST_INPUT_BUDGET",
             "P15C benchmark request exceeds its input budget",
@@ -731,33 +827,32 @@ def parse_p15c_provider_response(
         if not isinstance(usage, dict):
             raise P15CBenchmarkError("USAGE_INVALID", "provider usage is invalid")
         input_tokens = _nonnegative_int(usage.get("input_tokens"), "input tokens")
-        output_tokens = _nonnegative_int(
-            usage.get("output_tokens"), "output tokens"
-        )
+        output_tokens = _nonnegative_int(usage.get("output_tokens"), "output tokens")
         details = usage.get("input_tokens_details", {})
         cached = (
             _nonnegative_int(details.get("cached_tokens", 0), "cached tokens")
             if isinstance(details, dict)
             else 0
         )
-    elif packet.provider_id == "deepseek":
+    elif packet.provider_id in {"deepseek", "qwen"}:
+        response_label = "DEEPSEEK" if packet.provider_id == "deepseek" else "QWEN"
         choices = root.get("choices")
         if not isinstance(choices, list) or len(choices) != 1:
             raise P15CBenchmarkError(
-                "DEEPSEEK_RESPONSE_INVALID",
-                "DeepSeek response choices are invalid",
+                f"{response_label}_RESPONSE_INVALID",
+                "chat-completions response choices are invalid",
             )
         choice = choices[0]
         if not isinstance(choice, dict) or choice.get("finish_reason") != "stop":
             raise P15CBenchmarkError(
-                "DEEPSEEK_RESPONSE_INCOMPLETE",
-                "DeepSeek response did not complete",
+                f"{response_label}_RESPONSE_INCOMPLETE",
+                "chat-completions response did not complete",
             )
         message = choice.get("message")
         if not isinstance(message, dict) or not isinstance(message.get("content"), str):
             raise P15CBenchmarkError(
-                "DEEPSEEK_RESPONSE_INVALID",
-                "DeepSeek response content is invalid",
+                f"{response_label}_RESPONSE_INVALID",
+                "chat-completions response content is invalid",
             )
         text = message["content"]
         usage = root.get("usage")
@@ -891,6 +986,7 @@ class P15CBenchmarkExecutor:
         self._assert_route(policy, packet, case)
         self._source_seal(policy)
         body, request_sha256 = build_p15c_request(packet, case)
+        reservation_micro_usd = packet.reservation_micro_usd(policy)
         attempt_id = self._attempt_id(packet, case)
         previous = self._ledger.attempt(attempt_id)
         if previous is not None:
@@ -914,7 +1010,7 @@ class P15CBenchmarkExecutor:
             provider_id=packet.provider_id,
             case_id=case.case_id,
             request_sha256=request_sha256,
-            reservation_micro_usd=packet.per_attempt_hard_cap_micro_usd,
+            reservation_micro_usd=reservation_micro_usd,
             total_budget_micro_usd=policy.total_budget_micro_usd,
             provider_budget_micro_usd=policy.provider_budget_micro_usd[
                 packet.provider_id
@@ -933,6 +1029,11 @@ class P15CBenchmarkExecutor:
         try:
             current_policy = load_execution_policy(self._policy_path)
             current_policy.assert_active()
+            if current_policy.policy_sha256 != policy.policy_sha256:
+                raise P15CBenchmarkError(
+                    "POLICY_DRIFT",
+                    "execution policy changed after budget reservation",
+                )
             self._assert_route(current_policy, packet, case)
             self._source_seal(current_policy)
             credential = self._credential_resolver.resolve(
@@ -984,8 +1085,12 @@ class P15CBenchmarkExecutor:
                     "P15C attempt exceeded its wall-clock limit",
                 )
             metrics = build_p15c_metrics(parsed.output, case)
-            charged = calculate_p15c_cost_micro_usd(packet, parsed)
-            if charged > packet.per_attempt_hard_cap_micro_usd:
+            charged = calculate_p15c_cost_micro_usd(
+                packet,
+                parsed,
+                cny_to_micro_usd_ceiling=current_policy.cny_to_micro_usd_ceiling,
+            )
+            if charged > reservation_micro_usd:
                 raise P15CBenchmarkError(
                     "COST_ABOVE_PACKET",
                     "P15C provider cost exceeds its packet",
@@ -1035,7 +1140,7 @@ class P15CBenchmarkExecutor:
                 request_sha256,
                 status="ERROR",
                 failure_code=exc.failure_code,
-                charged_micro_usd=packet.per_attempt_hard_cap_micro_usd,
+                charged_micro_usd=reservation_micro_usd,
             )
         except P15CBenchmarkError as exc:
             self._ledger.record_transport_failure(attempt_id, exc.code)
@@ -1046,7 +1151,7 @@ class P15CBenchmarkExecutor:
                 request_sha256,
                 status="ERROR",
                 failure_code=exc.code,
-                charged_micro_usd=packet.per_attempt_hard_cap_micro_usd,
+                charged_micro_usd=reservation_micro_usd,
             )
 
     def _assert_complete_matrix(
@@ -1055,7 +1160,8 @@ class P15CBenchmarkExecutor:
         packets: tuple[P15CProviderPacket, ...],
         cases: tuple[P15CBenchmarkCase, ...],
     ) -> None:
-        if tuple(packet.provider_id for packet in packets) != P15C_ENABLED_PROVIDER_IDS:
+        frozen_packets = load_p15c_provider_packets(self._packet_config_path)
+        if packets != frozen_packets:
             raise P15CBenchmarkError(
                 "PROVIDER_MATRIX",
                 "P15C provider matrix is incomplete",
@@ -1068,8 +1174,7 @@ class P15CBenchmarkExecutor:
                 "P15C invocation ceiling does not equal the exact matrix",
             )
         required_total_budget = sum(
-            packet.per_attempt_hard_cap_micro_usd * len(cases)
-            for packet in packets
+            packet.reservation_micro_usd(policy) * len(cases) for packet in packets
         )
         if policy.total_budget_micro_usd < required_total_budget:
             raise P15CBenchmarkError(
@@ -1086,19 +1191,17 @@ class P15CBenchmarkExecutor:
         packet: P15CProviderPacket,
         case: P15CBenchmarkCase,
     ) -> None:
-        if packet.provider_id not in P15C_ENABLED_PROVIDER_IDS:
+        frozen_packet_sequence = load_p15c_provider_packets(self._packet_config_path)
+        frozen_packets = {item.provider_id: item for item in frozen_packet_sequence}
+        if packet.provider_id not in frozen_packets:
             raise P15CBenchmarkError("PROVIDER_NOT_ENABLED", "provider is not enabled")
-        if policy.max_provider_invocations != len(P15C_ENABLED_PROVIDER_IDS) * len(
+        if policy.max_provider_invocations != len(frozen_packet_sequence) * len(
             P15C_CASE_IDS
         ):
             raise P15CBenchmarkError(
                 "INVOCATION_MATRIX",
                 "P15C invocation ceiling does not equal the exact matrix",
             )
-        frozen_packets = {
-            item.provider_id: item
-            for item in load_p15c_provider_packets(self._packet_config_path)
-        }
         if frozen_packets.get(packet.provider_id) != packet:
             raise P15CBenchmarkError(
                 "PROVIDER_PACKET_DRIFT",
@@ -1114,7 +1217,7 @@ class P15CBenchmarkExecutor:
                 "PROVIDER_POLICY_DISABLED",
                 "provider is disabled by private policy",
             )
-        minimum_allocation = packet.per_attempt_hard_cap_micro_usd * len(P15C_CASE_IDS)
+        minimum_allocation = packet.reservation_micro_usd(policy) * len(P15C_CASE_IDS)
         if policy.provider_budget_micro_usd[packet.provider_id] < minimum_allocation:
             raise P15CBenchmarkError(
                 "PROVIDER_POLICY_BUDGET",
@@ -1139,19 +1242,18 @@ class P15CBenchmarkExecutor:
                 "BENCHMARK_CASE_DRIFT",
                 "benchmark case does not match its frozen source",
             )
-        if case.private_target:
-            if (
-                policy.private_repository_transfer_enabled is not True
-                or policy.provider_transfer_enabled[packet.provider_id] is not True
-                or self._target_packet.provider_transfer_authority_by_provider[
-                    packet.provider_id
-                ]
-                is not True
-            ):
-                raise P15CBenchmarkError(
-                    "PRIVATE_TRANSFER_NOT_AUTHORIZED",
-                    "private repository transfer is not authorized",
-                )
+        if case.private_target and (
+            policy.private_repository_transfer_enabled is not True
+            or policy.provider_transfer_enabled[packet.provider_id] is not True
+            or self._target_packet.provider_transfer_authority_by_provider[
+                packet.provider_id
+            ]
+            is not True
+        ):
+            raise P15CBenchmarkError(
+                "PRIVATE_TRANSFER_NOT_AUTHORIZED",
+                "private repository transfer is not authorized",
+            )
 
     def _source_seal(self, policy: P15CExecutionPolicy):
         return build_execution_source_seal(
@@ -1232,6 +1334,8 @@ def build_p15c_metrics(
 def calculate_p15c_cost_micro_usd(
     packet: P15CProviderPacket,
     parsed: P15CParsedResponse,
+    *,
+    cny_to_micro_usd_ceiling: int = 1_000_000,
 ) -> int:
     if packet.provider_id == "openai":
         uncached = parsed.input_tokens - parsed.cached_input_tokens
@@ -1241,8 +1345,24 @@ def calculate_p15c_cost_micro_usd(
             + parsed.output_tokens * 1_200_000
         )
     elif packet.provider_id == "deepseek":
-        numerator = (
-            parsed.input_tokens * 280_000 + parsed.output_tokens * 560_000
+        numerator = parsed.input_tokens * 280_000 + parsed.output_tokens * 560_000
+    elif packet.provider_id == "qwen":
+        if type(cny_to_micro_usd_ceiling) is not int or not (
+            P15C_MIN_CNY_TO_MICRO_USD_CEILING
+            <= cny_to_micro_usd_ceiling
+            <= P15C_MAX_CNY_TO_MICRO_USD_CEILING
+        ):
+            raise P15CBenchmarkError(
+                "CURRENCY_CEILING_INVALID",
+                "Qwen CNY accounting ceiling is invalid",
+            )
+        native_micro_cny = _ceil_div(
+            parsed.input_tokens * 2_000_000 + parsed.output_tokens * 8_000_000,
+            1_000_000,
+        )
+        return _ceil_div(
+            native_micro_cny * cny_to_micro_usd_ceiling,
+            1_000_000,
         )
     else:
         raise P15CBenchmarkError("PROVIDER_NOT_ENABLED", "provider is not enabled")
@@ -1398,7 +1518,9 @@ def _canonical_json(value: object) -> bytes:
             sort_keys=True,
         )
     except (TypeError, ValueError) as exc:
-        raise P15CBenchmarkError("CANONICAL_JSON", "value is not canonical JSON") from exc
+        raise P15CBenchmarkError(
+            "CANONICAL_JSON", "value is not canonical JSON"
+        ) from exc
     return rendered.encode("utf-8")
 
 
@@ -1421,12 +1543,18 @@ def _nonnegative_int(value: object, label: str) -> int:
     return value
 
 
+def _ceil_div(numerator: int, denominator: int) -> int:
+    return (numerator + denominator - 1) // denominator
+
+
 def _repository_relative_path(value: object) -> str:
     if not isinstance(value, str) or not value:
         raise P15CBenchmarkError("PATH_INVALID", "repository path is invalid")
     pure = PurePosixPath(value)
-    if pure.is_absolute() or str(pure) != value or any(
-        part in {"", ".", ".."} for part in pure.parts
+    if (
+        pure.is_absolute()
+        or str(pure) != value
+        or any(part in {"", ".", ".."} for part in pure.parts)
     ):
         raise P15CBenchmarkError("PATH_INVALID", "repository path is invalid")
     return value
