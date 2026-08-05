@@ -5,7 +5,7 @@ role: repository overview
 purpose: define the domain-agnostic tool system boundary and current controller contract  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-07-30 UTC+09:00
+updated_at: 2026-08-06 00:21 UTC+09:00
 
 ## Definition
 
@@ -52,15 +52,19 @@ Its permanent product objective is bounded blueprint-driven autonomous software 
 
 ## Provider portfolio and development economics
 
-The provider architecture is pluggable behind the versioned `AIWorkerProvider` interface. Roadmap candidates include a supported ChatGPT/Codex subscription surface, OpenAI's metered API, separately qualified domestic metered APIs such as DeepSeek, Qwen, GLM, and Kimi, and future local inference. Naming a candidate does not enable it. Each live provider, exact model, network route, credential reference, data policy, and execution limit remains separately controlled.
+Supported ChatGPT/Codex subscription mode is the daily development route. It is not OpenAI API credit and is never automated by scraping a browser session or extracting authentication material.
 
-A dedicated task-complexity assessor produces an advisory profile; deterministic policy makes the final route decision. Complexity and operational risk are independent. Provider availability failures use bounded failover among already eligible authorized routes, while output-quality failures use bounded repair and evidence-backed model escalation. Policy, data, budget, authorization, and stale-precondition failures block rather than switch around the control.
+All large-model APIs are optional backup routes and are disabled by default, including OpenAI, DeepSeek, Qwen, and future providers. A stored key does not enable a provider or authorize a call. Only repository-external owner configuration may explicitly enable API mode, enable a provider, select the currently available provider/model, and set the existing budget, expiry, transfer, retry, cancellation, and audit controls. Public source does not hard-code which provider or model must be used.
 
-Models are scored per task class from exact-version benchmark, reliability, time-to-acceptance, availability, and economic evidence. New models enter quarantine and qualification rather than becoming active from version number or launch price alone. Repeated failures demote a model only from affected task classes when possible; accepted replacements are published atomically and history remains auditable.
+The provider architecture remains pluggable behind the versioned `AIWorkerProvider` interface. Every provider-specific adapter must pass injected fake-I/O contract tests. Unconfigured, unfunded, invalid, expired, or unavailable providers are skipped; another eligible enabled provider may be used, and the subscription route is unaffected. When no enabled API route is usable, the API backup path returns a stable unavailable result rather than silently enabling a provider.
 
-The soft objective is expected total economic cost per accepted module. It includes provider usage, future renewals caused by delay, critical-path operating burn, local compute and electricity, verification, retry, rework, recovery, rollback, and opportunity cost. Safety, quality, data, and authorization remain hard constraints. Exact salaries, rent, electricity rates, subscription dates, billing values, and revenue assumptions are private installation inputs and never public-repository constants. The detailed contract is `docs/model_provider_portfolio_and_economics_contract_v1.md`.
+A dedicated task-complexity assessor produces an advisory profile; deterministic policy makes the final route decision. Complexity and operational risk are independent. Availability failures use bounded failover among already enabled, eligible, and authorized routes, while output-quality failures use bounded repair and evidence-backed escalation. Policy, data, budget, authorization, and stale-precondition failures block rather than switch around the control.
 
-P14 remains the provider-neutral autonomous-development core plus one separately authorized bounded real-provider proof. P15 owns multi-provider qualification and benchmark acceptance. P16 owns continuous model discovery, price/health refresh, portfolio lifecycle, renewal forecasting, and production-operations acceptance. P15 and P16 remain roadmap-only until separately authorized.
+The project-level live proof for the dormant API backup requires one explicitly enabled and currently usable key to complete one controlled smoke test on the then-canonical main. It does not require OpenAI and Qwen together, Qwen funding, simultaneous multi-provider availability, or a date-pinned version for a provider that exposes only a moving model ID. Each actual live audit records the provider/model requested and the redacted result.
+
+The soft objective is expected total economic cost per accepted module. It includes subscription capacity, enabled-provider usage, future renewals caused by delay, critical-path operating burn, local compute and electricity, verification, retry, rework, recovery, rollback, and opportunity cost. Safety, quality, data, and authorization remain hard constraints. Exact salaries, rent, electricity rates, subscription dates, billing values, and revenue assumptions are private installation inputs and never public-repository constants. The detailed contract is `docs/model_provider_portfolio_and_economics_contract_v1.md`.
+
+P14 remains the provider-neutral autonomous-development core plus its accepted bounded historical provider proof. P15 owns multi-project product evidence, fake-I/O adapter qualification, failure/economics evidence, and the final single-provider backup smoke gate. P16 owns sustainable operations; provider/model discovery, price/health refresh, and portfolio cadence apply only when API mode is explicitly enabled and are not default-off completion gates. P15 and P16 still require their separate acceptance and entry decisions.
 
 ## Current project state
 

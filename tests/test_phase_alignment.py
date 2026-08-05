@@ -7,7 +7,6 @@ from tool_system.cli.validate_change_plan import validate as validate_change_pla
 from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
 from tool_system.manifest.task_manifest import load_yaml_file
 
-
 ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ROOT / "AGENTS.md"
 README = ROOT / "README.md"
@@ -823,7 +822,10 @@ def test_p15b_accepts_only_isolated_fixtures_and_stops_before_p15c() -> None:
     ] == "isolated_fixture_no_live_provider"
     assert stages["P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"][
         "execution_boundary"
-    ] == "separately_authorized_live_provider_read_only_repositories"
+    ] == (
+        "fake_io_all_adapters_then_separately_authorized_single_provider_smoke_"
+        "no_target_access"
+    )
     assert project_state["current_phase"]["last_accepted_stage"] == (
         "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
     )
