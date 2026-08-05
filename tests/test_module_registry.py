@@ -101,6 +101,17 @@ AI_WORKER_REALIGNMENT_PLAN = (
     ROOT
     / "examples/change_plans/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml"
 )
+PROVIDER_PORTFOLIO_REALIGNMENT_REPORT = (
+    ROOT / "docs/reports/provider_mode_adaptive_provider_portfolio_realignment.md"
+)
+PROVIDER_PORTFOLIO_REALIGNMENT_MANIFEST = (
+    ROOT
+    / "examples/task_manifests/tool_system_provider_mode_adaptive_provider_portfolio_realignment_v1.yaml"
+)
+PROVIDER_PORTFOLIO_REALIGNMENT_PLAN = (
+    ROOT
+    / "examples/change_plans/tool_system_provider_mode_adaptive_provider_portfolio_realignment_v1.yaml"
+)
 PROJECT_STATE = ROOT / "docs/tool_system_project_state_v1.yaml"
 REPO_WRITE_POLICY = ROOT / "policy/repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy/autonomy_policy.yaml"
@@ -214,6 +225,23 @@ AI_WORKER_REALIGNMENT_FILES = {
     "tests/test_p15c_local_operator_config.py",
     "tests/test_repo_manifest.py",
 }
+PROVIDER_PORTFOLIO_REALIGNMENT_FILES = {
+    "REPO_MANIFEST.md",
+    "config/module_registry_v1.yaml",
+    "docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md",
+    "docs/reports/provider_mode_adaptive_provider_portfolio_realignment.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_provider_mode_adaptive_provider_portfolio_realignment_v1.yaml",
+    "examples/task_manifests/tool_system_provider_mode_adaptive_provider_portfolio_realignment_v1.yaml",
+    "src/tool_system/provider_portfolio/__init__.py",
+    "src/tool_system/provider_portfolio/failure_control.py",
+    "src/tool_system/provider_portfolio/provider_mode.py",
+    "tests/test_module_registry.py",
+    "tests/test_provider_portfolio_failure_control.py",
+    "tests/test_provider_portfolio_provider_mode.py",
+    "tests/test_repo_manifest.py",
+}
 PRE_MATRIX_CANONICAL_PACKET_SHA256 = (
     "509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962"
 )
@@ -221,12 +249,12 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
     "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
 )
 
-EXPECTED_RAW_SHA256 = "f7d787bfea8b5f91380511202e161df9c3472c576dabb2b4bd2440fa5441ce49"
-EXPECTED_BYTE_LENGTH = 106_594
+EXPECTED_RAW_SHA256 = "87bf6adbda80b75808bd3fc364637c6a354e51c4a313a8125aeeece0cfc1e386"
+EXPECTED_BYTE_LENGTH = 106_904
 EXPECTED_SEMANTIC_SHA256 = (
-    "6975cc175cc2a96aeeb509eaf7837f6a0ac17a6cc98f93183ac8af8f44f728d5"
+    "f9cef761c731bd53507f71c728d3861b89fcffcc5958bd383338ee82fe6887e3"
 )
-EXPECTED_MANAGED_PYTHON_FILE_COUNT = 107
+EXPECTED_MANAGED_PYTHON_FILE_COUNT = 108
 EXPECTED_MODULE_IDS = {
     "architecture_registry",
     "manifest_validation",
@@ -283,6 +311,7 @@ ADDITIONAL_TEST_SELECTORS = {
     "adaptive_model_portfolio_and_economics": (
         "tests/test_p15d_failure_economics_corpus_prerequisite.py",
         "tests/test_provider_portfolio_failure_control.py",
+        "tests/test_provider_portfolio_provider_mode.py",
     ),
     "ai_worker_runtime": (
         "tests/test_ai_worker_live_provider.py",
@@ -374,7 +403,7 @@ def authority_code_paths() -> dict[str, list[str]]:
         for current_id, contract in contracts.items()
     }
     flattened = [path for paths in result.values() for path in paths]
-    assert len(flattened) == len(set(flattened)) == 115
+    assert len(flattened) == len(set(flattened)) == 116
     python_owners = target_python_owner_by_path()
     assert {
         path: current_id
@@ -866,8 +895,67 @@ def test_ai_worker_runtime_realignment_scope_module_and_stage_stop_validate() ->
     assert state["publication_continuity"]["force_update_used"] is False
     assert project["provider_mode_and_acceptance_realignment_lifecycle"][
         "adaptive_provider_portfolio_package"
-    ]["status"] == "pending_dependency_order"
+    ]["status"] == (
+        "accepted_only_on_guarded_squash_merge_portfolio_realignment_no_execution"
+    )
     assert "schema-3" in report
+    assert "NO_AVAILABLE_PROVIDER" in report
+    assert "provider_invocations: 0" in report
+
+
+def test_provider_portfolio_realignment_scope_module_and_stage_stop_validate() -> None:
+    manifest_result = validate_task_manifest(
+        PROVIDER_PORTFOLIO_REALIGNMENT_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(PROVIDER_PORTFOLIO_REALIGNMENT_PLAN)
+    manifest = load_yaml_file(PROVIDER_PORTFOLIO_REALIGNMENT_MANIFEST)
+    plan = load_yaml_file(PROVIDER_PORTFOLIO_REALIGNMENT_PLAN)
+    project = load_yaml_file(PROJECT_STATE)
+    state = project["provider_mode_and_acceptance_realignment_lifecycle"][
+        "adaptive_provider_portfolio_package"
+    ]
+    registry = load_yaml_file(REGISTRY)
+    module = next(
+        item
+        for item in registry["modules"]
+        if item["module_id"] == "adaptive-model-portfolio-and-economics"
+    )
+    report = PROVIDER_PORTFOLIO_REALIGNMENT_REPORT.read_text(encoding="utf-8")
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == PROVIDER_PORTFOLIO_REALIGNMENT_FILES
+    assert set(manifest["scope"]["in_scope"]) == (
+        PROVIDER_PORTFOLIO_REALIGNMENT_FILES
+    )
+    assert set(plan["changed_files"]) == PROVIDER_PORTFOLIO_REALIGNMENT_FILES
+    assert len(PROVIDER_PORTFOLIO_REALIGNMENT_FILES) == 15
+    assert state["baseline_commit"] == (
+        "529001694c6d41ee819736293418cebfe455c392"
+    )
+    assert state["module"]["previous_module_version"] == "1.3.0"
+    assert state["module"]["module_version"] == module["module_version"] == "2.0.0"
+    assert state["module"]["aggregate_interface_version"] == "1.0.0"
+    assert state["active_route_mode"] == (
+        "repository_external_priority_requested_model_single_route"
+    )
+    assert state["all_large_model_apis_default_disabled"] is True
+    assert state["key_presence_grants_call_authority"] is False
+    assert state["availability_only_provider_skips"] is True
+    assert state["hard_control_provider_bypass_allowed"] is False
+    assert state["exact_matrix_is_compatibility_only"] is True
+    assert state["simultaneous_multi_provider_availability_required"] is False
+    assert state["named_provider_funding_required"] is False
+    assert state["moving_alias_exact_version_required"] is False
+    assert set(state["source_stage_evidence"].values()) == {0}
+    assert state["p15_stage_accepted"] is False
+    assert state["p16_stage_entered"] is False
+    assert state["final_live_smoke_executed"] is False
+    assert "API_DISABLED" in report
     assert "NO_AVAILABLE_PROVIDER" in report
     assert "provider_invocations: 0" in report
 
@@ -893,10 +981,10 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert hashlib.sha256(normalized).hexdigest() == EXPECTED_SEMANTIC_SHA256
     assert len(registry["modules"]) == len(registry["interfaces"]) == 19
     assert (
-        sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 115
+        sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 116
     )
     assert (
-        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 29
+        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 30
     )
     assert (
         sum(len(module["permitted_side_effects"]) for module in registry["modules"])
@@ -906,7 +994,7 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert (
         sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
     )
-    assert len(target_python_owner_by_path()) == 107
+    assert len(target_python_owner_by_path()) == 108
     assert_effect_oracle(registry)
 
 

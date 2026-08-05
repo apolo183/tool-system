@@ -124,7 +124,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
     assert legacy_reasons == []
-    assert len(rows) == 259
+    assert len(rows) == 261
     assert EXACT_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
     assert all(
         not any(character in row["path"] for character in "*?[]{}") for row in rows
@@ -132,7 +132,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_file_count"] == 259
+    assert result["formal_file_count"] == 261
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == len(retained_paths)
@@ -150,6 +150,20 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
         rows_by_path["tests/test_durable_orchestrator_reliability.py"]["owner"]
         == "durable-orchestrator module"
     )
+    provider_mode_source = rows_by_path[
+        "src/tool_system/provider_portfolio/provider_mode.py"
+    ]
+    provider_mode_test = rows_by_path[
+        "tests/test_provider_portfolio_provider_mode.py"
+    ]
+    assert provider_mode_source["owner"] == (
+        "adaptive_model_portfolio_and_economics module"
+    )
+    assert "repository-external provider order" in provider_mode_source["purpose"]
+    assert provider_mode_test["owner"] == (
+        "adaptive_model_portfolio_and_economics module"
+    )
+    assert "every API defaults off" in provider_mode_test["purpose"]
     assert result["unclassified_path_count"] == 0
     assert result["retained_inputs_are_current_authority"] is False
     assert result["cleanup_authorized"] is False

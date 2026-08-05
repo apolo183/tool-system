@@ -18,6 +18,10 @@ from tool_system.provider_portfolio import (
     FailureControlRequest,
     NoProgressStatus,
     PortfolioFixtureError,
+    ProviderAuthorizationState,
+    ProviderAvailabilityState,
+    ProviderModeRoute,
+    ProviderModeSnapshot,
     RouteDecision,
     RouteDecisionStatus,
     RouteEvaluation,
@@ -26,6 +30,7 @@ from tool_system.provider_portfolio import (
     evaluate_no_progress,
     plan_failure_control,
     select_lowest_total_economic_cost,
+    select_provider_mode_route,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -123,6 +128,49 @@ def _request(
     )
 
 
+def _provider_mode_decision():
+    return select_provider_mode_route(
+        ProviderModeSnapshot(
+            configuration_version="operator-snapshot-v1",
+            policy_version="provider-mode-policy-v1",
+            authorization_id="provider-mode-authorization-v1",
+            routes=(
+                ProviderModeRoute(
+                    provider_id="fixture-alpha",
+                    requested_model_id="moving-model",
+                    enabled=True,
+                    availability_state=ProviderAvailabilityState.AVAILABLE,
+                    provider_data_transfer_authorized=True,
+                    adapter_fake_io_contract_passed=True,
+                    provider_budget_microunits=1_000,
+                    reserved_cost_microunits=100,
+                    logical_duration_ms=10,
+                    strength_rank=1,
+                ),
+                ProviderModeRoute(
+                    provider_id="fixture-beta",
+                    requested_model_id="fallback-model",
+                    enabled=True,
+                    availability_state=ProviderAvailabilityState.AVAILABLE,
+                    provider_data_transfer_authorized=True,
+                    adapter_fake_io_contract_passed=True,
+                    provider_budget_microunits=1_000,
+                    reserved_cost_microunits=120,
+                    logical_duration_ms=20,
+                    strength_rank=2,
+                ),
+            ),
+            api_mode_enabled=True,
+            authorization_state=ProviderAuthorizationState.ACTIVE,
+            policy_preconditions_current=True,
+            source_preconditions_current=True,
+            total_budget_microunits=2_000,
+            max_attempts=2,
+            max_retries=0,
+        )
+    )
+
+
 def _cycle(
     attempt_number: int,
     *,
@@ -156,6 +204,31 @@ def _small_cost(total: int) -> TotalEconomicCost:
         rollback=0,
         opportunity_cost=0,
     )
+
+
+def test_failure_control_consumes_selected_provider_mode_decision_without_dispatch() -> None:
+    route_decision = _provider_mode_decision()
+    selected_route = "fixture-alpha/moving-model"
+    fallback_route = "fixture-beta/fallback-model"
+
+    decision = plan_failure_control(
+        FailureControlRequest(
+            route_decision=route_decision,
+            failure_class=FailureClass.PROVIDER_OUTAGE,
+            current_route_id=selected_route,
+            attempted_route_ids=(selected_route,),
+            total_attempts=1,
+            max_attempts=2,
+            same_route_repair_attempts=0,
+        )
+    )
+
+    assert decision.action is FailureControlAction.AVAILABILITY_FAILOVER
+    assert decision.planned_route_id == fallback_route
+    assert decision.provider_switch_planned is True
+    assert decision.dispatch_authorized is False
+    assert decision.candidate_application_authorized is False
+    assert decision.authority_effect == "none"
 
 
 def test_failure_control_distinguishes_bounded_actions_without_dispatch() -> None:
