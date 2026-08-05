@@ -71,7 +71,12 @@ class _FakeRequest:
 
 def test_api_guard_requires_exact_repository_external_selection() -> None:
     disabled = DefaultDisabledAPIExecutionGuard()
-    request = _FakeRequest(AIModelSpec(\n            provider_id="openai",\n            model_id="configured-model",\n            capabilities=(),\n            context_window_tokens=1,\n        ))
+    request = _FakeRequest(AIModelSpec(
+            provider_id="openai",
+            model_id="configured-model",
+            capabilities=(),
+            context_window_tokens=1,
+        ))
     provider = _FakeProvider()
 
     assert disabled.validate(request, provider) == (
