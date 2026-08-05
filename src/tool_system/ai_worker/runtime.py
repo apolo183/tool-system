@@ -96,6 +96,94 @@ class FixtureOnlyExecutionGuard:
         return tuple(reasons)
 
 
+@dataclass(frozen=True)
+class ProviderRouteConfig:
+    """Repository-external, non-secret provider/model activation metadata."""
+
+    provider_id: str
+    model_id: str
+    enabled: bool = False
+    available: bool = False
+
+
+@dataclass(frozen=True)
+class ProviderRouteSelection:
+    status: str
+    provider_id: str | None = None
+    model_id: str | None = None
+    skipped_provider_ids: tuple[str, ...] = ()
+    credential_resolver_invocations: int = 0
+    credential_value_accesses: int = 0
+    provider_invocations: int = 0
+    network_operations: int = 0
+
+
+def select_enabled_provider(
+    routes: tuple[ProviderRouteConfig, ...],
+    *,
+    api_mode_enabled: bool = False,
+) -> ProviderRouteSelection:
+    """Select one enabled usable route without credentials, transport, or fallback I/O."""
+
+    if not api_mode_enabled:
+        return ProviderRouteSelection(
+            status="API_DISABLED",
+            skipped_provider_ids=tuple(route.provider_id for route in routes),
+        )
+    seen: set[str] = set()
+    skipped: list[str] = []
+    for route in routes:
+        if not route.provider_id or not route.model_id or route.provider_id in seen:
+            return ProviderRouteSelection(
+                status="INVALID_EXTERNAL_CONFIGURATION",
+                skipped_provider_ids=tuple(skipped),
+            )
+        seen.add(route.provider_id)
+        if not route.enabled or not route.available:
+            skipped.append(route.provider_id)
+            continue
+        return ProviderRouteSelection(
+            status="ROUTE_SELECTED",
+            provider_id=route.provider_id,
+            model_id=route.model_id,
+            skipped_provider_ids=tuple(skipped),
+        )
+    return ProviderRouteSelection(
+        status="NO_AVAILABLE_PROVIDER",
+        skipped_provider_ids=tuple(skipped),
+    )
+
+
+@dataclass(frozen=True)
+class DefaultDisabledAPIExecutionGuard:
+    """Allow only the exact route selected by repository-external configuration."""
+
+    api_mode_enabled: bool = False
+    selected_provider_id: str | None = None
+    selected_model_id: str | None = None
+
+    def validate(
+        self,
+        request: AIWorkerRequest,
+        provider: AIWorkerProvider,
+    ) -> tuple[str, ...]:
+        reasons: list[str] = []
+        if not self.api_mode_enabled:
+            reasons.append("large-model API mode is disabled")
+        if self.selected_provider_id is None or self.selected_model_id is None:
+            reasons.append("no repository-external provider/model route is selected")
+            return tuple(reasons)
+        if request.model.provider_id != self.selected_provider_id:
+            reasons.append("request provider is not the explicitly selected route")
+        if request.model.model_id != self.selected_model_id:
+            reasons.append("request model is not the explicitly selected route")
+        if getattr(provider, "provider_id", None) != self.selected_provider_id:
+            reasons.append("runtime provider is not the explicitly selected route")
+        if getattr(provider, "model_id", None) != self.selected_model_id:
+            reasons.append("runtime model is not the explicitly selected route")
+        return tuple(reasons)
+
+
 class AIWorkerRuntime:
     def __init__(
         self,
@@ -488,7 +576,7 @@ def _request_sha256_or_fallback(request: AIWorkerRequest) -> str:
         identity = (
             f"{getattr(request, 'request_id', '')}\0"
             f"{getattr(request, 'idempotency_key', '')}"
-        ).encode("utf-8")
+        ).encode()
         return hashlib.sha256(identity).hexdigest()
 
 

@@ -23,15 +23,19 @@ from tool_system.ai_worker.p15c_benchmark import (
     build_p15c_request,
     calculate_p15c_cost_micro_usd,
     load_p15c_deterministic_case,
+    load_p15c_provider_catalog,
     load_p15c_provider_packets,
     parse_p15c_provider_response,
+    select_p15c_backup_candidates,
 )
 from tool_system.ai_worker.p15c_controls import (
     P15C_AUTHORIZATION_ID,
+    P15CControlError,
     P15CSnapshotFile,
     P15CTargetInventoryItem,
     P15CTargetPacket,
     P15CUsageLedger,
+    load_execution_policy,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -124,11 +128,15 @@ def _model_output(path: str) -> dict[str, object]:
     }
 
 
-def _provider_response(provider_id: str, path: str) -> P15CHTTPResponse:
+def _provider_response(
+    provider_id: str,
+    path: str,
+    model_id: str | None = None,
+) -> P15CHTTPResponse:
     output_text = json.dumps(_model_output(path), sort_keys=True)
     if provider_id == "openai":
         body = {
-            "model": "gpt-5.6-luna",
+            "model": model_id or "gpt-5.6-luna",
             "status": "completed",
             "output": [
                 {
@@ -144,7 +152,7 @@ def _provider_response(provider_id: str, path: str) -> P15CHTTPResponse:
         }
     elif provider_id == "deepseek":
         body = {
-            "model": "deepseek-v4-flash",
+            "model": model_id or "deepseek-v4-flash",
             "choices": [
                 {
                     "finish_reason": "stop",
@@ -156,7 +164,7 @@ def _provider_response(provider_id: str, path: str) -> P15CHTTPResponse:
     else:
         assert provider_id == "qwen"
         body = {
-            "model": "qwen3.7-plus-2026-05-26",
+            "model": model_id or "qwen3.7-plus-2026-05-26",
             "choices": [
                 {
                     "finish_reason": "stop",
@@ -180,6 +188,21 @@ class _FakeResolver:
 
     def resolve(self, reference: str, provider_id: str) -> str:
         self.calls.append((reference, provider_id))
+        return "unit-test-credential-value"
+
+
+class _SelectiveResolver(_FakeResolver):
+    def __init__(self, unavailable: set[str]) -> None:
+        super().__init__()
+        self.unavailable = unavailable
+
+    def resolve(self, reference: str, provider_id: str) -> str:
+        self.calls.append((reference, provider_id))
+        if provider_id in self.unavailable:
+            raise P15CControlError(
+                "CREDENTIAL_UNAVAILABLE",
+                "credential is unavailable in injected fake I/O",
+            )
         return "unit-test-credential-value"
 
 
@@ -214,7 +237,30 @@ class _FakeTransport:
                 "timeout_seconds": timeout_seconds,
             }
         )
-        return _provider_response(provider_id, snapshot["allowed_paths"][0])
+        return _provider_response(
+            provider_id,
+            snapshot["allowed_paths"][0],
+            str(request["model"]),
+        )
+
+
+class _AvailabilityThenSuccessTransport(_FakeTransport):
+    def __init__(self, unavailable_provider: str) -> None:
+        super().__init__()
+        self.unavailable_provider = unavailable_provider
+        self.failures = 0
+
+    def send(self, **kwargs: object) -> P15CHTTPResponse:
+        host = str(kwargs["host"])
+        provider_id = {
+            "api.openai.com": "openai",
+            "api.deepseek.com": "deepseek",
+            "dashscope.aliyuncs.com": "qwen",
+        }[host]
+        if provider_id == self.unavailable_provider:
+            self.failures += 1
+            raise P15CTransportFailure("TRANSPORT_TIMEOUT")
+        return super().send(**kwargs)  # type: ignore[arg-type]
 
 
 class _FailingTransport:
@@ -366,6 +412,67 @@ def _policy(
     )
 
 
+def _backup_policy(
+    path: Path,
+    commit: str,
+    tree: str,
+    *,
+    priority: tuple[str, ...] = ("deepseek", "openai"),
+    disabled: frozenset[str] = frozenset(),
+    zero_budget: frozenset[str] = frozenset(),
+    transfer_blocked: frozenset[str] = frozenset(),
+) -> Path:
+    provider_ids = ("deepseek", "openai", "qwen")
+    default_models = {
+        "deepseek": "deepseek-current",
+        "openai": "openai-current",
+        "qwen": "qwen-current",
+    }
+    provider_enabled = {
+        provider: provider in priority and provider not in disabled
+        for provider in provider_ids
+    }
+    provider_budget = {
+        "deepseek": 25_000,
+        "openai": 25_000,
+        "qwen": 250_000,
+    }
+    for provider in provider_ids:
+        if not provider_enabled[provider] or provider in zero_budget:
+            provider_budget[provider] = 0
+    provider_transfer = {
+        provider: provider_enabled[provider] and provider not in transfer_blocked
+        for provider in provider_ids
+    }
+    total_budget = max(1, sum(provider_budget.values()))
+    return _owner_json(
+        path,
+        {
+            "schema_version": 3,
+            "authorization_id": P15C_AUTHORIZATION_ID,
+            "enabled": True,
+            "total_budget_micro_usd": total_budget,
+            "expires_at_utc": "2099-01-01T00:00:00Z",
+            "expected_tool_system_commit": commit,
+            "expected_tool_system_tree": tree,
+            "provider_priority": list(priority),
+            "provider_model": {
+                provider: (
+                    default_models[provider] if provider_enabled[provider] else ""
+                )
+                for provider in provider_ids
+            },
+            "provider_enabled": provider_enabled,
+            "provider_budget_micro_usd": provider_budget,
+            "private_repository_transfer_enabled": False,
+            "provider_transfer_enabled": provider_transfer,
+            "allowed_case_ids": ["deterministic-corpus"],
+            "max_provider_invocations": len(priority),
+            "cny_to_micro_usd_ceiling": 1_000_000,
+        },
+    )
+
+
 def _executor_fixture(
     tmp_path: Path,
     transport: object,
@@ -409,6 +516,51 @@ def _executor_fixture(
     return executor, packets, cases, resolver, ledger
 
 
+def _backup_executor_fixture(
+    tmp_path: Path,
+    transport: object,
+    *,
+    resolver: object | None = None,
+    priority: tuple[str, ...] = ("deepseek", "openai"),
+    zero_budget: frozenset[str] = frozenset(),
+):
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    repository, commit, tree = _sealed_repository(tmp_path / "sealed")
+    private = tmp_path / "private"
+    private.mkdir()
+    private.chmod(0o700)
+    policy_path = _backup_policy(
+        private / "policy.json",
+        commit,
+        tree,
+        priority=priority,
+        zero_budget=zero_budget,
+    )
+    ledger = P15CUsageLedger(private / "usage.sqlite3")
+    selected_resolver = resolver or _FakeResolver()
+    executor = P15CBenchmarkExecutor(
+        repository_root=repository,
+        packet_config_path=repository / "config/p15c_execution_packet_freeze_v1.yaml",
+        policy_path=policy_path,
+        credential_resolver=selected_resolver,  # type: ignore[arg-type]
+        ledger=ledger,
+        transport=transport,  # type: ignore[arg-type]
+        monotonic=_Clock(),
+    )
+    catalog = load_p15c_provider_catalog(
+        repository / "config/p15c_execution_packet_freeze_v1.yaml"
+    )
+    candidates, skips = select_p15c_backup_candidates(
+        load_execution_policy(policy_path),
+        catalog,
+    )
+    case = load_p15c_deterministic_case(
+        repository,
+        repository / "config/p15c_execution_packet_freeze_v1.yaml",
+    )
+    return executor, candidates, skips, case, selected_resolver, ledger
+
+
 def test_frozen_packets_expose_exact_openai_qwen_routes_and_funding_block() -> None:
     packets = load_p15c_provider_packets(PACKET_CONFIG)
 
@@ -438,6 +590,98 @@ def test_canonical_packet_set_blocks_execution_on_unfunded_qwen() -> None:
         )
 
     assert caught.value.code == "PROVIDER_PACKET_BLOCKED"
+
+
+def test_schema_3_catalog_selection_uses_external_priority_models_and_budget(
+    tmp_path: Path,
+) -> None:
+    private = tmp_path / "private"
+    private.mkdir()
+    private.chmod(0o700)
+    policy_path = _backup_policy(
+        private / "policy.json",
+        "1" * 40,
+        "2" * 40,
+        priority=("qwen", "deepseek", "openai"),
+        zero_budget=frozenset({"qwen"}),
+    )
+
+    catalog = load_p15c_provider_catalog(PACKET_CONFIG)
+    candidates, skips = select_p15c_backup_candidates(
+        load_execution_policy(policy_path),
+        catalog,
+    )
+
+    assert tuple(packet.provider_id for packet in catalog) == (
+        "deepseek",
+        "openai",
+        "qwen",
+    )
+    assert tuple(packet.provider_id for packet in candidates) == (
+        "deepseek",
+        "openai",
+    )
+    assert tuple(packet.effective_model_id for packet in candidates) == (
+        "deepseek-current",
+        "openai-current",
+    )
+    assert candidates[0].packet_status == "BLOCKED_EXACT_VERSION_UNPINNABLE"
+    assert [item.public_record() for item in skips] == [
+        {
+            "provider_id": "qwen",
+            "requested_model_id": "qwen-current",
+            "status": "SKIPPED",
+            "reason_code": "PROVIDER_UNFUNDED",
+            "credential_value_recorded": False,
+        }
+    ]
+
+    funded_qwen_policy = _backup_policy(
+        private / "qwen.json",
+        "1" * 40,
+        "2" * 40,
+        priority=("qwen",),
+    )
+    funded_qwen, funded_qwen_skips = select_p15c_backup_candidates(
+        load_execution_policy(funded_qwen_policy),
+        catalog,
+    )
+    assert tuple(packet.provider_id for packet in funded_qwen) == ("qwen",)
+    assert funded_qwen[0].effective_model_id == "qwen-current"
+    assert funded_qwen_skips == ()
+
+
+def test_schema_3_returns_no_available_provider_and_keeps_transfer_hard(
+    tmp_path: Path,
+) -> None:
+    private = tmp_path / "private"
+    private.mkdir()
+    private.chmod(0o700)
+    no_budget = _backup_policy(
+        private / "no-budget.json",
+        "1" * 40,
+        "2" * 40,
+        zero_budget=frozenset({"deepseek", "openai"}),
+    )
+    with pytest.raises(P15CBenchmarkError) as caught:
+        select_p15c_backup_candidates(
+            load_execution_policy(no_budget),
+            load_p15c_provider_catalog(PACKET_CONFIG),
+        )
+    assert caught.value.code == "NO_AVAILABLE_PROVIDER"
+
+    blocked_transfer = _backup_policy(
+        private / "transfer.json",
+        "1" * 40,
+        "2" * 40,
+        transfer_blocked=frozenset({"deepseek"}),
+    )
+    with pytest.raises(P15CBenchmarkError) as caught:
+        select_p15c_backup_candidates(
+            load_execution_policy(blocked_transfer),
+            load_p15c_provider_catalog(PACKET_CONFIG),
+        )
+    assert caught.value.code == "PROVIDER_TRANSFER_NOT_AUTHORIZED"
 
 
 def test_direct_executor_blocks_before_policy_ledger_credentials_or_transport(
@@ -659,6 +903,28 @@ def test_provider_response_parsing_metrics_and_cost_are_redacted_and_bounded(
     assert caught.value.code == "PROVIDER_MODEL_DRIFT"
 
 
+def test_operator_requested_moving_alias_records_resolved_model_without_pin_gate() -> None:
+    openai = next(
+        packet
+        for packet in load_p15c_provider_catalog(PACKET_CONFIG)
+        if packet.provider_id == "openai"
+    )
+    route = replace(openai, requested_model_id="gpt-moving-alias")
+    case = _cases()[0]
+
+    parsed = parse_p15c_provider_response(
+        route,
+        _provider_response(
+            "openai",
+            next(iter(case.allowed_paths)),
+            "gpt-resolved-version",
+        ),
+    )
+
+    assert route.effective_model_id == "gpt-moving-alias"
+    assert parsed.resolved_model_id == "gpt-resolved-version"
+
+
 def test_preflight_resolves_references_but_performs_no_transport(
     tmp_path: Path,
 ) -> None:
@@ -799,6 +1065,141 @@ def test_executor_runs_openai_qwen_matrix_with_fake_transport_only(
     assert "operator/private-target" not in public
     assert "src/private.py" not in public
     assert all(call["authorization_present"] for call in transport.calls)
+
+
+def test_schema_3_preflight_and_chain_stop_after_one_fake_success(
+    tmp_path: Path,
+) -> None:
+    transport = _FakeTransport()
+    executor, candidates, skips, case, resolver, ledger = _backup_executor_fixture(
+        tmp_path,
+        transport,
+    )
+
+    preflight = executor.preflight_backup(candidates, case)
+    result = executor.execute_backup_chain(
+        candidates,
+        case,
+    )
+
+    assert skips == ()
+    assert preflight["planned_provider_invocations_max"] == 2
+    assert preflight["credential_ready_provider_ids"] == ["deepseek", "openai"]
+    assert preflight["private_target_loaded"] is False
+    assert preflight["provider_invocations"] == 0
+    assert len(resolver.calls) == 3  # type: ignore[union-attr]
+    assert len(transport.calls) == 1
+    assert result.status == "PASS"
+    assert result.winning_provider_id == "deepseek"
+    assert result.winning_model_id == "deepseek-current"
+    assert len(result.outcomes) == 1
+    assert result.outcomes[0].model_id == "deepseek-current"
+    assert tuple(item.status for item in ledger.attempts()) == ("SETTLED",)
+
+
+def test_schema_3_skips_missing_credential_without_transport_attempt(
+    tmp_path: Path,
+) -> None:
+    resolver = _SelectiveResolver({"deepseek"})
+    transport = _FakeTransport()
+    executor, candidates, _, case, _, ledger = _backup_executor_fixture(
+        tmp_path,
+        transport,
+        resolver=resolver,
+    )
+
+    preflight = executor.preflight_backup(candidates, case)
+    result = executor.execute_backup_chain(
+        candidates,
+        case,
+    )
+
+    assert preflight["credential_ready_provider_ids"] == ["openai"]
+    assert preflight["skips"][0]["provider_id"] == "deepseek"
+    assert preflight["skips"][0]["reason_code"] == "CREDENTIAL_UNAVAILABLE"
+    assert result.status == "PASS"
+    assert result.winning_provider_id == "openai"
+    assert [outcome.provider_invoked for outcome in result.outcomes] == [False, True]
+    assert len(transport.calls) == 1
+    assert transport.calls[0]["host"] == "api.openai.com"
+    assert tuple(item.provider_id for item in ledger.attempts()) == (
+        "deepseek",
+        "openai",
+    )
+    assert ledger.attempts()[0].status == "RELEASED"
+
+    all_missing_transport = _FakeTransport()
+    (
+        all_missing_executor,
+        all_missing_candidates,
+        _,
+        all_missing_case,
+        _,
+        all_missing_ledger,
+    ) = _backup_executor_fixture(
+        tmp_path / "all-missing",
+        all_missing_transport,
+        resolver=_SelectiveResolver({"deepseek", "openai"}),
+    )
+    with pytest.raises(P15CBenchmarkError) as caught:
+        all_missing_executor.preflight_backup(
+            all_missing_candidates,
+            all_missing_case,
+        )
+    assert caught.value.code == "NO_AVAILABLE_PROVIDER"
+    assert all_missing_transport.calls == []
+    assert all_missing_ledger.attempts() == ()
+
+
+def test_schema_3_fails_over_only_on_availability_and_stops_on_cancellation(
+    tmp_path: Path,
+) -> None:
+    transport = _AvailabilityThenSuccessTransport("deepseek")
+    executor, candidates, _, case, _, ledger = _backup_executor_fixture(
+        tmp_path,
+        transport,
+    )
+    executor.preflight_backup(candidates, case)
+
+    result = executor.execute_backup_chain(
+        candidates,
+        case,
+    )
+
+    assert result.status == "PASS"
+    assert result.winning_provider_id == "openai"
+    assert [outcome.failure_code for outcome in result.outcomes] == [
+        "TRANSPORT_TIMEOUT",
+        None,
+    ]
+    assert [outcome.provider_invoked for outcome in result.outcomes] == [True, True]
+    assert [item.reason_code for item in result.skips] == ["TRANSPORT_TIMEOUT"]
+    assert transport.failures == 1
+    assert {item.status for item in ledger.attempts()} == {"SETTLED", "UNCERTAIN"}
+
+    cancelled_transport = _FakeTransport()
+    (
+        cancelled_executor,
+        cancelled_candidates,
+        _,
+        cancelled_case,
+        _,
+        _,
+    ) = _backup_executor_fixture(tmp_path / "cancelled", cancelled_transport)
+    cancelled_executor.preflight_backup(
+        cancelled_candidates,
+        cancelled_case,
+    )
+    cancelled = cancelled_executor.execute_backup_chain(
+        cancelled_candidates,
+        cancelled_case,
+        cancellation=_Cancelled(),
+    )
+    assert cancelled.status == "BACKUP_BLOCKED"
+    assert len(cancelled.outcomes) == 1
+    assert cancelled.outcomes[0].failure_code == "CANCELLED_PRETRANSPORT"
+    assert cancelled.outcomes[0].provider_invoked is False
+    assert cancelled_transport.calls == []
 
 
 def test_cancellation_blocks_before_fake_transport_and_releases_budget(

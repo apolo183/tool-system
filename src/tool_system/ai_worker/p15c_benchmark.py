@@ -7,7 +7,7 @@ import math
 import ssl
 import time
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
 from typing import Protocol
 from urllib.parse import urlsplit
@@ -15,10 +15,12 @@ from urllib.parse import urlsplit
 import yaml
 
 from tool_system.ai_worker.p15c_controls import (
+    P15C_BACKUP_SMOKE_CASE_IDS,
     P15C_CASE_IDS,
     P15C_DEFAULT_EXECUTION_PROVIDER_IDS,
     P15C_MAX_CNY_TO_MICRO_USD_CEILING,
     P15C_MIN_CNY_TO_MICRO_USD_CEILING,
+    P15C_POLICY_SCHEMA_VERSION,
     P15C_PROVIDER_IDS,
     OwnerOnlyCredentialResolver,
     P15CControlError,
@@ -91,6 +93,11 @@ class P15CProviderPacket:
     billing_currency: str
     per_attempt_hard_cap_native_microunits: int
     packet_sha256: str
+    requested_model_id: str | None = None
+
+    @property
+    def effective_model_id(self) -> str:
+        return self.requested_model_id or self.model_id
 
     def reservation_micro_usd(self, policy: P15CExecutionPolicy) -> int:
         if self.billing_currency == "USD":
@@ -112,6 +119,12 @@ class P15CProviderPacket:
             "provider_id": self.provider_id,
             "execution_surface_id": self.execution_surface_id,
             "model_id": self.model_id,
+            "requested_model_id": self.effective_model_id,
+            "model_selection_source": (
+                "repository_external_operator_configuration"
+                if self.requested_model_id is not None
+                else "legacy_packet_catalog"
+            ),
             "exact_model_version": self.exact_model_version,
             "packet_status": self.packet_status,
             "execution_blocker": self.execution_blocker,
@@ -240,6 +253,7 @@ class P15CDirectTLSTransport:
 class P15CParsedResponse:
     output: Mapping[str, object]
     output_sha256: str
+    resolved_model_id: str
     input_tokens: int
     cached_input_tokens: int
     output_tokens: int
@@ -260,12 +274,16 @@ class P15CAttemptOutcome:
     charged_micro_usd: int
     metrics: Mapping[str, object] | None
     failure_code: str | None
+    resolved_model_id: str | None
+    provider_invoked: bool
 
     def public_record(self) -> dict[str, object]:
         return {
             "attempt_id": self.attempt_id,
             "provider_id": self.provider_id,
             "model_id": self.model_id,
+            "resolved_model_id": self.resolved_model_id,
+            "provider_invoked": self.provider_invoked,
             "case_id": self.case_id,
             "status": self.status,
             "request_sha256": self.request_sha256,
@@ -287,8 +305,56 @@ class P15CAttemptOutcome:
         }
 
 
+@dataclass(frozen=True)
+class P15CProviderSkip:
+    provider_id: str
+    requested_model_id: str | None
+    reason_code: str
+
+    def public_record(self) -> dict[str, object]:
+        return {
+            "provider_id": self.provider_id,
+            "requested_model_id": self.requested_model_id,
+            "status": "SKIPPED",
+            "reason_code": self.reason_code,
+            "credential_value_recorded": False,
+        }
+
+
+@dataclass(frozen=True)
+class P15CBackupResult:
+    status: str
+    outcomes: tuple[P15CAttemptOutcome, ...]
+    skips: tuple[P15CProviderSkip, ...]
+    winning_provider_id: str | None
+    winning_model_id: str | None
+
+    def public_record(self) -> dict[str, object]:
+        return {
+            "status": self.status,
+            "attempts": [item.public_record() for item in self.outcomes],
+            "skips": [item.public_record() for item in self.skips],
+            "winning_provider_id": self.winning_provider_id,
+            "winning_model_id": self.winning_model_id,
+        }
+
+
 def load_p15c_provider_packets(
     packet_config_path: str | Path,
+) -> tuple[P15CProviderPacket, ...]:
+    return _load_p15c_provider_packets(packet_config_path, include_catalog=False)
+
+
+def load_p15c_provider_catalog(
+    packet_config_path: str | Path,
+) -> tuple[P15CProviderPacket, ...]:
+    return _load_p15c_provider_packets(packet_config_path, include_catalog=True)
+
+
+def _load_p15c_provider_packets(
+    packet_config_path: str | Path,
+    *,
+    include_catalog: bool,
 ) -> tuple[P15CProviderPacket, ...]:
     path = Path(packet_config_path)
     try:
@@ -501,7 +567,8 @@ def load_p15c_provider_packets(
             ),
             packet_sha256=_canonical_sha256(packet_record),
         )
-    return tuple(parsed_packets[provider_id] for provider_id in execution_provider_ids)
+    selected_provider_ids = P15C_PROVIDER_IDS if include_catalog else execution_provider_ids
+    return tuple(parsed_packets[provider_id] for provider_id in selected_provider_ids)
 
 
 def _execution_provider_ids(root: Mapping[str, object]) -> tuple[str, ...]:
@@ -554,6 +621,87 @@ def assert_p15c_provider_packets_execution_eligible(
                 "PROVIDER_PACKET_BLOCKED",
                 "provider packet is not eligible for execution",
             )
+
+
+P15C_BACKUP_AVAILABILITY_FAILURE_CODES = frozenset(
+    {
+        "CREDENTIAL_UNAVAILABLE",
+        "CREDENTIAL_INVALID",
+        "AUTH_INVALID_KEY",
+        "ACCESS_FORBIDDEN",
+        "MODEL_UNAVAILABLE",
+        "PROVIDER_UNFUNDED",
+        "RATE_LIMIT",
+        "PROVIDER_OUTAGE",
+        "TRANSPORT_TIMEOUT",
+        "TRANSPORT_CONNECTION",
+    }
+)
+
+
+def select_p15c_backup_candidates(
+    policy: P15CExecutionPolicy,
+    catalog: Sequence[P15CProviderPacket],
+) -> tuple[tuple[P15CProviderPacket, ...], tuple[P15CProviderSkip, ...]]:
+    """Select a bounded operator-owned backup chain without resolving credentials."""
+
+    if policy.schema_version != P15C_POLICY_SCHEMA_VERSION:
+        raise P15CBenchmarkError(
+            "BACKUP_POLICY_SCHEMA",
+            "single-provider backup selection requires policy schema 3",
+        )
+    catalog_by_provider = {packet.provider_id: packet for packet in catalog}
+    if set(catalog_by_provider) != set(P15C_PROVIDER_IDS) or len(catalog) != len(
+        P15C_PROVIDER_IDS
+    ):
+        raise P15CBenchmarkError(
+            "PROVIDER_CATALOG",
+            "provider adapter catalog is incomplete",
+        )
+    candidates: list[P15CProviderPacket] = []
+    skips: list[P15CProviderSkip] = []
+    for provider_id in policy.provider_priority:
+        model_id = policy.provider_model[provider_id] or None
+        if policy.provider_enabled[provider_id] is not True:
+            skips.append(P15CProviderSkip(provider_id, model_id, "PROVIDER_DISABLED"))
+            continue
+        if model_id is None:
+            skips.append(P15CProviderSkip(provider_id, None, "PROVIDER_UNCONFIGURED"))
+            continue
+        packet = catalog_by_provider[provider_id]
+        if policy.provider_budget_micro_usd[provider_id] == 0:
+            skips.append(P15CProviderSkip(provider_id, model_id, "PROVIDER_UNFUNDED"))
+            continue
+        if packet.packet_status not in {
+            "FROZEN_NOT_ACTIVATED",
+            "BLOCKED_EXACT_VERSION_UNPINNABLE",
+            "BLOCKED_NOT_FUNDED",
+        }:
+            skips.append(P15CProviderSkip(provider_id, model_id, "PROVIDER_UNAVAILABLE"))
+            continue
+        if policy.provider_transfer_enabled[provider_id] is not True:
+            raise P15CBenchmarkError(
+                "PROVIDER_TRANSFER_NOT_AUTHORIZED",
+                "enabled provider transfer is not authorized",
+            )
+        reservation = packet.reservation_micro_usd(policy)
+        if (
+            policy.provider_budget_micro_usd[provider_id] < reservation
+            or policy.total_budget_micro_usd < reservation
+        ):
+            raise P15CBenchmarkError(
+                "PROVIDER_POLICY_BUDGET",
+                "enabled provider budget cannot cover one conservative attempt",
+            )
+        candidates.append(replace(packet, requested_model_id=model_id))
+        if len(candidates) == policy.max_provider_invocations:
+            break
+    if not candidates:
+        raise P15CBenchmarkError(
+            "NO_AVAILABLE_PROVIDER",
+            "API mode has no enabled eligible provider route",
+        )
+    return tuple(candidates), tuple(skips)
 
 
 def load_p15c_deterministic_case(
@@ -714,7 +862,7 @@ def build_p15c_request(
     )
     if packet.provider_id == "openai":
         request = {
-            "model": packet.model_id,
+            "model": packet.effective_model_id,
             "input": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -733,7 +881,7 @@ def build_p15c_request(
         }
     elif packet.provider_id == "deepseek":
         request = {
-            "model": packet.model_id,
+            "model": packet.effective_model_id,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -746,7 +894,7 @@ def build_p15c_request(
         }
     elif packet.provider_id == "qwen":
         request = {
-            "model": packet.model_id,
+            "model": packet.effective_model_id,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -790,8 +938,12 @@ def parse_p15c_provider_response(
     if response.status_code != 200:
         if response.status_code == 401:
             code = "AUTH_INVALID_KEY"
+        elif response.status_code == 402:
+            code = "PROVIDER_UNFUNDED"
         elif response.status_code == 403:
             code = "ACCESS_FORBIDDEN"
+        elif response.status_code == 404:
+            code = "MODEL_UNAVAILABLE"
         elif response.status_code == 429:
             code = "RATE_LIMIT"
         elif 500 <= response.status_code <= 599:
@@ -814,7 +966,18 @@ def parse_p15c_provider_response(
             "PROVIDER_RESPONSE_INVALID",
             "provider response root is invalid",
         )
-    if root.get("model") != packet.model_id:
+    resolved_model_id = root.get("model")
+    if (
+        not isinstance(resolved_model_id, str)
+        or not resolved_model_id
+        or len(resolved_model_id.encode("utf-8")) > 128
+        or any(character.isspace() for character in resolved_model_id)
+    ):
+        raise P15CBenchmarkError(
+            "PROVIDER_MODEL_INVALID",
+            "provider response model identifier is invalid",
+        )
+    if packet.requested_model_id is None and resolved_model_id != packet.model_id:
         raise P15CBenchmarkError(
             "PROVIDER_MODEL_DRIFT",
             "provider response model does not match the frozen packet",
@@ -893,6 +1056,7 @@ def parse_p15c_provider_response(
     return P15CParsedResponse(
         output=output,
         output_sha256=_canonical_sha256(output),
+        resolved_model_id=resolved_model_id,
         input_tokens=input_tokens,
         cached_input_tokens=min(cached, input_tokens),
         output_tokens=output_tokens,
@@ -909,7 +1073,7 @@ class P15CBenchmarkExecutor:
         credential_resolver: OwnerOnlyCredentialResolver,
         ledger: P15CUsageLedger,
         transport: P15CTransport,
-        target_packet: P15CTargetPacket,
+        target_packet: P15CTargetPacket | None = None,
         monotonic: object = time.monotonic,
     ) -> None:
         self._repository_root = Path(repository_root).resolve(strict=True)
@@ -966,7 +1130,84 @@ class P15CBenchmarkExecutor:
             "request_set_sha256": _canonical_sha256(sorted(request_hashes)),
             "credential_references_resolved": credential_references_resolved,
             "credential_values_recorded": 0,
-            "target_packet_sha256": self._target_packet.packet_sha256,
+            "target_packet_sha256": self._require_target_packet().packet_sha256,
+            "target_identity_recorded": False,
+            "target_paths_recorded": False,
+            "target_mutations": 0,
+            "provider_invocations": 0,
+            "network_operations": 0,
+        }
+
+    def preflight_backup(
+        self,
+        candidates: Sequence[P15CProviderPacket],
+        case: P15CBenchmarkCase,
+    ) -> dict[str, object]:
+        policy = load_execution_policy(self._policy_path)
+        policy.assert_active()
+        catalog = load_p15c_provider_catalog(self._packet_config_path)
+        expected_candidates, static_skips = select_p15c_backup_candidates(
+            policy,
+            catalog,
+        )
+        candidate_tuple = tuple(candidates)
+        if candidate_tuple != expected_candidates:
+            raise P15CBenchmarkError(
+                "PROVIDER_CHAIN_DRIFT",
+                "backup candidates do not match operator configuration",
+            )
+        self._assert_backup_case(case)
+        source_seal = self._source_seal(policy)
+        if self._ledger.attempts():
+            raise P15CBenchmarkError(
+                "LEDGER_NOT_EMPTY",
+                "backup preflight requires an unused usage ledger",
+            )
+        ready_provider_ids: list[str] = []
+        credential_skips: list[P15CProviderSkip] = []
+        request_hashes: list[str] = []
+        for packet in candidate_tuple:
+            self._assert_backup_route(policy, packet, case)
+            _, request_sha256 = build_p15c_request(packet, case)
+            request_hashes.append(request_sha256)
+            try:
+                value = self._credential_resolver.resolve(
+                    packet.credential_reference,
+                    packet.provider_id,
+                )
+            except P15CControlError as exc:
+                if exc.code not in P15C_BACKUP_AVAILABILITY_FAILURE_CODES:
+                    raise
+                credential_skips.append(
+                    P15CProviderSkip(
+                        packet.provider_id,
+                        packet.effective_model_id,
+                        exc.code,
+                    )
+                )
+            else:
+                ready_provider_ids.append(packet.provider_id)
+                del value
+        if not ready_provider_ids:
+            raise P15CBenchmarkError(
+                "NO_AVAILABLE_PROVIDER",
+                "no configured provider credential is currently usable",
+            )
+        skips = (*static_skips, *credential_skips)
+        return {
+            "status": "PASS",
+            "authorization_id": policy.authorization_id,
+            "policy_sha256": policy.policy_sha256,
+            "total_budget_micro_usd": policy.total_budget_micro_usd,
+            "source_seal": source_seal.audit_record(),
+            "packet_count": len(candidate_tuple),
+            "case_count": 1,
+            "planned_provider_invocations_max": len(candidate_tuple),
+            "request_set_sha256": _canonical_sha256(sorted(request_hashes)),
+            "credential_ready_provider_ids": ready_provider_ids,
+            "skips": [item.public_record() for item in skips],
+            "credential_values_recorded": 0,
+            "private_target_loaded": False,
             "target_identity_recorded": False,
             "target_paths_recorded": False,
             "target_mutations": 0,
@@ -981,12 +1222,35 @@ class P15CBenchmarkExecutor:
         *,
         cancellation: P15CCancellationSignal | None = None,
     ) -> P15CAttemptOutcome:
-        assert_p15c_provider_packets_execution_eligible(
-            load_p15c_provider_packets(self._packet_config_path)
-        )
+        return self._execute(packet, case, cancellation=cancellation, backup=False)
+
+    def execute_backup(
+        self,
+        packet: P15CProviderPacket,
+        case: P15CBenchmarkCase,
+        *,
+        cancellation: P15CCancellationSignal | None = None,
+    ) -> P15CAttemptOutcome:
+        return self._execute(packet, case, cancellation=cancellation, backup=True)
+
+    def _execute(
+        self,
+        packet: P15CProviderPacket,
+        case: P15CBenchmarkCase,
+        *,
+        cancellation: P15CCancellationSignal | None,
+        backup: bool,
+    ) -> P15CAttemptOutcome:
+        if not backup:
+            assert_p15c_provider_packets_execution_eligible(
+                load_p15c_provider_packets(self._packet_config_path)
+            )
         policy = load_execution_policy(self._policy_path)
         policy.assert_active()
-        self._assert_route(policy, packet, case)
+        if backup:
+            self._assert_backup_route(policy, packet, case)
+        else:
+            self._assert_route(policy, packet, case)
         self._source_seal(policy)
         body, request_sha256 = build_p15c_request(packet, case)
         reservation_micro_usd = packet.reservation_micro_usd(policy)
@@ -996,7 +1260,7 @@ class P15CBenchmarkExecutor:
             return P15CAttemptOutcome(
                 attempt_id=previous.attempt_id,
                 provider_id=previous.provider_id,
-                model_id=packet.model_id,
+                model_id=packet.effective_model_id,
                 case_id=previous.case_id,
                 status=previous.status,
                 request_sha256=previous.request_sha256,
@@ -1007,6 +1271,13 @@ class P15CBenchmarkExecutor:
                 charged_micro_usd=previous.charged_micro_usd,
                 metrics=previous.metrics,
                 failure_code=previous.failure_code or "LEDGER_REPLAY_BLOCKED",
+                resolved_model_id=(
+                    str(previous.metrics["resolved_model_id"])
+                    if previous.metrics is not None
+                    and isinstance(previous.metrics.get("resolved_model_id"), str)
+                    else None
+                ),
+                provider_invoked=previous.status in {"IN_FLIGHT", "SETTLED", "UNCERTAIN"},
             )
         self._ledger.reserve(
             attempt_id=attempt_id,
@@ -1037,7 +1308,10 @@ class P15CBenchmarkExecutor:
                     "POLICY_DRIFT",
                     "execution policy changed after budget reservation",
                 )
-            self._assert_route(current_policy, packet, case)
+            if backup:
+                self._assert_backup_route(current_policy, packet, case)
+            else:
+                self._assert_route(current_policy, packet, case)
             self._source_seal(current_policy)
             credential = self._credential_resolver.resolve(
                 packet.credential_reference,
@@ -1087,7 +1361,11 @@ class P15CBenchmarkExecutor:
                     "WALL_CLOCK_TIMEOUT",
                     "P15C attempt exceeded its wall-clock limit",
                 )
-            metrics = build_p15c_metrics(parsed.output, case)
+            metrics = {
+                **build_p15c_metrics(parsed.output, case),
+                "requested_model_id": packet.effective_model_id,
+                "resolved_model_id": parsed.resolved_model_id,
+            }
             charged = calculate_p15c_cost_micro_usd(
                 packet,
                 parsed,
@@ -1115,7 +1393,7 @@ class P15CBenchmarkExecutor:
             return P15CAttemptOutcome(
                 attempt_id=attempt_id,
                 provider_id=packet.provider_id,
-                model_id=packet.model_id,
+                model_id=packet.effective_model_id,
                 case_id=case.case_id,
                 status=terminal_status,
                 request_sha256=request_sha256,
@@ -1130,6 +1408,8 @@ class P15CBenchmarkExecutor:
                     if terminal_status == "CANCELLED"
                     else None
                 ),
+                resolved_model_id=parsed.resolved_model_id,
+                provider_invoked=True,
             )
         except KeyboardInterrupt:
             self._ledger.record_transport_failure(attempt_id, "INTERRUPTED")
@@ -1144,6 +1424,7 @@ class P15CBenchmarkExecutor:
                 status="ERROR",
                 failure_code=exc.failure_code,
                 charged_micro_usd=reservation_micro_usd,
+                provider_invoked=True,
             )
         except P15CBenchmarkError as exc:
             self._ledger.record_transport_failure(attempt_id, exc.code)
@@ -1155,7 +1436,64 @@ class P15CBenchmarkExecutor:
                 status="ERROR",
                 failure_code=exc.code,
                 charged_micro_usd=reservation_micro_usd,
+                provider_invoked=True,
             )
+
+    def execute_backup_chain(
+        self,
+        candidates: Sequence[P15CProviderPacket],
+        case: P15CBenchmarkCase,
+        *,
+        cancellation: P15CCancellationSignal | None = None,
+    ) -> P15CBackupResult:
+        candidate_tuple = tuple(candidates)
+        policy = load_execution_policy(self._policy_path)
+        policy.assert_active()
+        expected_candidates, _ = select_p15c_backup_candidates(
+            policy,
+            load_p15c_provider_catalog(self._packet_config_path),
+        )
+        if candidate_tuple != expected_candidates:
+            raise P15CBenchmarkError(
+                "PROVIDER_CHAIN_DRIFT",
+                "backup chain does not match operator configuration",
+            )
+        outcomes: list[P15CAttemptOutcome] = []
+        skips: list[P15CProviderSkip] = []
+        for packet in candidate_tuple:
+            outcome = self.execute_backup(packet, case, cancellation=cancellation)
+            outcomes.append(outcome)
+            if outcome.status == "PASS":
+                return P15CBackupResult(
+                    status="PASS",
+                    outcomes=tuple(outcomes),
+                    skips=tuple(skips),
+                    winning_provider_id=packet.provider_id,
+                    winning_model_id=packet.effective_model_id,
+                )
+            if outcome.failure_code in P15C_BACKUP_AVAILABILITY_FAILURE_CODES:
+                skips.append(
+                    P15CProviderSkip(
+                        packet.provider_id,
+                        packet.effective_model_id,
+                        str(outcome.failure_code),
+                    )
+                )
+                continue
+            return P15CBackupResult(
+                status="BACKUP_BLOCKED",
+                outcomes=tuple(outcomes),
+                skips=tuple(skips),
+                winning_provider_id=None,
+                winning_model_id=None,
+            )
+        return P15CBackupResult(
+            status="NO_AVAILABLE_PROVIDER",
+            outcomes=tuple(outcomes),
+            skips=tuple(skips),
+            winning_provider_id=None,
+            winning_model_id=None,
+        )
 
     def _assert_complete_matrix(
         self,
@@ -1163,6 +1501,11 @@ class P15CBenchmarkExecutor:
         packets: tuple[P15CProviderPacket, ...],
         cases: tuple[P15CBenchmarkCase, ...],
     ) -> None:
+        if policy.schema_version == P15C_POLICY_SCHEMA_VERSION:
+            raise P15CBenchmarkError(
+                "LEGACY_MATRIX_POLICY_REQUIRED",
+                "legacy exact-matrix execution requires policy schema 1 or 2",
+            )
         frozen_packets = load_p15c_provider_packets(self._packet_config_path)
         if packets != frozen_packets:
             raise P15CBenchmarkError(
@@ -1194,6 +1537,12 @@ class P15CBenchmarkExecutor:
         packet: P15CProviderPacket,
         case: P15CBenchmarkCase,
     ) -> None:
+        if policy.schema_version == P15C_POLICY_SCHEMA_VERSION:
+            raise P15CBenchmarkError(
+                "LEGACY_MATRIX_POLICY_REQUIRED",
+                "legacy exact-matrix execution requires policy schema 1 or 2",
+            )
+        target_packet = self._require_target_packet()
         frozen_packet_sequence = load_p15c_provider_packets(self._packet_config_path)
         frozen_packets = {item.provider_id: item for item in frozen_packet_sequence}
         if packet.provider_id not in frozen_packets:
@@ -1210,7 +1559,7 @@ class P15CBenchmarkExecutor:
                 "PROVIDER_PACKET_DRIFT",
                 "provider packet does not match the frozen catalog",
             )
-        if policy.expected_target_packet_sha256 != self._target_packet.packet_sha256:
+        if policy.expected_target_packet_sha256 != target_packet.packet_sha256:
             raise P15CBenchmarkError(
                 "TARGET_PACKET_POLICY_DRIFT",
                 "private policy does not bind the exact target packet",
@@ -1235,7 +1584,7 @@ class P15CBenchmarkExecutor:
             )
         elif case.case_id == "private-target":
             expected_case = build_p15c_private_case(
-                self._target_packet,
+                target_packet,
                 case.files,
             )
         else:  # pragma: no cover - policy validation fixes the case set
@@ -1248,7 +1597,7 @@ class P15CBenchmarkExecutor:
         if case.private_target and (
             policy.private_repository_transfer_enabled is not True
             or policy.provider_transfer_enabled[packet.provider_id] is not True
-            or self._target_packet.provider_transfer_authority_by_provider[
+            or target_packet.provider_transfer_authority_by_provider[
                 packet.provider_id
             ]
             is not True
@@ -1257,6 +1606,60 @@ class P15CBenchmarkExecutor:
                 "PRIVATE_TRANSFER_NOT_AUTHORIZED",
                 "private repository transfer is not authorized",
             )
+
+    def _assert_backup_case(self, case: P15CBenchmarkCase) -> None:
+        if case.case_id not in P15C_BACKUP_SMOKE_CASE_IDS or case.private_target:
+            raise P15CBenchmarkError(
+                "BACKUP_CASE_NOT_AUTHORIZED",
+                "backup smoke permits only the deterministic public fixture",
+            )
+        expected = load_p15c_deterministic_case(
+            self._repository_root,
+            self._packet_config_path,
+        )
+        if expected != case:
+            raise P15CBenchmarkError(
+                "BENCHMARK_CASE_DRIFT",
+                "backup smoke case does not match its deterministic source",
+            )
+
+    def _assert_backup_route(
+        self,
+        policy: P15CExecutionPolicy,
+        packet: P15CProviderPacket,
+        case: P15CBenchmarkCase,
+    ) -> None:
+        if policy.schema_version != P15C_POLICY_SCHEMA_VERSION:
+            raise P15CBenchmarkError(
+                "BACKUP_POLICY_SCHEMA",
+                "single-provider backup execution requires policy schema 3",
+            )
+        expected_candidates, _ = select_p15c_backup_candidates(
+            policy,
+            load_p15c_provider_catalog(self._packet_config_path),
+        )
+        expected = {
+            candidate.provider_id: candidate for candidate in expected_candidates
+        }.get(packet.provider_id)
+        if expected != packet:
+            raise P15CBenchmarkError(
+                "PROVIDER_PACKET_DRIFT",
+                "backup route does not match operator configuration",
+            )
+        self._assert_backup_case(case)
+        if policy.private_repository_transfer_enabled is not False:
+            raise P15CBenchmarkError(
+                "PRIVATE_TRANSFER_NOT_ALLOWED",
+                "backup smoke must not enable private transfer",
+            )
+
+    def _require_target_packet(self) -> P15CTargetPacket:
+        if self._target_packet is None:
+            raise P15CBenchmarkError(
+                "TARGET_PACKET_REQUIRED",
+                "legacy exact-matrix execution requires a target packet",
+            )
+        return self._target_packet
 
     def _source_seal(self, policy: P15CExecutionPolicy):
         return build_execution_source_seal(
@@ -1277,8 +1680,13 @@ class P15CBenchmarkExecutor:
                 self._policy_path
             ).expected_tool_system_tree,
             "packet_sha256": packet.packet_sha256,
+            "requested_model_id": packet.effective_model_id,
             "case_sha256": case.case_sha256,
-            "target_packet_sha256": self._target_packet.packet_sha256,
+            "target_packet_sha256": (
+                self._target_packet.packet_sha256
+                if self._target_packet is not None
+                else None
+            ),
         }
         return (
             f"p15c-{_canonical_sha256(binding)[:24]}-"
@@ -1381,11 +1789,12 @@ def _failed_outcome(
     status: str,
     failure_code: str,
     charged_micro_usd: int = 0,
+    provider_invoked: bool = False,
 ) -> P15CAttemptOutcome:
     return P15CAttemptOutcome(
         attempt_id=attempt_id,
         provider_id=packet.provider_id,
-        model_id=packet.model_id,
+        model_id=packet.effective_model_id,
         case_id=case.case_id,
         status=status,
         request_sha256=request_sha256,
@@ -1396,6 +1805,8 @@ def _failed_outcome(
         charged_micro_usd=charged_micro_usd,
         metrics=None,
         failure_code=failure_code,
+        resolved_model_id=None,
+        provider_invoked=provider_invoked,
     )
 
 

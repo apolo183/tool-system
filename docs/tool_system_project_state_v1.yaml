@@ -1195,6 +1195,71 @@ provider_mode_and_acceptance_realignment_lifecycle:
       ruff_0_16_0: passed
       governance_validators: passed
       exact_13_path_closure: passed
+  ai_worker_runtime_package:
+    task_identity: PROVIDER-MODE-AI-WORKER-RUNTIME-REALIGNMENT-v1
+    task_manifest: examples/task_manifests/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
+    change_plan: examples/change_plans/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
+    record: docs/reports/provider_mode_ai_worker_runtime_realignment.md
+    baseline_commit: 149296ff5e87e6b18a4982a9046012fd3edeb1b0
+    baseline_tree: be5489b2b6bd8a55d07684287dc364793a3da41d
+    status: accepted_only_on_guarded_squash_merge_runtime_realignment_no_execution
+    module:
+      current_module_id: ai_worker_runtime
+      canonical_module_id: ai-worker-runtime
+      previous_module_version: 1.9.1
+      module_version: 2.0.0
+      aggregate_interface_id: ai-worker-runtime-api
+      aggregate_interface_version: 1.0.0
+    active_policy_schema: 3
+    active_route_mode: repository_external_priority_and_model_single_success
+    active_case_ids:
+      - deterministic-corpus
+    private_target_loaded_by_active_route: false
+    all_provider_adapters_fake_io_covered: true
+    legacy_schema_1_and_2_matrix_compatibility_retained: true
+    static_funding_or_exact_version_label_is_completion_gate: false
+    no_available_provider_code: NO_AVAILABLE_PROVIDER
+    source_stage_evidence:
+      credential_resolver_invocations: 0
+      credential_value_accesses: 0
+      provider_invocations: 0
+      network_operations: 0
+      benchmark_executions: 0
+      private_target_reads: 0
+      target_repository_accesses: 0
+      target_mutations: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+    p15_stage_accepted: false
+    p16_stage_entered: false
+    final_live_smoke_executed: false
+    authority_effect: none
+    publication_continuity:
+      draft_pr: 185
+      initial_observed_head: 598e75f79f9e52f2c7e4d9f50380b8badecf9cff
+      initial_observed_commit_count: 10
+      initial_observed_changed_path_count: 8
+      pre_publication_parent_head: a1104beea34aabfcbd712802204f60e0daa3f1aa
+      pre_publication_commit_count: 16
+      pre_publication_changed_path_count: 9
+      final_candidate_path_count: 21
+      update_mode: non_force_fast_forward_consolidation
+      force_update_used: false
+      duplicate_pr_created: false
+      branch_or_pr_deleted: false
+    local_validation:
+      focused_pytest: 223_passed
+      full_pytest: 719_passed
+      python_compilation: passed
+      ruff_0_16_0: passed
+      governance_validators: passed
+      exact_21_path_closure: passed
+      secret_project_identity_and_forbidden_diff_scans: passed
+  adaptive_provider_portfolio_package:
+    status: pending_dependency_order
+  readonly_p15_acceptance_mapping:
+    status: pending_all_three_packages
   formal_rules:
     daily_development_route: chatgpt_codex_subscription
     all_large_model_apis_default_disabled: true

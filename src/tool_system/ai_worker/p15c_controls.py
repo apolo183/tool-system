@@ -20,7 +20,8 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.10 compatibility
     import tomli as tomllib  # type: ignore[no-redef]
 
 P15C_AUTHORIZATION_ID = "P15C-CROSS-PROVIDER-READ-ONLY-BENCHMARK-LIFECYCLE-v1"
-P15C_POLICY_SCHEMA_VERSION = 2
+P15C_POLICY_SCHEMA_VERSION = 3
+P15C_MATRIX_POLICY_SCHEMA_VERSION = 2
 P15C_LEGACY_POLICY_SCHEMA_VERSION = 1
 P15C_TARGET_PACKET_SCHEMA_VERSION = 1
 P15C_LEDGER_SCHEMA_VERSION = 1
@@ -30,8 +31,8 @@ P15C_DEFAULT_TARGET_PACKET_PATH = Path("~/.config/tool-system/p15c-target-packet
 P15C_DEFAULT_LEDGER_PATH = Path("~/.local/state/tool-system/p15c-usage.sqlite3")
 P15C_PROVIDER_IDS = ("deepseek", "openai", "qwen")
 P15C_DEFAULT_EXECUTION_PROVIDER_IDS = ("deepseek", "openai")
-P15C_ENABLED_PROVIDER_IDS = P15C_DEFAULT_EXECUTION_PROVIDER_IDS
 P15C_CASE_IDS = ("deterministic-corpus", "private-target")
+P15C_BACKUP_SMOKE_CASE_IDS = ("deterministic-corpus",)
 P15C_MAX_PROVIDER_INVOCATIONS = 4
 P15C_PUBLIC_BUDGET_CEILING_MICRO_USD = 20_000_000
 P15C_MIN_CNY_TO_MICRO_USD_CEILING = 1_000_000
@@ -50,6 +51,7 @@ P15C_CANONICAL_REMOTES = frozenset(
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _PACKET_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+_MODEL_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$")
 _REPOSITORY_ID_RE = re.compile(
     r"^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9])?/[A-Za-z0-9_.-]{1,100}$"
 )
@@ -86,13 +88,16 @@ class P15CControlError(ValueError):
 
 @dataclass(frozen=True)
 class P15CExecutionPolicy:
+    schema_version: int
     authorization_id: str
     enabled: bool
     total_budget_micro_usd: int
     expires_at_utc: str
     expected_tool_system_commit: str
     expected_tool_system_tree: str
-    expected_target_packet_sha256: str
+    expected_target_packet_sha256: str | None
+    provider_priority: tuple[str, ...]
+    provider_model: Mapping[str, str]
     provider_enabled: Mapping[str, bool]
     provider_budget_micro_usd: Mapping[str, int]
     private_repository_transfer_enabled: bool
@@ -231,7 +236,7 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
             )
     else:
         source = _load_owner_only_json(selected, label="execution policy")
-    common_fields = {
+    legacy_common_fields = {
         "schema_version",
         "authorization_id",
         "enabled",
@@ -249,9 +254,28 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
     }
     schema_version = source.get("schema_version")
     if schema_version == P15C_POLICY_SCHEMA_VERSION:
-        expected_fields = common_fields | {"cny_to_micro_usd_ceiling"}
+        expected_fields = {
+            "schema_version",
+            "authorization_id",
+            "enabled",
+            "total_budget_micro_usd",
+            "expires_at_utc",
+            "expected_tool_system_commit",
+            "expected_tool_system_tree",
+            "provider_priority",
+            "provider_model",
+            "provider_enabled",
+            "provider_budget_micro_usd",
+            "private_repository_transfer_enabled",
+            "provider_transfer_enabled",
+            "allowed_case_ids",
+            "max_provider_invocations",
+            "cny_to_micro_usd_ceiling",
+        }
+    elif schema_version == P15C_MATRIX_POLICY_SCHEMA_VERSION:
+        expected_fields = legacy_common_fields | {"cny_to_micro_usd_ceiling"}
     elif schema_version == P15C_LEGACY_POLICY_SCHEMA_VERSION:
-        expected_fields = common_fields
+        expected_fields = legacy_common_fields
     else:
         raise P15CControlError("POLICY_SCHEMA", "execution policy schema is invalid")
     _require_exact_fields(source, expected_fields, "execution policy")
@@ -268,14 +292,22 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
     budget = _require_int(
         source["total_budget_micro_usd"],
         "total_budget_micro_usd",
-        minimum=1,
+        minimum=0,
     )
+    if source["enabled"] is True and budget == 0:
+        raise P15CControlError(
+            "POLICY_BUDGET_REQUIRED",
+            "enabled execution policy requires a positive total budget",
+        )
     if budget > P15C_PUBLIC_BUDGET_CEILING_MICRO_USD:
         raise P15CControlError(
             "POLICY_BUDGET_ABOVE_AUTHORIZATION",
             "execution policy budget exceeds the public P15C ceiling",
         )
-    if schema_version == P15C_POLICY_SCHEMA_VERSION:
+    if schema_version in {
+        P15C_POLICY_SCHEMA_VERSION,
+        P15C_MATRIX_POLICY_SCHEMA_VERSION,
+    }:
         cny_to_micro_usd_ceiling = _require_int(
             source["cny_to_micro_usd_ceiling"],
             "cny_to_micro_usd_ceiling",
@@ -294,8 +326,10 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
     _parse_utc(expires_at)
     commit = _require_sha(source["expected_tool_system_commit"], "commit")
     tree = _require_sha(source["expected_tool_system_tree"], "tree")
-    target_packet_sha256 = _require_sha256(
-        source["expected_target_packet_sha256"], "target packet"
+    target_packet_sha256 = (
+        None
+        if schema_version == P15C_POLICY_SCHEMA_VERSION
+        else _require_sha256(source["expected_target_packet_sha256"], "target packet")
     )
     provider_enabled = _provider_bool_mapping(
         source["provider_enabled"], "provider_enabled"
@@ -304,6 +338,43 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
         source["provider_transfer_enabled"], "provider_transfer_enabled"
     )
     provider_budgets = _provider_int_mapping(source["provider_budget_micro_usd"])
+    if schema_version == P15C_POLICY_SCHEMA_VERSION:
+        provider_priority = _provider_priority(source["provider_priority"])
+        provider_model = _provider_model_mapping(source["provider_model"])
+        if source["private_repository_transfer_enabled"] is not False:
+            raise P15CControlError(
+                "PRIVATE_TRANSFER_NOT_ALLOWED",
+                "single-provider backup smoke must not enable private transfer",
+            )
+        if source["enabled"] is True:
+            enabled_in_priority = tuple(
+                provider
+                for provider in provider_priority
+                if provider_enabled[provider] is True
+            )
+            if not enabled_in_priority:
+                raise P15CControlError(
+                    "NO_ENABLED_PROVIDER",
+                    "enabled API mode requires an enabled prioritized provider",
+                )
+            if any(
+                enabled and provider not in provider_priority
+                for provider, enabled in provider_enabled.items()
+            ):
+                raise P15CControlError(
+                    "ENABLED_PROVIDER_NOT_PRIORITIZED",
+                    "each enabled provider must appear in provider priority",
+                )
+            if any(not provider_model[provider] for provider in enabled_in_priority):
+                raise P15CControlError(
+                    "PROVIDER_MODEL_REQUIRED",
+                    "each enabled prioritized provider requires a model",
+                )
+    else:
+        provider_priority = tuple(
+            provider for provider in P15C_PROVIDER_IDS if provider_enabled[provider]
+        )
+        provider_model = {provider: "" for provider in P15C_PROVIDER_IDS}
     if schema_version == P15C_LEGACY_POLICY_SCHEMA_VERSION and (
         provider_enabled["qwen"] is not False
         or provider_transfer["qwen"] is not False
@@ -319,23 +390,34 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
             "provider budget exceeds total policy budget",
         )
     cases = source["allowed_case_ids"]
-    if not isinstance(cases, list) or tuple(cases) != P15C_CASE_IDS:
+    expected_cases = (
+        P15C_BACKUP_SMOKE_CASE_IDS
+        if schema_version == P15C_POLICY_SCHEMA_VERSION
+        else P15C_CASE_IDS
+    )
+    if not isinstance(cases, list) or tuple(cases) != expected_cases:
         raise P15CControlError(
             "POLICY_CASE_SET",
-            "execution policy must name the exact P15C case set",
+            "execution policy must name its exact case set",
         )
     invocation_ceiling = _require_int(
         source["max_provider_invocations"],
         "max_provider_invocations",
         minimum=1,
     )
-    if invocation_ceiling > P15C_MAX_PROVIDER_INVOCATIONS:
+    invocation_limit = (
+        len(P15C_PROVIDER_IDS)
+        if schema_version == P15C_POLICY_SCHEMA_VERSION
+        else P15C_MAX_PROVIDER_INVOCATIONS
+    )
+    if invocation_ceiling > invocation_limit:
         raise P15CControlError(
             "POLICY_INVOCATION_CEILING",
             "execution policy invocation ceiling exceeds P15C",
         )
     canonical = _canonical_json(source)
     return P15CExecutionPolicy(
+        schema_version=int(schema_version),
         authorization_id=P15C_AUTHORIZATION_ID,
         enabled=source["enabled"],
         total_budget_micro_usd=budget,
@@ -343,6 +425,8 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
         expected_tool_system_commit=commit,
         expected_tool_system_tree=tree,
         expected_target_packet_sha256=target_packet_sha256,
+        provider_priority=provider_priority,
+        provider_model=provider_model,
         provider_enabled=provider_enabled,
         provider_budget_micro_usd=provider_budgets,
         private_repository_transfer_enabled=source[
@@ -604,7 +688,7 @@ class OwnerOnlyCredentialResolver:
     """Resolve exact provider references without logging or retaining values."""
 
     def __init__(self, path: str | Path) -> None:
-        self._path = _owner_only_file(path, "credential store")
+        self._path = Path(path).expanduser()
 
     def resolve(self, reference: str, provider_id: str) -> str:
         expected = f"private-control:credentials#providers.{provider_id}.api_key"
@@ -613,7 +697,15 @@ class OwnerOnlyCredentialResolver:
                 "CREDENTIAL_REFERENCE_NOT_ALLOWED",
                 "credential reference is not allowed",
             )
-        path = _owner_only_file(self._path, "credential store")
+        try:
+            path = _owner_only_file(self._path, "credential store")
+        except P15CControlError as exc:
+            if exc.code == "PRIVATE_FILE_UNAVAILABLE":
+                raise P15CControlError(
+                    "CREDENTIAL_UNAVAILABLE",
+                    "credential reference is unavailable",
+                ) from exc
+            raise
         try:
             with path.open("rb") as handle:
                 record = tomllib.load(handle)
@@ -1182,6 +1274,42 @@ def _provider_int_mapping(value: object) -> dict[str, int]:
         )
         for provider in P15C_PROVIDER_IDS
     }
+
+
+def _provider_priority(value: object) -> tuple[str, ...]:
+    if (
+        not isinstance(value, list)
+        or any(not isinstance(provider, str) for provider in value)
+        or len(value) != len(set(value))
+        or any(provider not in P15C_PROVIDER_IDS for provider in value)
+    ):
+        raise P15CControlError(
+            "PROVIDER_PRIORITY",
+            "provider priority must be an ordered unique supported-provider subset",
+        )
+    return tuple(value)
+
+
+def _provider_model_mapping(value: object) -> dict[str, str]:
+    if not isinstance(value, dict) or set(value) != set(P15C_PROVIDER_IDS):
+        raise P15CControlError(
+            "PROVIDER_MODEL_MAPPING",
+            "provider model provider set is invalid",
+        )
+    result: dict[str, str] = {}
+    for provider in P15C_PROVIDER_IDS:
+        model = value[provider]
+        if (
+            not isinstance(model, str)
+            or len(model.encode("utf-8")) > 128
+            or (model and (_MODEL_ID_RE.fullmatch(model) is None))
+        ):
+            raise P15CControlError(
+                "PROVIDER_MODEL",
+                f"provider_model.{provider} is invalid",
+            )
+        result[provider] = model
+    return result
 
 
 def _validate_target_path(value: object) -> str:

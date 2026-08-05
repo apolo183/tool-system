@@ -90,6 +90,17 @@ DURABLE_SIDECAR_RACE_PLAN = (
     ROOT
     / "examples/change_plans/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml"
 )
+AI_WORKER_REALIGNMENT_REPORT = (
+    ROOT / "docs/reports/provider_mode_ai_worker_runtime_realignment.md"
+)
+AI_WORKER_REALIGNMENT_MANIFEST = (
+    ROOT
+    / "examples/task_manifests/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml"
+)
+AI_WORKER_REALIGNMENT_PLAN = (
+    ROOT
+    / "examples/change_plans/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml"
+)
 PROJECT_STATE = ROOT / "docs/tool_system_project_state_v1.yaml"
 REPO_WRITE_POLICY = ROOT / "policy/repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy/autonomy_policy.yaml"
@@ -180,6 +191,29 @@ DURABLE_SIDECAR_RACE_FILES = {
     "tests/test_module_registry.py",
     "tests/test_repo_manifest.py",
 }
+AI_WORKER_REALIGNMENT_FILES = {
+    "REPO_MANIFEST.md",
+    "config/module_registry_v1.yaml",
+    "docs/modules/ai-worker-runtime-contract-v1.md",
+    "docs/reports/provider_mode_ai_worker_runtime_realignment.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml",
+    "examples/operator_config/tool_system_settings.example.toml",
+    "examples/task_manifests/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml",
+    "src/tool_system/ai_worker/__init__.py",
+    "src/tool_system/ai_worker/p15c_benchmark.py",
+    "src/tool_system/ai_worker/p15c_controls.py",
+    "src/tool_system/ai_worker/p15c_entry.py",
+    "src/tool_system/ai_worker/runtime.py",
+    "tests/test_ai_worker_p15c_benchmark.py",
+    "tests/test_ai_worker_p15c_controls.py",
+    "tests/test_ai_worker_p15c_entry.py",
+    "tests/test_ai_worker_provider_mode.py",
+    "tests/test_module_registry.py",
+    "tests/test_p15c_local_operator_config.py",
+    "tests/test_repo_manifest.py",
+}
 PRE_MATRIX_CANONICAL_PACKET_SHA256 = (
     "509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962"
 )
@@ -187,10 +221,10 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
     "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
 )
 
-EXPECTED_RAW_SHA256 = "ca001c5da2edf507e54cbd9aa35f7e372b95271668513be6ab14c1b081b4a87e"
-EXPECTED_BYTE_LENGTH = 106_365
+EXPECTED_RAW_SHA256 = "f7d787bfea8b5f91380511202e161df9c3472c576dabb2b4bd2440fa5441ce49"
+EXPECTED_BYTE_LENGTH = 106_594
 EXPECTED_SEMANTIC_SHA256 = (
-    "20ee794ae65433bff560d8725882c0eee3b649bae1654820042648cda82f5419"
+    "6975cc175cc2a96aeeb509eaf7837f6a0ac17a6cc98f93183ac8af8f44f728d5"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 107
 EXPECTED_MODULE_IDS = {
@@ -256,6 +290,7 @@ ADDITIONAL_TEST_SELECTORS = {
         "tests/test_ai_worker_p15c_controls.py",
         "tests/test_ai_worker_p15c_entry.py",
         "tests/test_p15c_local_operator_config.py",
+        "tests/test_ai_worker_provider_mode.py",
     ),
     "durable_orchestrator": ("tests/test_durable_orchestrator_reliability.py",),
     "process_authority": ("tests/test_p14c_live_issuer.py",),
@@ -788,6 +823,55 @@ def test_durable_sidecar_race_correction_scope_and_boundary_validate() -> None:
     assert "provider_invocations: 0" in report
 
 
+def test_ai_worker_runtime_realignment_scope_module_and_stage_stop_validate() -> None:
+    manifest_result = validate_task_manifest(
+        AI_WORKER_REALIGNMENT_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(AI_WORKER_REALIGNMENT_PLAN)
+    manifest = load_yaml_file(AI_WORKER_REALIGNMENT_MANIFEST)
+    plan = load_yaml_file(AI_WORKER_REALIGNMENT_PLAN)
+    project = load_yaml_file(PROJECT_STATE)
+    state = project["provider_mode_and_acceptance_realignment_lifecycle"][
+        "ai_worker_runtime_package"
+    ]
+    registry = load_yaml_file(REGISTRY)
+    module = next(
+        item for item in registry["modules"] if item["module_id"] == "ai-worker-runtime"
+    )
+    report = AI_WORKER_REALIGNMENT_REPORT.read_text(encoding="utf-8")
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == AI_WORKER_REALIGNMENT_FILES
+    assert set(manifest["scope"]["in_scope"]) == AI_WORKER_REALIGNMENT_FILES
+    assert set(plan["changed_files"]) == AI_WORKER_REALIGNMENT_FILES
+    assert len(AI_WORKER_REALIGNMENT_FILES) == 21
+    assert state["module"]["previous_module_version"] == "1.9.1"
+    assert state["module"]["module_version"] == module["module_version"] == "2.0.0"
+    assert state["module"]["aggregate_interface_version"] == "1.0.0"
+    assert state["active_policy_schema"] == 3
+    assert state["active_case_ids"] == ["deterministic-corpus"]
+    assert state["private_target_loaded_by_active_route"] is False
+    assert state["all_provider_adapters_fake_io_covered"] is True
+    assert state["static_funding_or_exact_version_label_is_completion_gate"] is False
+    assert set(state["source_stage_evidence"].values()) == {0}
+    assert state["p15_stage_accepted"] is False
+    assert state["p16_stage_entered"] is False
+    assert state["final_live_smoke_executed"] is False
+    assert state["publication_continuity"]["draft_pr"] == 185
+    assert state["publication_continuity"]["force_update_used"] is False
+    assert project["provider_mode_and_acceptance_realignment_lifecycle"][
+        "adaptive_provider_portfolio_package"
+    ]["status"] == "pending_dependency_order"
+    assert "schema-3" in report
+    assert "NO_AVAILABLE_PROVIDER" in report
+    assert "provider_invocations: 0" in report
+
+
 def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     raw = REGISTRY.read_bytes()
     registry = load_yaml_file(REGISTRY)
@@ -812,7 +896,7 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
         sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 115
     )
     assert (
-        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 28
+        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 29
     )
     assert (
         sum(len(module["permitted_side_effects"]) for module in registry["modules"])

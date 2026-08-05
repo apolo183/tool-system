@@ -1,25 +1,16 @@
 # AI Worker Runtime Module Compound Contract v1
 
-This file defines the module contract owned by the current
-`ai_worker_runtime` module. The default implementation remains a deterministic
-in-memory fixture. P14C adds a bounded live-provider adapter behind an exact
-process-authority grant and single-use execution capability. P15C adds a
-separate, generic, source-sealed read-only benchmark control plane for exact
-repository-external operator settings, credential-reference, target-packet,
-snapshot, and usage-ledger inputs. The settings and credentials are separate
-owner-only files under each installation's local configuration root; the
-public repository contains disabled examples only. It fixes the only live
-routes to OpenAI Responses, DeepSeek Chat Completions, and the exact
-Qwen3.7 Plus snapshot through Alibaba Model Studio Chat Completions. The
-current canonical P15C matrix is still fail-closed because
-the DeepSeek request API exposes only a moving model alias and cannot bind the
-dated catalog version. Packet-only metadata remains public; every private or
-live P15C entry blocks before private input. Qwen support is a dormant adapter;
-the unchanged canonical packet keeps Qwen outside the execution matrix and
-blocked as not funded. The module never serializes credential
-values, private target identity or paths, target bytes, or raw provider output
-into public evidence. The contract describes these capabilities but grants no
-execution authority.
+This file defines the contract owned by `ai_worker_runtime`. The default worker
+remains deterministic and provider-neutral. The accepted P14C bounded proof is
+unchanged. For P15, policy schema 3 exposes an optional API-backup path whose
+provider priority and requested models come only from owner-only,
+repository-external settings. API mode and every provider are disabled by
+default; a credential's presence grants no authority. The generic worker also
+has a default-disabled pre-invocation guard for the exact externally selected
+provider/model pair. The active backup path
+uses only the deterministic public fixture and stops after one successful
+provider. Schema 1 and schema 2 exact-matrix inputs remain readable as legacy
+compatibility and do not define the completion route.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -30,20 +21,20 @@ module_compound_contract:
   identity:
     canonical_module_id: ai-worker-runtime
     current_module_id: ai_worker_runtime
-    module_version: 1.9.1
+    module_version: 2.0.0
     aggregate_interface:
       interface_id: ai-worker-runtime-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@20686afbef73d5985f4aac0d542eabe7f3fdadff:ai_worker_runtime@1.9.0
+    rollback_identity: tool-system@149296ff5e87e6b18a4982a9046012fd3edeb1b0:ai_worker_runtime@1.9.1
     python_import_identities:
       - kind: prefix
         name: tool_system.ai_worker
   role:
-    summary: provide a provider-neutral structured AI worker contract, deterministic fixture, bounded P14C adapter, and generic source-sealed P15C read-only benchmark control plane with a dormant exact Qwen snapshot adapter and fail-closed native-currency accounting
-    responsibility_boundary: Preserve the P14C exact public synthetic proof and every P15C source-seal, private-input, exact-version, budget, transfer, cancellation, redaction, and no-retry invariant while exposing an exact qwen3.7-plus-2026-05-26 Chat Completions adapter. The runtime accepts only the legacy DeepSeek/OpenAI matrix or an explicit OpenAI/Qwen matrix, uses fixed direct-TLS routes, requires the selected Qwen packet's calculated ceiling to equal 196608 microCNY from the frozen token limits and official rates, and converts native CNY cost into the shared microUSD ledger with an owner-only conservative accounting ceiling. An unselected blocked catalog entry cannot prevent inspection of the selected legacy pair. The unchanged canonical catalog has no explicit matrix, keeps Qwen BLOCKED_NOT_FUNDED, and keeps DeepSeek BLOCKED_EXACT_VERSION_UNPINNABLE, so preflight and execute still block before settings, credentials, target packet, snapshot, ledger, or transport. Hosted CI uses test-local eligible packet copies and fake I/O only. The P15C path performs no repository mutation, tools, provider web search, retry, fallback, proxy, response storage, production, cleanup, or rollback.
+    summary: provide the provider-neutral worker, deterministic fixtures, generic default-disabled exact-route execution guard, bounded P14C adapter, and source-sealed default-off P15 API-backup runtime
+    responsibility_boundary: Preserve the accepted P14C proof and all source-seal, owner-only input, budget, expiry, authorization, transfer, retry, cancellation, reservation, audit, and redaction controls. The generic worker route selector has no credential or transport input, returns API_DISABLED without explicit API mode, chooses at most one externally named enabled and declared-available provider/model, and feeds a guard that rejects request or runtime route drift before invocation. Policy schema 3 reads provider priority and requested model identifiers only from repository-external settings, rejects disabled API mode before credential resolution, permits only the public deterministic fixture, never loads a private target, and stops after one successful route. Disabled, unconfigured, zero-budget, missing-credential, invalid-key, unfunded, moving-alias, or availability-failed providers do not make another enabled eligible route fail. Local policy, data-transfer, hard-budget, cancellation, source-integrity, and response-integrity failures remain non-bypassable. Legacy schema 1 and 2 preserve their exact two-case matrix behavior. All three adapters retain fixed verified TLS surfaces and injected fake-I/O coverage. No provider execution, stage acceptance, target access, production, cleanup, or rollback occurs in this contract package.
   natural_owner_evidence_paths:
     - src/tool_system/ai_worker/__init__.py
     - src/tool_system/ai_worker/contract.py
@@ -64,23 +55,25 @@ module_compound_contract:
   input_contract:
     registered_inputs:
       - AIWorkerRequest_v1
+      - repository_external_ProviderRouteConfig_v1
       - opaque_single_use_P14CLiveExecutionCapability
       - explicit_P14C_repository_ledger_and_positive_owner_comment_id
-      - owner_only_repository_external_P15C_settings
+      - owner_only_repository_external_P15C_settings_schema_1_2_or_3
       - separately_stored_owner_only_P15C_credential_references
-      - caller_supplied_content_addressed_P15C_target_packet_and_snapshot
+      - optional_legacy_content_addressed_P15C_target_packet_and_snapshot
       - owner_only_P15C_atomic_usage_ledger
-    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, and mandatory no-mutation flags. P14C additionally accepts its exact hardened approval inputs. P15C first accepts only public packet metadata and requires every selected provider route to be exact-version pinnable with exact executable native-currency ceilings. Policy schema 1 remains compatible only with Qwen disabled; schema 2 may explicitly name Qwen switches, transfer, sub-budget, and a conservative CNY-to-microUSD ceiling that is at least 1000000 and never obtained from the network. Total private budget may not exceed 20000000 microUSD. The current canonical DeepSeek disposition blocks before the runtime may accept or read an owner-only settings file, separate credential file, caller-supplied target packet or snapshot, or owner-only SQLite ledger. Private controls cannot bypass a public packet blocker. The public example is disabled, and mutation, retries, tools, provider web search, fallback, proxies, and response storage remain disabled.
+    boundary: The generic route record contains only provider ID, model ID, explicit enablement, and caller-supplied declared availability; it contains no key, credential value, transport, or implicit authorization. Schema 3 accepts an explicit API-mode switch, positive total budget, expiry, exact source commit and tree, ordered supported-provider subset, provider-specific requested models, provider switches, budgets, and transfer switches. The disabled public template has API mode false, no priority, empty models, zero total and provider budgets, and every provider and transfer switch false. Enabled prioritized providers require a requested model, but credential presence is never inspected until API mode, route, budget, and transfer policy pass. Schema 3 authorizes only deterministic-corpus and no private target. Static catalog funding or exact-version labels are descriptive adapter evidence, not completion authority; the external policy selects the requested model. Schema 1 and 2 remain legacy exact-matrix inputs, including their target-packet binding and conservative CNY conversion rules. Total configured budget never exceeds 20000000 microUSD.
   output_contract:
     registered_outputs:
       - AIWorkerResult_v1
+      - ProviderRouteSelection_v1
       - P14C_exact_approval_body_and_redacted_execution_receipt
-      - P15C_public_preflight_and_aggregate_benchmark_receipts
-    boundary: Return structured output, stable errors, bounded usage and cost evidence, output hashes, exact public P14C approval material, and redacted P14C or P15C receipts. P15C packet-only output includes public packet status and execution blocker; blocked private entries return PROVIDER_EXACT_VERSION_UNPINNABLE with zero private-input and live-operation counters. P15C public records contain no credential value, private repository identity, private commit, private path, target content, or raw provider response.
+      - P15C_public_catalog_preflight_skip_attempt_and_single_success_receipts
+    boundary: The generic selector returns API_DISABLED, INVALID_EXTERNAL_CONFIGURATION, NO_AVAILABLE_PROVIDER, or one ROUTE_SELECTED provider/model with zero credential, provider, and network counters. Runtime execution still requires the exact selected route guard. The P15 path returns structured output, stable sanitized codes, request and output hashes, bounded usage and cost, ordered skip evidence, requested and provider-resolved model identifiers, and a single winning provider when one succeeds. Packet-only output is public and grants no execution authority. Receipts never contain credential values, raw provider output, private repository identity, private commit, private paths, or target bytes.
   error_contract:
     registered_error_semantics:
       - stable_redacted_provider_neutral_errors
-    boundary: Integrity, authority, exact-version request binding, selected-packet native-currency ceiling, policy schema, public budget ceiling, native-currency conversion, policy drift after reservation, capability or transport binding, execution commit/tree/source/host/ledger drift, provider identity, credential reference or value shape, private target safety, cancellation, timeout, response, replay, and internal failures return stable sanitized codes. A selected stale Qwen ceiling returns PACKET_PRICE_DRIFT; an exact catalog version that cannot be bound by the provider request API returns PROVIDER_EXACT_VERSION_UNPINNABLE before private input. HTTP 401 and 403 remain AUTH_INVALID_KEY and ACCESS_FORBIDDEN without provider response details; an uncertain post-transport outcome conservatively consumes the full converted reservation and is never retried.
+    boundary: Disabled or expired policy, malformed external selection, transfer denial, budget exhaustion, source or policy drift, cancellation, replay, request or response integrity failure, and unsafe private-control boundaries return stable sanitized codes and stop. An empty eligible or credential-ready set and an exhausted availability-only chain return NO_AVAILABLE_PROVIDER. Missing or invalid credentials, HTTP authentication or access failure, no funding, unavailable model, rate limit, provider outage, and transport timeout or connection failure are availability-class evidence and may advance only to another already enabled eligible route. There is no same-route retry. Moving aliases may resolve to a different provider-returned model identifier; both requested and resolved identifiers are recorded without inventing an exact version.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -93,30 +86,30 @@ module_compound_contract:
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
           - src/tool_system/ai_worker/p15c_benchmark.py
-        boundary: P14C retains its one guarded DeepSeek request. The current canonical P15C packet set issues no request because its DeepSeek route cannot bind the dated catalog version, so preflight, execute, and direct executor entry fail before private controls or transport. The lower verified direct-TLS implementation is bounded to api.deepseek.com/chat/completions, api.openai.com/v1/responses, and dashscope.aliyuncs.com/compatible-mode/v1/chat/completions. The Qwen route is exercised only through injected fake I/O with an explicit test-local OpenAI/Qwen matrix and eligible packet copy. Packet-only and all tests issue no provider request.
+        boundary: P14C retains its separately guarded historical path. P15 network transport exists only behind explicit execute mode plus active schema-3 policy, an enabled prioritized provider, configured requested model, positive conservative budgets, transfer permission, exact source seal, credential reference, and unused ledger. Routes are fixed to api.deepseek.com/chat/completions, api.openai.com/v1/responses, and dashscope.aliyuncs.com/compatible-mode/v1/chat/completions. Hosted CI and this package use injected fake I/O only.
       - effect_class: external_system_write
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
           - src/tool_system/ai_worker/p15c_benchmark.py
-        boundary: The current canonical P15C packet set submits no snapshot bytes because its exact-version eligibility check blocks before target input. A future separately audited exact-version-pinnable matrix would still require public packet eligibility, exact private policy, target-packet authority, and per-provider transfer switches. Qwen requests additionally bind the exact dated model, disable thinking, and retain JSON output, no tools, no provider web search, no retry or fallback, and no raw-response persistence.
+        boundary: A future separately authorized schema-3 smoke may submit only the deterministic public fixture, with tools, provider search, streaming, storage, proxy use, and same-route retry disabled. It stops after one success and never accesses or mutates a downstream repository.
       - effect_class: data_write
         evidence_paths:
           - src/tool_system/ai_worker/p15c_controls.py
-        boundary: P15C writes only reservation, settlement, release, or conservative uncertain-cost state to the caller-selected owner-only usage ledger; it never writes the credential store, policy, target packet, snapshot, target repository, or tool-system source.
+        boundary: P15 writes only reservation, settlement, release, or conservative uncertain-cost state to the caller-selected owner-only usage ledger; it never writes settings, credentials, provider catalog, target packet, snapshot, repository, or source.
       - effect_class: database_write
         evidence_paths:
           - src/tool_system/ai_worker/p15c_controls.py
-        boundary: P15C initializes and transactionally updates one owner-only single-host SQLite usage ledger with exact schema and atomic BEGIN IMMEDIATE budget checks. Existing schema drift blocks; the ledger is not a multi-host coordination claim.
+        boundary: The owner-only single-host SQLite ledger uses exact schema and atomic BEGIN IMMEDIATE budget checks. Existing schema drift blocks, and no multi-host claim is made.
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve request validation, stable redacted errors, deterministic fixture defaults, all P14C authority and replay bindings, and every P15C exact-version eligibility guard, selected-packet exact native-currency ceiling, source seal, owner-only input, opaque reference, target safety, provider-specific private transfer, exact route/model/matrix, legacy-policy Qwen disablement, schema-2 currency ceiling, public total budget ceiling, cancellation, conservative reservation and failure charging, no-retry, no-tool, no-proxy, no-storage, and public-redaction invariant.
-    interface_incompatible_change: Requires a new aggregate interface version and a separately authorized provider qualification or migration stage.
+    interface_compatible_replacement: Preserve request validation, deterministic defaults, stable errors, the generic default-disabled exact-route guard, P14C authority and replay bindings, schema-1/2 legacy behavior, schema-3 default-off and external-selection semantics, source sealing, owner-only paths, explicit transfer, total and provider budgets, expiry, zero retry, cancellation, conservative charging, requested/resolved model audit, fixed adapter routes, public-fixture-only smoke, single-success stop, NO_AVAILABLE_PROVIDER, and redaction.
+    interface_incompatible_change: Requires a new aggregate interface version and a separately authorized migration stage.
   rollback_contract:
-    rollback_identity: tool-system@20686afbef73d5985f4aac0d542eabe7f3fdadff:ai_worker_runtime@1.9.0
-    method: Revert through a separately audited pull request and rerun contract, fixture-provider, P14C operator-entry and adapter, P15C repository-external settings and credentials, private-control, Hosted fake-I/O, cancellation, ledger, source-seal, budget, redaction, and packet-only no-I/O tests. This contract grants no rollback authority.
+    rollback_identity: tool-system@149296ff5e87e6b18a4982a9046012fd3edeb1b0:ai_worker_runtime@1.9.1
+    method: Revert through a separately audited pull request and rerun worker, P14C, schema-1/2 compatibility, schema-3 external selection, all-provider fake-I/O, budget, transfer, source-seal, cancellation, ledger, redaction, packet-only, registry, and repository-manifest tests. This contract grants no rollback authority.
   replacement_contract:
-    activation_rule: Replace only after provider-neutral and deterministic behavior, the complete P14C contract, and the complete P15C exact-version blocker, selected-packet 196608 microCNY Qwen ceiling, source seal, owner-only controls, schema compatibility, fixed Qwen route, native-currency accounting, injected OpenAI/Qwen fake matrix, cancellation, replay block, atomic ledger, conservative budget, structured response, and redaction suites pass with no real I/O. Changing the current canonical matrix or Qwen funding disposition requires a separate adaptive-portfolio packet correction.
+    activation_rule: Replace only after provider-neutral worker behavior, generic API-disabled and exact-route-guard tests, the complete P14C suite, legacy matrix compatibility, schema-3 disabled-default, external priority and model selection, skip classification, hard-failure non-bypass, all-provider fake-I/O, single-success stop, source seal, owner-only controls, budgets, cancellation, replay, atomic ledger, structured response, requested/resolved model evidence, and redaction pass without real I/O. Adaptive catalog and economics correction remains a dependent independent package.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -127,16 +120,16 @@ module_compound_contract:
   local_boundaries:
     repository:
       mode: delegated-read-only-source-seal
-      contract: Live capability construction and invocation revalidate the caller-selected canonical tool-system checkout through process-authority; no repository bytes are written.
+      contract: Execution revalidates canonical origin, expected tree, clean worktree, and critical-source hashes; no repository byte is written.
     data:
       mode: in-memory-plus-owner-only-p15c-ledger
-      contract: Requests, fixture scenarios, packets, target bytes, source seals, capabilities, results, credentials, and raw responses remain process memory only. Durable P14C replay remains owned by durable-orchestrator; P15C writes only sanitized aggregate usage and cost state to its caller-selected owner-only SQLite ledger.
+      contract: Requests, fixture bytes, packets, capabilities, credentials, and raw responses remain in process memory. P15 writes only sanitized usage, cost, requested-model, and resolved-model evidence to its ledger.
     artifact:
       mode: stdout-only-redacted-json
-      contract: Operator entries emit exact public approval JSON or redacted receipts to stdout. P15C emits hashes and aggregate metrics only and creates no receipt file, cache, target projection, raw response artifact, or private-target serialization.
+      contract: Entries emit only public metadata or redacted receipts and create no receipt file, cache, target projection, raw response artifact, or private-target serialization.
     database:
       mode: delegated-p14c-ledger-plus-direct-owner-only-p15c-usage-ledger
-      contract: P14C retains its process-authority ledger boundary. P15C owns one versioned single-host SQLite usage schema solely for atomic attempt reservation and settlement; exact shape drift blocks and no multi-host exactly-once guarantee is claimed.
+      contract: P14C retains its process-authority ledger boundary. P15 owns one exact single-host usage schema for atomic attempt reservation and settlement.
   external_root_contracts:
     declaration: declared
     roots:
@@ -152,7 +145,7 @@ module_compound_contract:
           - DeepSeekChatCompletionsProvider
         boundary_parameters:
           - repository_root
-        constraint: Load the canonical committed operator module and use only the exact clean source seal returned and revalidated by process-authority; missing entry source or any drift blocks before approval read or credential access.
+        constraint: Load and revalidate only the exact canonical committed P14C source accepted by process-authority; drift blocks before credential access.
       - root_id: p15c-execution-source-root
         access: read-only
         evidence_paths:
@@ -162,9 +155,10 @@ module_compound_contract:
         evidence_symbols:
           - build_execution_source_seal
           - P15CBenchmarkExecutor
+          - select_p15c_backup_candidates
         boundary_parameters:
           - repository_root
-        constraint: Parse only the legacy DeepSeek/OpenAI matrix or an explicit OpenAI/Qwen matrix, require every selected public provider packet to be exact-version execution-eligible before any private input, then require canonical tool-system origin, an exact canonical tree, clean worktree, and content hashes for the frozen packet config and all P15C execution modules before credential resolution and again immediately before every transport attempt. The current unchanged DeepSeek disposition blocks at the first eligibility requirement.
+        constraint: Require canonical tool-system origin, expected tree, clean worktree, and hashes for the adapter catalog and execution modules before credential resolution and immediately before transport. Schema 3 obtains provider order and requested models only from owner settings, reads only the public deterministic fixture, and stops after one success. Legacy schema 1 and 2 retain exact-matrix validation.
       - root_id: p15c-operator-private-input-root
         access: read-write
         evidence_paths:
@@ -178,27 +172,27 @@ module_compound_contract:
         boundary_parameters:
           - path
           - snapshot_root
-        constraint: Default settings, credentials, and target-packet paths resolve under ~/.config/tool-system while the default usage ledger resolves under ~/.local/state/tool-system; callers may select other repository-external paths. Each private path must resolve to an owner-only, non-symlink boundary. Settings and credentials remain separate files, credential values are read only through exact opaque references and never written or serialized, target files are exact content-addressed UTF-8 regular files, and only the separate usage ledger is writable. Policy schema 2 stores the adjustable non-secret CNY accounting ceiling and provider budgets; schema 1 may not enable Qwen. Public examples are disabled and contain no credential values; Hosted CI may exercise only synthetic or injected fake I/O.
+        constraint: Settings and credentials are separate repository-external owner-only files; credential lookup is lazy and occurs only after active route policy passes. Missing credential references become sanitized unavailable evidence, while unsafe file permissions remain hard failures. Target packet and snapshot inputs are legacy-only for schema 1 and 2. Only the usage ledger is writable. Public examples are disabled with zero budgets; Hosted CI uses fake I/O only.
   external_system_contracts:
     declaration: declared
     systems:
       - system_id: deepseek-chat-completions-api
-        mode: p14c-optional-live-plus-p15c-blocked-exact-version-unpinnable
+        mode: optional-default-disabled-fixed-surface-adapter
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
           - src/tool_system/ai_worker/p15c_benchmark.py
-        boundary: P14C retains its exact public fixture path. For P15C, the official catalog version is DeepSeek-V4-Flash-0731 but POST https://api.deepseek.com/chat/completions accepts only the moving request model ID deepseek-v4-flash; the canonical P15C route therefore returns PROVIDER_EXACT_VERSION_UNPINNABLE before any private-control credential reference, target input, ledger, or transport access.
+        boundary: The P15 adapter uses POST https://api.deepseek.com/chat/completions. A repository-external requested moving alias is permitted and its provider-resolved identifier is recorded; lack of a date-pinned identifier is not a completion blocker. The adapter has fake-I/O evidence and no authority in this package.
       - system_id: openai-responses-api
-        mode: optional-explicitly-guarded-p15c-read-only-provider
+        mode: optional-default-disabled-fixed-surface-adapter
         evidence_paths:
           - src/tool_system/ai_worker/p15c_benchmark.py
-        boundary: The OpenAI packet remains individually configured for exact model gpt-5.6-luna at POST https://api.openai.com/v1/responses with strict JSON schema output, store false, 2048 requested output tokens, a 25000 microUSD hard cap, one attempt, and no tools, redirects, proxy environment, retry, storage, or fallback. The canonical two-provider P15C matrix is nevertheless blocked before private input by the DeepSeek exact-version disposition, so no OpenAI P15C call is currently eligible.
+        boundary: The adapter uses POST https://api.openai.com/v1/responses with strict JSON schema, store false, bounded tokens and cost, one attempt, and no tools, redirects, proxy, retry, or fallback authority outside the bounded enabled chain. It has fake-I/O evidence and no authority in this package.
       - system_id: qwen-chat-completions-api
-        mode: dormant-exact-snapshot-adapter-fake-io-only
+        mode: optional-default-disabled-fixed-surface-adapter
         evidence_paths:
           - src/tool_system/ai_worker/p15c_benchmark.py
           - src/tool_system/ai_worker/p15c_controls.py
-        boundary: The dormant adapter binds qwen3.7-plus-2026-05-26 at POST https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions with JSON-object output, enable_thinking false, 2048 requested output tokens, a selected-packet calculated ceiling of 196608 microCNY, a 250000 microCNY native hard cap converted upward through the owner-only accounting ceiling, one attempt, and no tools, redirects, proxy environment, retry, storage, or fallback. The unchanged canonical catalog excludes Qwen from the matrix and marks it BLOCKED_NOT_FUNDED, so this adapter has no live authority.
+        boundary: The adapter uses POST https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions with JSON-object output, thinking false, bounded tokens, conservative CNY-to-microUSD accounting, one attempt, and no tools, redirects, proxy, retry, or storage. Funding comes from external positive budget configuration; the old catalog funding label is not call authority or a project gate. It has fake-I/O evidence and no authority in this package.
   non_claims:
     provider_execution_authorized: false
     target_repo_mutation_authorized: false
