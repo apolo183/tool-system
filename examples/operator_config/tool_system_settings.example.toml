@@ -1,19 +1,20 @@
 # Copy this file outside the repository to ~/.config/tool-system/settings.toml.
 # Keep the copied directory mode 0700 and file mode 0600.
 # One USD equals 1_000_000 microUSD. This disabled template spends nothing.
+# Copy and edit provider priority and model values only in the external file.
 
 [p15c]
-schema_version = 2
+schema_version = 3
 authorization_id = "P15C-CROSS-PROVIDER-READ-ONLY-BENCHMARK-LIFECYCLE-v1"
 enabled = false
-total_budget_micro_usd = 20_000_000
+total_budget_micro_usd = 0
 expires_at_utc = "1970-01-01T00:00:00Z"
 expected_tool_system_commit = "0000000000000000000000000000000000000000"
 expected_tool_system_tree = "0000000000000000000000000000000000000000"
-expected_target_packet_sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
 private_repository_transfer_enabled = false
-allowed_case_ids = ["deterministic-corpus", "private-target"]
-max_provider_invocations = 4
+provider_priority = []
+allowed_case_ids = ["deterministic-corpus"]
+max_provider_invocations = 3
 # Conservative accounting ceiling: 1 CNY is charged as at least 1 USD in the
 # microUSD ledger. Operators may raise this value, but the runtime rejects a
 # lower value and never performs an exchange-rate network lookup.
@@ -23,6 +24,11 @@ cny_to_micro_usd_ceiling = 1_000_000
 deepseek = false
 openai = false
 qwen = false
+
+[p15c.provider_model]
+deepseek = ""
+openai = ""
+qwen = ""
 
 [p15c.provider_budget_micro_usd]
 deepseek = 0

@@ -18,13 +18,19 @@ def test_public_templates_are_disabled_empty_and_project_neutral() -> None:
     credentials = tomllib.loads(CREDENTIALS.read_text(encoding="utf-8"))
     p15c = settings["p15c"]
 
-    assert p15c["schema_version"] == 2
+    assert p15c["schema_version"] == 3
     assert p15c["enabled"] is False
-    assert p15c["total_budget_micro_usd"] == 20_000_000
+    assert p15c["total_budget_micro_usd"] == 0
     assert p15c["cny_to_micro_usd_ceiling"] == 1_000_000
+    assert p15c["provider_priority"] == []
+    assert p15c["allowed_case_ids"] == ["deterministic-corpus"]
+    assert p15c["max_provider_invocations"] == 3
+    assert set(p15c["provider_model"].values()) == {""}
     assert set(p15c["provider_enabled"].values()) == {False}
     assert set(p15c["provider_transfer_enabled"].values()) == {False}
     assert set(p15c["provider_budget_micro_usd"].values()) == {0}
+    assert p15c["private_repository_transfer_enabled"] is False
+    assert "expected_target_packet_sha256" not in p15c
     assert credentials == {
         "providers": {
             "deepseek": {"api_key": ""},

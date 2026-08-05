@@ -123,7 +123,7 @@ def select_enabled_provider(
     *,
     api_mode_enabled: bool = False,
 ) -> ProviderRouteSelection:
-    """Select one explicitly enabled usable API route without touching credentials or I/O."""
+    """Select one enabled usable route without credentials, transport, or fallback I/O."""
 
     if not api_mode_enabled:
         return ProviderRouteSelection(
@@ -133,11 +133,7 @@ def select_enabled_provider(
     seen: set[str] = set()
     skipped: list[str] = []
     for route in routes:
-        if (
-            not route.provider_id
-            or not route.model_id
-            or route.provider_id in seen
-        ):
+        if not route.provider_id or not route.model_id or route.provider_id in seen:
             return ProviderRouteSelection(
                 status="INVALID_EXTERNAL_CONFIGURATION",
                 skipped_provider_ids=tuple(skipped),
@@ -160,7 +156,7 @@ def select_enabled_provider(
 
 @dataclass(frozen=True)
 class DefaultDisabledAPIExecutionGuard:
-    """Authorize only the exact route selected by repository-external configuration."""
+    """Allow only the exact route selected by repository-external configuration."""
 
     api_mode_enabled: bool = False
     selected_provider_id: str | None = None
@@ -580,7 +576,7 @@ def _request_sha256_or_fallback(request: AIWorkerRequest) -> str:
         identity = (
             f"{getattr(request, 'request_id', '')}\0"
             f"{getattr(request, 'idempotency_key', '')}"
-        ).encode("utf-8")
+        ).encode()
         return hashlib.sha256(identity).hexdigest()
 
 

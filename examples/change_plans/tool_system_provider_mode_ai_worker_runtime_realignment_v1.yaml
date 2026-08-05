@@ -3,38 +3,53 @@ target_repo: apolo183/tool-system
 task_manifest: examples/task_manifests/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
 changed_files:
   - REPO_MANIFEST.md
+  - config/module_registry_v1.yaml
+  - docs/modules/ai-worker-runtime-contract-v1.md
   - docs/reports/provider_mode_ai_worker_runtime_realignment.md
+  - docs/tool_system_module_registry_contract_v1.md
   - docs/tool_system_project_state_v1.yaml
   - examples/change_plans/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
+  - examples/operator_config/tool_system_settings.example.toml
   - examples/task_manifests/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
   - src/tool_system/ai_worker/__init__.py
+  - src/tool_system/ai_worker/p15c_benchmark.py
+  - src/tool_system/ai_worker/p15c_controls.py
+  - src/tool_system/ai_worker/p15c_entry.py
   - src/tool_system/ai_worker/runtime.py
+  - tests/test_ai_worker_p15c_benchmark.py
+  - tests/test_ai_worker_p15c_controls.py
+  - tests/test_ai_worker_p15c_entry.py
   - tests/test_ai_worker_provider_mode.py
+  - tests/test_module_registry.py
+  - tests/test_p15c_local_operator_config.py
   - tests/test_repo_manifest.py
 alignment:
   parent:
-    document: examples/task_manifests/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
-    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
-    scope: Correct only ai-worker-runtime provider activation and zero-I/O route selection.
+    document: docs/reports/provider_mode_and_acceptance_policy_realignment.md
+    section_or_key: Corrected stable rules
+    scope: Implement only the dependent AI-worker-runtime correction.
   global:
     document: blueprint/tool_system_v0.yaml
     section_or_key: product_objective
-    scope: Preserve bounded provider-neutral development and every safety boundary.
+    scope: Preserve every hard control while making the optional API path provider-neutral and single-success.
 verification:
   commands:
     - git diff --check
     - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
-    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_ai_worker_provider_mode.py tests/test_ai_worker_contract.py tests/test_ai_worker_fixture_provider.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_ai_worker_provider_mode.py tests/test_ai_worker_p15c_benchmark.py tests/test_ai_worker_p15c_controls.py tests/test_ai_worker_p15c_entry.py tests/test_p15c_local_operator_config.py tests/test_ai_worker_contract.py tests/test_ai_worker_live_provider.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_repo_manifest.py tests/test_model_provider_portfolio_contract.py tests/test_phase_alignment.py tests/test_product_objective_alignment.py
     - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
     - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
     - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
     - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
     - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
 publication:
-  method: github_app_draft_pr_then_guarded_ready_and_squash_merge
+  method: github_app_existing_draft_pr_non_force_fast_forward_then_guarded_ready_and_squash_merge
   branch: agent/provider-mode-ai-worker-runtime-realignment-v1
   retain_feature_branch: true
   exact_base: 149296ff5e87e6b18a4982a9046012fd3edeb1b0
+  exact_base_tree: be5489b2b6bd8a55d07684287dc364793a3da41d
   live_execution_during_publication: false
 rollback:
   method: git_revert

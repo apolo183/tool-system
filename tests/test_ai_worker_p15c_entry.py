@@ -50,13 +50,23 @@ def test_packet_only_is_public_and_performs_zero_private_or_live_operations(
     assert record["status"] == "PASS"
     assert record["mode"] == "packet-only"
     assert [packet["provider_id"] for packet in record["packets"]] == [
+        "deepseek",
         "openai",
         "qwen",
     ]
-    assert record["packets"][0]["exact_model_version"] == "gpt-5.6-luna"
-    assert record["packets"][0]["packet_status"] == "FROZEN_NOT_ACTIVATED"
-    assert record["packets"][1]["exact_model_version"] == ("qwen3.7-plus-2026-05-26")
-    assert record["packets"][1]["packet_status"] == "BLOCKED_NOT_FUNDED"
+    assert record["catalog_grants_execution_authority"] is False
+    assert record["selection_source"] == (
+        "repository_external_operator_configuration"
+    )
+    assert record["packets"][0]["packet_status"] == (
+        "BLOCKED_EXACT_VERSION_UNPINNABLE"
+    )
+    assert record["packets"][1]["exact_model_version"] == "gpt-5.6-luna"
+    assert record["packets"][1]["packet_status"] == "FROZEN_NOT_ACTIVATED"
+    assert record["packets"][2]["exact_model_version"] == (
+        "qwen3.7-plus-2026-05-26"
+    )
+    assert record["packets"][2]["packet_status"] == "BLOCKED_NOT_FUNDED"
     for field in (
         "provider_invocations",
         "network_operations",
@@ -72,12 +82,25 @@ def test_packet_only_is_public_and_performs_zero_private_or_live_operations(
         assert record[field] == 0
 
 
-def test_private_modes_block_before_private_inputs_on_unfunded_qwen(
+def test_disabled_api_mode_blocks_before_credentials_targets_or_transport(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     def forbidden(*_: object, **__: object) -> None:
-        raise AssertionError("funding blocker crossed a private boundary")
+        raise AssertionError("disabled API mode crossed a private or live boundary")
+
+    private = tmp_path / "private"
+    private.mkdir()
+    private.chmod(0o700)
+    settings = private / "settings.toml"
+    settings.write_text(
+        (ROOT / "examples/operator_config/tool_system_settings.example.toml").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+    settings.chmod(0o600)
 
     monkeypatch.setattr(p15c_entry, "load_target_packet", forbidden)
     monkeypatch.setattr(p15c_entry, "load_target_snapshot", forbidden)
@@ -91,6 +114,8 @@ def test_private_modes_block_before_private_inputs_on_unfunded_qwen(
             str(ROOT),
             "--packet-config",
             str(PACKET_CONFIG),
+            "--settings",
+            str(settings),
         ]
     )
     record = _output(capsys)
@@ -98,7 +123,7 @@ def test_private_modes_block_before_private_inputs_on_unfunded_qwen(
     assert result == 2
     assert record == {
         "credential_values_recorded": 0,
-        "failure_code": "PROVIDER_PACKET_BLOCKED",
+        "failure_code": "POLICY_DISABLED",
         "private_target_identity_recorded": False,
         "private_target_paths_recorded": False,
         "raw_provider_outputs_recorded": 0,

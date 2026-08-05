@@ -12,6 +12,7 @@ import pytest
 
 from tool_system.ai_worker.p15c_controls import (
     P15C_AUTHORIZATION_ID,
+    P15C_POLICY_SCHEMA_VERSION,
     OwnerOnlyCredentialResolver,
     P15CControlError,
     P15CUsageLedger,
@@ -141,6 +142,45 @@ def _policy_record(
     }
 
 
+def _backup_policy_record(*, enabled: bool = True) -> dict[str, object]:
+    return {
+        "schema_version": P15C_POLICY_SCHEMA_VERSION,
+        "authorization_id": P15C_AUTHORIZATION_ID,
+        "enabled": enabled,
+        "total_budget_micro_usd": 50_000 if enabled else 0,
+        "expires_at_utc": (
+            "2099-01-01T00:00:00Z" if enabled else "1970-01-01T00:00:00Z"
+        ),
+        "expected_tool_system_commit": "1" * 40,
+        "expected_tool_system_tree": "2" * 40,
+        "provider_priority": ["qwen", "openai"] if enabled else [],
+        "provider_model": {
+            "deepseek": "",
+            "openai": "gpt-current" if enabled else "",
+            "qwen": "qwen-current" if enabled else "",
+        },
+        "provider_enabled": {
+            "deepseek": False,
+            "openai": enabled,
+            "qwen": enabled,
+        },
+        "provider_budget_micro_usd": {
+            "deepseek": 0,
+            "openai": 25_000 if enabled else 0,
+            "qwen": 0,
+        },
+        "private_repository_transfer_enabled": False,
+        "provider_transfer_enabled": {
+            "deepseek": False,
+            "openai": enabled,
+            "qwen": enabled,
+        },
+        "allowed_case_ids": ["deterministic-corpus"],
+        "max_provider_invocations": 3,
+        "cny_to_micro_usd_ceiling": 1_000_000,
+    }
+
+
 def _target_packet_record(snapshot: Path, content: bytes) -> dict[str, object]:
     relative = "src/example.py"
     return {
@@ -245,6 +285,41 @@ def test_policy_is_exact_bounded_and_qwen_capable(tmp_path: Path) -> None:
     with pytest.raises(P15CControlError) as caught:
         load_execution_policy(policy_path)
     assert caught.value.code == "INTEGER_FIELD"
+
+
+def test_schema_3_owns_provider_priority_and_model_outside_repository(
+    tmp_path: Path,
+) -> None:
+    private = _owner_directory(tmp_path / "private")
+    policy_path = _owner_json(private / "backup.json", _backup_policy_record())
+
+    policy = load_execution_policy(policy_path)
+
+    assert policy.schema_version == 3
+    assert policy.provider_priority == ("qwen", "openai")
+    assert policy.provider_model["openai"] == "gpt-current"
+    assert policy.provider_model["qwen"] == "qwen-current"
+    assert policy.expected_target_packet_sha256 is None
+    assert policy.allowed_case_ids == ("deterministic-corpus",)
+    assert policy.private_repository_transfer_enabled is False
+
+    no_enabled_route = _backup_policy_record()
+    no_enabled_route["provider_enabled"] = {
+        "deepseek": False,
+        "openai": False,
+        "qwen": False,
+    }
+    _owner_json(policy_path, no_enabled_route)
+    with pytest.raises(P15CControlError) as caught:
+        load_execution_policy(policy_path)
+    assert caught.value.code == "NO_ENABLED_PROVIDER"
+
+    disabled = load_execution_policy(
+        _owner_json(policy_path, _backup_policy_record(enabled=False))
+    )
+    assert disabled.enabled is False
+    assert disabled.total_budget_micro_usd == 0
+    assert disabled.provider_priority == ()
 
 
 def test_legacy_policy_remains_readable_only_with_qwen_disabled(tmp_path: Path) -> None:
@@ -358,6 +433,14 @@ def test_credential_resolver_accepts_only_opaque_exact_references(
         "private-control:credentials#providers.qwen.api_key", "qwen"
     )
     assert qwen_value == "qwen-unit-value"
+
+    missing = OwnerOnlyCredentialResolver(private / "missing.toml")
+    with pytest.raises(P15CControlError) as caught:
+        missing.resolve(
+            "private-control:credentials#providers.openai.api_key",
+            "openai",
+        )
+    assert caught.value.code == "CREDENTIAL_UNAVAILABLE"
 
     with pytest.raises(P15CControlError) as caught:
         resolver.resolve("env:OPENAI_API_KEY", "openai")
