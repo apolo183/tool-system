@@ -1,0 +1,73 @@
+schema_version: 1
+benchmark_id: p15-non-live-multi-project-evidence-v1
+authority_effect: none
+execution_boundary: isolated_committed_fixtures_only
+canonical_base: 0bf9c98776c79ac9398c2b5c6251c0e7b65ef842
+projects:
+  - project_id: python-cli-fixture
+    fixture_root: tests/fixtures/p14h/python_cli
+    language_stack: python
+    isolated_repository: true
+    task_classes: [greenfield_add, bounded_modify, repair, status_convergence]
+    acceptance_test: test_greenfield_python_cli_repairs_source_and_stale_status
+    expected_terminal_class: accepted_local_fixture_commit
+  - project_id: typescript-package-fixture
+    fixture_root: tests/fixtures/p14h/typescript_package
+    language_stack: typescript
+    isolated_repository: true
+    task_classes: [bounded_add, bounded_modify, bounded_delete, topology_validation]
+    acceptance_test: test_typescript_language_neutral_flow_records_add_modify_delete
+    expected_terminal_class: accepted_local_fixture_commit
+cross_project_controls:
+  unique_repository_roots_required: true
+  unique_orchestrator_state_required: true
+  caller_supplied_project_identity_required: true
+  shared_candidate_tree_forbidden: true
+  shared_branch_identity_forbidden: true
+  downstream_repository_access_allowed: false
+generalization_cases:
+  - case_id: policy-and-scope-block
+    acceptance_test: test_ambiguous_blueprint_out_of_scope_patch_and_invented_milestone_block
+    expected_disposition: blocked_without_commit
+  - case_id: cancellation-resume-no-progress
+    acceptance_test: test_cancellation_resume_no_progress_and_evidence_non_reopening
+    expected_disposition: bounded_stop_and_deterministic_resume
+  - case_id: crash-resume-conflict
+    acceptance_test: test_completed_commit_crash_resumes_once_and_conflicting_branch_blocks
+    expected_disposition: exactly_once_resume_and_conflict_block
+metrics:
+  quality:
+    accepted_project_count: 2
+    rejected_out_of_scope_case_count: 1
+    deterministic_replay_required: true
+  time:
+    critical_path_measure: logical_development_cycles
+    finite_cycle_budget_required: true
+    wall_clock_is_advisory_only: true
+  economics:
+    unit: integer_microunits
+    private_value_required: false
+    double_counting_allowed: false
+  recovery:
+    cancellation_case_count: 1
+    no_progress_case_count: 1
+    crash_resume_case_count: 1
+    conflict_block_case_count: 1
+  policy:
+    external_side_effect_count: 0
+    provider_invocation_count: 0
+    credential_value_access_count: 0
+    target_repository_access_count: 0
+    production_operation_count: 0
+    cleanup_operation_count: 0
+    rollback_execution_count: 0
+provider_boundary:
+  daily_route: chatgpt_codex_subscription
+  all_large_model_apis_default_disabled: true
+  provider_model_selection_source: repository_external_operator_configuration
+  adapter_fake_io_evidence_required: true
+  live_smoke_executed: false
+acceptance_boundary:
+  p15_stage_accepted: false
+  p16_stage_entered: false
+  final_live_smoke_executed: false
