@@ -1,0 +1,47 @@
+plan_id: tool-system-p15d-prerequisite-corpus-freeze-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml
+changed_files:
+  - REPO_MANIFEST.md
+  - config/module_registry_v1.yaml
+  - config/p15d_failure_economics_corpus_prerequisite_v1.yaml
+  - docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
+  - docs/reports/p15d_failure_economics_corpus_prerequisite_freeze.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml
+  - examples/task_manifests/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml
+  - tests/test_module_registry.py
+  - tests/test_p15d_failure_economics_corpus_prerequisite.py
+  - tests/test_repo_manifest.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Add only the non-authorizing P15D prerequisite corpus and its single-module consistency closure while P15C acceptance remains missing.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Keep reusable failure and economics evidence deterministic bounded project-neutral and unable to expand execution authority.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_p15d_failure_economics_corpus_prerequisite.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_repo_manifest.py tests/test_phase_alignment.py tests/test_model_provider_portfolio_contract.py tests/test_repository_context_builder.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p15d-prerequisite-corpus-freeze-v1
+  retain_feature_branch: true
+  exact_base: 4ce30b432fedd80f7e4ff40c182cdace4e51244a
+  exact_base_tree: 1a8ceff8a365df183db433398a03f51ae2b48cc1
+rollback:
+  method: git_revert
+  reference: tool-system@4ce30b432fedd80f7e4ff40c182cdace4e51244a
+  execution_authorized: false
