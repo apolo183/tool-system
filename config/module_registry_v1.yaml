@@ -327,8 +327,8 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: adaptive-model-portfolio-and-economics
-  module_version: 1.0.0
-  role: profile isolated fixture tasks and select one deterministic authorized fixture provider-model route after every hard floor passes. Validate immutable task profiles, exact catalog and authorization snapshots, fixture-only structural AIWorkerProvider adapters, integer expected-total-economic-cost components, and distinct availability, quality, policy-block, and stop failures without executing a live route or reading external state.
+  module_version: 1.1.0
+  role: profile isolated fixture tasks, own one exact non-executing provider catalog and matrix, and select one deterministic authorized fixture provider-model route after every hard floor passes. Validate immutable task profiles, exact catalog, matrix, limit, economics, funding, transfer-authorization-record, and authorization snapshots, fixture-only structural AIWorkerProvider adapters, integer expected-total-economic-cost components, and distinct availability, quality, policy-block, funding-block, and stop failures without executing a live route or reading external state.
   owner: adaptive-model-portfolio-and-economics
   public_interface_refs:
   - interface_id: adaptive-model-portfolio-and-economics-api
@@ -358,12 +358,12 @@ modules:
   permitted_side_effects: []
   rollback_boundary:
     repo_relative_path: docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
-    sha256: d7c63a7404d3d736e67a7f67ecc2d48b19b5b9389f0c7c6e62c07d4ef0968ae8
+    sha256: 3d4c4a1217b91aa43a321f057de1e53022bac6e15de11c03f6df2ffd7dcb343d
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
-    sha256: d7c63a7404d3d736e67a7f67ecc2d48b19b5b9389f0c7c6e62c07d4ef0968ae8
+    sha256: 3d4c4a1217b91aa43a321f057de1e53022bac6e15de11c03f6df2ffd7dcb343d
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: durable-orchestrator
@@ -1784,32 +1784,32 @@ interfaces:
   consumers: []
   input_contract:
     repo_relative_path: docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
-    sha256: d7c63a7404d3d736e67a7f67ecc2d48b19b5b9389f0c7c6e62c07d4ef0968ae8
+    sha256: 3d4c4a1217b91aa43a321f057de1e53022bac6e15de11c03f6df2ffd7dcb343d
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
-    sha256: d7c63a7404d3d736e67a7f67ecc2d48b19b5b9389f0c7c6e62c07d4ef0968ae8
+    sha256: 3d4c4a1217b91aa43a321f057de1e53022bac6e15de11c03f6df2ffd7dcb343d
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
-    sha256: d7c63a7404d3d736e67a7f67ecc2d48b19b5b9389f0c7c6e62c07d4ef0968ae8
+    sha256: 3d4c4a1217b91aa43a321f057de1e53022bac6e15de11c03f6df2ffd7dcb343d
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
-    sha256: d7c63a7404d3d736e67a7f67ecc2d48b19b5b9389f0c7c6e62c07d4ef0968ae8
+    sha256: 3d4c4a1217b91aa43a321f057de1e53022bac6e15de11c03f6df2ffd7dcb343d
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
-    sha256: d7c63a7404d3d736e67a7f67ecc2d48b19b5b9389f0c7c6e62c07d4ef0968ae8
+    sha256: 3d4c4a1217b91aa43a321f057de1e53022bac6e15de11c03f6df2ffd7dcb343d
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
-    sha256: d7c63a7404d3d736e67a7f67ecc2d48b19b5b9389f0c7c6e62c07d4ef0968ae8
+    sha256: 3d4c4a1217b91aa43a321f057de1e53022bac6e15de11c03f6df2ffd7dcb343d
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: durable-orchestrator-api
