@@ -1195,6 +1195,24 @@ provider_mode_and_acceptance_realignment_lifecycle:
       ruff_0_16_0: passed
       governance_validators: passed
       exact_13_path_closure: passed
+  ai_worker_runtime_package:
+    task_identity: PROVIDER-MODE-AI-WORKER-RUNTIME-REALIGNMENT-v1
+    task_manifest: examples/task_manifests/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
+    change_plan: examples/change_plans/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
+    record: docs/reports/provider_mode_ai_worker_runtime_realignment.md
+    status: accepted_only_on_guarded_squash_merge_no_external_execution
+    baseline_commit: 149296ff5e87e6b18a4982a9046012fd3edeb1b0
+    runtime_contract:
+      api_default_disabled: true
+      key_presence_grants_authority: false
+      provider_model_source: repository_external_operator_configuration
+      unavailable_provider_may_skip: true
+      stable_no_route_status: NO_AVAILABLE_PROVIDER
+      one_usable_enabled_route_is_sufficient: true
+      credential_resolver_invocations: 0
+      credential_value_accesses: 0
+      provider_invocations: 0
+      network_operations: 0
   formal_rules:
     daily_development_route: chatgpt_codex_subscription
     all_large_model_apis_default_disabled: true
