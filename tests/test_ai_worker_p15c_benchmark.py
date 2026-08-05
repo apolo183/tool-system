@@ -54,7 +54,9 @@ def _snapshot(path: str, content: str) -> P15CSnapshotFile:
 
 def _cases() -> tuple[P15CBenchmarkCase, P15CBenchmarkCase]:
     deterministic_file = _snapshot("src/deterministic.py", "result = 1 / 0\n")
-    private_file = _snapshot("src/private.py", "def identity(value):\n    return value\n")
+    private_file = _snapshot(
+        "src/private.py", "def identity(value):\n    return value\n"
+    )
     return (
         P15CBenchmarkCase(
             case_id="deterministic-corpus",
@@ -99,7 +101,7 @@ def _target_packet(private_case: P15CBenchmarkCase, root: Path) -> P15CTargetPac
         provider_transfer_authority_by_provider={
             "deepseek": True,
             "openai": True,
-            "qwen": False,
+            "qwen": True,
         },
         mutation_authority=False,
         snapshot_root=root,
@@ -140,7 +142,7 @@ def _provider_response(provider_id: str, path: str) -> P15CHTTPResponse:
                 "input_tokens_details": {"cached_tokens": 20},
             },
         }
-    else:
+    elif provider_id == "deepseek":
         body = {
             "model": "deepseek-v4-flash",
             "choices": [
@@ -151,7 +153,25 @@ def _provider_response(provider_id: str, path: str) -> P15CHTTPResponse:
             ],
             "usage": {"prompt_tokens": 100, "completion_tokens": 10},
         }
-    return P15CHTTPResponse(200, {"content-type": "application/json"}, json.dumps(body).encode())
+    else:
+        assert provider_id == "qwen"
+        body = {
+            "model": "qwen3.7-plus-2026-05-26",
+            "choices": [
+                {
+                    "finish_reason": "stop",
+                    "message": {"role": "assistant", "content": output_text},
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 100,
+                "completion_tokens": 10,
+                "prompt_tokens_details": {"cached_tokens": 20},
+            },
+        }
+    return P15CHTTPResponse(
+        200, {"content-type": "application/json"}, json.dumps(body).encode()
+    )
 
 
 class _FakeResolver:
@@ -179,7 +199,11 @@ class _FakeTransport:
         timeout_seconds: float,
     ) -> P15CHTTPResponse:
         request = json.loads(body)
-        provider_id = "openai" if host == "api.openai.com" else "deepseek"
+        provider_id = {
+            "api.openai.com": "openai",
+            "api.deepseek.com": "deepseek",
+            "dashscope.aliyuncs.com": "qwen",
+        }[host]
         messages = request.get("input", request.get("messages"))
         snapshot = json.loads(messages[1]["content"].split("SNAPSHOT_JSON:\n", 1)[1])
         self.calls.append(
@@ -229,13 +253,15 @@ def _git(root: Path, *args: str) -> str:
         cwd=root,
         check=True,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
     )
     return completed.stdout.strip()
 
 
-def _sealed_repository(root: Path) -> tuple[Path, str, str]:
+def _sealed_repository(
+    root: Path,
+    provider_ids: tuple[str, str] = ("deepseek", "openai"),
+) -> tuple[Path, str, str]:
     root.mkdir()
     for relative in (
         "config/p15c_execution_packet_freeze_v1.yaml",
@@ -248,13 +274,27 @@ def _sealed_repository(root: Path) -> tuple[Path, str, str]:
         shutil.copyfile(ROOT / relative, destination)
     packet_config = root / "config/p15c_execution_packet_freeze_v1.yaml"
     packet_source = yaml.safe_load(packet_config.read_text(encoding="utf-8"))
-    deepseek = next(
-        packet
-        for packet in packet_source["provider_packets"]
-        if packet["provider_id"] == "deepseek"
-    )
-    deepseek["packet_status"] = "FROZEN_NOT_ACTIVATED"
-    deepseek.pop("execution_blocker")
+    if provider_ids == ("deepseek", "openai"):
+        deepseek = next(
+            packet
+            for packet in packet_source["provider_packets"]
+            if packet["provider_id"] == "deepseek"
+        )
+        deepseek["packet_status"] = "FROZEN_NOT_ACTIVATED"
+        deepseek.pop("execution_blocker")
+    else:
+        assert provider_ids == ("openai", "qwen")
+        packet_source["execution_matrix"] = {
+            "provider_ids": list(provider_ids),
+            "case_ids": ["deterministic-corpus", "private-target"],
+            "max_provider_invocations": 4,
+        }
+        qwen = next(
+            packet
+            for packet in packet_source["provider_packets"]
+            if packet["provider_id"] == "qwen"
+        )
+        qwen["packet_status"] = "FROZEN_NOT_ACTIVATED"
     packet_config.write_text(
         yaml.safe_dump(packet_source, sort_keys=False),
         encoding="utf-8",
@@ -280,38 +320,56 @@ def _owner_json(path: Path, value: object) -> Path:
     return path
 
 
-def _policy(path: Path, commit: str, tree: str, target_packet_sha256: str) -> Path:
+def _policy(
+    path: Path,
+    commit: str,
+    tree: str,
+    target_packet_sha256: str,
+    provider_ids: tuple[str, str] = ("deepseek", "openai"),
+) -> Path:
+    provider_enabled = {
+        provider_id: False for provider_id in ("deepseek", "openai", "qwen")
+    }
+    provider_transfer = dict(provider_enabled)
+    provider_budget = {provider_id: 0 for provider_id in provider_enabled}
+    for provider_id in provider_ids:
+        provider_enabled[provider_id] = True
+        provider_transfer[provider_id] = True
+    provider_budget["openai"] = 50_000
+    if "deepseek" in provider_ids:
+        provider_budget["deepseek"] = 50_000
+        total_budget_micro_usd = 100_000
+    else:
+        provider_budget["qwen"] = 500_000
+        total_budget_micro_usd = 550_000
     return _owner_json(
         path,
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "authorization_id": P15C_AUTHORIZATION_ID,
             "enabled": True,
-            "total_budget_micro_usd": 100_000,
+            "total_budget_micro_usd": total_budget_micro_usd,
             "expires_at_utc": "2099-01-01T00:00:00Z",
             "expected_tool_system_commit": commit,
             "expected_tool_system_tree": tree,
             "expected_target_packet_sha256": target_packet_sha256,
-            "provider_enabled": {"deepseek": True, "openai": True, "qwen": False},
-            "provider_budget_micro_usd": {
-                "deepseek": 50_000,
-                "openai": 50_000,
-                "qwen": 0,
-            },
+            "provider_enabled": provider_enabled,
+            "provider_budget_micro_usd": provider_budget,
             "private_repository_transfer_enabled": True,
-            "provider_transfer_enabled": {
-                "deepseek": True,
-                "openai": True,
-                "qwen": False,
-            },
+            "provider_transfer_enabled": provider_transfer,
             "allowed_case_ids": ["deterministic-corpus", "private-target"],
             "max_provider_invocations": 4,
+            "cny_to_micro_usd_ceiling": 1_000_000,
         },
     )
 
 
-def _executor_fixture(tmp_path: Path, transport: object):
-    repository, commit, tree = _sealed_repository(tmp_path / "sealed")
+def _executor_fixture(
+    tmp_path: Path,
+    transport: object,
+    provider_ids: tuple[str, str] = ("deepseek", "openai"),
+):
+    repository, commit, tree = _sealed_repository(tmp_path / "sealed", provider_ids)
     private_fixture = _cases()[1]
     target = _target_packet(private_fixture, tmp_path)
     cases = (
@@ -324,7 +382,13 @@ def _executor_fixture(tmp_path: Path, transport: object):
     private = tmp_path / "private"
     private.mkdir()
     private.chmod(0o700)
-    policy = _policy(private / "policy.json", commit, tree, target.packet_sha256)
+    policy = _policy(
+        private / "policy.json",
+        commit,
+        tree,
+        target.packet_sha256,
+        provider_ids,
+    )
     ledger = P15CUsageLedger(private / "usage.sqlite3")
     resolver = _FakeResolver()
     executor = P15CBenchmarkExecutor(
@@ -351,7 +415,11 @@ def test_frozen_packets_expose_exact_routes_and_block_unpinnable_deepseek() -> N
         ("api.deepseek.com", "/chat/completions"),
         ("api.openai.com", "/v1/responses"),
     ]
-    assert all(packet.per_attempt_hard_cap_micro_usd == 25_000 for packet in packets)
+    assert all(
+        packet.billing_currency == "USD"
+        and packet.per_attempt_hard_cap_native_microunits == 25_000
+        for packet in packets
+    )
     assert all(packet.public_record()["max_retries"] == 0 for packet in packets)
     assert packets[0].exact_model_version == "DeepSeek-V4-Flash-0731"
     assert packets[0].packet_status == "BLOCKED_EXACT_VERSION_UNPINNABLE"
@@ -408,7 +476,7 @@ def test_deterministic_corpus_is_exact_content_addressed_twelve_file_set() -> No
     assert case.private_target is False
 
 
-def test_private_case_requires_both_provider_transfer_grants(tmp_path: Path) -> None:
+def test_private_case_defers_provider_transfer_to_exact_route(tmp_path: Path) -> None:
     private_case = _cases()[1]
     packet = _target_packet(private_case, tmp_path)
 
@@ -426,9 +494,8 @@ def test_private_case_requires_both_provider_transfer_grants(tmp_path: Path) -> 
             },
         }
     )
-    with pytest.raises(P15CBenchmarkError) as caught:
-        build_p15c_private_case(blocked, private_case.files)
-    assert caught.value.code == "PRIVATE_CASE_TRANSFER_AUTHORITY"
+    built_without_openai_transfer = build_p15c_private_case(blocked, private_case.files)
+    assert built_without_openai_transfer.case_sha256 == built.case_sha256
 
 
 def test_requests_use_provider_specific_structured_json_and_no_tools() -> None:
@@ -450,6 +517,68 @@ def test_requests_use_provider_specific_structured_json_and_no_tools() -> None:
     assert openai["text"]["format"]["strict"] is True
     assert "operator/private-target" not in json.dumps(deepseek)
     assert "operator/private-target" not in json.dumps(openai)
+
+
+def test_qwen_exact_snapshot_request_response_and_cny_cost_are_bounded(
+    tmp_path: Path,
+) -> None:
+    repository, _, _ = _sealed_repository(tmp_path / "qwen-sealed", ("openai", "qwen"))
+    packets = load_p15c_provider_packets(
+        repository / "config/p15c_execution_packet_freeze_v1.yaml"
+    )
+    assert tuple(packet.provider_id for packet in packets) == ("openai", "qwen")
+    qwen = packets[1]
+    assert qwen.exact_model_version == "qwen3.7-plus-2026-05-26"
+    assert (qwen.host, qwen.path) == (
+        "dashscope.aliyuncs.com",
+        "/compatible-mode/v1/chat/completions",
+    )
+    assert qwen.billing_currency == "CNY"
+    assert qwen.per_attempt_hard_cap_native_microunits == 250_000
+
+    case = _cases()[0]
+    request = json.loads(build_p15c_request(qwen, case)[0])
+    assert request["model"] == "qwen3.7-plus-2026-05-26"
+    assert request["max_completion_tokens"] == 2_048
+    assert request["response_format"] == {"type": "json_object"}
+    assert request["enable_thinking"] is False
+    assert request["stream"] is False
+    assert request["tools"] == []
+
+    parsed = parse_p15c_provider_response(
+        qwen, _provider_response("qwen", next(iter(case.allowed_paths)))
+    )
+    assert (
+        calculate_p15c_cost_micro_usd(qwen, parsed, cny_to_micro_usd_ceiling=1_000_000)
+        == 280
+    )
+    with pytest.raises(P15CBenchmarkError) as caught:
+        calculate_p15c_cost_micro_usd(qwen, parsed, cny_to_micro_usd_ceiling=999_999)
+    assert caught.value.code == "CURRENCY_CEILING_INVALID"
+
+    with pytest.raises(P15CBenchmarkError) as caught:
+        calculate_p15c_cost_micro_usd(
+            qwen,
+            parsed,
+            cny_to_micro_usd_ceiling=20_000_001,
+        )
+    assert caught.value.code == "CURRENCY_CEILING_INVALID"
+
+
+def test_execution_matrix_rejects_non_string_provider_ids(tmp_path: Path) -> None:
+    source = yaml.safe_load(PACKET_CONFIG.read_text(encoding="utf-8"))
+    source["execution_matrix"] = {
+        "provider_ids": [{"provider": "openai"}, "qwen"],
+        "case_ids": ["deterministic-corpus", "private-target"],
+        "max_provider_invocations": 4,
+    }
+    candidate = tmp_path / "invalid-matrix.yaml"
+    candidate.write_text(yaml.safe_dump(source, sort_keys=False), encoding="utf-8")
+
+    with pytest.raises(P15CBenchmarkError) as caught:
+        load_p15c_provider_packets(candidate)
+
+    assert caught.value.code == "PACKET_MATRIX_INVALID"
 
 
 def test_request_budget_uses_conservative_byte_ceiling() -> None:
@@ -500,7 +629,9 @@ def test_provider_response_parsing_metrics_and_cost_are_redacted_and_bounded(
     assert caught.value.code == "PROVIDER_MODEL_DRIFT"
 
 
-def test_preflight_resolves_references_but_performs_no_transport(tmp_path: Path) -> None:
+def test_preflight_resolves_references_but_performs_no_transport(
+    tmp_path: Path,
+) -> None:
     transport = _FakeTransport()
     executor, packets, cases, resolver, ledger = _executor_fixture(tmp_path, transport)
 
@@ -601,7 +732,9 @@ def test_executor_runs_exact_fake_matrix_and_blocks_replay(tmp_path: Path) -> No
     assert len(transport.calls) == 4
     assert all(call["authorization_present"] for call in transport.calls)
     assert sum(outcome.charged_micro_usd for outcome in outcomes) == 126
-    public = json.dumps([outcome.public_record() for outcome in outcomes], sort_keys=True)
+    public = json.dumps(
+        [outcome.public_record() for outcome in outcomes], sort_keys=True
+    )
     assert "unit-test-credential-value" not in public
     assert "operator/private-target" not in public
     assert "src/private.py" not in public
@@ -613,7 +746,34 @@ def test_executor_runs_exact_fake_matrix_and_blocks_replay(tmp_path: Path) -> No
     assert len(transport.calls) == 4
 
 
-def test_cancellation_blocks_before_fake_transport_and_releases_budget(tmp_path: Path) -> None:
+def test_executor_runs_openai_qwen_matrix_with_fake_transport_only(
+    tmp_path: Path,
+) -> None:
+    transport = _FakeTransport()
+    executor, packets, cases, resolver, ledger = _executor_fixture(
+        tmp_path, transport, ("openai", "qwen")
+    )
+
+    preflight = executor.preflight(packets, cases)
+    outcomes = [executor.execute(packet, case) for packet in packets for case in cases]
+
+    assert preflight["planned_provider_invocations"] == 4
+    assert tuple(packet.provider_id for packet in packets) == ("openai", "qwen")
+    assert len(resolver.calls) == 6
+    assert len(transport.calls) == 4
+    assert all(outcome.status == "PASS" for outcome in outcomes)
+    assert sum(outcome.charged_micro_usd for outcome in outcomes) == 618
+    assert all(item.status == "SETTLED" for item in ledger.attempts())
+    public = json.dumps([outcome.public_record() for outcome in outcomes])
+    assert "unit-test-credential-value" not in public
+    assert "operator/private-target" not in public
+    assert "src/private.py" not in public
+    assert all(call["authorization_present"] for call in transport.calls)
+
+
+def test_cancellation_blocks_before_fake_transport_and_releases_budget(
+    tmp_path: Path,
+) -> None:
     transport = _FakeTransport()
     executor, packets, cases, _, ledger = _executor_fixture(tmp_path, transport)
 
@@ -644,6 +804,10 @@ def test_direct_transport_routes_are_fixed_and_source_has_no_proxy_or_retry() ->
     assert P15CDirectTLSTransport._allowed_routes == {
         ("api.deepseek.com", "/chat/completions"),
         ("api.openai.com", "/v1/responses"),
+        (
+            "dashscope.aliyuncs.com",
+            "/compatible-mode/v1/chat/completions",
+        ),
     }
     source = Path("src/tool_system/ai_worker/p15c_benchmark.py").read_text(
         encoding="utf-8"

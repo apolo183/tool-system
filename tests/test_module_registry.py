@@ -20,6 +20,8 @@ from tool_system.architecture.module_registry import (
     load_module_identity_mapping,
     validate_module_registry,
 )
+from tool_system.cli.validate_change_plan import validate as validate_change_plan
+from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
 from tool_system.manifest.task_manifest import load_yaml_file
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,13 +30,42 @@ LOCAL_SCHEMA = ROOT / "config/module_registry_schema_v1.json"
 MODULE_CONTRACT = ROOT / "docs/tool_system_module_registry_contract_v1.md"
 CONTRACT_DIR = ROOT / "docs/modules"
 BLUEPRINT = ROOT / "blueprint/tool_system_v0.yaml"
-
-EXPECTED_RAW_SHA256 = (
-    "4b5fd4a5c32b296ce70373b789631ef48c1d4cd42b59e07d221c2a5d424033ba"
+QWEN_ADAPTER_REPORT = ROOT / "docs/reports/p15c_qwen_runtime_adapter.md"
+QWEN_ADAPTER_MANIFEST = (
+    ROOT / "examples/task_manifests/tool_system_p15c_qwen_runtime_adapter_v1.yaml"
 )
-EXPECTED_BYTE_LENGTH = 104_754
+QWEN_ADAPTER_PLAN = (
+    ROOT / "examples/change_plans/tool_system_p15c_qwen_runtime_adapter_v1.yaml"
+)
+PROJECT_STATE = ROOT / "docs/tool_system_project_state_v1.yaml"
+REPO_WRITE_POLICY = ROOT / "policy/repo_write_policy.yaml"
+AUTONOMY_POLICY = ROOT / "policy/autonomy_policy.yaml"
+PACKET_CONFIG = ROOT / "config/p15c_execution_packet_freeze_v1.yaml"
+QWEN_ADAPTER_FILES = {
+    "REPO_MANIFEST.md",
+    "config/module_registry_v1.yaml",
+    "docs/modules/ai-worker-runtime-contract-v1.md",
+    "docs/reports/p15c_qwen_runtime_adapter.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p15c_qwen_runtime_adapter_v1.yaml",
+    "examples/operator_config/tool_system_settings.example.toml",
+    "examples/task_manifests/tool_system_p15c_qwen_runtime_adapter_v1.yaml",
+    "src/tool_system/ai_worker/p15c_benchmark.py",
+    "src/tool_system/ai_worker/p15c_controls.py",
+    "tests/test_ai_worker_p15c_benchmark.py",
+    "tests/test_ai_worker_p15c_controls.py",
+    "tests/test_module_registry.py",
+    "tests/test_p15c_local_operator_config.py",
+}
+CANONICAL_PACKET_SHA256 = (
+    "509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962"
+)
+
+EXPECTED_RAW_SHA256 = "b9154a0b24121b2c8340040e81ad12399cff4b2d8bd7af50ff881b4632435c4f"
+EXPECTED_BYTE_LENGTH = 104_851
 EXPECTED_SEMANTIC_SHA256 = (
-    "c7915b670f7e00e4dc88b5eac1c90bf41e0882886d91fb3402883f5855b1da27"
+    "6a1d447e1cf5e26527ea9a56ab6704ae3ac161912bba21145defa178999bfcb1"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 106
 EXPECTED_MODULE_IDS = {
@@ -134,9 +165,7 @@ def authority_contracts() -> dict[str, dict[str, Any]]:
         contract = _yaml_block(path, "MODULE-COMPOUND-CONTRACT")[
             "module_compound_contract"
         ]
-        assert contract["identity"]["current_module_id"] == mapping[
-            "current_module_id"
-        ]
+        assert contract["identity"]["current_module_id"] == mapping["current_module_id"]
         result[str(mapping["current_module_id"])] = contract
     assert set(result) == EXPECTED_MODULE_IDS
     return result
@@ -234,8 +263,7 @@ def authority_effect_matrices() -> tuple[
     dict[tuple[str, str, str, str], tuple[str, ...]],
 ]:
     mappings = {
-        str(row["current_module_id"]): row
-        for row in load_module_identity_mapping(ROOT)
+        str(row["current_module_id"]): row for row in load_module_identity_mapping(ROOT)
     }
     expanded: list[tuple[str, str, str, tuple[str, ...], str]] = []
     grouped: dict[tuple[str, str, str, str], list[str]] = {}
@@ -260,9 +288,7 @@ def authority_effect_matrices() -> tuple[
                 if effect["effect_class"] not in grouped[key]:
                     grouped[key].append(str(effect["effect_class"]))
         for capability in effects["delegated_effects"]:
-            assert capability["capability_state"] == (
-                "conditional-delegated-maximum"
-            )
+            assert capability["capability_state"] == ("conditional-delegated-maximum")
             assert capability["classification_grants_authority"] is False
             for target in capability["evidence_paths"]:
                 row = (
@@ -330,16 +356,16 @@ def legacy_registry_fixture() -> dict[str, Any]:
         current_id = str(row["current_module_id"])
         contract = contracts[current_id]
         interface_major = str(row["aggregate_interface_version"]).split(".")[0]
+
         def dependency(target: str) -> dict[str, str]:
             return {
                 "module_id": target,
-                "module_version": str(
-                    by_current[target]["current_module_version"]
-                ),
+                "module_version": str(by_current[target]["current_module_version"]),
                 "public_interface_version": str(
                     by_current[target]["aggregate_interface_version"]
                 ).split(".")[0],
             }
+
         modules.append(
             {
                 "module_id": current_id,
@@ -385,6 +411,47 @@ def legacy_registry_fixture() -> dict[str, Any]:
     }
 
 
+def test_qwen_runtime_adapter_pair_scope_and_zero_io_state_validate() -> None:
+    manifest_result = validate_task_manifest(
+        QWEN_ADAPTER_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(QWEN_ADAPTER_PLAN)
+    manifest = load_yaml_file(QWEN_ADAPTER_MANIFEST)
+    plan = load_yaml_file(QWEN_ADAPTER_PLAN)
+    state = load_yaml_file(PROJECT_STATE)["p15c_qwen_runtime_adapter"]
+    report = QWEN_ADAPTER_REPORT.read_text(encoding="utf-8")
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == QWEN_ADAPTER_FILES
+    assert set(manifest["scope"]["in_scope"]) == QWEN_ADAPTER_FILES
+    assert set(plan["changed_files"]) == QWEN_ADAPTER_FILES
+    assert len(QWEN_ADAPTER_FILES) == 15
+    assert hashlib.sha256(PACKET_CONFIG.read_bytes()).hexdigest() == (
+        CANONICAL_PACKET_SHA256
+    )
+    assert state["module"]["module_version"] == "1.9.0"
+    assert state["exact_qwen_adapter"]["exact_model_version"] == (
+        "qwen3.7-plus-2026-05-26"
+    )
+    assert state["currency_accounting"]["minimum_micro_usd_per_cny"] == (1_000_000)
+    assert state["canonical_packet_catalog_changed"] is False
+    assert state["synthetic_matrix_only"] is True
+    assert state["qwen_funding_attested"] is False
+    assert state["source_stage_evidence"]["credential_value_accesses"] == 0
+    assert state["source_stage_evidence"]["provider_invocations"] == 0
+    assert state["source_stage_evidence"]["benchmark_executions"] == 0
+    assert state["p15c_stage_accepted"] is False
+    assert state["p15d_authorized"] is False
+    assert "ACCEPTED_ONLY_ON_GUARDED_SQUASH_MERGE_NO_EXECUTION" in report
+    assert "qwen3.7-plus-2026-05-26" in report
+    assert "provider_invocations: 0" in report
+
+
 def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     raw = REGISTRY.read_bytes()
     registry = load_yaml_file(REGISTRY)
@@ -405,11 +472,20 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert hashlib.sha256(raw).hexdigest() == EXPECTED_RAW_SHA256
     assert hashlib.sha256(normalized).hexdigest() == EXPECTED_SEMANTIC_SHA256
     assert len(registry["modules"]) == len(registry["interfaces"]) == 19
-    assert sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 114
-    assert sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 25
-    assert sum(len(module["permitted_side_effects"]) for module in registry["modules"]) == 45
+    assert (
+        sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 114
+    )
+    assert (
+        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 25
+    )
+    assert (
+        sum(len(module["permitted_side_effects"]) for module in registry["modules"])
+        == 45
+    )
     assert len(list(_iter_contract_references(registry))) == 197
-    assert sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
+    assert (
+        sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
+    )
     assert len(target_python_owner_by_path()) == 106
     assert_effect_oracle(registry)
 
@@ -476,7 +552,9 @@ def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
         module = modules[canonical]
         assert module["module_version"] == row["current_module_version"]
         assert module["owner"] == canonical
-        assert [boundary["path"] for boundary in module["boundaries"]["code"]] == code_paths[current]
+        assert [
+            boundary["path"] for boundary in module["boundaries"]["code"]
+        ] == code_paths[current]
         assert [boundary["path"] for boundary in module["boundaries"]["tests"]] == [
             TEST_SELECTORS[current],
             *ADDITIONAL_TEST_SELECTORS.get(current, ()),
@@ -494,7 +572,9 @@ def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
                     if mapping["current_module_id"] == provider
                 ),
             )
-            for provider in contract["dependency_contract"]["direct_provider_module_ids"]
+            for provider in contract["dependency_contract"][
+                "direct_provider_module_ids"
+            ]
         }
         assert {
             (dependency["interface_id"], dependency["interface_version"])
@@ -510,9 +590,10 @@ def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
 def test_manifest_selector_and_unique_registry_authority_path() -> None:
     registry = load_yaml_file(REGISTRY)
     modules = _modules_by_id(registry)
-    assert [boundary["path"] for boundary in modules["manifest-validation"]["boundaries"]["tests"]] == [
-        "tests/test_task_manifest_policy.py"
-    ]
+    assert [
+        boundary["path"]
+        for boundary in modules["manifest-validation"]["boundaries"]["tests"]
+    ] == ["tests/test_task_manifest_policy.py"]
     assert [
         path.relative_to(ROOT).as_posix()
         for path in ROOT.rglob("*module_registry*.y*ml")
@@ -586,30 +667,26 @@ def test_current_dynamic_negative_cases(
             copy.deepcopy(module["permitted_side_effects"][0])
         )
     elif mutation == "nonreciprocal":
-        interface = next(
-            item for item in registry["interfaces"] if item["consumers"]
-        )
+        interface = next(item for item in registry["interfaces"] if item["consumers"])
         interface["consumers"] = []
     elif mutation == "cycle":
-        manifest = next(
-            m for m in modules if m["module_id"] == "manifest-validation"
-        )
+        manifest = next(m for m in modules if m["module_id"] == "manifest-validation")
         manifest["internal_dependencies"].append(
-                {
-                    "interface_id": "architecture-registry-api",
-                    "interface_version": "2.0.0",
-                }
+            {
+                "interface_id": "architecture-registry-api",
+                "interface_version": "2.0.0",
+            }
         )
         interface = next(
             i
             for i in registry["interfaces"]
             if i["interface_id"] == "architecture-registry-api"
         )
-        interface["consumers"].append(
-            {"consumer_module_id": "manifest-validation"}
-        )
+        interface["consumers"].append({"consumer_module_id": "manifest-validation"})
     elif mutation == "overlap":
-        modules[1]["boundaries"]["code"].append(copy.deepcopy(modules[0]["boundaries"]["code"][0]))
+        modules[1]["boundaries"]["code"].append(
+            copy.deepcopy(modules[0]["boundaries"]["code"][0])
+        )
     elif mutation == "prefix-overlap":
         modules[0]["boundaries"]["code"].append(
             {
@@ -622,12 +699,16 @@ def test_current_dynamic_negative_cases(
     elif mutation == "stale-reference":
         modules[0]["rollback_boundary"]["sha256"] = "0" * 64
     elif mutation == "missing-reference":
-        modules[0]["rollback_boundary"]["repo_relative_path"] = "docs/missing-contract.md"
+        modules[0]["rollback_boundary"]["repo_relative_path"] = (
+            "docs/missing-contract.md"
+        )
     elif mutation == "inconsistent-reference":
         modules[0]["rollback_boundary"]["format_identity"] = "different-format-v1"
     elif mutation == "unknown-effect-target":
         effect_module = next(m for m in modules if m["permitted_side_effects"])
-        effect_module["permitted_side_effects"][0]["target_boundary_id"] = "missing-boundary"
+        effect_module["permitted_side_effects"][0]["target_boundary_id"] = (
+            "missing-boundary"
+        )
     else:
         modules[0]["external_dependencies"] = [
             {
@@ -733,7 +814,9 @@ def test_adapter_reads_one_registry_and_does_not_mutate_index(
 def test_blueprint_and_ci_keep_local_registry_authority() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     enforcement = blueprint["milestone_module_invariant"]["enforcement"]
-    workflow = (ROOT / ".github/workflows/tool-system-ci.yml").read_text(encoding="utf-8")
+    workflow = (ROOT / ".github/workflows/tool-system-ci.yml").read_text(
+        encoding="utf-8"
+    )
     workflow_lines = {line.strip() for line in workflow.splitlines()}
     guarded_command = (
         "python -m tool_system.cli.validate_module_registry "
@@ -753,9 +836,7 @@ def test_blueprint_and_ci_keep_local_registry_authority() -> None:
     }
     assert enforcement["runtime_module_enforcement_required"] is True
     assert not any(key.endswith("_implemented") for key in enforcement)
-    assert not any(
-        "central" in key or ("cut" + "over") in key for key in enforcement
-    )
+    assert not any("central" in key or ("cut" + "over") in key for key in enforcement)
     assert f"run: {guarded_command}" in workflow_lines
     assert f"run: {unguarded_command}" not in workflow_lines
     assert json.loads(LOCAL_SCHEMA.read_text(encoding="utf-8"))["title"] == (

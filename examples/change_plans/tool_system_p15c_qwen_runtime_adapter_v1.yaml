@@ -1,0 +1,53 @@
+plan_id: tool-system-p15c-qwen-runtime-adapter-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p15c_qwen_runtime_adapter_v1.yaml
+changed_files:
+  - REPO_MANIFEST.md
+  - config/module_registry_v1.yaml
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/reports/p15c_qwen_runtime_adapter.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p15c_qwen_runtime_adapter_v1.yaml
+  - examples/operator_config/tool_system_settings.example.toml
+  - examples/task_manifests/tool_system_p15c_qwen_runtime_adapter_v1.yaml
+  - src/tool_system/ai_worker/p15c_benchmark.py
+  - src/tool_system/ai_worker/p15c_controls.py
+  - tests/test_ai_worker_p15c_benchmark.py
+  - tests/test_ai_worker_p15c_controls.py
+  - tests/test_module_registry.py
+  - tests/test_p15c_local_operator_config.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_p15c_qwen_runtime_adapter_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Add exact Qwen request response transport and conservative currency accounting without changing the canonical provider matrix.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Keep the generic provider runtime exact auditable bounded and target-project neutral.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_ai_worker_p15c_benchmark.py tests/test_ai_worker_p15c_controls.py tests/test_p15c_local_operator_config.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_repo_manifest.py tests/test_phase_alignment.py tests/test_model_provider_portfolio_contract.py tests/test_repository_context_builder.py tests/test_ai_worker_p15c_entry.py tests/test_p15c_execution_packet_freeze.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15c_qwen_runtime_adapter_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15c_qwen_runtime_adapter_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -B -m tool_system.ai_worker.p15c_entry --packet-only
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -B -m tool_system.ai_worker.p15c_entry --preflight
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p15c-qwen-runtime-adapter-v1
+  retain_feature_branch: true
+  exact_base: c4f7527a8a9f859c1f3ed64bfcc93393331dfc14
+  exact_base_tree: 6104fa710311cda019741d3c0d103a30af51fb9e
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@c4f7527a8a9f859c1f3ed64bfcc93393331dfc14
+  execution_authorized: false

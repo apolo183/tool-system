@@ -9,11 +9,14 @@ repository-external operator settings, credential-reference, target-packet,
 snapshot, and usage-ledger inputs. The settings and credentials are separate
 owner-only files under each installation's local configuration root; the
 public repository contains disabled examples only. It fixes the only live
-routes to OpenAI Responses and
-DeepSeek Chat Completions, but the current P15C matrix is fail-closed because
+routes to OpenAI Responses, DeepSeek Chat Completions, and the exact
+Qwen3.7 Plus snapshot through Alibaba Model Studio Chat Completions. The
+current canonical P15C matrix is still fail-closed because
 the DeepSeek request API exposes only a moving model alias and cannot bind the
 dated catalog version. Packet-only metadata remains public; every private or
-live P15C entry blocks before private input. The module keeps Qwen disabled and never serializes credential
+live P15C entry blocks before private input. Qwen support is a dormant adapter;
+the unchanged canonical packet keeps Qwen outside the execution matrix and
+blocked as not funded. The module never serializes credential
 values, private target identity or paths, target bytes, or raw provider output
 into public evidence. The contract describes these capabilities but grants no
 execution authority.
@@ -27,20 +30,20 @@ module_compound_contract:
   identity:
     canonical_module_id: ai-worker-runtime
     current_module_id: ai_worker_runtime
-    module_version: 1.8.1
+    module_version: 1.9.0
     aggregate_interface:
       interface_id: ai-worker-runtime-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@7e371b8e5f14c64cbe3ff06f6c3476fc166e01b1:ai_worker_runtime@1.8.0
+    rollback_identity: tool-system@c4f7527a8a9f859c1f3ed64bfcc93393331dfc14:ai_worker_runtime@1.8.1
     python_import_identities:
       - kind: prefix
         name: tool_system.ai_worker
   role:
-    summary: provide a provider-neutral structured AI worker contract, deterministic fixture, bounded P14C adapter, and generic source-sealed P15C read-only benchmark control plane that blocks an exact-version-unpinnable provider before repository-external private input
-    responsibility_boundary: Preserve the P14C exact public synthetic proof and the lower P15C source-sealed runtime while requiring every canonical P15C provider packet to bind an exact model version. The current DeepSeek packet records DeepSeek-V4-Flash-0731 but its request API exposes only deepseek-v4-flash, so packet-only may expose public metadata while preflight, execute, and direct executor entry return PROVIDER_EXACT_VERSION_UNPINNABLE before settings, credentials, target packet, target snapshot, ledger, or transport access. OpenAI remains individually configured, Qwen remains disabled, and the two-provider matrix is not execution-eligible. Hosted CI uses synthetic test-local eligible packet copies and fake I/O only. The P15C path performs no repository mutation, tools, provider web search, retry, fallback, proxy, response storage, production, cleanup, or rollback.
+    summary: provide a provider-neutral structured AI worker contract, deterministic fixture, bounded P14C adapter, and generic source-sealed P15C read-only benchmark control plane with a dormant exact Qwen snapshot adapter and fail-closed native-currency accounting
+    responsibility_boundary: Preserve the P14C exact public synthetic proof and every P15C source-seal, private-input, exact-version, budget, transfer, cancellation, redaction, and no-retry invariant while adding an exact qwen3.7-plus-2026-05-26 Chat Completions adapter. The runtime accepts only the legacy DeepSeek/OpenAI matrix or an explicit OpenAI/Qwen matrix, uses fixed direct-TLS routes, and converts Qwen native CNY cost into the shared microUSD ledger with an owner-only conservative accounting ceiling. The unchanged canonical catalog has no explicit matrix, keeps Qwen BLOCKED_NOT_FUNDED, and keeps DeepSeek BLOCKED_EXACT_VERSION_UNPINNABLE, so preflight and execute still block before settings, credentials, target packet, snapshot, ledger, or transport. Hosted CI uses test-local eligible packet copies and fake I/O only. The P15C path performs no repository mutation, tools, provider web search, retry, fallback, proxy, response storage, production, cleanup, or rollback.
   natural_owner_evidence_paths:
     - src/tool_system/ai_worker/__init__.py
     - src/tool_system/ai_worker/contract.py
@@ -67,7 +70,7 @@ module_compound_contract:
       - separately_stored_owner_only_P15C_credential_references
       - caller_supplied_content_addressed_P15C_target_packet_and_snapshot
       - owner_only_P15C_atomic_usage_ledger
-    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, and mandatory no-mutation flags. P14C additionally accepts its exact hardened approval inputs. P15C first accepts only public packet metadata and requires every configured provider route to be exact-version pinnable. The current canonical DeepSeek disposition blocks before the runtime may accept or read an owner-only repository-external settings file, separate credential file, caller-supplied target packet or snapshot, or owner-only SQLite ledger. Private operator switches, budgets, credentials, and transfer grants cannot bypass the public blocker. The public example is disabled, Qwen remains disabled, and mutation, retries, tools, provider web search, fallback, proxies, and response storage remain disabled.
+    boundary: Accept finite canonical structured input, content hashes, fixture or live model identity, capability requirements, budgets, and mandatory no-mutation flags. P14C additionally accepts its exact hardened approval inputs. P15C first accepts only public packet metadata and requires every configured provider route to be exact-version pinnable. Policy schema 1 remains compatible only with Qwen disabled; schema 2 may explicitly name Qwen switches, transfer, sub-budget, and a conservative CNY-to-microUSD ceiling that is at least 1000000 and never obtained from the network. Total private budget may not exceed 20000000 microUSD. The current canonical DeepSeek disposition blocks before the runtime may accept or read an owner-only settings file, separate credential file, caller-supplied target packet or snapshot, or owner-only SQLite ledger. Private controls cannot bypass a public packet blocker. The public example is disabled, and mutation, retries, tools, provider web search, fallback, proxies, and response storage remain disabled.
   output_contract:
     registered_outputs:
       - AIWorkerResult_v1
@@ -77,7 +80,7 @@ module_compound_contract:
   error_contract:
     registered_error_semantics:
       - stable_redacted_provider_neutral_errors
-    boundary: Integrity, authority, exact-version request binding, policy expiry, capability or transport binding, execution commit/tree/source/host/ledger drift, provider identity, credential reference or value shape, private target safety, budget, cancellation, timeout, response, replay, and internal failures return stable sanitized codes. An exact catalog version that cannot be bound by the provider request API returns PROVIDER_EXACT_VERSION_UNPINNABLE before private input. HTTP 401 and 403 remain AUTH_INVALID_KEY and ACCESS_FORBIDDEN without provider response details; an uncertain post-transport outcome conservatively consumes the full reserved attempt cap and is never retried.
+    boundary: Integrity, authority, exact-version request binding, policy schema, public budget ceiling, native-currency conversion, policy drift after reservation, capability or transport binding, execution commit/tree/source/host/ledger drift, provider identity, credential reference or value shape, private target safety, cancellation, timeout, response, replay, and internal failures return stable sanitized codes. An exact catalog version that cannot be bound by the provider request API returns PROVIDER_EXACT_VERSION_UNPINNABLE before private input. HTTP 401 and 403 remain AUTH_INVALID_KEY and ACCESS_FORBIDDEN without provider response details; an uncertain post-transport outcome conservatively consumes the full converted reservation and is never retried.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -90,12 +93,12 @@ module_compound_contract:
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
           - src/tool_system/ai_worker/p15c_benchmark.py
-        boundary: P14C retains its one guarded DeepSeek request. The current canonical P15C packet set issues no request because its DeepSeek route cannot bind the dated catalog version, so preflight, execute, and direct executor entry fail before private controls or transport. The lower verified direct-TLS implementation remains bounded to api.deepseek.com/chat/completions and api.openai.com/v1/responses and is exercised only by injected fake I/O with an explicit test-local eligible packet copy. Packet-only and all tests issue no provider request.
+        boundary: P14C retains its one guarded DeepSeek request. The current canonical P15C packet set issues no request because its DeepSeek route cannot bind the dated catalog version, so preflight, execute, and direct executor entry fail before private controls or transport. The lower verified direct-TLS implementation is bounded to api.deepseek.com/chat/completions, api.openai.com/v1/responses, and dashscope.aliyuncs.com/compatible-mode/v1/chat/completions. The Qwen route is exercised only through injected fake I/O with an explicit test-local OpenAI/Qwen matrix and eligible packet copy. Packet-only and all tests issue no provider request.
       - effect_class: external_system_write
         evidence_paths:
           - src/tool_system/ai_worker/live_provider.py
           - src/tool_system/ai_worker/p15c_benchmark.py
-        boundary: The current canonical P15C packet set submits no snapshot bytes because its exact-version eligibility check blocks before target input. A future separately audited exact-version-pinnable packet would still require both public lifecycle and exact private policy and per-provider transfer switches; requests would retain structured JSON, no tools, no provider web search, no retry or fallback, and no raw-response persistence.
+        boundary: The current canonical P15C packet set submits no snapshot bytes because its exact-version eligibility check blocks before target input. A future separately audited exact-version-pinnable matrix would still require public packet eligibility, exact private policy, target-packet authority, and per-provider transfer switches. Qwen requests additionally bind the exact dated model, disable thinking, and retain JSON output, no tools, no provider web search, no retry or fallback, and no raw-response persistence.
       - effect_class: data_write
         evidence_paths:
           - src/tool_system/ai_worker/p15c_controls.py
@@ -107,13 +110,13 @@ module_compound_contract:
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve request validation, stable redacted errors, deterministic fixture defaults, all P14C authority and replay bindings, and every P15C exact-version eligibility guard, source seal, owner-only input, opaque reference, target safety, private transfer, exact route/model/matrix, Qwen-disablement, cancellation, budget reservation, conservative failure charging, no-retry, no-tool, no-proxy, no-storage, and public-redaction invariant.
+    interface_compatible_replacement: Preserve request validation, stable redacted errors, deterministic fixture defaults, all P14C authority and replay bindings, and every P15C exact-version eligibility guard, source seal, owner-only input, opaque reference, target safety, provider-specific private transfer, exact route/model/matrix, legacy-policy Qwen disablement, schema-2 currency ceiling, public total budget ceiling, cancellation, conservative reservation and failure charging, no-retry, no-tool, no-proxy, no-storage, and public-redaction invariant.
     interface_incompatible_change: Requires a new aggregate interface version and a separately authorized provider qualification or migration stage.
   rollback_contract:
-    rollback_identity: tool-system@7e371b8e5f14c64cbe3ff06f6c3476fc166e01b1:ai_worker_runtime@1.8.0
+    rollback_identity: tool-system@c4f7527a8a9f859c1f3ed64bfcc93393331dfc14:ai_worker_runtime@1.8.1
     method: Revert through a separately audited pull request and rerun contract, fixture-provider, P14C operator-entry and adapter, P15C repository-external settings and credentials, private-control, Hosted fake-I/O, cancellation, ledger, source-seal, budget, redaction, and packet-only no-I/O tests. This contract grants no rollback authority.
   replacement_contract:
-    activation_rule: Replace only after provider-neutral and deterministic behavior, the complete P14C contract, and the complete P15C exact-version blocker, source seal, owner-only controls, injected fake transport, cancellation, replay block, atomic ledger, conservative budget, structured response, and redaction suites pass with no real I/O. Making the current matrix eligible requires separate official evidence and a separately audited packet correction.
+    activation_rule: Replace only after provider-neutral and deterministic behavior, the complete P14C contract, and the complete P15C exact-version blocker, source seal, owner-only controls, schema compatibility, fixed Qwen route, native-currency accounting, injected OpenAI/Qwen fake matrix, cancellation, replay block, atomic ledger, conservative budget, structured response, and redaction suites pass with no real I/O. Changing the current canonical matrix or Qwen funding disposition requires a separate adaptive-portfolio packet correction.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -161,7 +164,7 @@ module_compound_contract:
           - P15CBenchmarkExecutor
         boundary_parameters:
           - repository_root
-        constraint: Require the public provider packet set to be exact-version execution-eligible before any private input, then require canonical tool-system origin, an exact canonical tree, clean worktree, and content hashes for the frozen packet config and all P15C execution modules before credential resolution and again immediately before every transport attempt. The current DeepSeek disposition blocks at the first requirement.
+        constraint: Parse only the legacy DeepSeek/OpenAI matrix or an explicit OpenAI/Qwen matrix, require every selected public provider packet to be exact-version execution-eligible before any private input, then require canonical tool-system origin, an exact canonical tree, clean worktree, and content hashes for the frozen packet config and all P15C execution modules before credential resolution and again immediately before every transport attempt. The current unchanged DeepSeek disposition blocks at the first eligibility requirement.
       - root_id: p15c-operator-private-input-root
         access: read-write
         evidence_paths:
@@ -175,7 +178,7 @@ module_compound_contract:
         boundary_parameters:
           - path
           - snapshot_root
-        constraint: Default settings, credentials, and target-packet paths resolve under ~/.config/tool-system while the default usage ledger resolves under ~/.local/state/tool-system; callers may select other repository-external paths. Each private path must resolve to an owner-only, non-symlink boundary. Settings and credentials remain separate files, credential values are read only through exact opaque references and never written or serialized, target files are exact content-addressed UTF-8 regular files, and only the separate usage ledger is writable. Public examples are disabled and contain no credential values; Hosted CI may exercise only synthetic or injected fake I/O.
+        constraint: Default settings, credentials, and target-packet paths resolve under ~/.config/tool-system while the default usage ledger resolves under ~/.local/state/tool-system; callers may select other repository-external paths. Each private path must resolve to an owner-only, non-symlink boundary. Settings and credentials remain separate files, credential values are read only through exact opaque references and never written or serialized, target files are exact content-addressed UTF-8 regular files, and only the separate usage ledger is writable. Policy schema 2 stores the adjustable non-secret CNY accounting ceiling and provider budgets; schema 1 may not enable Qwen. Public examples are disabled and contain no credential values; Hosted CI may exercise only synthetic or injected fake I/O.
   external_system_contracts:
     declaration: declared
     systems:
@@ -190,6 +193,12 @@ module_compound_contract:
         evidence_paths:
           - src/tool_system/ai_worker/p15c_benchmark.py
         boundary: The OpenAI packet remains individually configured for exact model gpt-5.6-luna at POST https://api.openai.com/v1/responses with strict JSON schema output, store false, 2048 requested output tokens, a 25000 microUSD hard cap, one attempt, and no tools, redirects, proxy environment, retry, storage, or fallback. The canonical two-provider P15C matrix is nevertheless blocked before private input by the DeepSeek exact-version disposition, so no OpenAI P15C call is currently eligible.
+      - system_id: qwen-chat-completions-api
+        mode: dormant-exact-snapshot-adapter-fake-io-only
+        evidence_paths:
+          - src/tool_system/ai_worker/p15c_benchmark.py
+          - src/tool_system/ai_worker/p15c_controls.py
+        boundary: The dormant adapter binds qwen3.7-plus-2026-05-26 at POST https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions with JSON-object output, enable_thinking false, 2048 requested output tokens, a 250000 microCNY native hard cap converted upward through the owner-only accounting ceiling, one attempt, and no tools, redirects, proxy environment, retry, storage, or fallback. The unchanged canonical catalog excludes Qwen from the matrix and marks it BLOCKED_NOT_FUNDED, so this adapter has no live authority.
   non_claims:
     provider_execution_authorized: false
     target_repo_mutation_authorized: false

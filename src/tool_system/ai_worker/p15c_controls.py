@@ -19,22 +19,23 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - Python 3.10 compatibility
     import tomli as tomllib  # type: ignore[no-redef]
 
-P15C_AUTHORIZATION_ID = (
-    "P15C-CROSS-PROVIDER-READ-ONLY-BENCHMARK-LIFECYCLE-v1"
-)
-P15C_POLICY_SCHEMA_VERSION = 1
+P15C_AUTHORIZATION_ID = "P15C-CROSS-PROVIDER-READ-ONLY-BENCHMARK-LIFECYCLE-v1"
+P15C_POLICY_SCHEMA_VERSION = 2
+P15C_LEGACY_POLICY_SCHEMA_VERSION = 1
 P15C_TARGET_PACKET_SCHEMA_VERSION = 1
 P15C_LEDGER_SCHEMA_VERSION = 1
 P15C_DEFAULT_SETTINGS_PATH = Path("~/.config/tool-system/settings.toml")
 P15C_DEFAULT_CREDENTIALS_PATH = Path("~/.config/tool-system/credentials.toml")
-P15C_DEFAULT_TARGET_PACKET_PATH = Path(
-    "~/.config/tool-system/p15c-target-packet.json"
-)
+P15C_DEFAULT_TARGET_PACKET_PATH = Path("~/.config/tool-system/p15c-target-packet.json")
 P15C_DEFAULT_LEDGER_PATH = Path("~/.local/state/tool-system/p15c-usage.sqlite3")
 P15C_PROVIDER_IDS = ("deepseek", "openai", "qwen")
-P15C_ENABLED_PROVIDER_IDS = ("deepseek", "openai")
+P15C_DEFAULT_EXECUTION_PROVIDER_IDS = ("deepseek", "openai")
+P15C_ENABLED_PROVIDER_IDS = P15C_DEFAULT_EXECUTION_PROVIDER_IDS
 P15C_CASE_IDS = ("deterministic-corpus", "private-target")
 P15C_MAX_PROVIDER_INVOCATIONS = 4
+P15C_PUBLIC_BUDGET_CEILING_MICRO_USD = 20_000_000
+P15C_MIN_CNY_TO_MICRO_USD_CEILING = 1_000_000
+P15C_MAX_CNY_TO_MICRO_USD_CEILING = 20_000_000
 P15C_MAX_TARGET_FILES = 64
 P15C_MAX_TARGET_FILE_BYTES = 262_144
 P15C_MAX_TARGET_TOTAL_BYTES = 1_048_576
@@ -96,6 +97,7 @@ class P15CExecutionPolicy:
     provider_budget_micro_usd: Mapping[str, int]
     private_repository_transfer_enabled: bool
     provider_transfer_enabled: Mapping[str, bool]
+    cny_to_micro_usd_ceiling: int
     allowed_case_ids: tuple[str, ...]
     max_provider_invocations: int
     policy_sha256: str
@@ -229,7 +231,7 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
             )
     else:
         source = _load_owner_only_json(selected, label="execution policy")
-    expected_fields = {
+    common_fields = {
         "schema_version",
         "authorization_id",
         "enabled",
@@ -245,9 +247,14 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
         "allowed_case_ids",
         "max_provider_invocations",
     }
-    _require_exact_fields(source, expected_fields, "execution policy")
-    if source["schema_version"] != P15C_POLICY_SCHEMA_VERSION:
+    schema_version = source.get("schema_version")
+    if schema_version == P15C_POLICY_SCHEMA_VERSION:
+        expected_fields = common_fields | {"cny_to_micro_usd_ceiling"}
+    elif schema_version == P15C_LEGACY_POLICY_SCHEMA_VERSION:
+        expected_fields = common_fields
+    else:
         raise P15CControlError("POLICY_SCHEMA", "execution policy schema is invalid")
+    _require_exact_fields(source, expected_fields, "execution policy")
     if source["authorization_id"] != P15C_AUTHORIZATION_ID:
         raise P15CControlError(
             "POLICY_AUTHORIZATION",
@@ -263,6 +270,24 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
         "total_budget_micro_usd",
         minimum=1,
     )
+    if budget > P15C_PUBLIC_BUDGET_CEILING_MICRO_USD:
+        raise P15CControlError(
+            "POLICY_BUDGET_ABOVE_AUTHORIZATION",
+            "execution policy budget exceeds the public P15C ceiling",
+        )
+    if schema_version == P15C_POLICY_SCHEMA_VERSION:
+        cny_to_micro_usd_ceiling = _require_int(
+            source["cny_to_micro_usd_ceiling"],
+            "cny_to_micro_usd_ceiling",
+            minimum=P15C_MIN_CNY_TO_MICRO_USD_CEILING,
+        )
+        if cny_to_micro_usd_ceiling > P15C_MAX_CNY_TO_MICRO_USD_CEILING:
+            raise P15CControlError(
+                "POLICY_CURRENCY_CEILING",
+                "CNY accounting ceiling exceeds its fail-closed bound",
+            )
+    else:
+        cny_to_micro_usd_ceiling = P15C_MIN_CNY_TO_MICRO_USD_CEILING
     expires_at = source["expires_at_utc"]
     if not isinstance(expires_at, str):
         raise P15CControlError("POLICY_EXPIRY", "execution policy expiry is invalid")
@@ -279,15 +304,15 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
         source["provider_transfer_enabled"], "provider_transfer_enabled"
     )
     provider_budgets = _provider_int_mapping(source["provider_budget_micro_usd"])
-    if provider_enabled["qwen"] is not False:
-        raise P15CControlError("QWEN_NOT_DISABLED", "Qwen must remain disabled")
-    if provider_transfer["qwen"] is not False:
+    if schema_version == P15C_LEGACY_POLICY_SCHEMA_VERSION and (
+        provider_enabled["qwen"] is not False
+        or provider_transfer["qwen"] is not False
+        or provider_budgets["qwen"] != 0
+    ):
         raise P15CControlError(
-            "QWEN_TRANSFER_NOT_DISABLED",
-            "Qwen private transfer must remain disabled",
+            "LEGACY_QWEN_NOT_DISABLED",
+            "legacy execution policy must keep Qwen disabled",
         )
-    if provider_budgets["qwen"] != 0:
-        raise P15CControlError("QWEN_BUDGET_NONZERO", "Qwen budget must be zero")
     if any(value > budget for value in provider_budgets.values()):
         raise P15CControlError(
             "PROVIDER_BUDGET_ABOVE_TOTAL",
@@ -324,6 +349,7 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
             "private_repository_transfer_enabled"
         ],
         provider_transfer_enabled=provider_transfer,
+        cny_to_micro_usd_ceiling=cny_to_micro_usd_ceiling,
         allowed_case_ids=tuple(cases),
         max_provider_invocations=invocation_ceiling,
         policy_sha256=hashlib.sha256(canonical).hexdigest(),
@@ -439,17 +465,16 @@ def load_target_packet(path: str | Path) -> P15CTargetPacket:
             "TARGET_MODULE_CONTRACT",
             "target durable-module contract must be read-only",
         )
-    for field in ("inventory_read_authority", "benchmark_read_authority", "mutation_authority"):
+    for field in (
+        "inventory_read_authority",
+        "benchmark_read_authority",
+        "mutation_authority",
+    ):
         _require_bool(source[field], field)
     provider_transfer = _provider_bool_mapping(
         source["provider_transfer_authority_by_provider"],
         "provider_transfer_authority_by_provider",
     )
-    if provider_transfer["qwen"] is not False:
-        raise P15CControlError(
-            "QWEN_TRANSFER_NOT_DISABLED",
-            "target packet must deny Qwen transfer",
-        )
     snapshot_root = _owner_only_directory(source["snapshot_root"], "target snapshot")
     packet = P15CTargetPacket(
         packet_id=packet_id,
@@ -525,12 +550,16 @@ def load_target_snapshot(packet: P15CTargetPacket) -> tuple[P15CSnapshotFile, ..
                 "TARGET_NOT_UTF8",
                 "allowlisted target file is not UTF-8 text",
             ) from exc
-        if "\x00" in content or any(pattern.search(content) for pattern in _SECRET_CONTENT_PATTERNS):
+        if "\x00" in content or any(
+            pattern.search(content) for pattern in _SECRET_CONTENT_PATTERNS
+        ):
             raise P15CControlError(
                 "TARGET_SECRET_MATERIAL",
                 "allowlisted target file contains blocked material",
             )
-        loaded.append(P15CSnapshotFile(item.path, item.sha256, item.git_blob_sha, content))
+        loaded.append(
+            P15CSnapshotFile(item.path, item.sha256, item.git_blob_sha, content)
+        )
     return validate_target_snapshot(packet, loaded)
 
 
@@ -579,7 +608,7 @@ class OwnerOnlyCredentialResolver:
 
     def resolve(self, reference: str, provider_id: str) -> str:
         expected = f"private-control:credentials#providers.{provider_id}.api_key"
-        if provider_id not in P15C_ENABLED_PROVIDER_IDS or reference != expected:
+        if provider_id not in P15C_PROVIDER_IDS or reference != expected:
             raise P15CControlError(
                 "CREDENTIAL_REFERENCE_NOT_ALLOWED",
                 "credential reference is not allowed",
@@ -633,7 +662,7 @@ class P15CUsageLedger:
     ) -> None:
         if _PACKET_ID_RE.fullmatch(attempt_id) is None:
             raise P15CControlError("LEDGER_ATTEMPT_ID", "attempt ID is invalid")
-        if provider_id not in P15C_ENABLED_PROVIDER_IDS or case_id not in P15C_CASE_IDS:
+        if provider_id not in P15C_PROVIDER_IDS or case_id not in P15C_CASE_IDS:
             raise P15CControlError("LEDGER_ROUTE", "ledger route is invalid")
         if _SHA256_RE.fullmatch(request_sha256) is None:
             raise P15CControlError(
@@ -767,7 +796,10 @@ class P15CUsageLedger:
             connection.commit()
 
     def record_transport_failure(self, attempt_id: str, failure_code: str) -> None:
-        if not isinstance(failure_code, str) or _PACKET_ID_RE.fullmatch(failure_code) is None:
+        if (
+            not isinstance(failure_code, str)
+            or _PACKET_ID_RE.fullmatch(failure_code) is None
+        ):
             raise P15CControlError(
                 "LEDGER_FAILURE_CODE",
                 "usage-ledger failure code is invalid",
@@ -980,11 +1012,15 @@ def build_execution_source_seal(
     try:
         root = root.resolve(strict=True)
     except OSError as exc:
-        raise P15CControlError("SOURCE_ROOT", "execution source root is unavailable") from exc
+        raise P15CControlError(
+            "SOURCE_ROOT", "execution source root is unavailable"
+        ) from exc
     if _git_output(root, "rev-parse", "--show-toplevel") != str(root):
         raise P15CControlError("SOURCE_ROOT", "execution source is not the Git root")
     if _git_output(root, "remote", "get-url", "origin") not in P15C_CANONICAL_REMOTES:
-        raise P15CControlError("SOURCE_REMOTE", "execution source remote is not canonical")
+        raise P15CControlError(
+            "SOURCE_REMOTE", "execution source remote is not canonical"
+        )
     local_head = _require_sha(_git_output(root, "rev-parse", "HEAD"), "local head")
     local_tree = _require_sha(
         _git_output(root, "rev-parse", "HEAD^{tree}"), "local tree"
@@ -1073,7 +1109,9 @@ def _owner_only_file(path: str | Path, label: str) -> Path:
         parent = candidate.parent.lstat()
         resolved = candidate.resolve(strict=True)
     except OSError as exc:
-        raise P15CControlError("PRIVATE_FILE_UNAVAILABLE", f"{label} is unavailable") from exc
+        raise P15CControlError(
+            "PRIVATE_FILE_UNAVAILABLE", f"{label} is unavailable"
+        ) from exc
     if (
         stat.S_ISLNK(metadata.st_mode)
         or not stat.S_ISREG(metadata.st_mode)
@@ -1159,12 +1197,18 @@ def _validate_repository_relative_path(value: object) -> str:
     if not isinstance(value, str) or not value or len(value.encode("utf-8")) > 512:
         raise P15CControlError("PATH_INVALID", "repository-relative path is invalid")
     pure = PurePosixPath(value)
-    if pure.is_absolute() or str(pure) != value or any(part in {"", ".", ".."} for part in pure.parts):
+    if (
+        pure.is_absolute()
+        or str(pure) != value
+        or any(part in {"", ".", ".."} for part in pure.parts)
+    ):
         raise P15CControlError("PATH_INVALID", "repository-relative path is invalid")
     return value
 
 
-def _require_exact_fields(value: Mapping[str, object], fields: set[str], label: str) -> None:
+def _require_exact_fields(
+    value: Mapping[str, object], fields: set[str], label: str
+) -> None:
     if set(value) != fields:
         raise P15CControlError("EXACT_FIELDS", f"{label} fields are invalid")
 
@@ -1250,16 +1294,19 @@ def _git_output(root: Path, *arguments: str) -> str:
                 "GIT_TERMINAL_PROMPT": "0",
             },
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=5.0,
             check=False,
         )
     except (OSError, subprocess.SubprocessError) as exc:
-        raise P15CControlError("SOURCE_GIT", "execution source Git evidence failed") from exc
+        raise P15CControlError(
+            "SOURCE_GIT", "execution source Git evidence failed"
+        ) from exc
     if result.returncode != 0:
         raise P15CControlError("SOURCE_GIT", "execution source Git evidence is invalid")
     try:
         return result.stdout.decode("utf-8", errors="strict").strip()
     except UnicodeDecodeError as exc:
-        raise P15CControlError("SOURCE_GIT", "execution source Git output is invalid") from exc
+        raise P15CControlError(
+            "SOURCE_GIT", "execution source Git output is invalid"
+        ) from exc
