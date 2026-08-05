@@ -105,7 +105,7 @@ mapping_contract:
       rollback_identity: tool-system@ca04839ec96009fe6a4205b8a0d99794c7531cce:adaptive_model_portfolio_and_economics@1.2.0
     - current_module_id: durable_orchestrator
       canonical_module_id: durable-orchestrator
-      current_module_version: 1.1.0
+      current_module_version: 1.2.0
       aggregate_interface_id: durable-orchestrator-api
       aggregate_interface_version: 1.1.0
       runtime_id_preserved: true
@@ -114,8 +114,8 @@ mapping_contract:
       direct_consumer_module_ids:
         - process_authority
         - local_git
-      change_risk: "high: persistent SQLite state, recovery, and burn-on-claim authorization boundary"
-      rollback_identity: tool-system@2c325f20f4c7a2b531725463b98572dee5f70967:durable_orchestrator@1.0.0
+      change_risk: "high: persistent SQLite state, race-safe optional-sidecar validation, recovery, and burn-on-claim authorization boundary"
+      rollback_identity: tool-system@783a1bf16c48e717da281d9fefc134e68bf879c4:durable_orchestrator@1.1.0
     - current_module_id: repository_controller
       canonical_module_id: repository-controller
       current_module_version: 1.2.0

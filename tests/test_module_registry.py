@@ -79,6 +79,17 @@ P15D_FAILURE_CONTROL_PLAN = (
     ROOT
     / "examples/change_plans/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml"
 )
+DURABLE_SIDECAR_RACE_REPORT = (
+    ROOT / "docs/reports/durable_orchestrator_sqlite_sidecar_race_correction.md"
+)
+DURABLE_SIDECAR_RACE_MANIFEST = (
+    ROOT
+    / "examples/task_manifests/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml"
+)
+DURABLE_SIDECAR_RACE_PLAN = (
+    ROOT
+    / "examples/change_plans/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml"
+)
 PROJECT_STATE = ROOT / "docs/tool_system_project_state_v1.yaml"
 REPO_WRITE_POLICY = ROOT / "policy/repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy/autonomy_policy.yaml"
@@ -155,6 +166,20 @@ P15D_FAILURE_CONTROL_FILES = {
     "tests/test_provider_portfolio_failure_control.py",
     "tests/test_repo_manifest.py",
 }
+DURABLE_SIDECAR_RACE_FILES = {
+    "REPO_MANIFEST.md",
+    "config/module_registry_v1.yaml",
+    "docs/modules/durable-orchestrator-contract-v1.md",
+    "docs/reports/durable_orchestrator_sqlite_sidecar_race_correction.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml",
+    "examples/task_manifests/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml",
+    "src/tool_system/orchestrator/durable.py",
+    "tests/test_durable_orchestrator_reliability.py",
+    "tests/test_module_registry.py",
+    "tests/test_repo_manifest.py",
+}
 PRE_MATRIX_CANONICAL_PACKET_SHA256 = (
     "509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962"
 )
@@ -162,10 +187,10 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
     "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
 )
 
-EXPECTED_RAW_SHA256 = "542cd30f574ae0bcf690abbe0cb8b3b175dc054c16ff78af369c8c1f15355205"
-EXPECTED_BYTE_LENGTH = 106_160
+EXPECTED_RAW_SHA256 = "ca001c5da2edf507e54cbd9aa35f7e372b95271668513be6ab14c1b081b4a87e"
+EXPECTED_BYTE_LENGTH = 106_365
 EXPECTED_SEMANTIC_SHA256 = (
-    "4989eee78bd500d0ddfdf66fa212f56d4a5b822b224f31e740c1829427b0c439"
+    "20ee794ae65433bff560d8725882c0eee3b649bae1654820042648cda82f5419"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 107
 EXPECTED_MODULE_IDS = {
@@ -232,6 +257,7 @@ ADDITIONAL_TEST_SELECTORS = {
         "tests/test_ai_worker_p15c_entry.py",
         "tests/test_p15c_local_operator_config.py",
     ),
+    "durable_orchestrator": ("tests/test_durable_orchestrator_reliability.py",),
     "process_authority": ("tests/test_p14c_live_issuer.py",),
 }
 
@@ -722,6 +748,46 @@ def test_p15d_failure_control_scope_module_and_stage_stop_validate() -> None:
     assert "provider_invocations: 0" in report
 
 
+def test_durable_sidecar_race_correction_scope_and_boundary_validate() -> None:
+    manifest_result = validate_task_manifest(
+        DURABLE_SIDECAR_RACE_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(DURABLE_SIDECAR_RACE_PLAN)
+    manifest = load_yaml_file(DURABLE_SIDECAR_RACE_MANIFEST)
+    plan = load_yaml_file(DURABLE_SIDECAR_RACE_PLAN)
+    state = load_yaml_file(PROJECT_STATE)[
+        "durable_orchestrator_sqlite_sidecar_race_correction"
+    ]
+    report = DURABLE_SIDECAR_RACE_REPORT.read_text(encoding="utf-8")
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == DURABLE_SIDECAR_RACE_FILES
+    assert set(manifest["scope"]["in_scope"]) == DURABLE_SIDECAR_RACE_FILES
+    assert set(plan["changed_files"]) == DURABLE_SIDECAR_RACE_FILES
+    assert len(DURABLE_SIDECAR_RACE_FILES) == 12
+    assert state["module"]["previous_module_version"] == "1.1.0"
+    assert state["module"]["module_version"] == "1.2.0"
+    assert state["module"]["aggregate_interface_version"] == "1.1.0"
+    assert state["module"]["sqlite_schema_version"] == 3
+    assert state["correction"]["missing_before_atomic_lstat_is_valid_absence"]
+    assert state["correction"]["observed_regular_zero_link_metadata_is_valid_absence"]
+    assert state["correction"]["observed_multilink_blocked"]
+    assert set(state["source_stage_evidence"].values()) == {0}
+    assert state["funding_or_live_execution_required_for_this_correction"] is False
+    assert state["p15c_stage_accepted"] is False
+    assert state["p15d_stage_entered"] is False
+    assert state["p15d_stage_accepted"] is False
+    assert state["p15e_authorized"] is False
+    assert "RELIABILITY_CORRECTION" in report
+    assert "st_nlink == 0" in report
+    assert "provider_invocations: 0" in report
+
+
 def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     raw = REGISTRY.read_bytes()
     registry = load_yaml_file(REGISTRY)
@@ -746,7 +812,7 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
         sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 115
     )
     assert (
-        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 27
+        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 28
     )
     assert (
         sum(len(module["permitted_side_effects"]) for module in registry["modules"])
