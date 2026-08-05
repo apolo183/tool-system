@@ -1,0 +1,38 @@
+plan_id: tool-system-p15-non-live-multi-project-evidence-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p15_non_live_multi_project_evidence_v1.yaml
+changed_files:
+  - docs/reports/p15_non_live_multi_project_benchmark.md
+  - docs/reports/p15_non_live_multi_project_matrix_v1.yaml
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p15_non_live_multi_project_evidence_v1.yaml
+  - examples/task_manifests/tool_system_p15_non_live_multi_project_evidence_v1.yaml
+  - tests/test_p14h_multi_stack_e2e.py
+alignment:
+  parent:
+    document: docs/reports/p15_non_live_entry_state_correction.md
+    section_or_key: Dependency order
+    scope: Implement only representative isolated multi-project and generalization evidence.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Prove bounded multi-project development without external provider or downstream effects.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_p14h_multi_stack_e2e.py tests/test_phase_alignment.py tests/test_product_objective_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15_non_live_multi_project_evidence_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15_non_live_multi_project_evidence_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_connector_only_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p15-non-live-multi-project-evidence-v1
+  retain_feature_branch: true
+  exact_base: 0bf9c98776c79ac9398c2b5c6251c0e7b65ef842
+  exact_base_tree: canonical_main_tree_at_0bf9c98776c79ac9398c2b5c6251c0e7b65ef842
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@0bf9c98776c79ac9398c2b5c6251c0e7b65ef842
+  execution_authorized: false
