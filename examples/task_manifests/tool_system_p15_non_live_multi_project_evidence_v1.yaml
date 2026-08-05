@@ -25,7 +25,7 @@ bounded_closure:
     task_identity: P15-NON-LIVE-MULTI-PROJECT-EVIDENCE-v1
     baseline_commit: 0bf9c98776c79ac9398c2b5c6251c0e7b65ef842
     baseline_tree: canonical_main_tree_at_0bf9c98776c79ac9398c2b5c6251c0e7b65ef842
-    allowed_scope: exact_7_paths_listed_below
+    allowed_scope: exact_6_paths_listed_below
     acceptance_set:
       - Python and TypeScript isolated fixtures represent distinct projects and multiple task classes
       - existing executable success repair topology policy cancellation no-progress crash-resume and conflict cases are bound into one deterministic matrix
@@ -37,7 +37,7 @@ bounded_closure:
       - exact task pair matrix report state and existing P14H executable suite consistency
       - focused P14H phase alignment repository manifest and full tests
       - successful Hosted CI before Ready and squash merge with unchanged base head scope comments and reviews
-    terminal_predicate: exact seven-path Draft PR passes Hosted CI, moves without drift to Ready, squash-merges, retains its branch, and advances only to consolidated non-live evidence.
+    terminal_predicate: exact six-path Draft PR passes Hosted CI, moves without drift to Ready, squash-merges, retains its branch, and advances only to consolidated non-live evidence.
     finite_budgets:
       implementation_cycles: 2
       repair_cycles: 1
