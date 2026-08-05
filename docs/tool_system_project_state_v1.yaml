@@ -8,15 +8,15 @@ blueprint:
   process_state_allowed_in_blueprint: false
 current_phase:
   id: P15_MULTI_PROJECT_BENCHMARK
-  status: active
-  entry_record: docs/reports/p15a_provider_portfolio_qualification_specification.md
+  status: active_non_live_acceptance
+  entry_record: docs/reports/p15_non_live_entry_state_correction.md
   entry_authorized: true
   last_accepted_stage: P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES
   last_accepted_stage_record: docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md
-  next_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
+  next_stage: P15_NON_LIVE_MULTI_PROJECT_EVIDENCE
   next_stage_authorized: true
-  active_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
-  active_stage_status: provider_mode_acceptance_realignment_policy_package_no_execution
+  active_stage: P15_NON_LIVE_MULTI_PROJECT_EVIDENCE
+  active_stage_status: authorized_pending_dependent_package
   next_phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   next_phase_entry_authorized: false
 prior_acceptance:
@@ -1308,7 +1308,19 @@ provider_mode_and_acceptance_realignment_lifecycle:
       exact_15_path_closure: passed
       secret_project_identity_and_forbidden_diff_scans: passed
   readonly_p15_acceptance_mapping:
-    status: pending_all_three_packages
+    status: provider_realignments_complete_non_live_acceptance_pending
+    completed_dependencies:
+      - target_policy
+      - ai_worker_runtime
+      - adaptive_provider_portfolio
+    pending_dependencies:
+      - representative_multi_project_evidence
+      - cross_project_isolation_and_generalization
+      - quality_time_economics_recovery_policy_metrics
+      - failure_and_rollback_corpus
+      - deterministic_routing_and_hard_gate_evidence
+      - readonly_remaining_item_mapping
+      - separately_authorized_final_single_provider_live_smoke
   formal_rules:
     daily_development_route: chatgpt_codex_subscription
     all_large_model_apis_default_disabled: true
@@ -1362,3 +1374,43 @@ evidence_rule:
   status_facts_require_current_evidence: true
   authorization_requires_separate_active_manifest_change_plan_pair: true
   blueprint_is_not_a_progress_ledger: true
+
+p15_non_live_acceptance_lifecycle:
+  task_identity: P15-NON-LIVE-ACCEPTANCE-LIFECYCLE-v1
+  authorization_source: chat_user_message:2026-08-06-p15-non-live-acceptance-lifecycle-v1
+  canonical_entry_baseline_commit: b0a5591603079ce611f8a99d3fe00b507865201d
+  entry_state_correction:
+    task_manifest: examples/task_manifests/tool_system_p15_non_live_entry_state_correction_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15_non_live_entry_state_correction_v1.yaml
+    record: docs/reports/p15_non_live_entry_state_correction.md
+    status: candidate_pending_hosted_ci_and_guarded_merge
+  dependency_order:
+    - entry_state_correction
+    - representative_multi_project_and_isolation_evidence
+    - consolidated_non_live_acceptance_evidence
+    - readonly_remaining_item_mapping
+    - separately_authorized_final_single_provider_live_smoke
+  daily_development_route: chatgpt_codex_subscription
+  all_large_model_apis_default_disabled: true
+  provider_model_selection_source: repository_external_operator_configuration
+  credential_value_access_authorized: false
+  live_provider_execution_authorized: false
+  downstream_access_authorized: false
+  production_authorized: false
+  cleanup_authorized: false
+  rollback_execution_authorized: false
+  p15_stage_accepted: false
+  p16_stage_entered: false
+  final_live_smoke_executed: false
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    provider_invocations: 0
+    live_provider_network_operations: 0
+    private_target_reads: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    benchmark_executions: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
