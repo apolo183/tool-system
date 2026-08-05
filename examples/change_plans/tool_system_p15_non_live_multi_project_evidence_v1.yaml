@@ -7,7 +7,7 @@ changed_files:
   - docs/tool_system_project_state_v1.yaml
   - examples/change_plans/tool_system_p15_non_live_multi_project_evidence_v1.yaml
   - examples/task_manifests/tool_system_p15_non_live_multi_project_evidence_v1.yaml
-  - tests/test_p14h_multi_stack_e2e.py
+  - tests/test_phase_alignment.py
 alignment:
   parent:
     document: docs/reports/p15_non_live_entry_state_correction.md
@@ -20,7 +20,7 @@ alignment:
 verification:
   commands:
     - git diff --check
-    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_p14h_multi_stack_e2e.py tests/test_phase_alignment.py tests/test_product_objective_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_phase_alignment.py tests/test_phase_alignment.py tests/test_product_objective_alignment.py tests/test_repo_manifest.py
     - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
     - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15_non_live_multi_project_evidence_v1.yaml
     - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15_non_live_multi_project_evidence_v1.yaml
