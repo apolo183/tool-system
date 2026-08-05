@@ -275,6 +275,7 @@ def _sealed_repository(
     packet_config = root / "config/p15c_execution_packet_freeze_v1.yaml"
     packet_source = yaml.safe_load(packet_config.read_text(encoding="utf-8"))
     if provider_ids == ("deepseek", "openai"):
+        packet_source.pop("execution_matrix", None)
         deepseek = next(
             packet
             for packet in packet_source["provider_packets"]
@@ -295,6 +296,7 @@ def _sealed_repository(
             if packet["provider_id"] == "qwen"
         )
         qwen["packet_status"] = "FROZEN_NOT_ACTIVATED"
+        qwen["pricing_snapshot"]["calculated_worst_case_micro_cny"] = 196_608
     packet_config.write_text(
         yaml.safe_dump(packet_source, sort_keys=False),
         encoding="utf-8",
@@ -563,6 +565,24 @@ def test_qwen_exact_snapshot_request_response_and_cny_cost_are_bounded(
             cny_to_micro_usd_ceiling=20_000_001,
         )
     assert caught.value.code == "CURRENCY_CEILING_INVALID"
+
+
+def test_selected_qwen_rejects_stale_worst_case_native_ceiling(
+    tmp_path: Path,
+) -> None:
+    source = yaml.safe_load(PACKET_CONFIG.read_text(encoding="utf-8"))
+    source["execution_matrix"] = {
+        "provider_ids": ["openai", "qwen"],
+        "case_ids": ["deterministic-corpus", "private-target"],
+        "max_provider_invocations": 4,
+    }
+    candidate = tmp_path / "stale-qwen-price.yaml"
+    candidate.write_text(yaml.safe_dump(source, sort_keys=False), encoding="utf-8")
+
+    with pytest.raises(P15CBenchmarkError) as caught:
+        load_p15c_provider_packets(candidate)
+
+    assert caught.value.code == "PACKET_PRICE_DRIFT"
 
 
 def test_execution_matrix_rejects_non_string_provider_ids(tmp_path: Path) -> None:
