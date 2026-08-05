@@ -68,6 +68,17 @@ P15D_PREREQUISITE_PLAN = (
 P15D_PREREQUISITE_CONFIG = (
     ROOT / "config/p15d_failure_economics_corpus_prerequisite_v1.yaml"
 )
+P15D_FAILURE_CONTROL_REPORT = (
+    ROOT / "docs/reports/p15d_prerequisite_failure_control_fixture_implementation.md"
+)
+P15D_FAILURE_CONTROL_MANIFEST = (
+    ROOT
+    / "examples/task_manifests/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml"
+)
+P15D_FAILURE_CONTROL_PLAN = (
+    ROOT
+    / "examples/change_plans/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml"
+)
 PROJECT_STATE = ROOT / "docs/tool_system_project_state_v1.yaml"
 REPO_WRITE_POLICY = ROOT / "policy/repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy/autonomy_policy.yaml"
@@ -129,6 +140,21 @@ P15D_PREREQUISITE_FILES = {
     "tests/test_p15d_failure_economics_corpus_prerequisite.py",
     "tests/test_repo_manifest.py",
 }
+P15D_FAILURE_CONTROL_FILES = {
+    "REPO_MANIFEST.md",
+    "config/module_registry_v1.yaml",
+    "docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md",
+    "docs/reports/p15d_prerequisite_failure_control_fixture_implementation.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml",
+    "examples/task_manifests/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml",
+    "src/tool_system/provider_portfolio/__init__.py",
+    "src/tool_system/provider_portfolio/failure_control.py",
+    "tests/test_module_registry.py",
+    "tests/test_provider_portfolio_failure_control.py",
+    "tests/test_repo_manifest.py",
+}
 PRE_MATRIX_CANONICAL_PACKET_SHA256 = (
     "509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962"
 )
@@ -136,12 +162,12 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
     "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
 )
 
-EXPECTED_RAW_SHA256 = "3126d5f0ab98dcc12cbbbbd6d5f234fcfb70b2e11443d6b2b1c54e8aca148b32"
-EXPECTED_BYTE_LENGTH = 105_705
+EXPECTED_RAW_SHA256 = "542cd30f574ae0bcf690abbe0cb8b3b175dc054c16ff78af369c8c1f15355205"
+EXPECTED_BYTE_LENGTH = 106_160
 EXPECTED_SEMANTIC_SHA256 = (
-    "d779aff15282ec17ac7cd5a074e3e721fe17ca5d247acbe50858ded581b0af18"
+    "4989eee78bd500d0ddfdf66fa212f56d4a5b822b224f31e740c1829427b0c439"
 )
-EXPECTED_MANAGED_PYTHON_FILE_COUNT = 106
+EXPECTED_MANAGED_PYTHON_FILE_COUNT = 107
 EXPECTED_MODULE_IDS = {
     "architecture_registry",
     "manifest_validation",
@@ -197,6 +223,7 @@ TEST_SELECTORS = {
 ADDITIONAL_TEST_SELECTORS = {
     "adaptive_model_portfolio_and_economics": (
         "tests/test_p15d_failure_economics_corpus_prerequisite.py",
+        "tests/test_provider_portfolio_failure_control.py",
     ),
     "ai_worker_runtime": (
         "tests/test_ai_worker_live_provider.py",
@@ -286,7 +313,7 @@ def authority_code_paths() -> dict[str, list[str]]:
         for current_id, contract in contracts.items()
     }
     flattened = [path for paths in result.values() for path in paths]
-    assert len(flattened) == len(set(flattened)) == 114
+    assert len(flattened) == len(set(flattened)) == 115
     python_owners = target_python_owner_by_path()
     assert {
         path: current_id
@@ -660,6 +687,41 @@ def test_p15d_prerequisite_scope_module_and_stage_stop_validate() -> None:
     assert "provider_invocations: 0" in report
 
 
+def test_p15d_failure_control_scope_module_and_stage_stop_validate() -> None:
+    manifest_result = validate_task_manifest(
+        P15D_FAILURE_CONTROL_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(P15D_FAILURE_CONTROL_PLAN)
+    manifest = load_yaml_file(P15D_FAILURE_CONTROL_MANIFEST)
+    plan = load_yaml_file(P15D_FAILURE_CONTROL_PLAN)
+    state = load_yaml_file(PROJECT_STATE)["p15d_prerequisite_failure_control_fixture"]
+    report = P15D_FAILURE_CONTROL_REPORT.read_text(encoding="utf-8")
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == P15D_FAILURE_CONTROL_FILES
+    assert set(manifest["scope"]["in_scope"]) == P15D_FAILURE_CONTROL_FILES
+    assert set(plan["changed_files"]) == P15D_FAILURE_CONTROL_FILES
+    assert len(P15D_FAILURE_CONTROL_FILES) == 13
+    assert state["module"]["previous_module_version"] == "1.2.0"
+    assert state["module"]["module_version"] == "1.3.0"
+    assert state["module"]["aggregate_interface_version"] == "1.0.0"
+    assert state["implementation"]["frozen_prerequisite_packet_modified"] is False
+    assert set(state["source_stage_evidence"].values()) == {0}
+    assert state["funding_or_live_execution_required_for_this_fixture"] is False
+    assert state["p15c_stage_accepted"] is False
+    assert state["p15d_stage_entered"] is False
+    assert state["p15d_stage_accepted"] is False
+    assert state["p15e_authorized"] is False
+    assert "NON_EXECUTING_PREREQUISITE_FIXTURE" in report
+    assert "dispatch_authorized" in report
+    assert "provider_invocations: 0" in report
+
+
 def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     raw = REGISTRY.read_bytes()
     registry = load_yaml_file(REGISTRY)
@@ -681,10 +743,10 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert hashlib.sha256(normalized).hexdigest() == EXPECTED_SEMANTIC_SHA256
     assert len(registry["modules"]) == len(registry["interfaces"]) == 19
     assert (
-        sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 114
+        sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 115
     )
     assert (
-        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 26
+        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 27
     )
     assert (
         sum(len(module["permitted_side_effects"]) for module in registry["modules"])
@@ -694,7 +756,7 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert (
         sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
     )
-    assert len(target_python_owner_by_path()) == 106
+    assert len(target_python_owner_by_path()) == 107
     assert_effect_oracle(registry)
 
 

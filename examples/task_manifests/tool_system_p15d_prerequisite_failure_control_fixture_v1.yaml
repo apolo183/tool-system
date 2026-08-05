@@ -1,0 +1,158 @@
+task_id: tool-system-p15d-prerequisite-failure-control-fixture-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/p15d-prerequisite-failure-control-fixture-v1
+phase: P15_MULTI_PROJECT_BENCHMARK
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P15_MULTI_PROJECT_BENCHMARK.stage_plan.P15D_FAILURE_ROLLBACK_ISOLATION_AND_ECONOMICS_CORPUS
+alignment:
+  parent:
+    document: config/p15d_failure_economics_corpus_prerequisite_v1.yaml
+    section_or_key: case_catalog
+    scope: Implement only a pure in-memory non-authorizing fixture evaluator for the already frozen failure, no-progress, isolation, rollback-plan, and synthetic economics cases.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Advance reusable bounded failure-control and expected-economic-cost decisions without live execution, downstream coupling, or later-stage entry.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P15D-PREREQUISITE-FAILURE-CONTROL-FIXTURE-v1
+    baseline_commit: ca04839ec96009fe6a4205b8a0d99794c7531cce
+    baseline_tree: da1ce6dd7885a96a0bc1dc3a405a351debef0366
+    allowed_scope: exact_13_paths_listed_below
+    acceptance_set:
+      - adaptive_model_portfolio_and_economics is the only modified durable module and advances from 1.2.0 to 1.3.0 without changing aggregate interface version 1.0.0
+      - one generic provider-neutral pure in-memory failure-control fixture plans availability failover same-route repair stronger-route escalation hard block and terminal stop without dispatching any route
+      - cancellation attempt exhaustion repeated-fingerprint and two-consecutive-no-progress decisions are finite deterministic and content addressed
+      - recurrence fingerprints use only task digest candidate tree acceptance digest blocker set and validation results and exclude attempt number timestamps receipts pull-request metadata and status text
+      - one pure isolation plan stops the affected module output pauses the supplied affected downstream closure preserves supplied unrelated modules adds no machine lifecycle status and never executes rollback or cleanup
+      - one integer microUSD total-economic-cost fixture rejects negative float duplicate or noncanonical inputs and chooses only among candidates whose hard floors already passed
+      - the frozen prerequisite corpus remains unchanged and is used only as deterministic public test input while P15C remains unaccepted and P15D remains unentered and unaccepted
+      - no blueprint P15C packet frozen prerequisite corpus process authority provider adapter operator configuration fixture directory unrelated runtime or downstream repository change occurs
+      - no provider credential private target network benchmark target mutation production cleanup rollback P15D execution P15E operation or external write occurs
+    validation_set:
+      - exact task-pair source behavior corpus mapping module contract registry repository manifest project state and blueprint-entry consistency tests
+      - focused and full pytest Python compilation Ruff exact thirteen-path forbidden-diff secret and project-neutrality checks
+      - successful Hosted CI and unchanged canonical base head scope comments and reviews before Ready and squash merge
+    terminal_predicate: all acceptance and validation items pass, one Draft PR is published, Hosted CI succeeds, unchanged canonical base head and exact scope move to Ready and squash-merge, the branch is retained, and P15C and P15D acceptance state remains unchanged
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 1
+      review_cycles: 1
+      wall_clock_hours: 8
+      credential_resolver_invocations: 0
+      credential_value_accesses: 0
+      provider_invocations: 0
+      network_operations: 0
+      private_target_reads: 0
+      target_repository_accesses: 0
+      target_mutations: 0
+      benchmark_executions: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Implement one reusable non-executing failure-control and economics fixture inside the existing portfolio module while preserving the unsatisfied P15C-to-P15D gate.
+  in_scope: &p15d_failure_control_files
+    - REPO_MANIFEST.md
+    - config/module_registry_v1.yaml
+    - docs/modules/adaptive-model-portfolio-and-economics-contract-v1.md
+    - docs/reports/p15d_prerequisite_failure_control_fixture_implementation.md
+    - docs/tool_system_module_registry_contract_v1.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml
+    - examples/task_manifests/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml
+    - src/tool_system/provider_portfolio/__init__.py
+    - src/tool_system/provider_portfolio/failure_control.py
+    - tests/test_module_registry.py
+    - tests/test_provider_portfolio_failure_control.py
+    - tests/test_repo_manifest.py
+  out_of_scope:
+    - blueprint provider-economics roadmap P15C packet frozen P15D prerequisite corpus process-authority or policy modification
+    - existing fixture router or AI worker runtime provider adapter credential resolver operator configuration or deterministic fixture modification
+    - P15C evidence execution acceptance or funding attestation
+    - P15D entry execution or acceptance P15E production cleanup rollback branch deletion or downstream repository work
+    - credential value private target provider network benchmark or target mutation access
+evidence:
+  - repo: apolo183/tool-system
+    path: config/p15d_failure_economics_corpus_prerequisite_v1.yaml
+    commit_sha: ca04839ec96009fe6a4205b8a0d99794c7531cce
+    why_relevant: The accepted non-authorizing prerequisite freeze provides the immutable eight-case public input without satisfying the P15D entry gate.
+  - repo: apolo183/tool-system
+    path: docs/model_provider_portfolio_and_economics_contract_v1.md
+    commit_sha: ca04839ec96009fe6a4205b8a0d99794c7531cce
+    why_relevant: Sections 5 and 7 own distinct failure dispositions finite stops and expected total economic cost after hard floors.
+  - repo: apolo183/tool-system
+    path: src/tool_system/provider_portfolio/fixtures.py
+    commit_sha: ca04839ec96009fe6a4205b8a0d99794c7531cce
+    why_relevant: The existing accepted route decision and failure classification API is the unchanged upstream natural-owner implementation.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: ca04839ec96009fe6a4205b8a0d99794c7531cce
+    why_relevant: The product objective requires bounded failover repair escalation no-progress isolation rollback evidence and economic decisions while P15D entry still requires accepted P15C.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: current_main_consumed_at_task_start
+    why_relevant: Central bounded closure requires the exact scope acceptance validation and stop predicate frozen before execution.
+allowed_files: *p15d_failure_control_files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/**
+  - .github/workflows/**
+  - config/p15c_execution_packet_freeze_v1.yaml
+  - config/p15d_failure_economics_corpus_prerequisite_v1.yaml
+  - config/process_authority_v1.yaml
+  - config/replay_snapshot_v1.yaml
+  - docs/model_provider_portfolio_and_economics_contract_v1.md
+  - docs/modules/ai-worker-runtime-contract-v1.md
+  - docs/tool_system_global_development_principles_v1.md
+  - examples/operator_config/**
+  - policy/**
+  - src/tool_system/ai_worker/**
+  - src/tool_system/provider_portfolio/fixtures.py
+  - tests/fixtures/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_provider_portfolio_failure_control.py tests/test_p15d_failure_economics_corpus_prerequisite.py tests/test_provider_portfolio_fixtures.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_repo_manifest.py tests/test_phase_alignment.py tests/test_model_provider_portfolio_contract.py tests/test_repository_context_builder.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - exact thirteen-file diff and zero forbidden-path change
+    - deterministic non-executing failure control no-progress isolation and integer economics behavior validates against the frozen public corpus
+    - P15C acceptance remains false and P15D entry acceptance and execution remain false
+    - no live provider credential private target network benchmark mutation production cleanup rollback or downstream repository operation occurs
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+rollback:
+  method: git_revert
+  reference: tool-system@ca04839ec96009fe6a4205b8a0d99794c7531cce
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user_standing_small_milestone_process_authority
+  approval_source: chat_user_message:2026-08-05-defer-funding-and-continue-offline-development
+  approved_at: 2026-08-05 UTC+09:00

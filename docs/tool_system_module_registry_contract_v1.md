@@ -94,15 +94,15 @@ mapping_contract:
       rollback_identity: tool-system@20686afbef73d5985f4aac0d542eabe7f3fdadff:ai_worker_runtime@1.9.0
     - current_module_id: adaptive_model_portfolio_and_economics
       canonical_module_id: adaptive-model-portfolio-and-economics
-      current_module_version: 1.2.0
+      current_module_version: 1.3.0
       aggregate_interface_id: adaptive-model-portfolio-and-economics-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.provider_portfolio}
       direct_consumer_module_ids: []
-      change_risk: "medium: isolated fixture profiling plus exact non-executing OpenAI/Qwen matrix and P15D prerequisite corpus records; P15C acceptance and P15D entry remain fail-closed"
-      rollback_identity: tool-system@4ce30b432fedd80f7e4ff40c182cdace4e51244a:adaptive_model_portfolio_and_economics@1.1.0
+      change_risk: "medium: pure in-memory failure-control no-progress isolation rollback-plan and integer economics fixtures extend the existing provider-neutral portfolio boundary; P15C acceptance and P15D entry remain fail-closed"
+      rollback_identity: tool-system@ca04839ec96009fe6a4205b8a0d99794c7531cce:adaptive_model_portfolio_and_economics@1.2.0
     - current_module_id: durable_orchestrator
       canonical_module_id: durable-orchestrator
       current_module_version: 1.1.0
