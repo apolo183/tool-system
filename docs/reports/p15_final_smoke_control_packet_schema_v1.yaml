@@ -1,0 +1,54 @@
+schema_version: 1
+packet_schema_id: p15-final-single-provider-live-smoke-control-packet-schema-v1
+role: non_authorizing_repository_template_only
+authority_effect: none
+api_mode_enabled: false
+provider:
+  enabled: false
+  provider_id: repository_external_operator_selection_required
+  requested_model_id: repository_external_operator_selection_required
+  simultaneous_multi_provider_availability_required: false
+credential:
+  reference: repository_external_credential_reference_required
+  value_present_in_packet: false
+  key_presence_grants_call_authority: false
+network:
+  authorized: false
+  destination_reference: repository_external_provider_endpoint_required
+  direct_tls_required: true
+budget:
+  authorized: false
+  hard_ceiling_microunits: 0
+  currency_reference: repository_external_operator_value_required
+expiry:
+  authorized_until: null
+authorization:
+  final_smoke_authorized: false
+  separate_current_user_authorization_required: true
+  then_canonical_main_sha_required: true
+  single_provider_only: true
+data_transfer:
+  authorized: false
+  approved_payload_class_reference: repository_external_authorization_required
+retry_and_cancellation:
+  max_attempts: 1
+  max_retries: 0
+  cancellation_token_required: true
+audit:
+  redacted_provider_and_requested_model_required: true
+  credential_value_forbidden: true
+  response_body_retention_default: false
+stop_conditions:
+  - api_mode_not_explicitly_enabled
+  - provider_not_explicitly_enabled
+  - missing_or_unusable_credential_reference
+  - budget_not_authorized
+  - authorization_missing_or_expired
+  - data_transfer_not_authorized
+  - stale_canonical_main
+  - cancellation_requested
+current_state:
+  executable: false
+  live_smoke_executed: false
+  p15_accepted: false
+  p16_entered: false
