@@ -94,15 +94,15 @@ mapping_contract:
       rollback_identity: tool-system@149296ff5e87e6b18a4982a9046012fd3edeb1b0:ai_worker_runtime@1.9.1
     - current_module_id: adaptive_model_portfolio_and_economics
       canonical_module_id: adaptive-model-portfolio-and-economics
-      current_module_version: 1.3.0
+      current_module_version: 2.0.0
       aggregate_interface_id: adaptive-model-portfolio-and-economics-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.provider_portfolio}
       direct_consumer_module_ids: []
-      change_risk: "medium: pure in-memory failure-control no-progress isolation rollback-plan and integer economics fixtures extend the existing provider-neutral portfolio boundary; P15C acceptance and P15D entry remain fail-closed"
-      rollback_identity: tool-system@ca04839ec96009fe6a4205b8a0d99794c7531cce:adaptive_model_portfolio_and_economics@1.2.0
+      change_risk: "high: the active pure in-memory portfolio path now consumes repository-external provider order and requested models, keeps every API default-disabled, skips only unavailable routes, blocks hard-control bypass, requires fake-I/O evidence, selects at most one route, and retains exact-matrix behavior only as compatibility; it adds no execution authority and does not accept P15 or enter P16"
+      rollback_identity: tool-system@529001694c6d41ee819736293418cebfe455c392:adaptive_model_portfolio_and_economics@1.3.0
     - current_module_id: durable_orchestrator
       canonical_module_id: durable-orchestrator
       current_module_version: 1.2.0

@@ -33,6 +33,18 @@ from tool_system.provider_portfolio.fixtures import (
     build_task_profile_fixture,
     classify_failure,
 )
+from tool_system.provider_portfolio.provider_mode import (
+    ProviderAuthorizationState,
+    ProviderAvailabilityState,
+    ProviderModeDecision,
+    ProviderModeDecisionStatus,
+    ProviderModeError,
+    ProviderModeEvaluation,
+    ProviderModeEvaluationDisposition,
+    ProviderModeRoute,
+    ProviderModeSnapshot,
+    select_provider_mode_route,
+)
 
 __all__ = [
     "CatalogCandidate",
@@ -54,6 +66,15 @@ __all__ = [
     "NoProgressStatus",
     "PortfolioFixtureAdapter",
     "PortfolioFixtureError",
+    "ProviderAuthorizationState",
+    "ProviderAvailabilityState",
+    "ProviderModeDecision",
+    "ProviderModeDecisionStatus",
+    "ProviderModeError",
+    "ProviderModeEvaluation",
+    "ProviderModeEvaluationDisposition",
+    "ProviderModeRoute",
+    "ProviderModeSnapshot",
     "QualificationState",
     "RouteDecision",
     "RouteDecisionStatus",
@@ -66,4 +87,5 @@ __all__ = [
     "evaluate_no_progress",
     "plan_failure_control",
     "select_lowest_total_economic_cost",
+    "select_provider_mode_route",
 ]

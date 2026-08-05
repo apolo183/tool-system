@@ -15,6 +15,10 @@ from tool_system.provider_portfolio.fixtures import (
     RouteDecisionStatus,
     classify_failure,
 )
+from tool_system.provider_portfolio.provider_mode import (
+    ProviderModeDecision,
+    ProviderModeDecisionStatus,
+)
 
 _IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -219,7 +223,7 @@ def _cycle_made_progress(
 
 @dataclass(frozen=True)
 class FailureControlRequest:
-    route_decision: RouteDecision
+    route_decision: RouteDecision | ProviderModeDecision
     failure_class: FailureClass
     current_route_id: str
     attempted_route_ids: tuple[str, ...]
@@ -229,9 +233,16 @@ class FailureControlRequest:
     no_progress_decision: NoProgressDecision | None = None
 
     def __post_init__(self) -> None:
-        if not isinstance(self.route_decision, RouteDecision):
-            raise PortfolioFixtureError("route_decision must be RouteDecision")
-        if self.route_decision.status is not RouteDecisionStatus.SELECTED:
+        if not isinstance(self.route_decision, (RouteDecision, ProviderModeDecision)):
+            raise PortfolioFixtureError(
+                "route_decision must be RouteDecision or ProviderModeDecision"
+            )
+        selected = (
+            self.route_decision.status is RouteDecisionStatus.SELECTED
+            if isinstance(self.route_decision, RouteDecision)
+            else self.route_decision.status is ProviderModeDecisionStatus.SELECTED
+        )
+        if not selected:
             raise PortfolioFixtureError("route_decision must contain a selected route")
         if not isinstance(self.failure_class, FailureClass):
             raise PortfolioFixtureError("failure_class must be registered")
