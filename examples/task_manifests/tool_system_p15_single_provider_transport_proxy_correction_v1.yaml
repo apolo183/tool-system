@@ -44,6 +44,7 @@ bounded_closure:
     finite_budgets:
       implementation_cycles: 2
       repair_cycles: 1
+      explicitly_authorized_extra_repair_cycles: 1
       review_cycles: 1
       wall_clock_hours: 4
       live_provider_invocations: 0
@@ -97,6 +98,11 @@ rollback:
   method: git_revert
   reference: tool-system@efd4d4c306a77fd97b835651e3d5c36796a9778d
   execution_authorized: false
+extra_repair_authorization:
+  task_identity: P15-SINGLE-PROVIDER-TRANSPORT-PROXY-CORRECTION-EXTRA-REPAIR-v1
+  scope: restore exactly two canonical rollback identities and reseal only the contract registry and exact-seal consistency test
+  runtime_code_changes_authorized: false
+  live_execution_authorized: false
 approval:
   required: true
   approved_by: user
