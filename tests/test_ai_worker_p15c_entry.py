@@ -191,10 +191,7 @@ def test_source_stage_state_and_exact_scope_remain_non_accepting_and_generic() -
         ROOT / "docs/reports/p15c_runtime_control_plane_implementation.md"
     ).read_text(encoding="utf-8")
 
-    current = state["current_phase"]
     runtime = state["p15c_runtime_control_plane"]
-    assert current["next_stage_authorized"] is True
-    assert current["active_stage"] == "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
     assert runtime["module"]["module_version"] == "1.8.1"
     assert runtime["configured_provider_ids"] == ["deepseek", "openai"]
     assert runtime["execution_eligible_provider_ids"] == ["openai"]

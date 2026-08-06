@@ -211,11 +211,7 @@ def test_successor_chain_builds_product_before_benchmark_and_operations() -> Non
     assert "each real repository mutation separately authorized" in (
         p15["entry_requires"]
     )
-    assert (
-        "the final live API backup smoke has one named provider-model-network-"
-        "credential-reference-limit execution packet for the single provider "
-        "selected by repository-external operator configuration"
-    ) in p15["entry_requires"]
+    assert not any("final live API backup smoke" in item for item in p15["entry_requires"])
     assert "deterministic policy-owned routing decisions and hard capability floors" in (
         p15["outputs"]
     )
@@ -224,8 +220,9 @@ def test_successor_chain_builds_product_before_benchmark_and_operations() -> Non
         "and policy metrics"
     ) in p15["outputs"]
     assert (
-        "one controlled backup-API smoke through any single explicitly enabled "
-        "usable key on the then-canonical main"
+        "independent optional API plugin release criteria requiring one controlled "
+        "smoke through any single explicitly enabled usable key only when that "
+        "plugin is separately released"
     ) in p15["outputs"]
     assert (
         "explicit proof that simultaneous multi-provider availability Qwen "
@@ -256,6 +253,8 @@ def test_successor_chain_builds_product_before_benchmark_and_operations() -> Non
     assert rules["every_large_model_api_is_default_disabled"] is True
     assert rules["api_key_presence_grants_call_authority"] is False
     assert rules["one_enabled_usable_api_smoke_satisfies_backup_path_proof"] is True
+    assert rules["api_backup_live_smoke_is_independent_of_p15_and_p16_core_acceptance"] is True
+    assert rules["optional_api_plugin_may_be_completed_after_core_product"] is True
     assert rules["simultaneous_multi_provider_availability_required_for_completion"] is False
 
 

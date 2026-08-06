@@ -47,27 +47,6 @@ def test_provider_portfolio_contract_is_product_control_not_runtime_authority() 
     assert "LocalModelProvider" in contract
     assert "The names above are portfolio candidates, not enabled routes." in contract
 
-    current_phase = project_state["current_phase"]
-    assert current_phase["id"] == "P15_MULTI_PROJECT_BENCHMARK"
-    assert current_phase["last_accepted_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
-    )
-    assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md"
-    )
-    assert current_phase["status"] == "active"
-    assert current_phase["active_stage_status"] == (
-        "provider_mode_acceptance_realignment_policy_package_no_execution"
-    )
-    assert current_phase["entry_record"] == (
-        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
-    )
-    assert current_phase["next_stage"] == (
-        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
-    )
-    assert current_phase["next_stage_authorized"] is True
-    assert current_phase["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
-    assert current_phase["next_phase_entry_authorized"] is False
     boundaries = project_state["authorization_boundaries"]
     assert boundaries["live_model_provider_execution_authorized"] is True
     assert boundaries["remote_target_mutation_authorized"] is False
@@ -221,15 +200,15 @@ def test_conditional_api_maintenance_and_roadmap_owners_are_locked() -> None:
     assert "does not impose a 24-hour, 72-hour, weekly, or" in contract
     assert "monthly live-call requirement" in contract
     assert "provider-specific fake-I/O adapter" in contract
-    assert "one final" in contract
-    assert "single explicitly enabled usable API key" in contract
+    assert "controlled single-provider live smoke" in contract
+    assert "one live usable key is sufficient for the final backup-path smoke" in contract
     assert p15["stage_plan"][-1]["stage"] == "P15F_BENCHMARK_ACCEPTANCE_CLOSURE"
     assert (
         "versioned atomic enabled-route publication and rollback when API mode is enabled"
         in p16["outputs"]
     )
     assert (
-        "proof that disabled or unavailable API providers do not block production-operations acceptance"
+        "proof that disabled or unavailable API providers and an unreleased optional API plugin do not block production-operations acceptance"
         in p16["outputs"]
     )
 

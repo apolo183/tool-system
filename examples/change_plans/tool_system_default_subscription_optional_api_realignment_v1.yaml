@@ -1,0 +1,57 @@
+plan_id: tool-system-default-subscription-optional-api-realignment-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_default_subscription_optional_api_realignment_v1.yaml
+changed_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/tool_system_v0.yaml
+  - docs/model_provider_portfolio_and_economics_contract_v1.md
+  - docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md
+  - docs/tool_system_global_development_principles_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_default_subscription_optional_api_realignment_v1.yaml
+  - examples/task_manifests/tool_system_default_subscription_optional_api_realignment_v1.yaml
+  - tests/test_ai_worker_p15c_entry.py
+  - tests/test_milestone_module_invariant.py
+  - tests/test_model_provider_portfolio_contract.py
+  - tests/test_p14_phase_entry_contract.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_p15c_execution_packet_freeze.py
+  - tests/test_p15d_failure_economics_corpus_prerequisite.py
+  - tests/test_repository_context_builder.py
+  - tests/test_phase_alignment.py
+  - tests/test_product_objective_alignment.py
+alignment:
+  parent:
+    document: docs/reports/p15_non_live_consolidated_acceptance.md
+    section_or_key: Evidence consolidation
+    scope: Reclassify only the already proven non-live core and optional API release boundary.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Keep the subscription route primary and API providers replaceable default-disabled plugins.
+implementation_sequence:
+  - read current central governance and canonical local contracts
+  - freeze the exact scope and inherited non-live evidence
+  - remove live API smoke from P15 core and P16 entry gates
+  - record P15 core acceptance P16 entry and optional API plugin backlog
+  - update consistency tests and repository manifest descriptions
+  - publish Draft PR run Hosted CI verify no drift Ready squash merge retain branch and stop
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_phase_alignment.py tests/test_product_objective_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_default_subscription_optional_api_realignment_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_default_subscription_optional_api_realignment_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_connector_only_draft_pr_hosted_fake_io_no_drift_ready_squash_merge
+  branch: agent/default-subscription-optional-api-realignment-v1
+  exact_base: ee5b1a661c9663537f63e018a2f5dc9f2da4924f
+  retain_feature_branch: true
+rollback:
+  method: git_revert
+  reference: tool-system@ee5b1a661c9663537f63e018a2f5dc9f2da4924f
+  execution_authorized: false

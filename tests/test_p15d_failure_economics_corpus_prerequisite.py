@@ -124,9 +124,6 @@ def test_blueprint_state_report_and_zero_operation_stop_remain_consistent() -> N
     assert p15d["entry_requires"] == [
         "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK accepted"
     ]
-    assert state["current_phase"]["active_stage"] == (
-        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
-    )
     prerequisite = state["p15d_prerequisite_corpus_freeze"]
     assert prerequisite["p15c_stage_accepted"] is False
     assert prerequisite["p15d_stage_entered"] is False
