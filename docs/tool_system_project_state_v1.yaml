@@ -1502,18 +1502,40 @@ p15_final_single_provider_live_smoke_lifecycle:
     max_automatic_retries: 0
     allowed_case_ids: [deterministic-corpus]
     private_target_bundle_loaded: false
-  current_execution_disposition: BLOCKED_CURRENT_WEB_EXECUTION_ENVIRONMENT_HAS_NO_REPOSITORY_EXTERNAL_PRIVATE_CONFIG_ACCESS
+  current_execution_disposition: COMPLETED_ONE_ATTEMPT_NO_AVAILABLE_PROVIDER_TRANSPORT_CONNECTION
+  selected_provider_id: openai
+  selected_model_id: gpt-5.6-luna
+  route_mode: single-success
+  route_attempts: 1
+  max_automatic_retries: 0
+  result_status: NO_AVAILABLE_PROVIDER
+  failure_code: TRANSPORT_CONNECTION
+  winning_provider_id: null
+  winning_model_id: null
+  configured_budget_micro_usd: 1000000
+  charged_micro_usd: 25000
+  ledger_charge_status: UNCERTAIN
   credential_value_requested_from_user: false
-  credential_value_accesses: 0
-  provider_invocations: 0
-  live_provider_network_operations: 0
-  spend_micro_usd: 0
+  credential_values_recorded: 0
+  raw_provider_outputs_recorded: 0
+  provider_invocations: 1
+  live_provider_network_operations: 1
   live_smoke_authorized: true
-  live_smoke_executed: false
+  live_smoke_executed: true
+  live_smoke_succeeded: false
+  invocation_allowance_exhausted: true
+  retry_authorized: false
+  private_target_loaded: false
+  p15_final_readonly_mapping:
+    non_live_evidence_complete: true
+    successful_live_smoke_complete: false
+    remaining_item: successful_controlled_single_provider_live_smoke
+    stop_boundary: new_explicit_lifecycle_required_before_any_future_live_attempt
   p15_stage_accepted: false
   p16_stage_entered: false
   downstream_accesses: 0
-  benchmark_executions: 0
+  project_benchmark_operations: 0
+  runtime_execution_counter: 1
   production_operations: 0
   cleanup_operations: 0
   rollback_operations: 0
