@@ -25,7 +25,7 @@ module_compound_contract:
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@efd4d4c306a77fd97b835651e3d5c36796a9778d:ai_worker_runtime@2.0.0
+    rollback_identity: tool-system@149296ff5e87e6b18a4982a9046012fd3edeb1b0:ai_worker_runtime@1.9.1
     python_import_identities:
       - kind: prefix
         name: tool_system.ai_worker
@@ -103,7 +103,7 @@ module_compound_contract:
     interface_compatible_replacement: Preserve request validation, deterministic defaults, stable errors, the generic default-disabled exact-route guard, P14C authority and replay bindings, schema-1/2 legacy matrix behavior, schema-3 direct single-provider compatibility, schema-4 default-off and external-selection semantics, source sealing, owner-only paths, explicit transfer, total and provider budgets, expiry, zero retry, cancellation, conservative charging, requested/resolved model audit, fixed adapter routes, direct-default verified TLS, explicit owner-only loopback CONNECT without proxy credentials or endpoint disclosure, public-fixture-only smoke, single-success stop, NO_AVAILABLE_PROVIDER, and redaction.
     interface_incompatible_change: Requires a new aggregate interface version and a separately authorized migration stage.
   rollback_contract:
-    rollback_identity: tool-system@efd4d4c306a77fd97b835651e3d5c36796a9778d:ai_worker_runtime@2.0.0
+    rollback_identity: tool-system@149296ff5e87e6b18a4982a9046012fd3edeb1b0:ai_worker_runtime@1.9.1
     method: Revert through a separately audited pull request and rerun worker, P14C, schema-1/2/3 compatibility, schema-4 external selection, all-provider fake-I/O, budget, transfer, source-seal, cancellation, ledger, redaction, packet-only, registry, and repository-manifest tests. This contract grants no rollback authority.
   replacement_contract:
     activation_rule: Replace only after provider-neutral worker behavior, generic API-disabled and exact-route-guard tests, the complete P14C suite, legacy matrix compatibility, schema-4 disabled-default, direct-default and explicit CONNECT fake-I/O, external priority and model selection, skip classification, hard-failure non-bypass, all-provider fake-I/O, single-success stop, source seal, owner-only controls, budgets, cancellation, replay, atomic ledger, structured response, requested/resolved model evidence, and redaction pass without real I/O. Adaptive catalog and economics correction remains a dependent independent package.
