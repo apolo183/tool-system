@@ -1,0 +1,40 @@
+plan_id: tool-system-p16a-sustainable-operations-acceptance-specification-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
+changed_files:
+  - REPO_MANIFEST.md
+  - docs/reports/p16a_sustainable_operations_acceptance_specification.md
+  - docs/reports/p16a_sustainable_operations_inventory_v1.yaml
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
+  - examples/task_manifests/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
+  - tests/test_p16a_sustainable_operations_specification.py
+  - tests/test_repo_manifest.py
+alignment:
+  parent:
+    document: docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md
+    section_or_key: P16 entry
+    scope: Inventory P16 without accepting it.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P16_PRODUCTION_OPERATIONS_ACCEPTANCE.outputs
+    scope: Map every output and freeze dependencies.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_p16a_sustainable_operations_specification.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_connector_only_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p16a-sustainable-operations-specification-v1
+  retain_feature_branch: true
+  exact_base: 83b6d96a8f81519d5188c00cac8d2a209eac33b4
+  exact_base_tree: canonical_main_tree_at_83b6d96a8f81519d5188c00cac8d2a209eac33b4
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@83b6d96a8f81519d5188c00cac8d2a209eac33b4
+  execution_authorized: false
