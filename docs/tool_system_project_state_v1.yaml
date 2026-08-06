@@ -7,17 +7,17 @@ blueprint:
   schema_version: 0.6
   process_state_allowed_in_blueprint: false
 current_phase:
-  id: P15_MULTI_PROJECT_BENCHMARK
+  id: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
   status: active
-  entry_record: docs/reports/p15a_provider_portfolio_qualification_specification.md
+  entry_record: docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md
   entry_authorized: true
-  last_accepted_stage: P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES
-  last_accepted_stage_record: docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md
-  next_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
-  next_stage_authorized: true
-  active_stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
-  active_stage_status: provider_mode_acceptance_realignment_policy_package_no_execution
-  next_phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+  last_accepted_stage: P15_MULTI_PROJECT_BENCHMARK
+  last_accepted_stage_record: docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md
+  next_stage: null
+  next_stage_authorized: false
+  active_stage: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+  active_stage_status: entered_subscription_primary_core_no_production_authority
+  next_phase: null
   next_phase_entry_authorized: false
 prior_acceptance:
   phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
@@ -1614,3 +1614,49 @@ p15_single_provider_transport_proxy_correction_lifecycle:
     p15_acceptance_requires_separate_authority: true
     p16_entry_requires_separate_authority: true
   stop_boundary: descriptive_closeout_merged_emit_readonly_p15_remaining_items_and_stop_before_any_live_call
+
+
+default_subscription_mainline_optional_api_plugin_realignment:
+  authorization_packet: DEFAULT-SUBSCRIPTION-MAINLINE-AND-OPTIONAL-API-PLUGIN-REALIGNMENT-v1
+  canonical_base: ee5b1a661c9663537f63e018a2f5dc9f2da4924f
+  record: docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md
+  evidence_source:
+    consolidated_non_live_report: docs/reports/p15_non_live_consolidated_acceptance.md
+    consolidated_non_live_matrix: docs/reports/p15_non_live_consolidated_evidence_v1.yaml
+    consolidation_merge: 579dde4718fb80ae0dc9c16d796e825c62aba189
+    descriptive_closeout_merge: 71bc347942e921675cea340ff06f6c3476fc166e01b1
+    non_live_evidence_complete: true
+    representative_isolated_projects: 2
+    provider_fake_io_adapters: [openai, deepseek, qwen]
+    provider_invocations_for_this_realignment: 0
+  p15_core_acceptance:
+    phase: P15_MULTI_PROJECT_BENCHMARK
+    status: accepted_subscription_primary_core
+    accepted_scope: multi_project_isolation_generalization_fake_io_adapters_deterministic_routing_hard_gates_failure_recovery_economics
+    accepted_at: 2026-08-06 UTC+09:00
+    live_api_smoke_required: false
+  optional_api_provider_plugin_v2:
+    status: default_disabled_deferred_independent_module_backlog
+    project_completion_gate: false
+    p16_entry_gate: false
+    live_smoke_status: not_required_for_core
+    release_requires_one_separately_authorized_single_provider_smoke: true
+    known_legacy_runtime_findings:
+      - authorization_identity_hard_coded_to_historical_p15c_packet
+      - legacy_packet_catalog_and_external_provider_selection_overlap
+      - transport_behavior_requires_independent_plugin_revalidation
+  p16_entry:
+    phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+    authorized: true
+    entered: true
+    production_deployment_authorized: false
+    api_mode_required: false
+  zero_operation_boundary:
+    credential_value_accesses: 0
+    provider_invocations: 0
+    live_smoke_executions: 0
+    benchmark_executions: 0
+    real_downstream_accesses: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
