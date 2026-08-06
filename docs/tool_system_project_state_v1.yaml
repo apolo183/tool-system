@@ -1571,6 +1571,13 @@ p15_single_provider_transport_proxy_correction_lifecycle:
     api_default_enabled: false
     key_or_proxy_presence_grants_authority: false
     max_automatic_retries: 0
+  extra_repair:
+    task_identity: P15-SINGLE-PROVIDER-TRANSPORT-PROXY-CORRECTION-EXTRA-REPAIR-v1
+    authorization_source: chat_user_message:2026-08-06-p15-single-provider-transport-proxy-correction-extra-repair-v1
+    exact_rollback_identity_restored: tool-system@149296ff5e87e6b18a4982a9046012fd3edeb1b0:ai_worker_runtime@1.9.1
+    runtime_code_changes: 0
+    provider_invocations: 0
+    status: hosted_ci_pending
   readonly_preflight_mapping:
     private_config_required: true
     canonical_source_revalidation_required: true
