@@ -26,6 +26,10 @@ alignment:
     document: blueprint/tool_system_v0.yaml
     section_or_key: product_objective
     scope: Preserve subscription-primary API-default-off behavior and repository-external live route configuration.
+extra_repair:
+  task_identity: P15-SINGLE-PROVIDER-TRANSPORT-PROXY-CORRECTION-EXTRA-REPAIR-v1
+  exact_change: restore two canonical rollback identities and reseal existing contract registry and registry fixture
+  additional_runtime_scope: none
 implementation_sequence:
   - add schema-4 direct_tls or http_connect transport selection while preserving schema-1-3 direct compatibility
   - implement fixed-route verified TLS over an explicit unauthenticated CONNECT proxy without redirect support
