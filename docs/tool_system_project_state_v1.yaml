@@ -1308,7 +1308,7 @@ provider_mode_and_acceptance_realignment_lifecycle:
       exact_15_path_closure: passed
       secret_project_identity_and_forbidden_diff_scans: passed
   readonly_p15_acceptance_mapping:
-    status: all_non_live_p15_evidence_complete_stopped_before_final_smoke
+    status: final_single_provider_live_smoke_authorized_pending_private_operator_execution
     completed_dependencies:
       - target_policy
       - ai_worker_runtime
@@ -1320,7 +1320,7 @@ provider_mode_and_acceptance_realignment_lifecycle:
       - deterministic_routing_and_hard_gate_evidence
       - readonly_remaining_item_mapping
     remaining_dependencies:
-      - separately_authorized_single_provider_live_smoke_on_then_canonical_main
+      - authorized_single_provider_live_smoke_pending_private_operator_execution
       - explicit_p15_acceptance_decision_after_smoke
     false_completion_gates:
       simultaneous_multi_provider_availability: false
@@ -1460,7 +1460,10 @@ p15_non_live_acceptance_lifecycle:
       - 31057595127
       - 31057953768
     feature_branches_retained: true
-    status: candidate_post_merge_fact_correction_only
+    merge_commit: 71bc347942e921675cea340ff07274834a1b8f9f
+    hosted_ci_run: 31058240804
+    hosted_ci_conclusion: success
+    status: accepted_non_live_lifecycle_closeout
   source_stage_evidence:
     credential_resolver_invocations: 0
     credential_value_accesses: 0
@@ -1474,3 +1477,43 @@ p15_non_live_acceptance_lifecycle:
     production_operations: 0
     cleanup_operations: 0
     rollback_operations: 0
+
+p15_final_single_provider_live_smoke_lifecycle:
+  task_identity: P15-FINAL-SINGLE-PROVIDER-LIVE-SMOKE-LIFECYCLE-v1
+  authorization_source: chat_user_message:2026-08-06-p15-final-single-provider-live-smoke-lifecycle-v1
+  canonical_authorized_baseline_commit: 71bc347942e921675cea340ff07274834a1b8f9f
+  task_manifest: examples/task_manifests/tool_system_p15_final_single_provider_live_smoke_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15_final_single_provider_live_smoke_v1.yaml
+  record: docs/reports/p15_final_single_provider_live_smoke.md
+  smoke_packet_schema: docs/reports/p15_final_smoke_control_packet_schema_v1.yaml
+  publication:
+    branch: agent/p15-final-single-provider-live-smoke-v1
+    draft_pr_required: true
+    hosted_ci_fake_io_only: true
+    retain_feature_branch: true
+  private_runtime_requirements:
+    settings: ~/.config/tool-system/settings.toml
+    credentials: ~/.config/tool-system/credentials.toml
+    usage_ledger: ~/.local/state/tool-system/p15c-usage.sqlite3
+    exactly_one_enabled_provider: true
+    repository_external_provider_model_selection: true
+    recommended_total_budget_micro_usd: 1000000
+    max_provider_invocations: 1
+    max_automatic_retries: 0
+    allowed_case_ids: [deterministic-corpus]
+    private_target_bundle_loaded: false
+  current_execution_disposition: BLOCKED_CURRENT_WEB_EXECUTION_ENVIRONMENT_HAS_NO_REPOSITORY_EXTERNAL_PRIVATE_CONFIG_ACCESS
+  credential_value_requested_from_user: false
+  credential_value_accesses: 0
+  provider_invocations: 0
+  live_provider_network_operations: 0
+  spend_micro_usd: 0
+  live_smoke_authorized: true
+  live_smoke_executed: false
+  p15_stage_accepted: false
+  p16_stage_entered: false
+  downstream_accesses: 0
+  benchmark_executions: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
