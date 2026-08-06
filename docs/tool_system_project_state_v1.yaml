@@ -1539,3 +1539,52 @@ p15_final_single_provider_live_smoke_lifecycle:
   production_operations: 0
   cleanup_operations: 0
   rollback_operations: 0
+
+p15_single_provider_transport_proxy_correction_lifecycle:
+  task_identity: P15-SINGLE-PROVIDER-TRANSPORT-PROXY-CORRECTION-LIFECYCLE-v1
+  authority_effect: none
+  authorization_source: chat_user_message:2026-08-06-p15-single-provider-transport-proxy-correction-lifecycle-v1
+  canonical_authorized_baseline_commit: efd4d4c306a77fd97b835651e3d5c36796a9778d
+  parent_evidence: docs/reports/p15_final_single_provider_live_smoke.md
+  task_manifest: examples/task_manifests/tool_system_p15_single_provider_transport_proxy_correction_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15_single_provider_transport_proxy_correction_v1.yaml
+  record: docs/reports/p15_single_provider_transport_proxy_correction.md
+  publication:
+    branch: agent/p15-single-provider-transport-proxy-correction-v1
+    draft_pr_required: true
+    hosted_ci_fake_io_only: true
+    retain_feature_branch: true
+  correction:
+    module_id: ai-worker-runtime
+    interface_compatible: true
+    aggregate_interface_version: 1.0.0
+    direct_verified_tls_default: true
+    repository_external_transport_selection: true
+    supported_transport_modes: [direct_tls, http_connect]
+    http_connect_loopback_only: true
+    fixed_provider_host_path_allowlist_preserved: true
+    tls_verification_preserved: true
+    redirect_support: false
+    environment_proxy_activation: false
+    proxy_credentials_supported: false
+    private_proxy_endpoint_recorded: false
+    api_default_enabled: false
+    key_or_proxy_presence_grants_authority: false
+    max_automatic_retries: 0
+  readonly_preflight_mapping:
+    private_config_required: true
+    canonical_source_revalidation_required: true
+    explicit_single_provider_model_required: true
+    budget_expiry_transfer_cancellation_retry_audit_revalidation_required: true
+    proxy_reachability_diagnostic_requires_separate_authority: true
+    future_provider_call_requires_new_explicit_lifecycle: true
+  live_provider_invocations: 0
+  credential_value_accesses: 0
+  benchmark_executions: 0
+  downstream_accesses: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+  p15_stage_accepted: false
+  p16_stage_entered: false
+  stop_boundary: merge_correction_emit_readonly_preflight_mapping_and_stop_before_any_live_call
