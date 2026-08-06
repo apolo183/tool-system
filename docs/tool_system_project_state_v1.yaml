@@ -1660,3 +1660,51 @@ default_subscription_mainline_optional_api_plugin_realignment:
     production_operations: 0
     cleanup_operations: 0
     rollback_operations: 0
+
+p16a_sustainable_operations_acceptance_specification:
+  authorization_packet: P16A-SUSTAINABLE-OPERATIONS-ACCEPTANCE-SPECIFICATION-LIFECYCLE-v1
+  baseline_commit: 83b6d96a8f81519d5188c00cac8d2a209eac33b4
+  status: inventory_planned_pending_guarded_merge
+  authority_effect: none
+  specification: docs/reports/p16a_sustainable_operations_acceptance_specification.md
+  capability_inventory: docs/reports/p16a_sustainable_operations_inventory_v1.yaml
+  task_manifest: examples/task_manifests/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
+  change_plan: examples/change_plans/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
+  classification_counts:
+    complete_inheritable: 1
+    primitive_not_production_closed: 3
+    missing_module_or_interface: 6
+    api_mode_conditional: 5
+    separate_production_authorization: 1
+  dependency_order:
+    - P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT
+    - P16C-STATE-MIGRATION-AND-COMPATIBILITY
+    - P16D-BACKUP-RESTORE-AND-DISASTER-RECOVERY
+    - P16E-OBSERVABILITY-SLO-AND-INCIDENT-RESPONSE
+    - P16F-AUDIT-RUN-RETENTION-AND-ARCHIVAL
+    - P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
+    - P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS
+    - P16I-PRODUCTION-OPERATIONS-ACCEPTANCE-DECISION
+  optional_api_provider_plugin_v2:
+    status: independent_default_disabled_deferred
+    core_dependency: false
+    p16_acceptance_gate: false
+  p16_accepted: false
+  production_deployment_authorized: false
+  next_implementation_package: P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT
+  next_implementation_package_authorized: false
+  optional_api_provider_plugin_v2_is_core_gate: false
+  zero_operation_boundary:
+    runtime_source_changes: 0
+    blueprint_changes: 0
+    provider_invocations: 0
+    credential_value_accesses: 0
+    live_smoke_executions: 0
+    benchmark_executions: 0
+    downstream_repository_accesses: 0
+    production_operations: 0
+    deployment_operations: 0
+    backup_restore_drills: 0
+    disaster_recovery_drills: 0
+    cleanup_operations: 0
+    rollback_operations: 0

@@ -1,0 +1,117 @@
+schema_version: 1
+inventory_id: p16a-sustainable-operations-inventory-v1
+baseline_commit: 83b6d96a8f81519d5188c00cac8d2a209eac33b4
+authority_effect: none
+evidence_mode: repository_read_only
+classification_legend:
+  complete_inheritable: existing evidence is complete for the bounded claim
+  primitive_not_production_closed: safe implementation exists but lacks an end-to-end production contract
+  missing_module_or_interface: no natural-owner production interface and acceptance evidence were found
+  api_mode_conditional: applies only when the default-disabled optional API plugin is explicitly enabled
+  separate_production_authorization: requires deployment or real-environment validation authority
+outputs:
+  - output: release_and_version_policy
+    classification: missing_module_or_interface
+    evidence: [pyproject.toml, config/module_registry_v1.yaml]
+    gap: No release train, artifact compatibility window, deprecation clock, or public release decision interface.
+    package: P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT
+  - output: schema_and_state_migration_strategy
+    classification: primitive_not_production_closed
+    evidence: [src/tool_system/orchestrator/durable.py, docs/modules/durable-orchestrator-contract-v1.md, tests/test_durable_orchestrator_reliability.py]
+    inherited_claim: Local SQLite schema v2-to-v3 migration, integrity checks, transactions, and fail-closed unsupported-version handling.
+    gap: No product-wide migration registry, compatibility matrix, dry-run planner, or downgrade strategy.
+    package: P16C-STATE-MIGRATION-AND-COMPATIBILITY
+  - output: upgrade_downgrade_backup_restore_and_disaster_recovery_evidence
+    classification: missing_module_or_interface
+    evidence: [src/tool_system/orchestrator/durable.py, tests/test_durable_orchestrator_recovery.py]
+    inherited_claim: Lease and outbox recovery primitives exist for isolated local stores.
+    gap: No backup format, restore verifier, disaster-recovery plan, RPO/RTO contract, or non-live drill harness.
+    package: P16D-BACKUP-RESTORE-AND-DISASTER-RECOVERY
+  - output: observability_slos_alerting_and_incident_response
+    classification: missing_module_or_interface
+    evidence: [src/tool_system/repo_controller/main_ci.py, src/tool_system/repo_controller/audit_log.py]
+    inherited_claim: CI observations and bounded audit records exist.
+    gap: No production telemetry interface, SLI/SLO calculation, alert policy, incident state machine, or escalation runbook.
+    package: P16E-OBSERVABILITY-SLO-AND-INCIDENT-RESPONSE
+  - output: audit_and_run_retention_policy
+    classification: primitive_not_production_closed
+    evidence: [src/tool_system/runtime/audit_bundle.py, src/tool_system/repo_controller/audit_log.py, src/tool_system/orchestrator/durable.py]
+    inherited_claim: Redacted audit bundles, JSONL records, and bounded durable run records exist.
+    gap: No retention classes, expiry/index policy, legal hold boundary, archive interface, or deletion authorization contract.
+    package: P16F-AUDIT-RUN-RETENTION-AND-ARCHIVAL
+  - output: conditional_api_provider_model_release_deprecation_price_quota_health_refresh
+    classification: api_mode_conditional
+    evidence: [src/tool_system/provider_portfolio/fixtures.py, src/tool_system/provider_portfolio/provider_mode.py]
+    gap: Static fake-I/O primitives do not provide release publication or health refresh.
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: operator_configured_availability_critical_path_and_economic_recomputation
+    classification: api_mode_conditional
+    evidence: [src/tool_system/provider_portfolio/failure_control.py, src/tool_system/provider_portfolio/provider_mode.py]
+    gap: Pure decisions exist; no enabled-route production scheduler or refresh persistence.
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: operator_configured_changed_route_incremental_benchmarks
+    classification: api_mode_conditional
+    evidence: [tests/test_ai_worker_p15c_benchmark.py]
+    gap: Hosted fake-I/O is complete; live or changed-route benchmarks require separate authorization and are not P16 Core gates.
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: conditional_task_class_portfolio_review_and_promotion_demotion
+    classification: api_mode_conditional
+    evidence: [src/tool_system/provider_portfolio/fixtures.py]
+    gap: Qualification states are deterministic fixtures only; no atomic publication owner exists.
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: subscription_completion_forecast_and_pre_renewal_review
+    classification: missing_module_or_interface
+    evidence: [docs/model_provider_portfolio_and_economics_contract_v1.md]
+    gap: Policy states the subscription-primary route but no forecast or renewal-review interface exists.
+    package: P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
+  - output: enabled_route_lifecycle_discovery_quarantine_retirement
+    classification: api_mode_conditional
+    evidence: [src/tool_system/provider_portfolio/fixtures.py]
+    gap: Lifecycle vocabulary exists as fixture data only.
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: versioned_atomic_enabled_route_publication_and_rollback
+    classification: api_mode_conditional
+    evidence: [src/tool_system/provider_portfolio/fixtures.py]
+    gap: No publication store or executed rollback interface exists.
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: total_economic_cost_quota_concentration_risk_provider_outage_controls
+    classification: primitive_not_production_closed
+    evidence: [src/tool_system/provider_portfolio/failure_control.py, src/tool_system/provider_portfolio/fixtures.py]
+    inherited_claim: Integer total-economic-cost selection and deterministic quota/outage failure classes are tested without I/O.
+    gap: Core subscription capacity and concentration limits lack a production-neutral policy owner; API route controls remain conditional.
+    package: P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
+  - output: disabled_api_and_unreleased_plugin_do_not_block_acceptance
+    classification: complete_inheritable
+    evidence: [blueprint/tool_system_v0.yaml, docs/tool_system_project_state_v1.yaml, tests/test_model_provider_portfolio_contract.py]
+    inherited_claim: Subscription-primary Core entered P16 while all APIs and the optional plugin remain default-disabled and non-gating.
+    package: inherited
+  - output: operator_runbook_and_deprecation_policy
+    classification: missing_module_or_interface
+    evidence: [README.md, docs/tool_system_global_development_principles_v1.md]
+    gap: Orientation and governance exist, but no versioned sustainable-operations runbook or deprecation procedure exists.
+    package: P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS
+  - output: production_acceptance_decision_record
+    classification: separate_production_authorization
+    evidence: [blueprint/tool_system_v0.yaml, docs/tool_system_project_state_v1.yaml]
+    gap: Must be produced only after P16B through P16H Core evidence; deployment and real-environment checks remain separately authorized.
+    package: P16I-PRODUCTION-OPERATIONS-ACCEPTANCE-DECISION
+dependency_graph:
+  - [P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT]
+  - [P16C-STATE-MIGRATION-AND-COMPATIBILITY, P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT]
+  - [P16D-BACKUP-RESTORE-AND-DISASTER-RECOVERY, P16C-STATE-MIGRATION-AND-COMPATIBILITY]
+  - [P16E-OBSERVABILITY-SLO-AND-INCIDENT-RESPONSE, P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT]
+  - [P16F-AUDIT-RUN-RETENTION-AND-ARCHIVAL, P16E-OBSERVABILITY-SLO-AND-INCIDENT-RESPONSE]
+  - [P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW, P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT]
+  - [P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS, P16D-AND-P16E-AND-P16F-AND-P16G]
+  - [P16I-PRODUCTION-OPERATIONS-ACCEPTANCE-DECISION, P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS]
+  - [OPTIONAL-API-PROVIDER-PLUGIN-v2, independent_default_disabled_after_core]
+stop_boundary:
+  p16_accepted: false
+  production_deployment_authorized: false
+  first_implementation_package_authorized: false
+  optional_api_plugin_is_core_gate: false
+  provider_invocations: 0
+  credential_value_accesses: 0
+  production_operations: 0
+  backup_restore_drills: 0
+  disaster_recovery_drills: 0
