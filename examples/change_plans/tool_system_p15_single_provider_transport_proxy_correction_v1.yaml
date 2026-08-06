@@ -16,6 +16,7 @@ changed_files:
   - tests/test_ai_worker_p15c_benchmark.py
   - tests/test_ai_worker_p15c_controls.py
   - tests/test_p15c_local_operator_config.py
+  - tests/test_module_registry.py
 alignment:
   parent:
     document: docs/reports/p15_final_single_provider_live_smoke.md
