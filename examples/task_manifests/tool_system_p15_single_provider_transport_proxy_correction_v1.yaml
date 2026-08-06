@@ -70,6 +70,7 @@ scope:
     - tests/test_ai_worker_p15c_benchmark.py
     - tests/test_ai_worker_p15c_controls.py
     - tests/test_p15c_local_operator_config.py
+    - tests/test_module_registry.py
   out_of_scope:
     - blueprint AGENTS README global principles provider portfolio source packet catalog workflow and credential example modification
     - proxy credentials environment-variable activation redirect support or dynamic provider endpoints
