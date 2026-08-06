@@ -1577,7 +1577,9 @@ p15_single_provider_transport_proxy_correction_lifecycle:
     exact_rollback_identity_restored: tool-system@149296ff5e87e6b18a4982a9046012fd3edeb1b0:ai_worker_runtime@1.9.1
     runtime_code_changes: 0
     provider_invocations: 0
-    status: hosted_ci_pending
+    hosted_ci_run: 1135
+    hosted_ci_result: pass
+    status: correction_validated_pending_no_drift_ready_merge
   readonly_preflight_mapping:
     private_config_required: true
     canonical_source_revalidation_required: true
