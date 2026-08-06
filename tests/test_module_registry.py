@@ -249,12 +249,10 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
     "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
 )
 
-EXPECTED_RAW_SHA256 = "41a1bc10c87f93fda3cc9e1efb6226e8101bb56443eeb72e05c6971b99d63527"
-EXPECTED_BYTE_LENGTH = 107_151
-EXPECTED_SEMANTIC_SHA256 = (
-    "69f9e1343443d86e0762aad0d4c5214cabf2349eefeaa7652edf0244fa8fae27"
-)
-EXPECTED_MANAGED_PYTHON_FILE_COUNT = 108
+EXPECTED_RAW_SHA256 = "f1f3c1520ce44fc22f43cd61dd5fcc98c5410a2960427b54c0545d9b4e44bfef"
+EXPECTED_BYTE_LENGTH = 109_356
+EXPECTED_SEMANTIC_SHA256 = (\n    "0000000000000000000000000000000000000000000000000000000000000000"\n)
+EXPECTED_MANAGED_PYTHON_FILE_COUNT = 110
 EXPECTED_MODULE_IDS = {
     "architecture_registry",
     "manifest_validation",
@@ -275,6 +273,7 @@ EXPECTED_MODULE_IDS = {
     "blueprint_compiler",
     "development_loop",
     "local_git",
+    "release_governance",
 }
 TARGET_OWNER_DELTAS = {
     "src/tool_system/gate/command_runner.py": (
@@ -306,6 +305,7 @@ TEST_SELECTORS = {
     "blueprint_compiler": "tests/test_blueprint_compiler.py",
     "development_loop": "tests/test_development_loop.py",
     "local_git": "tests/test_local_git_orchestrator.py",
+    "release_governance": "tests/test_release_governance.py",
 }
 ADDITIONAL_TEST_SELECTORS = {
     "adaptive_model_portfolio_and_economics": (
@@ -403,7 +403,7 @@ def authority_code_paths() -> dict[str, list[str]]:
         for current_id, contract in contracts.items()
     }
     flattened = [path for paths in result.values() for path in paths]
-    assert len(flattened) == len(set(flattened)) == 116
+    assert len(flattened) == len(set(flattened)) == 118
     python_owners = target_python_owner_by_path()
     assert {
         path: current_id
@@ -673,7 +673,7 @@ def test_qwen_economics_correction_pair_scope_and_zero_io_state_validate() -> No
     assert state["module"]["module_version"] == "1.9.1"
     assert (
         state["corrected_invariant"]["current_calculated_worst_case_micro_cny"]
-        == 196_608
+        == 206_608
     )
     assert state["corrected_invariant"]["per_attempt_hard_cap_micro_cny"] == (250_000)
     assert state["canonical_packet_catalog_changed"] is False
@@ -984,17 +984,17 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
         sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 116
     )
     assert (
-        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 30
+        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 31
     )
     assert (
         sum(len(module["permitted_side_effects"]) for module in registry["modules"])
         == 45
     )
-    assert len(list(_iter_contract_references(registry))) == 197
+    assert len(list(_iter_contract_references(registry))) == 205
     assert (
         sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
     )
-    assert len(target_python_owner_by_path()) == 108
+    assert len(target_python_owner_by_path()) == 110
     assert_effect_oracle(registry)
 
 
@@ -1014,7 +1014,7 @@ def test_current_current_registry_is_authority_and_tmp_copy_is_not(
     assert current["current_registry_authority"] is True
     assert current["validation_scope"] == "tool_system_current_module_registry"
     assert current["compatibility_adapter"]["applied"] is False
-    assert current["contract_reference_count"] == 197
+    assert current["contract_reference_count"] == 205
     assert current["external_provider_count"] == 0
     assert compatibility["status"] == "PASS"
     assert compatibility["current_registry_authority"] is False
