@@ -297,7 +297,7 @@ modules:
     target_boundary_id: code-005
     effect_contract:
       repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-      sha256: c6bc00bcb7434b0f5aa831797cafa2ee17302cc95f1da4d96beb2b54059bed0c
+      sha256: a31f0443780f4fdc8e8b627ed2550f76e76e970b35eafb6761f282b15cc7a4ce
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: direct-effects-code-006
@@ -307,7 +307,7 @@ modules:
     target_boundary_id: code-006
     effect_contract:
       repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-      sha256: c6bc00bcb7434b0f5aa831797cafa2ee17302cc95f1da4d96beb2b54059bed0c
+      sha256: a31f0443780f4fdc8e8b627ed2550f76e76e970b35eafb6761f282b15cc7a4ce
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: direct-effects-code-007
@@ -317,17 +317,17 @@ modules:
     target_boundary_id: code-007
     effect_contract:
       repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-      sha256: c6bc00bcb7434b0f5aa831797cafa2ee17302cc95f1da4d96beb2b54059bed0c
+      sha256: a31f0443780f4fdc8e8b627ed2550f76e76e970b35eafb6761f282b15cc7a4ce
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   rollback_boundary:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: c6bc00bcb7434b0f5aa831797cafa2ee17302cc95f1da4d96beb2b54059bed0c
+    sha256: a31f0443780f4fdc8e8b627ed2550f76e76e970b35eafb6761f282b15cc7a4ce
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: c6bc00bcb7434b0f5aa831797cafa2ee17302cc95f1da4d96beb2b54059bed0c
+    sha256: a31f0443780f4fdc8e8b627ed2550f76e76e970b35eafb6761f282b15cc7a4ce
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: adaptive-model-portfolio-and-economics
@@ -1782,32 +1782,32 @@ interfaces:
   - consumer_module_id: adaptive-model-portfolio-and-economics
   input_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: c6bc00bcb7434b0f5aa831797cafa2ee17302cc95f1da4d96beb2b54059bed0c
+    sha256: a31f0443780f4fdc8e8b627ed2550f76e76e970b35eafb6761f282b15cc7a4ce
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: c6bc00bcb7434b0f5aa831797cafa2ee17302cc95f1da4d96beb2b54059bed0c
+    sha256: a31f0443780f4fdc8e8b627ed2550f76e76e970b35eafb6761f282b15cc7a4ce
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: c6bc00bcb7434b0f5aa831797cafa2ee17302cc95f1da4d96beb2b54059bed0c
+    sha256: a31f0443780f4fdc8e8b627ed2550f76e76e970b35eafb6761f282b15cc7a4ce
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: c6bc00bcb7434b0f5aa831797cafa2ee17302cc95f1da4d96beb2b54059bed0c
+    sha256: a31f0443780f4fdc8e8b627ed2550f76e76e970b35eafb6761f282b15cc7a4ce
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: c6bc00bcb7434b0f5aa831797cafa2ee17302cc95f1da4d96beb2b54059bed0c
+    sha256: a31f0443780f4fdc8e8b627ed2550f76e76e970b35eafb6761f282b15cc7a4ce
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/ai-worker-runtime-contract-v1.md
-    sha256: c6bc00bcb7434b0f5aa831797cafa2ee17302cc95f1da4d96beb2b54059bed0c
+    sha256: a31f0443780f4fdc8e8b627ed2550f76e76e970b35eafb6761f282b15cc7a4ce
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: adaptive-model-portfolio-and-economics-api
