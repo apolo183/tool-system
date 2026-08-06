@@ -255,12 +255,13 @@ is disabled, these operations are skipped and do not block project completion.
 - P14 remains provider-neutral autonomous blueprint-to-code development plus one
   accepted bounded historical provider proof. It does not make that API a daily
   route or grant current execution authority.
-- P15 owns multi-project product evidence, provider-specific fake-I/O adapter
+- P15 owns multi-project core evidence, provider-specific fake-I/O adapter
   qualification, task profiling, bounded failover/escalation evidence,
-  total-economic-cost comparison, release-candidate acceptance, and one final
-  controlled live smoke through any single explicitly enabled usable API key.
-  Simultaneous multi-provider availability, Qwen funding, and a provider's moving
-  model alias are not acceptance gates.
+  total-economic-cost comparison, and release-candidate acceptance. The final
+  controlled single-provider live smoke belongs to an independent optional API
+  plugin release, may be completed after the core product, and is not a P15 core
+  or P16 entry gate. Simultaneous multi-provider availability, Qwen funding, and
+  a provider's moving model alias are not acceptance gates.
 - P16 owns sustainable observability, incident response, release and recovery
   operations. Discovery, health/price refresh, portfolio lifecycle, and renewal
   forecasting are conditional on API mode being enabled and are not default-off
