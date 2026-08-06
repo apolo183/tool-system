@@ -178,6 +178,9 @@ def _backup_policy_record(*, enabled: bool = True) -> dict[str, object]:
         "allowed_case_ids": ["deterministic-corpus"],
         "max_provider_invocations": 3,
         "cny_to_micro_usd_ceiling": 1_000_000,
+        "transport_mode": "direct_tls",
+        "proxy_host": "",
+        "proxy_port": 0,
     }
 
 
@@ -287,7 +290,7 @@ def test_policy_is_exact_bounded_and_qwen_capable(tmp_path: Path) -> None:
     assert caught.value.code == "INTEGER_FIELD"
 
 
-def test_schema_3_owns_provider_priority_and_model_outside_repository(
+def test_schema_4_owns_provider_model_and_transport_outside_repository(
     tmp_path: Path,
 ) -> None:
     private = _owner_directory(tmp_path / "private")
@@ -295,7 +298,10 @@ def test_schema_3_owns_provider_priority_and_model_outside_repository(
 
     policy = load_execution_policy(policy_path)
 
-    assert policy.schema_version == 3
+    assert policy.schema_version == 4
+    assert policy.transport_mode == "direct_tls"
+    assert policy.proxy_host is None
+    assert policy.proxy_port is None
     assert policy.provider_priority == ("qwen", "openai")
     assert policy.provider_model["openai"] == "gpt-current"
     assert policy.provider_model["qwen"] == "qwen-current"
@@ -320,6 +326,58 @@ def test_schema_3_owns_provider_priority_and_model_outside_repository(
     assert disabled.enabled is False
     assert disabled.total_budget_micro_usd == 0
     assert disabled.provider_priority == ()
+
+
+def test_schema_4_http_connect_is_loopback_only_and_private(
+    tmp_path: Path,
+) -> None:
+    private = _owner_directory(tmp_path / "private")
+    policy_path = private / "backup.json"
+    record = _backup_policy_record()
+    record["transport_mode"] = "http_connect"
+    record["proxy_host"] = "127.0.0.1"
+    record["proxy_port"] = 17897
+    _owner_json(policy_path, record)
+
+    policy = load_execution_policy(policy_path)
+
+    assert policy.transport_mode == "http_connect"
+    assert policy.proxy_host == "127.0.0.1"
+    assert policy.proxy_port == 17897
+    assert "127.0.0.1" not in policy.policy_sha256
+    assert "17897" not in policy.policy_sha256
+
+    record["proxy_host"] = "proxy.example"
+    _owner_json(policy_path, record)
+    with pytest.raises(P15CControlError) as caught:
+        load_execution_policy(policy_path)
+    assert caught.value.code == "PROXY_HOST"
+
+    record["transport_mode"] = "direct_tls"
+    record["proxy_host"] = ""
+    record["proxy_port"] = 17897
+    _owner_json(policy_path, record)
+    with pytest.raises(P15CControlError) as caught:
+        load_execution_policy(policy_path)
+    assert caught.value.code == "PROXY_CONFIGURATION"
+
+
+def test_schema_3_remains_direct_tls_compatible(tmp_path: Path) -> None:
+    private = _owner_directory(tmp_path / "private")
+    policy_path = private / "backup.json"
+    record = _backup_policy_record()
+    record["schema_version"] = 3
+    record.pop("transport_mode")
+    record.pop("proxy_host")
+    record.pop("proxy_port")
+    _owner_json(policy_path, record)
+
+    policy = load_execution_policy(policy_path)
+
+    assert policy.schema_version == 3
+    assert policy.transport_mode == "direct_tls"
+    assert policy.proxy_host is None
+    assert policy.proxy_port is None
 
 
 def test_legacy_policy_remains_readable_only_with_qwen_disabled(tmp_path: Path) -> None:

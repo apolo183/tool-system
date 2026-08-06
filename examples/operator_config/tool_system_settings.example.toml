@@ -4,7 +4,7 @@
 # Copy and edit provider priority and model values only in the external file.
 
 [p15c]
-schema_version = 3
+schema_version = 4
 authorization_id = "P15C-CROSS-PROVIDER-READ-ONLY-BENCHMARK-LIFECYCLE-v1"
 enabled = false
 total_budget_micro_usd = 0
@@ -19,6 +19,12 @@ max_provider_invocations = 3
 # microUSD ledger. Operators may raise this value, but the runtime rejects a
 # lower value and never performs an exchange-rate network lookup.
 cny_to_micro_usd_ceiling = 1_000_000
+# Transport remains direct unless the owner-only copied file explicitly changes
+# this to http_connect and supplies a loopback host/port. Environment proxy
+# variables and proxy presence are ignored. Proxy credentials are unsupported.
+transport_mode = "direct_tls"
+proxy_host = ""
+proxy_port = 0
 
 [p15c.provider_enabled]
 deepseek = false

@@ -23,6 +23,7 @@ from tool_system.ai_worker.p15c_controls import (
     P15C_DEFAULT_SETTINGS_PATH,
     P15C_DEFAULT_TARGET_PACKET_PATH,
     P15C_POLICY_SCHEMA_VERSION,
+    P15C_SINGLE_PROVIDER_POLICY_SCHEMA_VERSION,
     OwnerOnlyCredentialResolver,
     P15CControlError,
     P15CUsageLedger,
@@ -113,7 +114,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
         policy = load_execution_policy(arguments.settings)
         policy.assert_active()
-        if policy.schema_version == P15C_POLICY_SCHEMA_VERSION:
+        if policy.schema_version in {
+            P15C_POLICY_SCHEMA_VERSION,
+            P15C_SINGLE_PROVIDER_POLICY_SCHEMA_VERSION,
+        }:
             return _run_backup_mode(
                 arguments=arguments,
                 repository_root=repository_root,
@@ -186,7 +190,11 @@ def _run_backup_mode(
         policy_path=arguments.settings,
         credential_resolver=resolver,
         ledger=ledger,
-        transport=P15CDirectTLSTransport(),
+        transport=P15CDirectTLSTransport(
+            transport_mode=policy.transport_mode,
+            proxy_host=policy.proxy_host,
+            proxy_port=policy.proxy_port,
+        ),
     )
     preflight = executor.preflight_backup(candidates, deterministic_case)
     if arguments.preflight:
