@@ -200,7 +200,7 @@ def test_conditional_api_maintenance_and_roadmap_owners_are_locked() -> None:
     assert "does not impose a 24-hour, 72-hour, weekly, or" in contract
     assert "monthly live-call requirement" in contract
     assert "provider-specific fake-I/O adapter" in contract
-    assert "one controlled smoke test" in contract
+    assert "controlled single-provider live smoke" in contract
     assert "single explicitly enabled usable API key" in contract
     assert p15["stage_plan"][-1]["stage"] == "P15F_BENCHMARK_ACCEPTANCE_CLOSURE"
     assert (
