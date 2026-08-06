@@ -1,4 +1,1725 @@
-undefined
+schema_version: 1
+state_id: tool-system-project-state
+role: descriptive_project_progress_only
+authority_effect: none
+blueprint:
+  path: blueprint/tool_system_v0.yaml
+  schema_version: 0.6
+  process_state_allowed_in_blueprint: false
+current_phase:
+  id: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+  status: active
+  entry_record: docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md
+  entry_authorized: true
+  last_accepted_stage: P15_MULTI_PROJECT_BENCHMARK
+  last_accepted_stage_record: docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md
+  next_stage: null
+  next_stage_authorized: false
+  active_stage: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+  active_stage_status: entered_subscription_primary_core_no_production_authority
+  next_phase: null
+  next_phase_entry_authorized: false
+prior_acceptance:
+  phase: P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT
+  record: docs/reports/p14i_blueprint_to_code_acceptance_closure.md
+  accepted_at: 2026-08-03 UTC+09:00
+  accepted_scope: approved_bounded_blueprint_isolated_repository_fixture_auditable_resumable_fail_closed_local_git_workflow
+  predecessor:
+    phase: P13_SECURITY_RELIABILITY_HARDENING
+    record: docs/reports/p13e_security_reliability_acceptance_closure.md
+    accepted_scope: application_guarded_local_fixture_worker_and_single_host_sqlite_hardening
+p14c:
+  source_record: docs/reports/p14c_bounded_real_model_provider_execution.md
+  source_role: implementation_evidence_only
+  implementation_authorization_packet: P14C-IMPL-v2
+  source_status: bounded_deepseek_live_provider_proof_accepted
+  acceptance_record: docs/reports/p14c_bounded_real_provider_acceptance.md
+  acceptance_authorization_packet: P14C-DEEPSEEK-RESULT-ACCEPTANCE-v1
+  acceptance_status: accepted
+  accepted_at: 2026-08-02 UTC+09:00
+  live_issuer_record: docs/reports/p14c_live_issuer_implementation.md
+  live_issuer_implementation_authorization_packet: P14C-LIVE-ISSUER-IMPL-v1
+  live_issuer_lifecycle_authorization_packet: P14C-LIVE-ISSUER-LIFECYCLE-v1
+  live_issuer_source:
+    base: b6ea3c62aa668031e87abb6341f82cb1bd32a3eb
+    head: 46e66481447fd64ac9a0916b179eb652aef647ad
+    pull_request: 148
+    merge: 20cbb13feb934ce95f2624dafc4510efcd04f1da
+    tree: b2263ba1c8121bb7d2f30b96b88cebabfa880872
+    publication_status: merged_hosted_ci_validated
+    pull_request_ci_run_id: 30616081875
+    main_ci_run_id: 30616558561
+    branch_retained: true
+  trust_root: github_owner_issue_comment
+  source_hardening_record: docs/reports/p14c_source_seal_replay_hardening.md
+  source_hardening_authorization_packet: P14C-SOURCE-SEAL-REPLAY-LIFECYCLE-v1
+  source_hardening_status: exact_source_host_and_single_host_replay_source_implemented_fake_io_only_no_execution_not_accepted
+  approval_contract_version: p14c-live-execution-approval-v2
+  execution_source_seal_required: true
+  durable_replay_boundary: single_host_sqlite_burn_on_claim_at_most_once
+  multi_host_exactly_once_claimed: false
+  first_live_attempt:
+    packet_id: P14C-IMPL-v2
+    provider_id: openai
+    model_id: gpt-5.6-luna
+    approval_conversation: 153
+    approval_comment_id: 5152284946
+    approval_record_created: true
+    approval_durably_consumed: true
+    live_capability_issued: true
+    credential_resolution_attempt_count: 2
+    provider_invocation_count: 1
+    redacted_error_code: PROVIDER_FAILURE
+    output_received: false
+    credential_value_recorded: false
+    diagnosed_openai_tls_path: blocked
+    acceptance_effect: none
+  real_live_approval_record_created: true
+  live_capability_issued: true
+  prior_recovery_implementation_packet: P14C-QWEN-RECOVERY-v1
+  prior_recovery_attempt:
+    provider_id: qwen
+    model_id: qwen3.7-plus-2026-05-26
+    endpoint: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+    credential_reference: file:~/.config/tool-system/credentials.toml#providers.qwen.api_key
+    api_access_mode: one_explicit_execute_only
+    fallback_allowed: false
+    live_execution_attempted: true
+    live_execution_succeeded: false
+    approval_conversation: 155
+    approval_comment_id: 5156628612
+    approval_durably_consumed: true
+    credential_resolution_attempt_count: 1
+    provider_invocation_count: 1
+    redacted_failure_class: AUTH_FAILED
+    failure_detail: ambiguous_http_401_or_403_under_legacy_classifier
+    output_received: false
+    credential_value_recorded: false
+    usage_tokens: 0
+    cost_microunits: 0
+    acceptance_effect: none
+  recovery_implementation_packet: P14C-DEEPSEEK-RECOVERY-v1
+  recovery_route:
+    provider_id: deepseek
+    model_id: deepseek-v4-flash
+    endpoint: https://api.deepseek.com/chat/completions
+    credential_reference: file:~/.config/tool-system/credentials.toml#providers.deepseek.api_key
+    api_access_mode: one_explicit_execute_only
+    fallback_allowed: false
+    live_execution_attempted: true
+    live_execution_succeeded: true
+    approval_conversation: 157
+    approval_comment_id: 5158008082
+    approval_record_sha256: 61715c0b87e46b871016265cf88a0ca6c8b9e4383c444ea41db5374192173e5d
+    approval_durably_consumed: true
+    credential_resolution_attempt_count: 1
+    provider_invocation_count: 1
+    transport_attempt_ceiling: 1
+    usage:
+      input_tokens: 106
+      output_tokens: 39
+      total_tokens: 145
+      cost_microunits: 184
+      duration_ms: 1770
+    output_sha256: 16a6f16328aad19a4d64aa4ff329c7e78e02a09a270e2b55bb3f795a3e6bba33
+    source_seal:
+      execution_commit_sha: 55ed92e336d2aa110e50e197c5eefb8fa80896a8
+      execution_tree_sha: 2e6ce267738a396f52a5847052f91edafea74af9
+      execution_host_id: apolo-9004
+      replay_ledger_instance_id: 1f8f11e844f5ab829e38cecfc1b988d9aedb897ee9af543df011dd9397228fde
+      source_manifest_sha256: c2932b312b69804535dda1fde43caf90f7118f510870f19c00aa362641fdd112
+      source_seal_sha256: 1d7688faf8be7950ff88b359af2d726ccaea52e832a33796defd08c3793f2019
+    credential_value_recorded: false
+    raw_provider_output_recorded: false
+    acceptance_effect: p14c_bounded_real_model_provider_execution_accepted
+  stage_accepted: true
+p14d:
+  implementation_authorization_packet: P14D-REPOSITORY-CONTEXT-LIFECYCLE-v1
+  module_id: repository-context
+  module_version: 1.0.0
+  public_interface_id: repository-context-api
+  public_interface_version: 1.0.0
+  acceptance_record: docs/reports/p14d_repository_context_natural_owner_acceptance.md
+  acceptance_status: accepted
+  accepted_at: 2026-08-02 UTC+09:00
+  evidence_boundary: isolated_local_git_fixture_repositories_only
+  repository_snapshot_contract:
+    exact_expected_head_required: true
+    clean_worktree_required: true
+    committed_tracked_blobs_only: true
+    content_addressed_head_tree_tracked_set_and_context: true
+    end_of_build_revalidation_required: true
+  bounded_context_contract:
+    maximum_tracked_files: 512
+    maximum_selected_files: 32
+    maximum_file_bytes: 131072
+    maximum_scan_bytes: 4194304
+    maximum_selected_bytes: 1048576
+    maximum_query_terms: 24
+  accepted_fixture_evidence:
+    python_dependency_and_test_mapping: true
+    typescript_dependency_and_test_mapping: true
+    relevance_and_seed_selection: true
+    natural_owner_evidence_sufficiency_gate: true
+    dirty_and_stale_snapshot_blocking: true
+    path_symlink_binary_utf8_and_size_safety: true
+    deterministic_replay: true
+    repository_writes: 0
+    network_operations: 0
+    provider_invocations: 0
+    credential_accesses: 0
+  natural_owner_proposal_grants_authority: false
+  real_downstream_repository_accessed: false
+  stage_accepted: true
+p14e:
+  implementation_authorization_packet: P14E-BLUEPRINT-COMPILER-LIFECYCLE-v1
+  module_id: blueprint-compiler
+  module_version: 1.0.0
+  public_interface_id: blueprint-compiler-api
+  public_interface_version: 1.0.0
+  acceptance_record: docs/reports/p14e_blueprint_compiler_acceptance.md
+  acceptance_status: accepted
+  accepted_at: 2026-08-03 UTC+09:00
+  evidence_boundary: structured_in_memory_isolated_fixture_inputs_only
+  compilation_contract:
+    exact_milestone_to_module_binding_required: true
+    one_module_or_interface_change_per_milestone: true
+    deterministic_module_and_task_dags_required: true
+    task_planner_graph_compatibility_required: true
+    finite_limits_required: true
+    authority_effect: none
+  accepted_fixture_evidence:
+    deterministic_replay: true
+    module_dependency_ordering: true
+    task_graph_compatibility: true
+    overlap_and_cycle_blocking: true
+    authorization_and_context_blocking: true
+    path_precondition_and_limit_blocking: true
+    repository_reads: 0
+    repository_writes: 0
+    network_operations: 0
+    provider_invocations: 0
+    credential_accesses: 0
+  generated_documents_grant_authority: false
+  real_downstream_repository_accessed: false
+  stage_accepted: true
+p14f:
+  implementation_authorization_packet: P14F-DEVELOPMENT-LOOP-LIFECYCLE-v1
+  module_id: development-loop
+  module_version: 1.1.0
+  public_interface_id: development-loop-api
+  public_interface_version: 1.1.0
+  acceptance_record: docs/reports/p14f_development_loop_acceptance.md
+  acceptance_status: accepted
+  accepted_at: 2026-08-03 UTC+09:00
+  evidence_boundary: caller_owned_in_memory_fixture_repository_and_injected_callbacks_only
+  frozen_closure_contract:
+    task_digest_required: true
+    baseline_tree_required: true
+    exact_allowed_scope_required: true
+    frozen_acceptance_and_validation_sets_required: true
+    fixed_terminal_predicate_required: true
+    finite_cycle_worker_patch_time_and_cost_budgets_required: true
+    candidate_tree_excluded_before_execution: true
+  accepted_fixture_evidence:
+    atomic_structured_patch_preconditions: true
+    validation_diagnosis_and_bounded_repair: true
+    independent_code_and_contract_review: true
+    review_cannot_expand_frozen_acceptance: true
+    recurrence_fingerprint_excludes_attempt_and_metadata: true
+    repeated_state_and_no_progress_termination: true
+    sealed_candidate_evidence_non_reopening: true
+    sealed_resume_does_not_repeat_worker_call: true
+    caller_cancellation_before_worker_dispatch: true
+    caller_cancellation_before_patch_application: true
+    cancelled_worker_patch_discarded: true
+    invalid_cancellation_signal_blocks: true
+    filesystem_operations: 0
+    git_operations: 0
+    network_operations: 0
+    provider_invocations: 0
+    credential_accesses: 0
+    downstream_repository_operations: 0
+  durable_state_and_local_git_owned_by_p14g: true
+  cancellation_correction:
+    authorization_packet: P14H-PREREQUISITE-CORRECTIONS-v1
+    acceptance_record: docs/reports/p14f_cancellation_correction_acceptance.md
+    acceptance_status: accepted_fixture_only
+    authority_effect: none
+  real_downstream_repository_accessed: false
+  stage_accepted: true
+p14g:
+  implementation_authorization_packet: P14G-DURABLE-LOCAL-GIT-LIFECYCLE-v1
+  module_id: local-git
+  module_version: 1.1.0
+  public_interface_id: local-git-api
+  public_interface_version: 1.1.0
+  acceptance_record: docs/reports/p14g_durable_local_git_acceptance.md
+  acceptance_status: accepted
+  accepted_at: 2026-08-03 UTC+09:00
+  evidence_boundary: remote_free_pytest_temporary_local_git_and_sqlite_fixtures_only
+  accepted_fixture_evidence:
+    exact_base_commit_tree_and_scope_preflight: true
+    durable_lease_checkpoint_attempt_and_side_effect_receipts: true
+    one_local_branch_and_commit: true
+    exact_baseline_presence_and_content_topology: true
+    add_modify_delete_delta_in_one_commit: true
+    staged_paths_equal_actual_changed_subset: true
+    crash_after_completed_commit_resume_without_duplicate: true
+    ambiguous_side_effect_blocks: true
+    rollback_cleanup_and_draft_pr_are_plans_only: true
+    remote_operations: 0
+    provider_invocations: 0
+    credential_accesses: 0
+    downstream_repository_operations: 0
+  real_downstream_repository_accessed: false
+  file_topology_correction:
+    authorization_packet: P14H-PREREQUISITE-CORRECTIONS-v1
+    acceptance_record: docs/reports/p14g_file_topology_correction_acceptance.md
+    acceptance_status: accepted_fixture_only
+    authority_effect: none
+  stage_accepted: true
+p14h:
+  implementation_authorization_packet: P14H-MULTI-STACK-FIXTURE-LIFECYCLE-v1
+  acceptance_record: docs/reports/p14h_multi_stack_fixture_acceptance.md
+  acceptance_status: accepted
+  accepted_at: 2026-08-03 UTC+09:00
+  evidence_boundary: isolated_python_and_typescript_fixture_repositories_only
+  accepted_fixture_evidence:
+    greenfield_python_cli: true
+    existing_python_library_natural_owner_change: true
+    typescript_package_language_neutral_flow: true
+    bounded_failing_test_repair: true
+    ambiguous_blueprint_pre_mutation_block: true
+    out_of_scope_patch_block_and_rollback: true
+    timeout_cancellation_cleanup_and_resume: true
+    completed_side_effect_crash_without_duplicate_replay: true
+    local_git_conflict_policy: true
+    deterministic_content_addressed_replay: true
+    stale_status_converges_within_finite_cycles: true
+    stale_pr_metadata_does_not_reopen_source: true
+    repeated_recurrence_fingerprint_stops: true
+    suggestions_outside_acceptance_are_non_blocking: true
+    receipts_cannot_add_acceptance_obligations: true
+    system_does_not_invent_milestones: true
+    remote_operations: 0
+    provider_invocations: 0
+    credential_accesses: 0
+    downstream_repository_operations: 0
+  real_downstream_repository_accessed: false
+  stage_accepted: true
+p14i:
+  authorization_packet: P14I-ACCEPTANCE-CLOSURE-LIFECYCLE-v1
+  baseline_commit: cf1b8344695ab6e325cdb6c3cdd6b69037b2d657
+  baseline_tree: 0e54197070781c898f5cc5ce77596a1f52b9f252
+  acceptance_record: docs/reports/p14i_blueprint_to_code_acceptance_closure.md
+  acceptance_status: accepted_and_closed
+  accepted_at: 2026-08-03 UTC+09:00
+  evidence_chain_read_only_revalidated:
+    - P14A_PHASE_ENTRY_END_TO_END_SPECIFICATION
+    - P14B_PROVIDER_NEUTRAL_AI_WORKER_CONTRACT
+    - P14MR_MILESTONE_MODULE_INVARIANT
+    - P14C_BOUNDED_REAL_MODEL_PROVIDER_EXECUTION
+    - P14D_REPOSITORY_CONTEXT_NATURAL_OWNER
+    - P14E_BLUEPRINT_COMPILER
+    - P14F_AUTONOMOUS_PATCH_TEST_REPAIR_REVIEW
+    - P14G_DURABLE_LOCAL_GIT_ORCHESTRATION
+    - P14H_MULTI_STACK_END_TO_END_FIXTURE_ACCEPTANCE
+  accepted_claim_boundary: approved_bounded_blueprint_isolated_repository_fixture_auditable_resumable_fail_closed_local_git_workflow
+  product_wide_completion_claimed: false
+  p15_entry_authorized: false
+  runtime_source_changes: 0
+  blueprint_changes: 0
+  provider_invocations: 0
+  credential_value_accesses: 0
+  downstream_repository_accesses: 0
+  remote_fixture_operations: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+  stage_accepted: true
+p15a:
+  authorization_packet: P15A-PHASE-ENTRY-AND-QUALIFICATION-SPECIFICATION-LIFECYCLE-v1
+  baseline_commit: e3b02654edbe69850d0f801adb77a083c444b2d3
+  baseline_tree: ef8de13cce5ce55b713ba8a083196142f6504ccd
+  phase_entry_and_specification_record: docs/reports/p15a_provider_portfolio_qualification_specification.md
+  specification_status: accepted_governance_only
+  accepted_at: 2026-08-03 UTC+09:00
+  provider_neutral_interface_lock:
+    protocol_path: src/tool_system/ai_worker/contract.py
+    protocol_symbol: AIWorkerProvider
+    aggregate_interface_id: ai-worker-runtime-api
+    aggregate_interface_version: 1.0.0
+    selection_contract_path: docs/model_provider_portfolio_and_economics_contract_v1.md
+    selection_module_id: adaptive_model_portfolio_and_economics
+    selection_public_interface_version: 1
+  task_profile_required_fields:
+    - task_class_language_repository_context_and_dependency_breadth
+    - reasoning_and_implementation_complexity
+    - independent_security_data_repository_mutation_and_operational_risk
+    - required_capabilities_and_minimum_quality_confidence_floor
+    - verification_and_repair_burden
+    - critical_path_slack_and_delay_sensitivity
+    - evidence_confidence_and_uncertainty_reasons
+  hard_floor_categories:
+    - authorization_and_execution_surface
+    - data_policy_residency_retention_and_sensitivity
+    - exact_model_capability_context_and_output_limits
+    - independent_security_quality_and_risk
+    - time_token_cost_retry_cancellation_and_no_progress_limits
+    - current_catalog_policy_benchmark_health_and_precondition_evidence
+    - repository_access_and_mutation_authority
+  economics_objective: expected_total_economic_cost_per_accepted_module
+  private_economic_values_publicly_recorded: false
+  qualification_states:
+    - DISCOVERED
+    - QUARANTINED
+    - BENCHMARKING
+    - SHADOW
+    - CANARY
+    - ELIGIBLE
+    - PRIMARY
+    - DEGRADED
+    - RETIRED
+  benchmark_corpus_seed_boundary: accepted_p14_isolated_python_and_typescript_fixtures_as_specification_inputs_only
+  benchmark_results_created: 0
+  provider_candidates_enabled: 0
+  provider_adapters_added_or_modified: 0
+  credential_reference_metadata_inspected: true
+  credential_resolver_invocations: 0
+  credential_value_accesses: 0
+  provider_invocations: 0
+  network_operations: 0
+  real_downstream_repository_accesses: 0
+  target_mutations: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+  blueprint_changes: 0
+  runtime_source_changes: 0
+  p15b_authorized: false
+  stage_accepted: true
+p15b:
+  authorization_packet: P15B-ADAPTER-ROUTER-AND-PROFILER-FIXTURES-LIFECYCLE-v1
+  baseline_commit: f912add44845be9d60021333c6792e4ecf6a142b
+  baseline_tree: 493c5563cf4d95b1cc3e236e1453c8c9db5e3423
+  fixture_acceptance_record: docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md
+  implementation_status: accepted_isolated_fixture_no_live_provider
+  accepted_at: 2026-08-03 UTC+09:00
+  module:
+    current_module_id: adaptive_model_portfolio_and_economics
+    canonical_module_id: adaptive-model-portfolio-and-economics
+    module_version: 1.0.0
+    aggregate_interface_id: adaptive-model-portfolio-and-economics-api
+    aggregate_interface_version: 1.0.0
+    upstream_interface_id: ai-worker-runtime-api
+    upstream_interface_version: 1.0.0
+    natural_owner_paths:
+      - src/tool_system/provider_portfolio/__init__.py
+      - src/tool_system/provider_portfolio/fixtures.py
+  task_profile_builder: build_task_profile_fixture
+  routing_policy_version: p15b-fixture-routing-policy-v1
+  catalog_fixture_version: p15b-fixture-catalog-v1
+  evidence_snapshot_fixture_version: p15b-fixture-evidence-v1
+  hard_floors_evaluated_before_economics: true
+  economics_arithmetic: non_negative_integer_microunits_without_float_scoring
+  selectable_qualification_states:
+    - ELIGIBLE
+    - PRIMARY
+  failure_dispositions:
+    - AVAILABILITY_FAILOVER
+    - SAME_ROUTE_REPAIR_THEN_ESCALATE
+    - BLOCK_NO_PROVIDER_BYPASS
+    - STOP
+  fixture_adapter:
+    protocol_path: src/tool_system/ai_worker/contract.py
+    protocol_symbol: AIWorkerProvider
+    provider_kind: deterministic_fixture
+    execution_mode: fixture
+    structural_compatibility_tested: true
+    calls_external_provider: false
+    uses_credentials: false
+    network_access: false
+  module_source_files_added: 2
+  existing_ai_worker_source_changes: 0
+  live_provider_adapters_added_or_modified: 0
+  provider_candidates_enabled_for_live_execution: 0
+  benchmark_results_created: 0
+  benchmark_executions: 0
+  provider_invocations: 0
+  provider_network_operations: 0
+  credential_resolver_invocations: 0
+  credential_value_accesses: 0
+  real_downstream_repository_accesses: 0
+  remote_fixture_operations: 0
+  target_mutations: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+  blueprint_changes: 0
+  p15c_authorized: false
+  stage_accepted: true
+p15c_packet_freeze:
+  authorization_packet: P15C-EXECUTION-PACKET-FREEZE-v1
+  evidence_completion_source: chat_user_message:2026-08-03-provider-repository-budget-and-read-only-research-scope
+  baseline_commit: f30f43512acfa497afd9f27dcce7cf4a0ebeb101
+  baseline_tree: 1c6b29bdcb9b823e7e063d5050587df45cd2f126
+  packet_catalog: config/p15c_execution_packet_freeze_v1.yaml
+  acceptance_record: docs/reports/p15c_execution_packet_freeze.md
+  status: accepted_pre_entry_freeze_no_execution_authority
+  frozen_at: 2026-08-03 UTC+09:00
+  canonical_refreeze:
+    authorization_packet: P15C-PACKET-CANONICAL-REFREEZE-v1
+    task_manifest: examples/task_manifests/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15c_packet_canonical_refreeze_v1.yaml
+    acceptance_record: docs/reports/p15c_packet_canonical_refreeze_acceptance.md
+    status: accepted_on_guarded_squash_merge
+    previous_baseline_commit: 81be20f8cdf2d588993347fa11ca090dc9f17135
+    previous_baseline_tree: 23addb451399ae89cc99e2c740115596f5e763c0
+    current_baseline_commit: 1ede788b8b1c36bcc224cde15a5f6462c9b51938
+    current_baseline_tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
+    compatibility_basis: intervening_target_identity_governance_only_change
+    packet_semantics_excluding_tool_system_baseline_sha256: 03f99a7e43ce7f3a381d59231c8a9d31ec1a9324922639126fa2268ff6d42626
+    provider_model_economics_corpus_and_limit_semantics_changed: false
+    official_provider_document_reads: 0
+    provider_invocations: 0
+    credential_value_accesses: 0
+    target_repository_accesses: 0
+    benchmark_executions: 0
+    p15c_authorized: false
+    p15c_stage_accepted: false
+  deepseek_packet_evidence_correction:
+    authorization_packet: P15C-DEEPSEEK-PACKET-EVIDENCE-CORRECTION-v1
+    task_manifest: examples/task_manifests/tool_system_p15c_deepseek_packet_evidence_correction_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15c_deepseek_packet_evidence_correction_v1.yaml
+    acceptance_record: docs/reports/p15c_deepseek_packet_evidence_correction.md
+    status: accepted_on_guarded_squash_merge
+    baseline_commit: f30f43512acfa497afd9f27dcce7cf4a0ebeb101
+    baseline_tree: 1c6b29bdcb9b823e7e063d5050587df45cd2f126
+    corrected_fields:
+      exact_model_version:
+        previous: DeepSeek-V4-Flash-0731
+        current: DeepSeek-V4-Flash
+      execution_surface_id:
+        previous: deepseek-responses-api
+        current: deepseek-openai-compatible-chat
+      operation:
+        previous: responses.create
+        current: chat.completions.create
+    provider_model_id_changed: false
+    economics_limits_corpus_or_private_boundaries_changed: false
+    packet_semantics_excluding_tool_system_baseline_sha256: 27dc75dc1644518aee2717a1a0150a86c55be38d09a2d8c753c0a8bdf1bfc483
+    execution_authority_added: false
+    provider_invocations: 0
+    credential_value_accesses: 0
+    target_repository_accesses: 0
+    benchmark_executions: 0
+  deepseek_exact_version_block:
+    task_identity: P15C-DEEPSEEK-EXACT-VERSION-BLOCK-v1
+    authorization_source: chat_user_message:2026-08-05-option-1-preserve-exact-version-invariant
+    task_manifest: examples/task_manifests/tool_system_p15c_deepseek_exact_version_block_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15c_deepseek_exact_version_block_v1.yaml
+    acceptance_record: docs/reports/p15c_deepseek_exact_version_block.md
+    status: accepted_only_on_guarded_squash_merge_no_execution
+    baseline_commit: 7e371b8e5f14c64cbe3ff06f6c3476fc166e01b1
+    baseline_tree: 802e32725c371907ff367ff7fd31ddcd3d502887
+    official_catalog_model_version: DeepSeek-V4-Flash-0731
+    request_api_model_id: deepseek-v4-flash
+    exact_version_request_binding_evidenced: false
+    execution_blocker: PROVIDER_EXACT_VERSION_UNPINNABLE
+    packet_semantics_excluding_tool_system_baseline_sha256: 9d856fe6821f340b4ae372572f42bf4da4c45c318f7cbd0ba1c6a42b8aaa3d4b
+    ai_worker_runtime_module_version: 1.8.1
+    aggregate_interface_version_changed: false
+    provider_model_id_changed: false
+    provider_route_changed: false
+    economics_limits_corpus_or_private_boundaries_changed: false
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    private_target_packet_reads: 0
+    private_target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    target_repository_accesses: 0
+    benchmark_executions: 0
+    p15c_stage_accepted: false
+    p15d_authorized: false
+  provider_packets:
+    deepseek:
+      packet_id: P15C-DEEPSEEK-V4-FLASH-READONLY-v1
+      model_id: deepseek-v4-flash
+      exact_model_version: DeepSeek-V4-Flash-0731
+      execution_surface_id: deepseek-openai-compatible-chat
+      operation: chat.completions.create
+      qualification_state: QUARANTINED
+      packet_status: BLOCKED_EXACT_VERSION_UNPINNABLE
+      execution_blocker: EXACT_MODEL_VERSION_UNPINNABLE
+    openai:
+      packet_id: P15C-OPENAI-GPT-5.6-LUNA-READONLY-v1
+      model_id: gpt-5.6-luna
+      exact_model_version: gpt-5.6-luna
+      qualification_state: QUARANTINED
+      packet_status: FROZEN_NOT_ACTIVATED
+    qwen:
+      packet_id: P15C-QWEN-3.7-PLUS-READONLY-v1
+      model_id: qwen3.7-plus-2026-05-26
+      exact_model_version: qwen3.7-plus-2026-05-26
+      qualification_state: QUARANTINED
+      packet_status: BLOCKED_NOT_FUNDED
+  provider_packets_enabled_for_live_execution: 0
+  public_authorization_ceiling_micro_usd: 20000000
+  private_execution_policy_reference: private-control:p15c-execution-policy
+  private_credential_store_reference: private-control:credentials
+  private_target_packet_reference: private-control:p15c-target-packet
+  private_usage_ledger_reference: private-state:p15c-usage-ledger
+  secret_policy_target_and_usage_state_separated: true
+  deterministic_corpus:
+    file_count: 12
+    aggregate_sha256: 8b527c193fee4970516a5d7794c13db0a3b6b25770ef3d85c6b4d5ccc4234953
+    benchmark_results_created: 0
+  private_target_candidate_contract:
+    binding_mode: operator_private_runtime_input
+    downstream_identity_serialized: false
+    exact_commit_serialized: false
+    exact_file_allowlist_serialized: false
+    content_digest_serialized: false
+    prepared_target_attestation: present_outside_repository
+    exact_snapshot_required_before_execution: true
+    benchmark_read_authorized: false
+    provider_transfer_authorized: false
+    mutation_authorized: false
+  official_public_document_reads: bounded_to_named_sources
+  credential_resolver_invocations: 0
+  credential_value_accesses: 0
+  provider_invocations: 0
+  benchmark_executions: 0
+  private_repository_provider_transfers: 0
+  target_mutations: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+  blueprint_changes: 0
+  runtime_source_changes: 0
+  p15c_authorized: false
+  p15c_stage_accepted: false
+p15c_runtime_control_plane:
+  authorization_packet: P15C-CROSS-PROVIDER-READ-ONLY-BENCHMARK-LIFECYCLE-v1
+  authorization_source: chat_user_message:2026-08-03-p15c-cross-provider-read-only-benchmark-lifecycle-v1
+  requested_baseline_commit: f30f43512acfa497afd9f27dcce7cf4a0ebeb101
+  canonical_source_baseline_commit: 1019b719547fe0b38341821e968dcae57a1f3697
+  canonical_source_baseline_tree: 8f74c31d2033feff357c4a306e23f6f7f8d44c13
+  prerequisite_correction_record: docs/reports/p15c_deepseek_packet_evidence_correction.md
+  task_manifest: examples/task_manifests/tool_system_p15c_runtime_control_plane_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15c_runtime_control_plane_v1.yaml
+  implementation_record: docs/reports/p15c_runtime_control_plane_implementation.md
+  implementation_status: blocked_deepseek_exact_version_unpinnable_no_execution
+  module:
+    current_module_id: ai_worker_runtime
+    canonical_module_id: ai-worker-runtime
+    module_version: 1.8.1
+    aggregate_interface_id: ai-worker-runtime-api
+    aggregate_interface_version: 1.0.0
+    natural_owner_paths_added:
+      - src/tool_system/ai_worker/p15c_benchmark.py
+      - src/tool_system/ai_worker/p15c_controls.py
+      - src/tool_system/ai_worker/p15c_entry.py
+  packet_catalog: config/p15c_execution_packet_freeze_v1.yaml
+  configured_provider_ids:
+    - deepseek
+    - openai
+  execution_eligible_provider_ids:
+    - openai
+  exact_matrix_execution_eligible: false
+  execution_blocker: PROVIDER_EXACT_VERSION_UNPINNABLE
+  qwen_enabled: false
+  case_ids:
+    - deterministic-corpus
+    - private-target
+  max_provider_invocations: 4
+  max_retries: 0
+  operator_private_configured_budget_example_micro_usd: 20000000
+  runtime_literal_budget_ceiling_present: false
+  private_control_references:
+    settings:
+      reference: private-control:p15c-execution-policy
+      default_path: ~/.config/tool-system/settings.toml
+    credentials:
+      reference: private-control:credentials
+      default_path: ~/.config/tool-system/credentials.toml
+    target_packet:
+      reference: private-control:p15c-target-packet
+      default_path: ~/.config/tool-system/p15c-target-packet.json
+    usage_ledger:
+      reference: private-state:p15c-usage-ledger
+      default_path: ~/.local/state/tool-system/p15c-usage.sqlite3
+  private_repository_transfer_authorized_by_user:
+    deepseek: true
+    openai: true
+    qwen: false
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_repository_provider_transfers: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  public_receipt_private_target_identity_recorded: false
+  public_receipt_private_target_paths_recorded: false
+  raw_provider_outputs_recorded: false
+  blueprint_changes: 0
+  adaptive_portfolio_source_changes: 0
+  live_execution_pending: false
+  live_execution_blocked: true
+  p15c_stage_accepted: false
+  p15d_authorized: false
+  authority_effect: none
+p15c_qwen_runtime_adapter:
+  authorization_source: chat_user_message:2026-08-05-approved-openai-qwen-exact-matrix-recommendation
+  canonical_source_baseline_commit: c4f7527a8a9f859c1f3ed64bfcc93393331dfc14
+  canonical_source_baseline_tree: 6104fa710311cda019741d3c0d103a30af51fb9e
+  task_manifest: examples/task_manifests/tool_system_p15c_qwen_runtime_adapter_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15c_qwen_runtime_adapter_v1.yaml
+  implementation_record: docs/reports/p15c_qwen_runtime_adapter.md
+  implementation_status: accepted_only_on_guarded_squash_merge_no_execution
+  module:
+    current_module_id: ai_worker_runtime
+    canonical_module_id: ai-worker-runtime
+    module_version: 1.9.0
+    aggregate_interface_id: ai-worker-runtime-api
+    aggregate_interface_version: 1.0.0
+  exact_qwen_adapter:
+    provider_id: qwen
+    model_id: qwen3.7-plus-2026-05-26
+    exact_model_version: qwen3.7-plus-2026-05-26
+    host: dashscope.aliyuncs.com
+    path: /compatible-mode/v1/chat/completions
+    billing_currency: CNY
+    per_attempt_hard_cap_micro_cny: 250000
+    requested_output_tokens: 2048
+    thinking_enabled: false
+    streaming_enabled: false
+    tools_enabled: false
+    provider_web_search_enabled: false
+  currency_accounting:
+    ledger_currency: microUSD
+    operator_private_field: cny_to_micro_usd_ceiling
+    minimum_micro_usd_per_cny: 1000000
+    maximum_micro_usd_per_cny: 20000000
+    integer_ceiling_arithmetic: true
+    network_exchange_rate_lookup: false
+  public_budget_ceiling_micro_usd: 20000000
+  canonical_packet_catalog_sha256: 509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962
+  canonical_packet_catalog_changed: false
+  canonical_provider_ids:
+    - deepseek
+    - openai
+  synthetic_qwen_matrix_provider_ids:
+    - openai
+    - qwen
+  synthetic_matrix_only: true
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    target_packet_reads: 0
+    target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_repository_provider_transfers: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  qwen_funding_attested: false
+  canonical_matrix_changed: false
+  p15c_stage_accepted: false
+  p15d_authorized: false
+  authority_effect: none
+p15c_qwen_economics_consistency_correction:
+  task_identity: P15C-QWEN-ECONOMICS-CONSISTENCY-CORRECTION-v1
+  authorization_source: standing_small_milestone_authorization_and_chat_user_message:2026-08-05-agreed-two-stage-openai-qwen-plan
+  canonical_source_baseline_commit: 20686afbef73d5985f4aac0d542eabe7f3fdadff
+  canonical_source_baseline_tree: 0eca08ed3e32850d93b39dfdb151ca86962e59fa
+  task_manifest: examples/task_manifests/tool_system_p15c_qwen_economics_consistency_correction_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15c_qwen_economics_consistency_correction_v1.yaml
+  correction_record: docs/reports/p15c_qwen_economics_consistency_correction.md
+  status: accepted_only_on_guarded_squash_merge_no_execution
+  module:
+    current_module_id: ai_worker_runtime
+    canonical_module_id: ai-worker-runtime
+    previous_module_version: 1.9.0
+    module_version: 1.9.1
+    aggregate_interface_id: ai-worker-runtime-api
+    aggregate_interface_version: 1.0.0
+  corrected_invariant:
+    provider_id: qwen
+    exact_model_version: qwen3.7-plus-2026-05-26
+    max_input_tokens: 65536
+    input_micro_cny_per_token: 2
+    max_output_tokens: 8192
+    output_micro_cny_per_token: 8
+    previous_calculated_worst_case_micro_cny: 192000
+    current_calculated_worst_case_micro_cny: 196608
+    per_attempt_hard_cap_micro_cny: 250000
+    applies_to_selected_execution_packet: true
+    stale_selected_packet_failure_code: PACKET_PRICE_DRIFT
+  canonical_packet_catalog_sha256: 509270b737aab11776397a5d5db9c0a6f8a89165a07f37002a669cb2cbf3a962
+  canonical_packet_catalog_changed: false
+  qwen_selected_in_canonical_matrix: false
+  qwen_funding_attested: false
+  local_validation:
+    focused_pytest: 122_passed
+    full_pytest: 687_passed
+    python_compilation: passed
+    ruff_0_16_0: passed
+    governance_validators: passed
+    packet_only_zero_io: passed
+    default_preflight_before_private_input: PROVIDER_EXACT_VERSION_UNPINNABLE
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    target_packet_reads: 0
+    target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_repository_provider_transfers: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  p15c_stage_accepted: false
+  p15d_authorized: false
+  authority_effect: none
+p15c_local_operator_configuration:
+  authorization_source: chat_user_message:2026-08-04-agreed-local-operator-configuration
+  canonical_source_baseline_commit: 432ab42b56e45a4fc469301cef17b7c35324e0f8
+  task_manifest: examples/task_manifests/tool_system_p15c_local_operator_config_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15c_local_operator_config_v1.yaml
+  implementation_record: docs/reports/p15c_local_operator_configuration.md
+  implementation_status: source_implemented_fake_io_only_pending_publication
+  superseded_hosted_live_bridge:
+    pull_request: 175
+    state: closed_unmerged
+    branch: agent/p15c-hosted-benchmark-bridge-v1
+    branch_retained: true
+  public_repository_boundary:
+    disabled_settings_example: examples/operator_config/tool_system_settings.example.toml
+    empty_credentials_example: examples/operator_config/tool_system_credentials.example.toml
+    credential_values_present: false
+    target_identity_present: false
+  per_installation_private_defaults:
+    settings: ~/.config/tool-system/settings.toml
+    credentials: ~/.config/tool-system/credentials.toml
+    target_packet: ~/.config/tool-system/p15c-target-packet.json
+    usage_ledger: ~/.local/state/tool-system/p15c-usage.sqlite3
+    settings_and_credentials_separate: true
+    owner_only_non_symlink_required: true
+  hosted_ci:
+    synthetic_inputs_only: true
+    injected_fake_transport_only: true
+    real_provider_secrets_consumed: false
+    private_target_bundle_consumed: false
+    live_execute_command_present: false
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_repository_provider_transfers: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  p15c_stage_accepted: false
+  p15d_authorized: false
+  authority_effect: none
+target_identity_decoupling:
+  authorization_source: chat_user_message:recommended_project_neutral_decoupling
+  baseline_commit: 5e964adfd40502a3798630b98fb0d876bbd01d91
+  baseline_tree: 440a95606e964ce3477eab6e3e427b51df64c54a
+  task_manifest: examples/task_manifests/tool_system_target_identity_decoupling_v1.yaml
+  change_plan: examples/change_plans/tool_system_target_identity_decoupling_v1.yaml
+  acceptance_record: docs/reports/target_identity_decoupling_acceptance.md
+  implementation_status: accepted_merged_terminal_evidence_verified
+  authority_effect: none
+  public_core_contract:
+    downstream_repository_identity_serialized: false
+    target_identity_binding_mode: caller_supplied
+    target_policy_binding_mode: caller_supplied
+    unknown_target_disposition: block
+    synthetic_fixture_only: true
+  retained_historical_evidence_modified: false
+  local_validation:
+    exact_31_path_closure: passed
+    focused_pytest: 107_passed
+    full_pytest: 639_passed
+    changed_file_ruff: passed
+    governance_validators: passed
+    formal_path_count: 245
+    unclassified_path_count: 0
+  draft_pull_request:
+    repository: apolo183/tool-system
+    number: 171
+    url: https://github.com/apolo183/tool-system/pull/171
+    final_head_commit: 2dbd0c6735b4a0f081d1a064458750d73d870cfe
+    final_head_tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
+    changed_path_count: 31
+  hosted_ci_status: passed_on_final_head
+  initial_hosted_ci:
+    workflow: tool-system-ci
+    run_id: 30811492314
+    run_number: 1066
+    conclusion: success
+  hosted_ci:
+    workflow: tool-system-ci
+    run_id: 30811800450
+    run_number: 1067
+    conclusion: success
+    tests: passed
+    active_gates: passed
+    process_authority: passed
+    current_module_registry: passed
+    repository_manifest: passed
+  terminal_lifecycle:
+    no_drift_ready_check: passed
+    squash_merge_commit: 1ede788b8b1c36bcc224cde15a5f6462c9b51938
+    canonical_main_tree: 7abd3b555d5c05f8bdf719c18619459ae9e06645
+    retained_branch: agent/target-identity-decoupling-v1
+    retained_branch_head: 2dbd0c6735b4a0f081d1a064458750d73d870cfe
+    retained_branch_verified: true
+  downstream_repository_accesses: 0
+  target_mutations: 0
+  provider_invocations: 0
+  credential_value_accesses: 0
+  benchmark_executions: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+  p15c_authorized: false
+p15c_openai_qwen_matrix_refreeze:
+  task_identity: P15C-OPENAI-QWEN-MATRIX-REFREEZE-v1
+  authorization_source: chat_user_message:2026-08-05-agreed-two-stage-openai-qwen-plan
+  canonical_source_baseline_commit: 0908a1d2ed8e88554fa4bd1e73bb7c4c4a88807b
+  canonical_source_baseline_tree: c053dd93999c5ef2f9112a7638b5fd2c00acb676
+  task_manifest: examples/task_manifests/tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15c_openai_qwen_matrix_refreeze_v1.yaml
+  acceptance_record: docs/reports/p15c_openai_qwen_matrix_refreeze.md
+  status: accepted_only_on_guarded_squash_merge_blocked_not_funded_no_execution
+  module:
+    current_module_id: adaptive_model_portfolio_and_economics
+    canonical_module_id: adaptive-model-portfolio-and-economics
+    previous_module_version: 1.0.0
+    module_version: 1.1.0
+    aggregate_interface_id: adaptive-model-portfolio-and-economics-api
+    aggregate_interface_version: 1.0.0
+  execution_matrix:
+    provider_ids:
+      - openai
+      - qwen
+    case_ids:
+      - deterministic-corpus
+      - private-target
+    max_provider_invocations: 4
+  provider_dispositions:
+    deepseek:
+      packet_status: BLOCKED_EXACT_VERSION_UNPINNABLE
+      selected: false
+      bypass_allowed: false
+    openai:
+      exact_model_version: gpt-5.6-luna
+      packet_status: FROZEN_NOT_ACTIVATED
+      selected: true
+    qwen:
+      exact_model_version: qwen3.7-plus-2026-05-26
+      packet_status: BLOCKED_NOT_FUNDED
+      selected: true
+      funding_attested: false
+      official_max_output_tokens: 131072
+      calculated_worst_case_micro_cny: 196608
+      per_attempt_hard_cap_micro_cny: 250000
+      shared_usd_budget_allocation_micro_usd: 0
+  provider_transfer_authorization_record:
+    deepseek: false
+    openai: true
+    qwen: true
+    grants_runtime_transfer: false
+    private_policy_and_target_packet_match_required: true
+  local_validation:
+    focused_pytest: 152_passed
+    full_pytest: 689_passed
+    python_compilation: passed
+    ruff_0_16_0: passed
+    governance_validators: passed
+    exact_twelve_path_and_forbidden_diff: passed
+    secret_and_project_neutrality_scans: passed
+    packet_only_zero_io: passed
+    default_preflight_before_private_input: PROVIDER_PACKET_BLOCKED
+  source_stage_evidence:
+    runtime_source_changes: 0
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    target_packet_reads: 0
+    target_snapshot_reads: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_repository_provider_transfers: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  qwen_funding_attested: false
+  p15c_stage_accepted: false
+  p15d_authorized: false
+  authority_effect: none
+p15d_prerequisite_corpus_freeze:
+  task_identity: P15D-PREREQUISITE-CORPUS-FREEZE-v1
+  authorization_source: chat_user_message:2026-08-05-defer-funding-and-continue-offline-development
+  canonical_source_baseline_commit: 4ce30b432fedd80f7e4ff40c182cdace4e51244a
+  canonical_source_baseline_tree: 1a8ceff8a365df183db433398a03f51ae2b48cc1
+  task_manifest: examples/task_manifests/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15d_prerequisite_corpus_freeze_v1.yaml
+  prerequisite_packet: config/p15d_failure_economics_corpus_prerequisite_v1.yaml
+  record: docs/reports/p15d_failure_economics_corpus_prerequisite_freeze.md
+  status: accepted_only_on_guarded_squash_merge_non_executing_preentry_freeze
+  module:
+    current_module_id: adaptive_model_portfolio_and_economics
+    canonical_module_id: adaptive-model-portfolio-and-economics
+    previous_module_version: 1.1.0
+    module_version: 1.2.0
+    aggregate_interface_id: adaptive-model-portfolio-and-economics-api
+    aggregate_interface_version: 1.0.0
+  frozen_case_ids:
+    - availability-failover
+    - quality-repair-then-escalation
+    - policy-block-no-provider-bypass
+    - cancellation-before-dispatch-and-before-application
+    - repeated-or-two-cycle-no-progress-stop
+    - affected-module-isolation
+    - rollback-plan-remains-non-executing
+    - hard-floors-before-total-economics
+  source_evidence_role: accepted_historical_fixture_and_current_non_accepting_p15c_sources_only
+  missing_required_p15c_inputs:
+    - accepted_cross_provider_read_only_benchmark_record
+    - exact_redacted_openai_qwen_benchmark_evidence
+    - accepted_real_repository_read_only_benchmark_evidence
+  local_validation:
+    focused_pytest: 119_passed
+    full_pytest: 693_passed
+    python_compilation: passed
+    ruff_0_16_0: passed
+    governance_validators: passed
+    exact_twelve_path_and_forbidden_diff: passed
+    secret_and_project_neutrality_scans: passed
+  source_stage_evidence:
+    runtime_source_changes: 0
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    provider_invocations: 0
+    network_operations: 0
+    private_target_reads: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    benchmark_executions: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  funding_or_live_execution_required_for_this_freeze: false
+  p15c_stage_accepted: false
+  p15d_stage_entered: false
+  p15d_stage_accepted: false
+  p15e_authorized: false
+  authority_effect: none
+p15d_prerequisite_failure_control_fixture:
+  task_identity: P15D-PREREQUISITE-FAILURE-CONTROL-FIXTURE-v1
+  authorization_source: chat_user_message:2026-08-05-defer-funding-and-continue-offline-development
+  canonical_source_baseline_commit: ca04839ec96009fe6a4205b8a0d99794c7531cce
+  canonical_source_baseline_tree: da1ce6dd7885a96a0bc1dc3a405a351debef0366
+  task_manifest: examples/task_manifests/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15d_prerequisite_failure_control_fixture_v1.yaml
+  frozen_prerequisite_packet: config/p15d_failure_economics_corpus_prerequisite_v1.yaml
+  record: docs/reports/p15d_prerequisite_failure_control_fixture_implementation.md
+  status: accepted_only_on_guarded_squash_merge_non_executing_prerequisite_fixture
+  module:
+    current_module_id: adaptive_model_portfolio_and_economics
+    canonical_module_id: adaptive-model-portfolio-and-economics
+    previous_module_version: 1.2.0
+    module_version: 1.3.0
+    aggregate_interface_id: adaptive-model-portfolio-and-economics-api
+    aggregate_interface_version: 1.0.0
+    implementation_source_paths:
+      - src/tool_system/provider_portfolio/__init__.py
+      - src/tool_system/provider_portfolio/failure_control.py
+  implementation:
+    execution_mode: pure_in_memory_non_executing_fixture
+    failure_actions:
+      - AVAILABILITY_FAILOVER
+      - SAME_ROUTE_REPAIR
+      - QUALITY_ESCALATION
+      - BLOCK_NO_PROVIDER_BYPASS
+      - STOP
+    recurrence_fingerprint_fields:
+      - task_digest_sha256
+      - candidate_tree_sha256
+      - acceptance_digest_sha256
+      - blocker_ids
+      - validation_results
+    repeated_fingerprint_stop: STOPPED_NO_PROGRESS_REPEATED_FINGERPRINT
+    two_cycle_stop: STOPPED_NO_PROGRESS_TWO_CYCLES
+    isolation_adds_machine_lifecycle_status: false
+    rollback_or_cleanup_execution_authorized: false
+    economics_currency: microUSD
+    economics_arithmetic: non_negative_integers_only
+    frozen_synthetic_total_micro_usd: 17000
+    hard_floors_evaluated_before_economics: true
+    frozen_prerequisite_packet_modified: false
+  local_validation:
+    focused_pytest: 149_passed
+    full_pytest: 700_passed
+    python_compilation: passed
+    ruff_0_16_0: passed
+    governance_validators: passed
+    exact_thirteen_path_and_forbidden_diff: passed
+    secret_and_project_neutrality_scans: passed
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    provider_invocations: 0
+    network_operations: 0
+    private_target_reads: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    benchmark_executions: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  funding_or_live_execution_required_for_this_fixture: false
+  p15c_stage_accepted: false
+  p15d_stage_entered: false
+  p15d_stage_accepted: false
+  p15e_authorized: false
+  authority_effect: none
+durable_orchestrator_sqlite_sidecar_race_correction:
+  task_identity: DURABLE-ORCHESTRATOR-SQLITE-SIDECAR-RACE-CORRECTION-v1
+  authorization_source: chat_user_message:2026-08-05-defer-funding-and-continue-offline-development
+  canonical_source_baseline_commit: 783a1bf16c48e717da281d9fefc134e68bf879c4
+  canonical_source_baseline_tree: 5d3651587e973b8ac226298bf7c1b65f51838059
+  task_manifest: examples/task_manifests/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml
+  change_plan: examples/change_plans/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml
+  record: docs/reports/durable_orchestrator_sqlite_sidecar_race_correction.md
+  status: accepted_only_on_guarded_squash_merge_reliability_correction
+  module:
+    current_module_id: durable_orchestrator
+    canonical_module_id: durable-orchestrator
+    previous_module_version: 1.1.0
+    module_version: 1.2.0
+    aggregate_interface_id: durable-orchestrator-api
+    aggregate_interface_version: 1.1.0
+    sqlite_schema_version: 3
+    implementation_source_path: src/tool_system/orchestrator/durable.py
+  correction:
+    optional_sidecars:
+      - -wal
+      - -shm
+      - -journal
+    missing_before_atomic_lstat_is_valid_absence: true
+    observed_regular_zero_link_metadata_is_valid_absence: true
+    observed_symlink_blocked: true
+    observed_nonregular_blocked: true
+    observed_multilink_blocked: true
+    database_file_exactly_one_link_required: true
+    database_identity_binding_preserved: true
+    public_interface_modified: false
+    sqlite_schema_modified: false
+  local_validation:
+    deterministic_reproduction_before_fix: passed
+    durable_reliability_pytest: 16_passed
+    independent_process_stress_iterations: 25_passed
+    focused_pytest: 226_passed
+    full_pytest: 703_passed
+    python_compilation: passed
+    ruff_0_16_0: passed_no_new_diagnostics_against_baseline
+    governance_validators: passed
+    exact_twelve_path_and_forbidden_diff: passed
+    secret_and_project_neutrality_scans: passed
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    provider_invocations: 0
+    network_operations: 0
+    private_target_reads: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    benchmark_executions: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  funding_or_live_execution_required_for_this_correction: false
+  p15c_stage_accepted: false
+  p15d_stage_entered: false
+  p15d_stage_accepted: false
+  p15e_authorized: false
+  authority_effect: none
+provider_mode_and_acceptance_realignment_lifecycle:
+  task_identity: PROVIDER-MODE-AND-ACCEPTANCE-REALIGNMENT-LIFECYCLE-v1
+  authorization_source: chat_user_message:2026-08-06-provider-mode-and-acceptance-realignment-lifecycle-v1
+  canonical_source_baseline_commit: c4120a8275f6eb8bc8aaa660282b8875b013f1f6
+  canonical_source_baseline_tree: b6268cb92b54d46d5166466a87bf6def01fb2c62
+  dependency_order:
+    - target_policy
+    - ai_worker_runtime
+    - adaptive_provider_portfolio
+    - readonly_p15_acceptance_mapping
+  target_policy_package:
+    task_identity: PROVIDER-MODE-AND-ACCEPTANCE-POLICY-REALIGNMENT-v1
+    task_manifest: examples/task_manifests/tool_system_provider_mode_and_acceptance_policy_realignment_v1.yaml
+    change_plan: examples/change_plans/tool_system_provider_mode_and_acceptance_policy_realignment_v1.yaml
+    record: docs/reports/provider_mode_and_acceptance_policy_realignment.md
+    status: accepted_only_on_guarded_squash_merge_policy_realignment_no_execution
+    local_validation:
+      focused_pytest: 72_passed
+      full_pytest: 704_passed
+      python_compilation: passed
+      ruff_0_16_0: passed
+      governance_validators: passed
+      exact_13_path_closure: passed
+  ai_worker_runtime_package:
+    task_identity: PROVIDER-MODE-AI-WORKER-RUNTIME-REALIGNMENT-v1
+    task_manifest: examples/task_manifests/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
+    change_plan: examples/change_plans/tool_system_provider_mode_ai_worker_runtime_realignment_v1.yaml
+    record: docs/reports/provider_mode_ai_worker_runtime_realignment.md
+    baseline_commit: 149296ff5e87e6b18a4982a9046012fd3edeb1b0
+    baseline_tree: be5489b2b6bd8a55d07684287dc364793a3da41d
+    status: accepted_only_on_guarded_squash_merge_runtime_realignment_no_execution
+    module:
+      current_module_id: ai_worker_runtime
+      canonical_module_id: ai-worker-runtime
+      previous_module_version: 1.9.1
+      module_version: 2.0.0
+      aggregate_interface_id: ai-worker-runtime-api
+      aggregate_interface_version: 1.0.0
+    active_policy_schema: 3
+    active_route_mode: repository_external_priority_and_model_single_success
+    active_case_ids:
+      - deterministic-corpus
+    private_target_loaded_by_active_route: false
+    all_provider_adapters_fake_io_covered: true
+    legacy_schema_1_and_2_matrix_compatibility_retained: true
+    static_funding_or_exact_version_label_is_completion_gate: false
+    no_available_provider_code: NO_AVAILABLE_PROVIDER
+    source_stage_evidence:
+      credential_resolver_invocations: 0
+      credential_value_accesses: 0
+      provider_invocations: 0
+      network_operations: 0
+      benchmark_executions: 0
+      private_target_reads: 0
+      target_repository_accesses: 0
+      target_mutations: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+    p15_stage_accepted: false
+    p16_stage_entered: false
+    final_live_smoke_executed: false
+    authority_effect: none
+    publication_continuity:
+      draft_pr: 185
+      initial_observed_head: 598e75f79f9e52f2c7e4d9f50380b8badecf9cff
+      initial_observed_commit_count: 10
+      initial_observed_changed_path_count: 8
+      pre_publication_parent_head: a1104beea34aabfcbd712802204f60e0daa3f1aa
+      pre_publication_commit_count: 16
+      pre_publication_changed_path_count: 9
+      final_candidate_path_count: 21
+      update_mode: non_force_fast_forward_consolidation
+      force_update_used: false
+      duplicate_pr_created: false
+      branch_or_pr_deleted: false
+    local_validation:
+      focused_pytest: 223_passed
+      full_pytest: 719_passed
+      python_compilation: passed
+      ruff_0_16_0: passed
+      governance_validators: passed
+      exact_21_path_closure: passed
+      secret_project_identity_and_forbidden_diff_scans: passed
+  adaptive_provider_portfolio_package:
+    task_identity: PROVIDER-MODE-ADAPTIVE-PROVIDER-PORTFOLIO-REALIGNMENT-v1
+    task_manifest: examples/task_manifests/tool_system_provider_mode_adaptive_provider_portfolio_realignment_v1.yaml
+    change_plan: examples/change_plans/tool_system_provider_mode_adaptive_provider_portfolio_realignment_v1.yaml
+    record: docs/reports/provider_mode_adaptive_provider_portfolio_realignment.md
+    baseline_commit: 529001694c6d41ee819736293418cebfe455c392
+    baseline_tree: 58fc95fae23d594b9a89ec2c5432eea6343f55a6
+    status: accepted_only_on_guarded_squash_merge_portfolio_realignment_no_execution
+    module:
+      current_module_id: adaptive_model_portfolio_and_economics
+      canonical_module_id: adaptive-model-portfolio-and-economics
+      previous_module_version: 1.3.0
+      module_version: 2.0.0
+      aggregate_interface_id: adaptive-model-portfolio-and-economics-api
+      aggregate_interface_version: 1.0.0
+    active_route_mode: repository_external_priority_requested_model_single_route
+    all_large_model_apis_default_disabled: true
+    key_presence_grants_call_authority: false
+    availability_only_provider_skips: true
+    hard_control_provider_bypass_allowed: false
+    fake_io_contract_evidence_required: true
+    exact_matrix_is_compatibility_only: true
+    simultaneous_multi_provider_availability_required: false
+    named_provider_funding_required: false
+    moving_alias_exact_version_required: false
+    no_available_provider_code: NO_AVAILABLE_PROVIDER
+    legacy_exact_catalog_and_p15d_corpus_preserved: true
+    source_stage_evidence:
+      credential_resolver_invocations: 0
+      credential_value_accesses: 0
+      provider_invocations: 0
+      network_operations: 0
+      benchmark_executions: 0
+      private_target_reads: 0
+      target_repository_accesses: 0
+      target_mutations: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+    p15_stage_accepted: false
+    p16_stage_entered: false
+    final_live_smoke_executed: false
+    authority_effect: none
+    local_validation:
+      focused_pytest: 167_passed
+      full_pytest: 745_passed
+      python_compilation: passed
+      ruff_0_16_0: passed
+      governance_validators: passed
+      exact_15_path_closure: passed
+      secret_project_identity_and_forbidden_diff_scans: passed
+  readonly_p15_acceptance_mapping:
+    status: final_single_provider_live_smoke_authorized_pending_private_operator_execution
+    completed_dependencies:
+      - target_policy
+      - ai_worker_runtime
+      - adaptive_provider_portfolio
+      - representative_multi_project_evidence
+      - cross_project_isolation_and_generalization
+      - quality_time_economics_recovery_policy_metrics
+      - failure_and_rollback_plan_corpus
+      - deterministic_routing_and_hard_gate_evidence
+      - readonly_remaining_item_mapping
+    remaining_dependencies:
+      - authorized_single_provider_live_smoke_pending_private_operator_execution
+      - explicit_p15_acceptance_decision_after_smoke
+    false_completion_gates:
+      simultaneous_multi_provider_availability: false
+      qwen_funding: false
+      moving_alias_exact_version: false
+  formal_rules:
+    daily_development_route: chatgpt_codex_subscription
+    all_large_model_apis_default_disabled: true
+    provider_ids_explicitly_included:
+      - openai
+      - deepseek
+      - qwen
+      - future_providers
+    api_key_presence_grants_call_authority: false
+    provider_and_model_selection_source: repository_external_operator_configuration
+    unavailable_unfunded_invalid_expired_or_unconfigured_provider_may_skip: true
+    provider_specific_fake_io_contract_required: true
+    final_backup_path_live_proof: one_explicitly_enabled_usable_key_on_then_canonical_main
+    simultaneous_multi_provider_availability_required: false
+    qwen_funding_required: false
+    moving_alias_exact_version_required: false
+  preserved_controls:
+    - api_default_disabled
+    - credentials_external
+    - budgets_and_expiry
+    - authorization_and_data_transfer
+    - retry_and_cancellation
+    - redacted_audit
+    - hosted_ci_fake_io_only
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    provider_invocations: 0
+    network_operations: 0
+    benchmark_executions: 0
+    private_target_reads: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  p15_stage_accepted: false
+  p16_stage_entered: false
+  final_live_smoke_executed: false
+  authority_effect: none
+authorization_boundaries:
+  state_file_grants_authority: false
+  live_model_provider_execution_authorized: true
+  credential_value_access_authorized: true
+  downstream_repository_access_authorized: true
+  remote_target_mutation_authorized: false
+  production_deployment_authorized: false
+  cleanup_execution_authorized: false
+  rollback_execution_authorized: false
+evidence_rule:
+  status_facts_require_current_evidence: true
+  authorization_requires_separate_active_manifest_change_plan_pair: true
+  blueprint_is_not_a_progress_ledger: true
+
+p15_non_live_acceptance_lifecycle:
+  task_identity: P15-NON-LIVE-ACCEPTANCE-LIFECYCLE-v1
+  authorization_source: chat_user_message:2026-08-06-p15-non-live-acceptance-lifecycle-v1
+  canonical_entry_baseline_commit: b0a5591603079ce611f8a99d3fe00b507865201d
+  entry_state_correction:
+    task_manifest: examples/task_manifests/tool_system_p15_non_live_entry_state_correction_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15_non_live_entry_state_correction_v1.yaml
+    record: docs/reports/p15_non_live_entry_state_correction.md
+    merge_commit: 0bf9c98776c79ac9398c2b5c6251c0e7b65ef842
+    status: accepted_state_correction_no_stage_rename
+  representative_multi_project_and_isolation_evidence:
+    task_manifest: examples/task_manifests/tool_system_p15_non_live_multi_project_evidence_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15_non_live_multi_project_evidence_v1.yaml
+    matrix: docs/reports/p15_non_live_multi_project_matrix_v1.yaml
+    record: docs/reports/p15_non_live_multi_project_benchmark.md
+    project_count: 2
+    language_stacks: [python, typescript]
+    task_classes:
+      - greenfield_add
+      - bounded_modify
+      - repair
+      - bounded_delete
+      - topology_validation
+      - policy_block
+      - cancellation_resume
+      - no_progress_stop
+      - crash_resume
+      - conflict_block
+    cross_project_isolation_required: true
+    source_boundary: committed_isolated_fixtures_only
+    merge_commit: 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+    hosted_ci_run: 31057595127
+    hosted_ci_conclusion: success
+    status: accepted_isolated_multi_project_evidence
+  consolidated_non_live_acceptance_evidence:
+    task_manifest: examples/task_manifests/tool_system_p15_non_live_consolidated_evidence_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15_non_live_consolidated_evidence_v1.yaml
+    matrix: docs/reports/p15_non_live_consolidated_evidence_v1.yaml
+    smoke_packet_schema: docs/reports/p15_final_smoke_control_packet_schema_v1.yaml
+    record: docs/reports/p15_non_live_consolidated_acceptance.md
+    all_non_live_p15_evidence_complete_on_guarded_merge: true
+    merge_commit: 579dde4718fb80ae0dc9c16d796e825c62aba189
+    hosted_ci_run: 31057953768
+    hosted_ci_conclusion: success
+    live_smoke_authorized: false
+    live_smoke_executed: false
+    p15_stage_accepted: false
+    p16_stage_entered: false
+    status: accepted_all_non_live_p15_evidence_stopped_before_final_smoke
+  dependency_order:
+    - entry_state_correction
+    - representative_multi_project_and_isolation_evidence
+    - consolidated_non_live_acceptance_evidence
+    - readonly_remaining_item_mapping
+    - separately_authorized_final_single_provider_live_smoke
+  daily_development_route: chatgpt_codex_subscription
+  all_large_model_apis_default_disabled: true
+  provider_model_selection_source: repository_external_operator_configuration
+  credential_value_access_authorized: false
+  live_provider_execution_authorized: false
+  downstream_access_authorized: false
+  production_authorized: false
+  cleanup_authorized: false
+  rollback_execution_authorized: false
+  p15_stage_accepted: false
+  p16_stage_entered: false
+  final_live_smoke_executed: false
+  lifecycle_closeout:
+    task_manifest: examples/task_manifests/tool_system_p15_non_live_lifecycle_closeout_v1.yaml
+    change_plan: examples/change_plans/tool_system_p15_non_live_lifecycle_closeout_v1.yaml
+    record: docs/reports/p15_non_live_lifecycle_closeout.md
+    dependency_merges:
+      - 0bf9c98776c79ac9398c2b5c6251c0e7b65ef842
+      - 32ad304576d5e38405313fbddc0c519dd9bc8b1a
+      - 579dde4718fb80ae0dc9c16d796e825c62aba189
+    dependency_hosted_ci_runs:
+      - 31057074087
+      - 31057595127
+      - 31057953768
+    feature_branches_retained: true
+    merge_commit: 71bc347942e921675cea340ff07274834a1b8f9f
+    hosted_ci_run: 31058240804
+    hosted_ci_conclusion: success
+    status: accepted_non_live_lifecycle_closeout
+  source_stage_evidence:
+    credential_resolver_invocations: 0
+    credential_value_accesses: 0
+    provider_invocations: 0
+    live_provider_network_operations: 0
+    private_target_reads: 0
+    target_repository_accesses: 0
+    target_mutations: 0
+    benchmark_executions: 1
+    benchmark_execution_boundary: hosted_ci_isolated_fixtures_only
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+
+p15_final_single_provider_live_smoke_lifecycle:
+  task_identity: P15-FINAL-SINGLE-PROVIDER-LIVE-SMOKE-LIFECYCLE-v1
+  authorization_source: chat_user_message:2026-08-06-p15-final-single-provider-live-smoke-lifecycle-v1
+  canonical_authorized_baseline_commit: 71bc347942e921675cea340ff07274834a1b8f9f
+  task_manifest: examples/task_manifests/tool_system_p15_final_single_provider_live_smoke_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15_final_single_provider_live_smoke_v1.yaml
+  record: docs/reports/p15_final_single_provider_live_smoke.md
+  smoke_packet_schema: docs/reports/p15_final_smoke_control_packet_schema_v1.yaml
+  publication:
+    branch: agent/p15-final-single-provider-live-smoke-v1
+    draft_pr_required: true
+    hosted_ci_fake_io_only: true
+    retain_feature_branch: true
+  private_runtime_requirements:
+    settings: ~/.config/tool-system/settings.toml
+    credentials: ~/.config/tool-system/credentials.toml
+    usage_ledger: ~/.local/state/tool-system/p15c-usage.sqlite3
+    exactly_one_enabled_provider: true
+    repository_external_provider_model_selection: true
+    recommended_total_budget_micro_usd: 1000000
+    max_provider_invocations: 1
+    max_automatic_retries: 0
+    allowed_case_ids: [deterministic-corpus]
+    private_target_bundle_loaded: false
+  current_execution_disposition: COMPLETED_ONE_ATTEMPT_NO_AVAILABLE_PROVIDER_TRANSPORT_CONNECTION
+  selected_provider_id: openai
+  selected_model_id: gpt-5.6-luna
+  route_mode: single-success
+  route_attempts: 1
+  max_automatic_retries: 0
+  result_status: NO_AVAILABLE_PROVIDER
+  failure_code: TRANSPORT_CONNECTION
+  winning_provider_id: null
+  winning_model_id: null
+  configured_budget_micro_usd: 1000000
+  charged_micro_usd: 25000
+  ledger_charge_status: UNCERTAIN
+  credential_value_requested_from_user: false
+  credential_values_recorded: 0
+  raw_provider_outputs_recorded: 0
+  provider_invocations: 1
+  live_provider_network_operations: 1
+  live_smoke_authorized: true
+  live_smoke_executed: true
+  live_smoke_succeeded: false
+  invocation_allowance_exhausted: true
+  retry_authorized: false
+  private_target_loaded: false
+  p15_final_readonly_mapping:
+    non_live_evidence_complete: true
+    successful_live_smoke_complete: false
+    remaining_item: successful_controlled_single_provider_live_smoke
+    stop_boundary: new_explicit_lifecycle_required_before_any_future_live_attempt
+  p15_stage_accepted: false
+  p16_stage_entered: false
+  downstream_accesses: 0
+  project_benchmark_operations: 0
+  runtime_execution_counter: 1
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+
+p15_single_provider_transport_proxy_correction_lifecycle:
+  task_identity: P15-SINGLE-PROVIDER-TRANSPORT-PROXY-CORRECTION-LIFECYCLE-v1
+  authority_effect: none
+  authorization_source: chat_user_message:2026-08-06-p15-single-provider-transport-proxy-correction-lifecycle-v1
+  canonical_authorized_baseline_commit: efd4d4c306a77fd97b835651e3d5c36796a9778d
+  parent_evidence: docs/reports/p15_final_single_provider_live_smoke.md
+  task_manifest: examples/task_manifests/tool_system_p15_single_provider_transport_proxy_correction_v1.yaml
+  change_plan: examples/change_plans/tool_system_p15_single_provider_transport_proxy_correction_v1.yaml
+  record: docs/reports/p15_single_provider_transport_proxy_correction.md
+  publication:
+    branch: agent/p15-single-provider-transport-proxy-correction-v1
+    draft_pr_required: true
+    hosted_ci_fake_io_only: true
+    retain_feature_branch: true
+  correction:
+    module_id: ai-worker-runtime
+    interface_compatible: true
+    aggregate_interface_version: 1.0.0
+    direct_verified_tls_default: true
+    repository_external_transport_selection: true
+    supported_transport_modes: [direct_tls, http_connect]
+    http_connect_loopback_only: true
+    fixed_provider_host_path_allowlist_preserved: true
+    tls_verification_preserved: true
+    redirect_support: false
+    environment_proxy_activation: false
+    proxy_credentials_supported: false
+    private_proxy_endpoint_recorded: false
+    api_default_enabled: false
+    key_or_proxy_presence_grants_authority: false
+    max_automatic_retries: 0
+  extra_repair:
+    task_identity: P15-SINGLE-PROVIDER-TRANSPORT-PROXY-CORRECTION-EXTRA-REPAIR-v1
+    authorization_source: chat_user_message:2026-08-06-p15-single-provider-transport-proxy-correction-extra-repair-v1
+    exact_rollback_identity_restored: tool-system@149296ff5e87e6b18a4982a9046012fd3edeb1b0:ai_worker_runtime@1.9.1
+    runtime_code_changes: 0
+    provider_invocations: 0
+    hosted_ci_run: 1135
+    hosted_ci_result: pass
+    status: accepted_only_on_guarded_squash_merge_transport_proxy_correction_no_execution
+    publication_receipt:
+      pull_request: 192
+      final_pr_head: 9813e0256b2ff9ab20fa14ca035ec63605491388
+      canonical_squash_commit: de0d6854d66bfe804df5d0e967934dd4e85aabc4
+      hosted_ci_final_run: 1136
+      hosted_ci_final_result: pass
+      no_drift_ready_completed: true
+      squash_merge_completed: true
+      retained_branch: agent/p15-single-provider-transport-proxy-correction-v1
+      retained_branch_restored_after_automatic_deletion: true
+  readonly_preflight_mapping:
+    private_config_required: true
+    canonical_source_revalidation_required: true
+    explicit_single_provider_model_required: true
+    budget_expiry_transfer_cancellation_retry_audit_revalidation_required: true
+    proxy_reachability_diagnostic_requires_separate_authority: true
+    future_provider_call_requires_new_explicit_lifecycle: true
+  live_provider_invocations: 0
+  credential_value_accesses: 0
+  benchmark_executions: 0
+  downstream_accesses: 0
+  production_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+  p15_stage_accepted: false
+  p16_stage_entered: false
+  readonly_p15_remaining_items:
+    descriptive_transport_proxy_correction_closed: true
+    final_single_provider_live_smoke_success_observed: false
+    future_proxy_reachability_diagnostic_requires_new_authority: true
+    future_provider_call_requires_new_single_use_lifecycle: true
+    p15_acceptance_requires_separate_authority: true
+    p16_entry_requires_separate_authority: true
+  stop_boundary: descriptive_closeout_merged_emit_readonly_p15_remaining_items_and_stop_before_any_live_call
+
+
+default_subscription_mainline_optional_api_plugin_realignment:
+  authorization_packet: DEFAULT-SUBSCRIPTION-MAINLINE-AND-OPTIONAL-API-PLUGIN-REALIGNMENT-v1
+  canonical_base: ee5b1a661c9663537f63e018a2f5dc9f2da4924f
+  record: docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md
+  evidence_source:
+    consolidated_non_live_report: docs/reports/p15_non_live_consolidated_acceptance.md
+    consolidated_non_live_matrix: docs/reports/p15_non_live_consolidated_evidence_v1.yaml
+    consolidation_merge: 579dde4718fb80ae0dc9c16d796e825c62aba189
+    descriptive_closeout_merge: 71bc347942e921675cea340ff06f6c3476fc166e01b1
+    non_live_evidence_complete: true
+    representative_isolated_projects: 2
+    provider_fake_io_adapters: [openai, deepseek, qwen]
+    provider_invocations_for_this_realignment: 0
+  p15_core_acceptance:
+    phase: P15_MULTI_PROJECT_BENCHMARK
+    status: accepted_subscription_primary_core
+    accepted_scope: multi_project_isolation_generalization_fake_io_adapters_deterministic_routing_hard_gates_failure_recovery_economics
+    accepted_at: 2026-08-06 UTC+09:00
+    live_api_smoke_required: false
+  optional_api_provider_plugin_v2:
+    status: default_disabled_deferred_independent_module_backlog
+    project_completion_gate: false
+    p16_entry_gate: false
+    live_smoke_status: not_required_for_core
+    release_requires_one_separately_authorized_single_provider_smoke: true
+    known_legacy_runtime_findings:
+      - authorization_identity_hard_coded_to_historical_p15c_packet
+      - legacy_packet_catalog_and_external_provider_selection_overlap
+      - transport_behavior_requires_independent_plugin_revalidation
+  p16_entry:
+    phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+    authorized: true
+    entered: true
+    production_deployment_authorized: false
+    api_mode_required: false
+  zero_operation_boundary:
+    credential_value_accesses: 0
+    provider_invocations: 0
+    live_smoke_executions: 0
+    benchmark_executions: 0
+    real_downstream_accesses: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+
+p16a_sustainable_operations_acceptance_specification:
+  authorization_packet: P16A-SUSTAINABLE-OPERATIONS-ACCEPTANCE-SPECIFICATION-LIFECYCLE-v1
+  baseline_commit: 83b6d96a8f81519d5188c00cac8d2a209eac33b4
+  status: specification_merged_dependency_graph_frozen_non_authorizing
+  authority_effect: none
+  closeout_receipts:
+    pull_request: 195
+    final_pr_head: 61f792e20652477d8aa83a3a0038011b77b15446
+    canonical_squash_commit: b7570be532eac75efe2ccdcb64a72fbbc47f1130
+    hosted_ci_run: 1148
+    hosted_ci_conclusion: success
+    feature_branch: agent/p16a-sustainable-operations-specification-v1
+    feature_branch_retained: true
+    read_only_inventory_complete: true
+    p16b_to_p16i_dependency_graph_frozen: true
+    p16b_separate_authorization_required: true
+  specification: docs/reports/p16a_sustainable_operations_acceptance_specification.md
+  capability_inventory: docs/reports/p16a_sustainable_operations_inventory_v1.yaml
+  task_manifest: examples/task_manifests/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
+  change_plan: examples/change_plans/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
+  classification_counts:
+    complete_inheritable: 1
+    primitive_not_production_closed: 3
+    missing_module_or_interface: 5
+    api_mode_conditional: 6
+    separate_production_authorization: 1
+  dependency_order:
+    - P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT
+    - P16C-STATE-MIGRATION-AND-COMPATIBILITY
+    - P16D-BACKUP-RESTORE-AND-DISASTER-RECOVERY
+    - P16E-OBSERVABILITY-SLO-AND-INCIDENT-RESPONSE
+    - P16F-AUDIT-RUN-RETENTION-AND-ARCHIVAL
+    - P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
+    - P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS
+    - P16I-PRODUCTION-OPERATIONS-ACCEPTANCE-DECISION
+  optional_api_provider_plugin_v2:
+    status: independent_default_disabled_deferred
+    core_dependency: false
+    p16_acceptance_gate: false
+  p16_accepted: false
+  production_deployment_authorized: false
+  next_implementation_package: P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT
+  next_implementation_package_authorized: false
+  optional_api_provider_plugin_v2_is_core_gate: false
+  zero_operation_boundary:
+    runtime_source_changes: 0
+    blueprint_changes: 0
+    provider_invocations: 0
+    credential_value_accesses: 0
+    live_smoke_executions: 0
+    benchmark_executions: 0
+    downstream_repository_accesses: 0
+    production_operations: 0
+    deployment_operations: 0
+    backup_restore_drills: 0
+    disaster_recovery_drills: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+
 p16b_release_version_and_deprecation_contract:
   baseline_commit: c35be57de6ff1f7e31446469281fa369f529d937
   status: core_contract_implemented_non_authorizing
