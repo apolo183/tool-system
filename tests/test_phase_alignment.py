@@ -168,7 +168,7 @@ BOUNDED_CLOSURE_FILES = {
     "examples/change_plans/tool_system_bounded_closure_no_progress_contract_v1.yaml",
 }
 P14_PHASE = "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
-EXPECTED_PHASE = "P15_MULTI_PROJECT_BENCHMARK"
+EXPECTED_PHASE = "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
 TRANSIENT_RULE_OWNER_PATTERNS = {
     "pull-request receipt": r"\bPR\s+#\d+\b",
     "main commit receipt": r"\bmain@[0-9a-f]{40}\b",
@@ -186,27 +186,21 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     project_state = load_yaml_file(PROJECT_STATE)
 
-    assert project_state["current_phase"]["id"] == EXPECTED_PHASE
-    assert project_state["current_phase"]["status"] == "active"
+    assert project_state["current_phase"] == {
+        "id": EXPECTED_PHASE,
+        "status": "active",
+        "entry_record": "docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md",
+        "entry_authorized": True,
+        "last_accepted_stage": "P15_MULTI_PROJECT_BENCHMARK",
+        "last_accepted_stage_record": "docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md",
+        "next_stage": None,
+        "next_stage_authorized": False,
+        "active_stage": EXPECTED_PHASE,
+        "active_stage_status": "entered_subscription_primary_core_no_production_authority",
+        "next_phase": None,
+        "next_phase_entry_authorized": False,
+    }
     assert project_state["authority_effect"] == "none"
-    assert project_state["current_phase"]["entry_record"] == (
-        "docs/reports/p15a_provider_portfolio_qualification_specification.md"
-    )
-    assert project_state["current_phase"]["entry_authorized"] is True
-    assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
-    )
-    assert project_state["current_phase"]["last_accepted_stage_record"] == (
-        "docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md"
-    )
-    assert project_state["current_phase"]["next_stage"] == (
-        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
-    )
-    assert project_state["current_phase"]["next_stage_authorized"] is True
-    assert project_state["current_phase"]["next_phase"] == (
-        "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
-    )
-    assert project_state["current_phase"]["next_phase_entry_authorized"] is False
     assert EXPECTED_PHASE in blueprint["milestones"]
     assert {
         "phase",
@@ -670,9 +664,6 @@ def test_p14i_closes_only_bounded_p14_and_stops_before_p15() -> None:
     assert project_state["prior_acceptance"]["phase"] == P14_PHASE
     assert project_state["p14i"]["p15_entry_authorized"] is False
     assert project_state["current_phase"]["id"] == EXPECTED_PHASE
-    assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
-    )
     for marker in (
         "P14 output acceptance matrix",
         "Required P14 fixture matrix",
@@ -737,13 +728,6 @@ def test_p15a_specification_remains_the_direct_parent_of_p15b() -> None:
         "execution_boundary"
     ] == "governance_only"
     assert project_state["current_phase"]["id"] == EXPECTED_PHASE
-    assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
-    )
-    assert project_state["current_phase"]["next_stage"] == (
-        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
-    )
-    assert project_state["current_phase"]["next_stage_authorized"] is True
     assert project_state["p15a"]["p15b_authorized"] is False
     for marker in (
         "Read-only existing-surface inventory",
@@ -823,16 +807,8 @@ def test_p15b_accepts_only_isolated_fixtures_and_stops_before_p15c() -> None:
     assert stages["P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"][
         "execution_boundary"
     ] == (
-        "fake_io_all_adapters_then_separately_authorized_single_provider_smoke_"
-        "no_target_access"
+        "fake_io_all_adapters_no_live_provider_no_target_access"
     )
-    assert project_state["current_phase"]["last_accepted_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
-    )
-    assert project_state["current_phase"]["next_stage"] == (
-        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
-    )
-    assert project_state["current_phase"]["next_stage_authorized"] is True
     assert project_state["p15b"]["p15c_authorized"] is False
     for marker in (
         "Advisory task-profile fixture",
@@ -1060,3 +1036,24 @@ def test_p15_consolidated_non_live_evidence_stops_before_final_smoke() -> None:
         "p15_accepted": False,
         "p16_entered": False,
     }
+
+
+def test_subscription_primary_core_acceptance_enters_p16_without_api_smoke() -> None:
+    state = load_yaml_file(PROJECT_STATE)
+    lifecycle = state["default_subscription_mainline_optional_api_plugin_realignment"]
+    assert lifecycle["evidence_source"]["non_live_evidence_complete"] is True
+    assert lifecycle["p15_core_acceptance"]["status"] == "accepted_subscription_primary_core"
+    assert lifecycle["p15_core_acceptance"]["live_api_smoke_required"] is False
+    plugin = lifecycle["optional_api_provider_plugin_v2"]
+    assert plugin["status"] == "default_disabled_deferred_independent_module_backlog"
+    assert plugin["project_completion_gate"] is False
+    assert plugin["p16_entry_gate"] is False
+    assert plugin["release_requires_one_separately_authorized_single_provider_smoke"] is True
+    assert lifecycle["p16_entry"] == {
+        "phase": "P16_PRODUCTION_OPERATIONS_ACCEPTANCE",
+        "authorized": True,
+        "entered": True,
+        "production_deployment_authorized": False,
+        "api_mode_required": False,
+    }
+    assert set(lifecycle["zero_operation_boundary"].values()) == {0}
