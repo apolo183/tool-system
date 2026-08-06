@@ -1,0 +1,77 @@
+task_id: tool-system-p15-transport-proxy-correction-descriptive-closeout-v1
+task_type: descriptive_closeout
+target_repo: apolo183/tool-system
+target_branch: agent/p15-transport-proxy-correction-descriptive-closeout-v1
+phase: P15_MULTI_PROJECT_BENCHMARK
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P15_MULTI_PROJECT_BENCHMARK
+alignment:
+  parent:
+    document: docs/reports/p15_single_provider_transport_proxy_correction.md
+    section_or_key: Read-only network and proxy preflight mapping
+    scope: Correct only the stale pre-merge lifecycle description after the already completed guarded merge.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P15-TRANSPORT-PROXY-CORRECTION-DESCRIPTIVE-CLOSEOUT-v1
+    baseline_commit: de0d6854d66bfe804df5d0e967934dd4e85aabc4
+    acceptance_set:
+      - record PR 192 final head squash commit Hosted CI 1136 and retained branch
+      - replace the stale pending merge status with accepted descriptive merge facts
+      - preserve the readonly network and proxy preflight mapping
+      - preserve direct verified TLS default and external owner-only explicit CONNECT selection
+      - preserve zero live provider credential target benchmark production cleanup and rollback operations
+      - preserve P15 not accepted and P16 not entered
+    validation_set:
+      - exact four-path descriptive scope
+      - full Hosted CI fake-I-O and governance validation
+      - unchanged canonical base head scope comments reviews and CI before Ready and squash merge
+    terminal_predicate: Descriptive status matches the accepted PR 192 merge facts and execution stops before any newly authorized provider or proxy diagnostic.
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 1
+      review_cycles: 1
+      live_provider_invocations: 0
+      credential_value_accesses: 0
+      target_accesses: 0
+      benchmark_executions: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+scope:
+  summary: Close the stale pre-merge description without changing runtime behavior.
+  in_scope: &closeout_files
+    - docs/reports/p15_transport_proxy_correction_descriptive_closeout.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_p15_transport_proxy_correction_descriptive_closeout_v1.yaml
+    - examples/task_manifests/tool_system_p15_transport_proxy_correction_descriptive_closeout_v1.yaml
+  out_of_scope:
+    - runtime code provider adapters configuration templates tests blueprint AGENTS README and provider policy
+    - credentials private proxy endpoints diagnostics provider calls live smoke benchmark targets production cleanup rollback P15 acceptance or P16 entry
+allowed_files: *closeout_files
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15_transport_proxy_correction_descriptive_closeout_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15_transport_proxy_correction_descriptive_closeout_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+rollback:
+  method: git_revert
+  reference: tool-system@de0d6854d66bfe804df5d0e967934dd4e85aabc4
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-06-p15-transport-proxy-correction-descriptive-closeout-v1
+  approved_at: 2026-08-06 UTC+09:00
