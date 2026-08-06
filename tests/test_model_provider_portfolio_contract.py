@@ -208,7 +208,7 @@ def test_conditional_api_maintenance_and_roadmap_owners_are_locked() -> None:
         in p16["outputs"]
     )
     assert (
-        "proof that disabled or unavailable API providers do not block production-operations acceptance"
+        "proof that disabled or unavailable API providers and an unreleased optional API plugin do not block production-operations acceptance"
         in p16["outputs"]
     )
 
