@@ -18,10 +18,13 @@ def test_public_templates_are_disabled_empty_and_project_neutral() -> None:
     credentials = tomllib.loads(CREDENTIALS.read_text(encoding="utf-8"))
     p15c = settings["p15c"]
 
-    assert p15c["schema_version"] == 3
+    assert p15c["schema_version"] == 4
     assert p15c["enabled"] is False
     assert p15c["total_budget_micro_usd"] == 0
     assert p15c["cny_to_micro_usd_ceiling"] == 1_000_000
+    assert p15c["transport_mode"] == "direct_tls"
+    assert p15c["proxy_host"] == ""
+    assert p15c["proxy_port"] == 0
     assert p15c["provider_priority"] == []
     assert p15c["allowed_case_ids"] == ["deterministic-corpus"]
     assert p15c["max_provider_invocations"] == 3
@@ -43,6 +46,9 @@ def test_public_templates_are_disabled_empty_and_project_neutral() -> None:
     ).lower()
     assert "finance" + "-us" not in public
     assert "github.com/" not in public
+    assert "127.0.0.1" not in public
+    assert "http_proxy =" not in public
+    assert "https_proxy =" not in public
 
 
 def test_hosted_workflows_do_not_reference_provider_or_private_bundle_secrets() -> None:
