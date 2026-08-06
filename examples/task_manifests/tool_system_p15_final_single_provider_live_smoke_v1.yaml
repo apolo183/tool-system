@@ -1,0 +1,134 @@
+task_id: tool-system-p15-final-single-provider-live-smoke-v1
+task_type: execution
+target_repo: apolo183/tool-system
+target_branch: agent/p15-final-single-provider-live-smoke-v1
+phase: P15_MULTI_PROJECT_BENCHMARK
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P15_MULTI_PROJECT_BENCHMARK
+alignment:
+  parent:
+    document: docs/reports/p15_non_live_lifecycle_closeout.md
+    section_or_key: Read-only stop
+    scope: Execute only the remaining separately authorized single-provider live smoke.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Prove the dormant API backup with one usable external route while preserving every hard control and stopping before P15 acceptance or P16.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P15-FINAL-SINGLE-PROVIDER-LIVE-SMOKE-LIFECYCLE-v1
+    baseline_commit: 71bc347942e921675cea340ff07274834a1b8f9f
+    baseline_tree: canonical_main_tree_at_71bc347942e921675cea340ff07274834a1b8f9f
+    allowed_scope: exact_4_repository_paths_plus_one_external_single_call
+    acceptance_set:
+      - canonical source API provider model network budget expiry data transfer cancellation retry and audit gates pass before credential resolution
+      - repository-external configuration explicitly selects exactly one enabled usable provider and requested model
+      - key presence alone grants no authority and credential value is never printed hashed returned persisted or committed
+      - maximum provider invocations is one automatic retries are zero and one success stops
+      - only redacted provider model time cost stop reason and success or failure are retained
+      - no real downstream target benchmark production cleanup rollback P15 acceptance P16 entry or second provider call occurs
+      - after live evidence one readonly P15 final acceptance mapping is formed and execution stops
+    validation_set:
+      - exact manifest plan report state and current smoke schema consistency
+      - Hosted CI full fake-I-O provider contract and governance validation before any private preflight
+      - private runtime preflight bound to then-canonical main before the single call
+      - unchanged base head scope comments and reviews before Ready and squash merge
+    terminal_predicate: Hosted fake-I-O CI succeeds, one authorized private preflight and at most one provider call produce sanitized evidence, the Draft PR moves without drift to Ready and squash-merges, the feature branch is retained, a read-only P15 final mapping is emitted, and P15 remains unaccepted.
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 1
+      review_cycles: 1
+      wall_clock_hours: 4
+      recommended_private_total_budget_micro_usd: 1000000
+      max_provider_invocations: 1
+      max_automatic_retries: 0
+      credential_value_records: 0
+      real_downstream_accesses: 0
+      target_mutations: 0
+      benchmark_executions: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+      p16_entries: 0
+scope:
+  summary: Prepare and execute exactly one repository-external single-provider backup smoke, then form a read-only mapping.
+  in_scope: &smoke_files
+    - docs/reports/p15_final_single_provider_live_smoke.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_p15_final_single_provider_live_smoke_v1.yaml
+    - examples/task_manifests/tool_system_p15_final_single_provider_live_smoke_v1.yaml
+  out_of_scope:
+    - blueprint AGENTS README global principles runtime source provider source config workflow tests fixtures module registry and repository manifest modification
+    - credential value disclosure or transfer
+    - real downstream target or private target bundle access
+    - benchmark production cleanup rollback P15 acceptance P16 entry or more than one provider invocation
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p15_final_smoke_control_packet_schema_v1.yaml
+    commit_sha: 71bc347942e921675cea340ff07274834a1b8f9f
+    why_relevant: The accepted schema defines the default-closed single-provider smoke controls.
+  - repo: apolo183/tool-system
+    path: src/tool_system/ai_worker/p15c_entry.py
+    commit_sha: 71bc347942e921675cea340ff07274834a1b8f9f
+    why_relevant: The runtime exposes packet-only preflight and bounded execute modes with redacted output.
+  - repo: apolo183/tool-system
+    path: docs/reports/p15c_local_operator_configuration.md
+    commit_sha: 71bc347942e921675cea340ff07274834a1b8f9f
+    why_relevant: Private settings credentials and ledger remain installation-owned outside the repository and Hosted CI.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: current_main_consumed_at_task_start
+    why_relevant: Current governance requires exact bounded closure and no credential or authority expansion.
+allowed_files: *smoke_files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/**
+  - .github/workflows/**
+  - config/**
+  - docs/model_provider_portfolio_and_economics_contract_v1.md
+  - docs/modules/**
+  - docs/tool_system_global_development_principles_v1.md
+  - examples/operator_config/**
+  - policy/**
+  - src/**
+  - tests/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_ai_worker_p15c_benchmark.py tests/test_ai_worker_p15c_entry.py tests/test_p15c_local_operator_config.py tests/test_provider_portfolio_provider_mode.py tests/test_phase_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15_final_single_provider_live_smoke_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15_final_single_provider_live_smoke_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - exact four repository paths and zero forbidden-path change
+    - Hosted CI remains fake-I-O only and succeeds
+    - private preflight and single live invocation occur only on a surface with repository-external owner-only config access
+    - sanitized evidence contains no credential or raw provider output
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  live_execution_during_publication: true
+rollback:
+  method: git_revert
+  reference: tool-system@71bc347942e921675cea340ff07274834a1b8f9f
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-06-p15-final-single-provider-live-smoke-lifecycle-v1
+  approved_at: 2026-08-06 UTC+09:00
