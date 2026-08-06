@@ -27,6 +27,11 @@ def test_every_blueprint_output_is_classified_once() -> None:
         "separate_production_authorization",
     }
     assert all(item["evidence"] for item in outputs)
+    state = load(STATE)["p16a_sustainable_operations_acceptance_specification"]
+    counts = state["classification_counts"]
+    assert counts == dict(__import__("collections").Counter(
+        item["classification"] for item in outputs
+    ))
 
 
 def test_p16a_freezes_exact_governance_only_scope() -> None:

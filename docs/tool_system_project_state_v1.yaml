@@ -1673,8 +1673,8 @@ p16a_sustainable_operations_acceptance_specification:
   classification_counts:
     complete_inheritable: 1
     primitive_not_production_closed: 3
-    missing_module_or_interface: 6
-    api_mode_conditional: 5
+    missing_module_or_interface: 5
+    api_mode_conditional: 6
     separate_production_authorization: 1
   dependency_order:
     - P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT
