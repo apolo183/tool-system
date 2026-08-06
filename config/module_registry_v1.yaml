@@ -1661,6 +1661,40 @@ modules:
     effect_contract: *local_git_contract
   rollback_boundary: *local_git_contract
   replacement_boundary: *local_git_contract
+- module_id: release-governance
+  module_version: 1.0.0
+  role: evaluate semantic versions, compatibility windows, deprecation clocks, and release-candidate evidence. Return deterministic non-authorizing decisions from caller-supplied values without reading clocks, repositories, credentials, networks, or deployment state.
+  owner: release-governance
+  public_interface_refs:
+  - interface_id: release-governance-api
+    interface_version: 1.0.0
+  internal_dependencies: []
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/release_governance/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/release_governance/policy.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_release_governance.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary: &release_governance_contract
+    repo_relative_path: docs/modules/release-governance-contract-v1.md
+    sha256: 68c8915be670bf8190f7f741cd8245465ce67e74cb3b0934ec079840b0bc2eab
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary: *release_governance_contract
 interfaces:
 - interface_id: architecture-registry-api
   interface_version: 2.0.0
@@ -2319,3 +2353,17 @@ interfaces:
   side_effect_contract: *local_git_interface_contract
   compatibility_policy: *local_git_interface_contract
   replacement_revalidation_boundary: *local_git_interface_contract
+- interface_id: release-governance-api
+  interface_version: 1.0.0
+  provider_module_id: release-governance
+  consumers: []
+  input_contract: &release_governance_interface_contract
+    repo_relative_path: docs/modules/release-governance-contract-v1.md
+    sha256: 68c8915be670bf8190f7f741cd8245465ce67e74cb3b0934ec079840b0bc2eab
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract: *release_governance_interface_contract
+  error_contract: *release_governance_interface_contract
+  side_effect_contract: *release_governance_interface_contract
+  compatibility_policy: *release_governance_interface_contract
+  replacement_revalidation_boundary: *release_governance_interface_contract
