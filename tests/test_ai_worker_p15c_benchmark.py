@@ -1231,7 +1231,7 @@ def test_transport_failure_is_not_retried_and_charges_full_reservation(
     assert ledger.attempts()[0].status == "UNCERTAIN"
 
 
-def test_direct_transport_routes_are_fixed_and_source_has_no_proxy_or_retry() -> None:
+def test_transport_routes_are_fixed_and_environment_proxy_is_ignored() -> None:
     assert P15CDirectTLSTransport._allowed_routes == {
         ("api.deepseek.com", "/chat/completions"),
         ("api.openai.com", "/v1/responses"),
@@ -1243,8 +1243,103 @@ def test_direct_transport_routes_are_fixed_and_source_has_no_proxy_or_retry() ->
     source = Path("src/tool_system/ai_worker/p15c_benchmark.py").read_text(
         encoding="utf-8"
     )
-    assert "Proxy" not in source
     assert "HTTP_PROXY" not in source
     assert "HTTPS_PROXY" not in source
+    assert "getproxies" not in source
     assert "requests." not in source
     assert "urllib.request" not in source
+
+
+def test_http_connect_transport_uses_loopback_tunnel_and_verified_tls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    created: list[object] = []
+
+    class FakeResponse:
+        status = 200
+
+        def read(self, limit: int) -> bytes:
+            assert limit > 0
+            return b'{"ok":true}'
+
+        def getheaders(self) -> list[tuple[str, str]]:
+            return [("content-type", "application/json")]
+
+    class FakeHTTPSConnection:
+        def __init__(
+            self,
+            host: str,
+            port: int,
+            *,
+            timeout: float,
+            context: object,
+        ) -> None:
+            self.host = host
+            self.port = port
+            self.timeout = timeout
+            self.context = context
+            self.tunnel: tuple[str, int] | None = None
+            self.request_record: tuple[str, str, bytes, dict[str, str]] | None = None
+            self.closed = False
+            created.append(self)
+
+        def set_tunnel(self, host: str, port: int) -> None:
+            self.tunnel = (host, port)
+
+        def request(
+            self,
+            method: str,
+            path: str,
+            *,
+            body: bytes,
+            headers: dict[str, str],
+        ) -> None:
+            self.request_record = (method, path, body, headers)
+
+        def getresponse(self) -> FakeResponse:
+            return FakeResponse()
+
+        def close(self) -> None:
+            self.closed = True
+
+    monkeypatch.setattr(
+        "tool_system.ai_worker.p15c_benchmark.http.client.HTTPSConnection",
+        FakeHTTPSConnection,
+    )
+    transport = P15CDirectTLSTransport(
+        transport_mode="http_connect",
+        proxy_host="127.0.0.1",
+        proxy_port=17897,
+    )
+
+    response = transport.send(
+        host="api.openai.com",
+        path="/v1/responses",
+        headers={"authorization": "opaque"},
+        body=b"{}",
+        timeout_seconds=30,
+    )
+
+    connection = created[0]
+    assert isinstance(connection, FakeHTTPSConnection)
+    assert (connection.host, connection.port) == ("127.0.0.1", 17897)
+    assert connection.tunnel == ("api.openai.com", 443)
+    assert connection.request_record is not None
+    assert connection.request_record[:2] == ("POST", "/v1/responses")
+    assert connection.closed is True
+    assert response.status_code == 200
+
+
+def test_http_connect_transport_rejects_non_loopback_and_proxy_credentials() -> None:
+    with pytest.raises(ValueError):
+        P15CDirectTLSTransport(
+            transport_mode="http_connect",
+            proxy_host="proxy.example",
+            proxy_port=443,
+        )
+    with pytest.raises(ValueError):
+        P15CDirectTLSTransport(
+            transport_mode="direct_tls",
+            proxy_host="127.0.0.1",
+            proxy_port=17897,
+        )
