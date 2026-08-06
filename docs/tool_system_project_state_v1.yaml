@@ -1579,7 +1579,17 @@ p15_single_provider_transport_proxy_correction_lifecycle:
     provider_invocations: 0
     hosted_ci_run: 1135
     hosted_ci_result: pass
-    status: correction_validated_pending_no_drift_ready_merge
+    status: accepted_only_on_guarded_squash_merge_transport_proxy_correction_no_execution
+    publication_receipt:
+      pull_request: 192
+      final_pr_head: 9813e0256b2ff9ab20fa14ca035ec63605491388
+      canonical_squash_commit: de0d6854d66bfe804df5d0e967934dd4e85aabc4
+      hosted_ci_final_run: 1136
+      hosted_ci_final_result: pass
+      no_drift_ready_completed: true
+      squash_merge_completed: true
+      retained_branch: agent/p15-single-provider-transport-proxy-correction-v1
+      retained_branch_restored_after_automatic_deletion: true
   readonly_preflight_mapping:
     private_config_required: true
     canonical_source_revalidation_required: true
@@ -1596,4 +1606,11 @@ p15_single_provider_transport_proxy_correction_lifecycle:
   rollback_operations: 0
   p15_stage_accepted: false
   p16_stage_entered: false
-  stop_boundary: merge_correction_emit_readonly_preflight_mapping_and_stop_before_any_live_call
+  readonly_p15_remaining_items:
+    descriptive_transport_proxy_correction_closed: true
+    final_single_provider_live_smoke_success_observed: false
+    future_proxy_reachability_diagnostic_requires_new_authority: true
+    future_provider_call_requires_new_single_use_lifecycle: true
+    p15_acceptance_requires_separate_authority: true
+    p16_entry_requires_separate_authority: true
+  stop_boundary: descriptive_closeout_merged_emit_readonly_p15_remaining_items_and_stop_before_any_live_call

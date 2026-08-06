@@ -1,0 +1,35 @@
+plan_id: tool-system-p15-transport-proxy-correction-descriptive-closeout-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p15_transport_proxy_correction_descriptive_closeout_v1.yaml
+changed_files:
+  - docs/reports/p15_transport_proxy_correction_descriptive_closeout.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p15_transport_proxy_correction_descriptive_closeout_v1.yaml
+  - examples/task_manifests/tool_system_p15_transport_proxy_correction_descriptive_closeout_v1.yaml
+alignment:
+  parent:
+    document: docs/reports/p15_single_provider_transport_proxy_correction.md
+    section_or_key: Read-only network and proxy preflight mapping
+    scope: Record only the already completed PR 192 publication facts and retained stop boundary.
+implementation_sequence:
+  - freeze exact descriptive scope before status mutation
+  - replace the stale pending merge status with completed guarded merge facts
+  - record PR final head canonical squash commit Hosted CI 1136 and restored retained branch
+  - restate the readonly network and proxy preflight mapping and all zero-operation counters
+  - publish Draft PR run Hosted CI verify no drift Ready squash merge retain branch and stop
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p15_transport_proxy_correction_descriptive_closeout_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p15_transport_proxy_correction_descriptive_closeout_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_connector_only_draft_pr_hosted_fake_io_no_drift_ready_squash_merge
+  branch: agent/p15-transport-proxy-correction-descriptive-closeout-v1
+  exact_base: de0d6854d66bfe804df5d0e967934dd4e85aabc4
+  retain_feature_branch: true
+rollback:
+  method: git_revert
+  reference: tool-system@de0d6854d66bfe804df5d0e967934dd4e85aabc4
+  execution_authorized: false
