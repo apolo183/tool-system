@@ -168,6 +168,7 @@ BOUNDED_CLOSURE_FILES = {
     "examples/change_plans/tool_system_bounded_closure_no_progress_contract_v1.yaml",
 }
 P14_PHASE = "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
+P15_PHASE = "P15_MULTI_PROJECT_BENCHMARK"
 EXPECTED_PHASE = "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
 TRANSIENT_RULE_OWNER_PATTERNS = {
     "pull-request receipt": r"\bPR\s+#\d+\b",
@@ -717,7 +718,7 @@ def test_p15a_specification_remains_the_direct_parent_of_p15b() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     project_state = load_yaml_file(PROJECT_STATE)
     report = P15A_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
-    p15 = blueprint["milestones"][EXPECTED_PHASE]
+    p15 = blueprint["milestones"][P15_PHASE]
     stages = {stage["stage"]: stage for stage in p15["stage_plan"]}
 
     assert "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT accepted" in (
@@ -795,7 +796,7 @@ def test_p15b_accepts_only_isolated_fixtures_and_stops_before_p15c() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     project_state = load_yaml_file(PROJECT_STATE)
     report = P15B_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
-    p15 = blueprint["milestones"][EXPECTED_PHASE]
+    p15 = blueprint["milestones"][P15_PHASE]
     stages = {stage["stage"]: stage for stage in p15["stage_plan"]}
 
     assert stages["P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"][

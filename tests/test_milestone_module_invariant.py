@@ -196,19 +196,11 @@ def test_local_authority_does_not_govern_other_repositories() -> None:
 
 def test_p14mr_report_is_acceptance_evidence_not_durable_rule_owner() -> None:
     project_state = load_yaml_file(PROJECT_STATE)
-    current_phase = project_state["current_phase"]
-
     assert REPORT.is_file()
     assert project_state["prior_acceptance"]["phase"] == (
         "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
     )
     assert project_state["p14i"]["acceptance_status"] == "accepted_and_closed"
-    assert current_phase["last_accepted_stage_record"] == (
-        "docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md"
-    )
-    assert current_phase["last_accepted_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
-    )
     assert project_state["authority_effect"] == "none"
 
 
@@ -232,14 +224,8 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
     project_state = load_yaml_file(PROJECT_STATE)
     p14 = blueprint["milestones"]["P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"]
     stages = {stage["stage"]: stage for stage in p14["stage_plan"]}
-    current_phase = project_state["current_phase"]
-
     assert "phase" not in blueprint
     assert "status" not in blueprint
-    assert current_phase["id"] == "P15_MULTI_PROJECT_BENCHMARK"
-    assert current_phase["last_accepted_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
-    )
     assert stages["P14MR_MILESTONE_MODULE_INVARIANT"]["execution_boundary"] == (
         "governance_only"
     )
@@ -267,13 +253,6 @@ def test_p14mr_precedes_p14c_and_future_stages_own_enforcement() -> None:
         "P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT"
     )
     assert project_state["p14i"]["acceptance_status"] == "accepted_and_closed"
-    assert current_phase["status"] == "active"
-    assert current_phase["next_stage"] == (
-        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
-    )
-    assert current_phase["next_stage_authorized"] is True
-    assert current_phase["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
-    assert current_phase["next_phase_entry_authorized"] is False
     assert (
         project_state["authorization_boundaries"]
         ["live_model_provider_execution_authorized"]

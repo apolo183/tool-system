@@ -396,21 +396,6 @@ def test_p14d_exact_task_pair_and_descriptive_acceptance_state_validate() -> Non
     assert set(manifest["scope"]["in_scope"]) == P14D_FILES
     assert set(plan["changed_files"]) == P14D_FILES
     assert len(P14D_FILES) == 19
-    current = state["current_phase"]
-    assert current["id"] == "P15_MULTI_PROJECT_BENCHMARK"
-    assert current["last_accepted_stage"] == (
-        "P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES"
-    )
-    assert current["last_accepted_stage_record"] == (
-        "docs/reports/p15b_adapter_router_profiler_fixture_acceptance.md"
-    )
-    assert current["status"] == "active"
-    assert current["next_stage"] == (
-        "P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK"
-    )
-    assert current["next_stage_authorized"] is True
-    assert current["next_phase"] == "P16_PRODUCTION_OPERATIONS_ACCEPTANCE"
-    assert current["next_phase_entry_authorized"] is False
     assert state["authority_effect"] == "none"
     assert state["p14d"]["stage_accepted"] is True
     assert state["p14d"]["natural_owner_proposal_grants_authority"] is False

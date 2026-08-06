@@ -12,6 +12,14 @@ changed_files:
   - docs/tool_system_project_state_v1.yaml
   - examples/change_plans/tool_system_default_subscription_optional_api_realignment_v1.yaml
   - examples/task_manifests/tool_system_default_subscription_optional_api_realignment_v1.yaml
+  - tests/test_ai_worker_p15c_entry.py
+  - tests/test_milestone_module_invariant.py
+  - tests/test_model_provider_portfolio_contract.py
+  - tests/test_p14_phase_entry_contract.py
+  - tests/test_p14c_execution_contract.py
+  - tests/test_p15c_execution_packet_freeze.py
+  - tests/test_p15d_failure_economics_corpus_prerequisite.py
+  - tests/test_repository_context_builder.py
   - tests/test_phase_alignment.py
   - tests/test_product_objective_alignment.py
 alignment:
