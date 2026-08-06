@@ -174,6 +174,34 @@ class P15CHTTPResponse:
 class P15CTransport(Protocol):
     transport_kind: str
 
+    def __init__(
+        self,
+        *,
+        transport_mode: str = "direct_tls",
+        proxy_host: str | None = None,
+        proxy_port: int | None = None,
+    ) -> None:
+        if transport_mode not in {"direct_tls", "http_connect"}:
+            raise ValueError("unsupported P15C transport mode")
+        if transport_mode == "direct_tls" and (
+            proxy_host is not None or proxy_port is not None
+        ):
+            raise ValueError("direct TLS cannot carry proxy configuration")
+        if transport_mode == "http_connect" and (
+            proxy_host not in {"127.0.0.1", "::1", "localhost"}
+            or type(proxy_port) is not int
+            or not 1 <= proxy_port <= 65535
+        ):
+            raise ValueError("HTTP CONNECT requires an explicit loopback endpoint")
+        self._transport_mode = transport_mode
+        self._proxy_host = proxy_host
+        self._proxy_port = proxy_port
+        self.transport_kind = (
+            "p15c_direct_tls"
+            if transport_mode == "direct_tls"
+            else "p15c_http_connect_verified_tls"
+        )
+
     def send(
         self,
         *,
@@ -192,9 +220,8 @@ class P15CTransportFailure(RuntimeError):
 
 
 class P15CDirectTLSTransport:
-    """Direct verified TLS with fixed routes and no proxy or redirect support."""
+    """Verified TLS on fixed routes, direct by default or through explicit CONNECT."""
 
-    transport_kind = "p15c_direct_tls"
     _allowed_routes = frozenset(
         {
             ("api.deepseek.com", "/chat/completions"),
@@ -222,12 +249,21 @@ class P15CDirectTLSTransport:
             or not 0 < timeout_seconds <= 90
         ):
             raise P15CTransportFailure("TRANSPORT_PRECONDITION")
-        connection = http.client.HTTPSConnection(
-            host,
-            443,
-            timeout=timeout_seconds,
-            context=ssl.create_default_context(),
-        )
+        if self._transport_mode == "http_connect":
+            connection = http.client.HTTPSConnection(
+                self._proxy_host,
+                self._proxy_port,
+                timeout=timeout_seconds,
+                context=ssl.create_default_context(),
+            )
+            connection.set_tunnel(host, 443)
+        else:
+            connection = http.client.HTTPSConnection(
+                host,
+                443,
+                timeout=timeout_seconds,
+                context=ssl.create_default_context(),
+            )
         try:
             connection.request("POST", path, body=body, headers=dict(headers))
             response = connection.getresponse()
