@@ -22,7 +22,7 @@ bounded_closure:
     task_identity: P16A-SUSTAINABLE-OPERATIONS-ACCEPTANCE-SPECIFICATION-LIFECYCLE-v1
     baseline_commit: 83b6d96a8f81519d5188c00cac8d2a209eac33b4
     baseline_tree: canonical_main_tree_at_83b6d96a8f81519d5188c00cac8d2a209eac33b4
-    allowed_scope: exact_7_paths_listed_below
+    allowed_scope: exact_8_paths_listed_below
     acceptance_set:
       - every P16 output has exactly one evidence classification
       - safe primitives are not promoted to production-closed claims
@@ -58,6 +58,7 @@ scope:
     - examples/change_plans/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
     - examples/task_manifests/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
     - tests/test_p16a_sustainable_operations_specification.py
+    - tests/test_repo_manifest.py
   out_of_scope:
     - runtime provider adapter configuration template blueprint workflow or policy modification
     - provider credential live smoke benchmark production downstream cleanup rollback deployment backup restore or disaster recovery exercise
@@ -112,5 +113,5 @@ rollback:
 approval:
   required: true
   approved_by: user
-  approval_source: chat_user_message:P16A-SUSTAINABLE-OPERATIONS-ACCEPTANCE-SPECIFICATION-LIFECYCLE-v1
+  approval_source: chat_user_messages:P16A-SUSTAINABLE-OPERATIONS-ACCEPTANCE-SPECIFICATION-LIFECYCLE-v1+P16A-SUSTAINABLE-OPERATIONS-ACCEPTANCE-SPECIFICATION-CI-CONSISTENCY-REPAIR-v1
   approved_at: 2026-08-06 UTC+09:00

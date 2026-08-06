@@ -9,6 +9,7 @@ changed_files:
   - examples/change_plans/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
   - examples/task_manifests/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml
   - tests/test_p16a_sustainable_operations_specification.py
+  - tests/test_repo_manifest.py
 alignment:
   parent:
     document: docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md

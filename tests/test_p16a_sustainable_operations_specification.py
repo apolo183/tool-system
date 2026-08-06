@@ -40,7 +40,7 @@ def test_p16a_freezes_exact_governance_only_scope() -> None:
     files = set(manifest["allowed_files"])
     assert files == set(manifest["scope"]["in_scope"])
     assert files == set(plan["changed_files"])
-    assert len(files) == 7
+    assert len(files) == 8
     assert all(not path.startswith("src/") for path in files)
     assert "blueprint/tool_system_v0.yaml" not in files
     assert all(not path.startswith("config/") for path in files)
