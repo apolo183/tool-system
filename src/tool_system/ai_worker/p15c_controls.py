@@ -20,7 +20,8 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.10 compatibility
     import tomli as tomllib  # type: ignore[no-redef]
 
 P15C_AUTHORIZATION_ID = "P15C-CROSS-PROVIDER-READ-ONLY-BENCHMARK-LIFECYCLE-v1"
-P15C_POLICY_SCHEMA_VERSION = 3
+P15C_POLICY_SCHEMA_VERSION = 4
+P15C_SINGLE_PROVIDER_POLICY_SCHEMA_VERSION = 3
 P15C_MATRIX_POLICY_SCHEMA_VERSION = 2
 P15C_LEGACY_POLICY_SCHEMA_VERSION = 1
 P15C_TARGET_PACKET_SCHEMA_VERSION = 1
@@ -105,6 +106,9 @@ class P15CExecutionPolicy:
     cny_to_micro_usd_ceiling: int
     allowed_case_ids: tuple[str, ...]
     max_provider_invocations: int
+    transport_mode: str
+    proxy_host: str | None
+    proxy_port: int | None
     policy_sha256: str
 
     def assert_active(self, *, now: datetime | None = None) -> None:
@@ -253,25 +257,32 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
         "max_provider_invocations",
     }
     schema_version = source.get("schema_version")
+    single_provider_fields = {
+        "schema_version",
+        "authorization_id",
+        "enabled",
+        "total_budget_micro_usd",
+        "expires_at_utc",
+        "expected_tool_system_commit",
+        "expected_tool_system_tree",
+        "provider_priority",
+        "provider_model",
+        "provider_enabled",
+        "provider_budget_micro_usd",
+        "private_repository_transfer_enabled",
+        "provider_transfer_enabled",
+        "allowed_case_ids",
+        "max_provider_invocations",
+        "cny_to_micro_usd_ceiling",
+    }
     if schema_version == P15C_POLICY_SCHEMA_VERSION:
-        expected_fields = {
-            "schema_version",
-            "authorization_id",
-            "enabled",
-            "total_budget_micro_usd",
-            "expires_at_utc",
-            "expected_tool_system_commit",
-            "expected_tool_system_tree",
-            "provider_priority",
-            "provider_model",
-            "provider_enabled",
-            "provider_budget_micro_usd",
-            "private_repository_transfer_enabled",
-            "provider_transfer_enabled",
-            "allowed_case_ids",
-            "max_provider_invocations",
-            "cny_to_micro_usd_ceiling",
+        expected_fields = single_provider_fields | {
+            "transport_mode",
+            "proxy_host",
+            "proxy_port",
         }
+    elif schema_version == P15C_SINGLE_PROVIDER_POLICY_SCHEMA_VERSION:
+        expected_fields = single_provider_fields
     elif schema_version == P15C_MATRIX_POLICY_SCHEMA_VERSION:
         expected_fields = legacy_common_fields | {"cny_to_micro_usd_ceiling"}
     elif schema_version == P15C_LEGACY_POLICY_SCHEMA_VERSION:
@@ -306,6 +317,7 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
         )
     if schema_version in {
         P15C_POLICY_SCHEMA_VERSION,
+        P15C_SINGLE_PROVIDER_POLICY_SCHEMA_VERSION,
         P15C_MATRIX_POLICY_SCHEMA_VERSION,
     }:
         cny_to_micro_usd_ceiling = _require_int(
@@ -326,9 +338,13 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
     _parse_utc(expires_at)
     commit = _require_sha(source["expected_tool_system_commit"], "commit")
     tree = _require_sha(source["expected_tool_system_tree"], "tree")
+    is_single_provider_policy = schema_version in {
+        P15C_POLICY_SCHEMA_VERSION,
+        P15C_SINGLE_PROVIDER_POLICY_SCHEMA_VERSION,
+    }
     target_packet_sha256 = (
         None
-        if schema_version == P15C_POLICY_SCHEMA_VERSION
+        if is_single_provider_policy
         else _require_sha256(source["expected_target_packet_sha256"], "target packet")
     )
     provider_enabled = _provider_bool_mapping(
@@ -338,7 +354,7 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
         source["provider_transfer_enabled"], "provider_transfer_enabled"
     )
     provider_budgets = _provider_int_mapping(source["provider_budget_micro_usd"])
-    if schema_version == P15C_POLICY_SCHEMA_VERSION:
+    if is_single_provider_policy:
         provider_priority = _provider_priority(source["provider_priority"])
         provider_model = _provider_model_mapping(source["provider_model"])
         if source["private_repository_transfer_enabled"] is not False:
@@ -389,10 +405,44 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
             "PROVIDER_BUDGET_ABOVE_TOTAL",
             "provider budget exceeds total policy budget",
         )
+    if schema_version == P15C_POLICY_SCHEMA_VERSION:
+        transport_mode = source["transport_mode"]
+        proxy_host = source["proxy_host"]
+        proxy_port = source["proxy_port"]
+        if transport_mode not in {"direct_tls", "http_connect"}:
+            raise P15CControlError(
+                "TRANSPORT_MODE",
+                "transport mode must be direct_tls or http_connect",
+            )
+        if transport_mode == "direct_tls":
+            if proxy_host != "" or proxy_port != 0:
+                raise P15CControlError(
+                    "PROXY_CONFIGURATION",
+                    "direct TLS must not configure a proxy endpoint",
+                )
+            private_proxy_host = None
+            private_proxy_port = None
+        else:
+            if proxy_host not in {"127.0.0.1", "::1", "localhost"}:
+                raise P15CControlError(
+                    "PROXY_HOST",
+                    "HTTP CONNECT proxy must be an explicit loopback endpoint",
+                )
+            private_proxy_host = str(proxy_host)
+            private_proxy_port = _require_int(proxy_port, "proxy_port", minimum=1)
+            if private_proxy_port > 65535:
+                raise P15CControlError(
+                    "PROXY_PORT",
+                    "proxy port is outside the valid range",
+                )
+    else:
+        transport_mode = "direct_tls"
+        private_proxy_host = None
+        private_proxy_port = None
     cases = source["allowed_case_ids"]
     expected_cases = (
         P15C_BACKUP_SMOKE_CASE_IDS
-        if schema_version == P15C_POLICY_SCHEMA_VERSION
+        if is_single_provider_policy
         else P15C_CASE_IDS
     )
     if not isinstance(cases, list) or tuple(cases) != expected_cases:
@@ -407,7 +457,7 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
     )
     invocation_limit = (
         len(P15C_PROVIDER_IDS)
-        if schema_version == P15C_POLICY_SCHEMA_VERSION
+        if is_single_provider_policy
         else P15C_MAX_PROVIDER_INVOCATIONS
     )
     if invocation_ceiling > invocation_limit:
@@ -415,7 +465,11 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
             "POLICY_INVOCATION_CEILING",
             "execution policy invocation ceiling exceeds P15C",
         )
-    canonical = _canonical_json(source)
+    audit_source = dict(source)
+    if schema_version == P15C_POLICY_SCHEMA_VERSION:
+        audit_source["proxy_host"] = "<private>" if private_proxy_host else ""
+        audit_source["proxy_port"] = 0
+    canonical = _canonical_json(audit_source)
     return P15CExecutionPolicy(
         schema_version=int(schema_version),
         authorization_id=P15C_AUTHORIZATION_ID,
@@ -436,6 +490,9 @@ def load_execution_policy(path: str | Path) -> P15CExecutionPolicy:
         cny_to_micro_usd_ceiling=cny_to_micro_usd_ceiling,
         allowed_case_ids=tuple(cases),
         max_provider_invocations=invocation_ceiling,
+        transport_mode=transport_mode,
+        proxy_host=private_proxy_host,
+        proxy_port=private_proxy_port,
         policy_sha256=hashlib.sha256(canonical).hexdigest(),
     )
 
