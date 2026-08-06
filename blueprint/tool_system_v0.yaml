@@ -455,6 +455,8 @@ role_control_rules:
   unavailable_providers_may_be_skipped: true
   provider_specific_fake_io_contract_tests_required: true
   one_enabled_usable_api_smoke_satisfies_backup_path_proof: true
+  api_backup_live_smoke_is_independent_of_p15_and_p16_core_acceptance: true
+  optional_api_plugin_may_be_completed_after_core_product: true
   simultaneous_multi_provider_availability_required_for_completion: false
   named_provider_funding_required_for_completion: false
   moving_alias_exact_version_required_for_completion: false
@@ -755,11 +757,10 @@ milestones:
       or drifted modules, and record a local Git software change through an
       auditable, resumable, fail-closed workflow.
   P15_MULTI_PROJECT_BENCHMARK:
-    objective: qualify the accepted blueprint-to-code product across task classes and multiple isolated projects, keep ChatGPT/Codex subscription mode as the daily route, and validate the dormant API backup through provider-specific fake-I/O plus one final single-provider smoke before any optional target pilot
+    objective: qualify the accepted blueprint-to-code product across task classes and multiple isolated projects, keep ChatGPT/Codex subscription mode as the daily route, and qualify every dormant API adapter through provider-specific fake-I/O without making API activation or live smoke a core acceptance gate
     entry_requires:
       - P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT accepted
       - explicit P15 phase-entry authorization
-      - the final live API backup smoke has one named provider-model-network-credential-reference-limit execution packet for the single provider selected by repository-external operator configuration
       - each real repository mutation separately authorized
       - each benchmark project supplies its own explicitly authorized durable-module contract
     outputs:
@@ -775,7 +776,7 @@ milestones:
       - distinct bounded availability-failover, quality-repair, and model-escalation evidence
       - cross-project isolation and generalization evidence
       - failed-case and rollback corpus
-      - one controlled backup-API smoke through any single explicitly enabled usable key on the then-canonical main
+      - independent optional API plugin release criteria requiring one controlled smoke through any single explicitly enabled usable key only when that plugin is separately released
       - explicit proof that simultaneous multi-provider availability Qwen funding and moving-alias exact versions are not completion gates
       - optional separately authorized controlled target pilot
       - release-candidate acceptance review
@@ -789,11 +790,10 @@ milestones:
           - P15A_PROVIDER_PORTFOLIO_QUALIFICATION_SPECIFICATION accepted
         execution_boundary: isolated_fixture_no_live_provider
       - stage: P15C_CROSS_PROVIDER_READ_ONLY_BENCHMARK
-        objective: retain the stable stage identifier while qualifying every provider-specific adapter through fake-I/O and deferring one controlled live backup-path smoke to any single explicitly enabled usable provider; multiple live providers and real-repository transfer are not required
+        objective: retain the stable stage identifier while qualifying every provider-specific adapter through fake-I/O and proving the optional API plugin boundary without requiring API activation, a usable key, or live smoke
         entry_requires:
           - P15B_ADAPTER_ROUTER_AND_PROFILER_FIXTURES accepted
-          - named execution packet only for the one provider selected for the final live smoke
-        execution_boundary: fake_io_all_adapters_then_separately_authorized_single_provider_smoke_no_target_access
+        execution_boundary: fake_io_all_adapters_no_live_provider_no_target_access
       - stage: P15D_FAILURE_ROLLBACK_ISOLATION_AND_ECONOMICS_CORPUS
         objective: prove bounded failover, repair, escalation, cancellation, no-progress, isolation, rollback, and total-economic-cost decisions
         entry_requires:
@@ -831,7 +831,7 @@ milestones:
       - enabled-route lifecycle from discovery and quarantine through retirement when applicable
       - versioned atomic enabled-route publication and rollback when API mode is enabled
       - total-economic-cost, quota, concentration-risk, and provider-outage controls
-      - proof that disabled or unavailable API providers do not block production-operations acceptance
+      - proof that disabled or unavailable API providers and an unreleased optional API plugin do not block production-operations acceptance
       - operator runbook and deprecation policy
       - production acceptance decision record
 
