@@ -18,7 +18,7 @@ module_compound_contract:
   identity:
     canonical_module_id: ai-worker-runtime
     current_module_id: ai_worker_runtime
-    module_version: 2.1.0
+    module_version: 2.0.0
     aggregate_interface:
       interface_id: ai-worker-runtime-api
       interface_version: 1.0.0
