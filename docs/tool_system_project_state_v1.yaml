@@ -1664,8 +1664,19 @@ default_subscription_mainline_optional_api_plugin_realignment:
 p16a_sustainable_operations_acceptance_specification:
   authorization_packet: P16A-SUSTAINABLE-OPERATIONS-ACCEPTANCE-SPECIFICATION-LIFECYCLE-v1
   baseline_commit: 83b6d96a8f81519d5188c00cac8d2a209eac33b4
-  status: inventory_planned_pending_guarded_merge
+  status: specification_merged_dependency_graph_frozen_non_authorizing
   authority_effect: none
+  closeout_receipts:
+    pull_request: 195
+    final_pr_head: 61f792e20652477d8aa83a3a0038011b77b15446
+    canonical_squash_commit: b7570be532eac75efe2ccdcb64a72fbbc47f1130
+    hosted_ci_run: 1148
+    hosted_ci_conclusion: success
+    feature_branch: agent/p16a-sustainable-operations-specification-v1
+    feature_branch_retained: true
+    read_only_inventory_complete: true
+    p16b_to_p16i_dependency_graph_frozen: true
+    p16b_separate_authorization_required: true
   specification: docs/reports/p16a_sustainable_operations_acceptance_specification.md
   capability_inventory: docs/reports/p16a_sustainable_operations_inventory_v1.yaml
   task_manifest: examples/task_manifests/tool_system_p16a_sustainable_operations_acceptance_specification_v1.yaml

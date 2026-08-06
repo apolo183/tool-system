@@ -61,11 +61,23 @@ def test_optional_api_work_is_non_gating_and_p16_is_not_accepted() -> None:
     assert stop["production_deployment_authorized"] is False
     assert stop["first_implementation_package_authorized"] is False
     p16a = state["p16a_sustainable_operations_acceptance_specification"]
-    assert p16a["status"] == "inventory_planned_pending_guarded_merge"
+    assert p16a["status"] == "specification_merged_dependency_graph_frozen_non_authorizing"
     assert p16a["p16_accepted"] is False
     assert p16a["production_deployment_authorized"] is False
     assert p16a["next_implementation_package_authorized"] is False
     assert p16a["optional_api_provider_plugin_v2_is_core_gate"] is False
+    assert p16a["closeout_receipts"] == {
+        "pull_request": 195,
+        "final_pr_head": "61f792e20652477d8aa83a3a0038011b77b15446",
+        "canonical_squash_commit": "b7570be532eac75efe2ccdcb64a72fbbc47f1130",
+        "hosted_ci_run": 1148,
+        "hosted_ci_conclusion": "success",
+        "feature_branch": "agent/p16a-sustainable-operations-specification-v1",
+        "feature_branch_retained": True,
+        "read_only_inventory_complete": True,
+        "p16b_to_p16i_dependency_graph_frozen": True,
+        "p16b_separate_authorization_required": True,
+    }
     text = SPEC.read_text(encoding="utf-8")
     assert "P16 remains active and unaccepted" in text
     assert "separate user authorization for P16B" in text
