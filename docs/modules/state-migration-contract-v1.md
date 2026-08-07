@@ -33,7 +33,8 @@ module_compound_contract:
     direction: provider-to-direct-consumer
     direct_provider_module_ids:
       - release_governance
-    direct_consumer_module_ids: []
+    direct_consumer_module_ids:
+    - recovery_planning
   input_contract:
     registered_inputs:
       - migration_registry_v1
