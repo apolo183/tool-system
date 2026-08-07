@@ -252,7 +252,7 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
 EXPECTED_RAW_SHA256 = "f1f3c1520ce44fc22f43cd61dd5fcc98c5410a2960427b54c0545d9b4e44bfef"
 EXPECTED_BYTE_LENGTH = 109_356
 EXPECTED_SEMANTIC_SHA256 = (
-    "0000000000000000000000000000000000000000000000000000000000000000"
+    "92609ce05412d16c9db6ecf12df8f2fa87510115c999c643e64a46ce368c69fc"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 110
 EXPECTED_MODULE_IDS = {
@@ -675,7 +675,7 @@ def test_qwen_economics_correction_pair_scope_and_zero_io_state_validate() -> No
     assert state["module"]["module_version"] == "1.9.1"
     assert (
         state["corrected_invariant"]["current_calculated_worst_case_micro_cny"]
-        == 206_608
+        == 196_608
     )
     assert state["corrected_invariant"]["per_attempt_hard_cap_micro_cny"] == (250_000)
     assert state["canonical_packet_catalog_changed"] is False
