@@ -300,7 +300,7 @@ mapping_contract:
       direct_consumer_module_ids: []
       change_risk: "high: remote-free add/modify/delete local Git writes coordinated with durable receipts and crash resume"
       rollback_identity: tool-system@22dedb0f2a2c0b38a0bd4c67f36c1c2454ca19d5:local_git@absent
-~    - current_module_id: release_governance
+    - current_module_id: release_governance
       canonical_module_id: release-governance
       current_module_version: 1.0.0
       aggregate_interface_id: release-governance-api
