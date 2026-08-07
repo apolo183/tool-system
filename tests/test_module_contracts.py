@@ -115,6 +115,7 @@ DIRECT_EFFECT_EXPECTATIONS = {
     "blueprint_compiler": frozenset(),
     "development_loop": frozenset(),
     "local_git": frozenset({"repository_write", "data_write", "git_write"}),
+    "release_governance": frozenset(),
 }
 DELEGATED_EFFECT_EXPECTATIONS = {
     "architecture_registry": {},
