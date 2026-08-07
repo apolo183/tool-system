@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 19
+  module_count: 20
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -300,6 +300,17 @@ mapping_contract:
       direct_consumer_module_ids: []
       change_risk: "high: remote-free add/modify/delete local Git writes coordinated with durable receipts and crash resume"
       rollback_identity: tool-system@22dedb0f2a2c0b38a0bd4c67f36c1c2454ca19d5:local_git@absent
+    - current_module_id: release_governance
+      canonical_module_id: release-governance
+      current_module_version: 1.0.0
+      aggregate_interface_id: release-governance-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.release_governance}
+      direct_consumer_module_ids: []
+      change_risk: "medium: deterministic non-authorizing release compatibility and deprecation boundary"
+      rollback_identity: tool-system@c35be57de6ff1f7e31446469281fa369f529d937:release_governance@absent
 ~~~
 <!-- MODULE-IDENTITY-MAPPING:END -->
 
@@ -369,6 +380,7 @@ static_import_dag:
     development_loop:
       - local_git
     local_git: []
+    release_governance: []
   zero_consumer_modules:
     - architecture_registry
     - adaptive_model_portfolio_and_economics
@@ -379,6 +391,7 @@ static_import_dag:
     - blueprint_compiler
     - development_loop
     - local_git
+    - release_governance
   non_claim: >-
     Static AST import equality does not prove absence of dynamic imports, CLI
     invocation dependencies, data dependencies, configuration dependencies,

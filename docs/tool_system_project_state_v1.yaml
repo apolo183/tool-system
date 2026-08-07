@@ -1719,3 +1719,25 @@ p16a_sustainable_operations_acceptance_specification:
     disaster_recovery_drills: 0
     cleanup_operations: 0
     rollback_operations: 0
+
+p16b_release_version_and_deprecation_contract:
+  baseline_commit: c35be57de6ff1f7e31446469281fa369f529d937
+  status: core_contract_implemented_non_authorizing
+  module_id: release-governance
+  interface_id: release-governance-api
+  interface_version: 1.0.0
+  report: docs/reports/p16b_release_version_deprecation_acceptance.md
+  task_manifest: examples/task_manifests/tool_system_p16b_release_version_deprecation_contract_v1.yaml
+  change_plan: examples/change_plans/tool_system_p16b_release_version_deprecation_contract_v1.yaml
+  release_execution_authorized: false
+  production_deployment_authorized: false
+  p16_accepted: false
+  optional_api_provider_plugin_v2_is_core_gate: false
+  next_implementation_package: P16C-STATE-MIGRATION-AND-COMPATIBILITY
+  zero_operation_boundary:
+    provider_invocations: 0
+    credential_value_accesses: 0
+    live_smoke_executions: 0
+    production_operations: 0
+    deployment_operations: 0
+    rollback_operations: 0
