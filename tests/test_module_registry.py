@@ -981,7 +981,7 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert len(raw) == EXPECTED_BYTE_LENGTH
     assert hashlib.sha256(raw).hexdigest() == EXPECTED_RAW_SHA256
     assert hashlib.sha256(normalized).hexdigest() == EXPECTED_SEMANTIC_SHA256
-    assert len(registry["modules"]) == len(registry["interfaces"]) == 19
+    assert len(registry["modules"]) == len(registry["interfaces"]) == 20
     assert (
         sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 116
     )
