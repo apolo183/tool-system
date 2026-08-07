@@ -161,6 +161,7 @@ DELEGATED_EFFECT_EXPECTATIONS = {
             TOOL_SYSTEM_EFFECT_CLASSES
         )
     },
+    "release_governance": {},
 }
 TOKEN_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SEMVER_RE = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
