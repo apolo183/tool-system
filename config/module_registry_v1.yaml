@@ -2444,10 +2444,7 @@ interfaces:
   interface_version: 1.0.0
   provider_module_id: state-migration
   consumers:
-  - module_id: recovery-planning
-    version_range:
-      minimum: 1.0.0
-      maximum: 1.0.0
+  - consumer_module_id: recovery-planning
   input_contract: &state_migration_interface_contract
     repo_relative_path: docs/modules/state-migration-contract-v1.md
     sha256: e710be9a571d8ac392f386fb44d0ba23282db214db215537d3d9a1797dbeca5c
