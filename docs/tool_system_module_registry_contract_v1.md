@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 20
+  module_count: 21
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -308,9 +308,21 @@ mapping_contract:
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.release_governance}
-      direct_consumer_module_ids: []
+      direct_consumer_module_ids:
+        - state_migration
       change_risk: "medium: deterministic non-authorizing release compatibility and deprecation boundary"
       rollback_identity: tool-system@c35be57de6ff1f7e31446469281fa369f529d937:release_governance@absent
+    - current_module_id: state_migration
+      canonical_module_id: state-migration
+      current_module_version: 1.0.0
+      aggregate_interface_id: state-migration-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.state_migration}
+      direct_consumer_module_ids: []
+      change_risk: "medium: deterministic product-wide migration compatibility and dry-run planning boundary"
+      rollback_identity: tool-system@315f4bb08aacf038e0391a0a55553fe1bed67a26:state_migration@absent
 ~~~
 <!-- MODULE-IDENTITY-MAPPING:END -->
 
@@ -380,7 +392,9 @@ static_import_dag:
     development_loop:
       - local_git
     local_git: []
-    release_governance: []
+    release_governance:
+      - state_migration
+    state_migration: []
   zero_consumer_modules:
     - architecture_registry
     - adaptive_model_portfolio_and_economics
@@ -391,7 +405,7 @@ static_import_dag:
     - blueprint_compiler
     - development_loop
     - local_git
-    - release_governance
+    - state_migration
   non_claim: >-
     Static AST import equality does not prove absence of dynamic imports, CLI
     invocation dependencies, data dependencies, configuration dependencies,
