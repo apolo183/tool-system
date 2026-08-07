@@ -1691,7 +1691,7 @@ modules:
   permitted_side_effects: []
   rollback_boundary: &release_governance_contract
     repo_relative_path: docs/modules/release-governance-contract-v1.md
-    sha256: ec79a1278d124706130927e67d5bdfa7a186bad2650d84c31b8e384c384295dc
+    sha256: 920ae15a4e045da2ef505b8d2d27b64e75bbe7f4fdcd37154798a74ec2e10f75
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *release_governance_contract
@@ -1767,6 +1767,42 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *recovery_planning_contract
+- module_id: operational-observability
+  module_version: 1.0.0
+  role: evaluate caller-supplied telemetry against deterministic SLO alert and incident-response policies. Produce in-memory decisions only; never collect telemetry, deliver alerts, page operators, mutate incidents, deploy systems, or grant production authority.
+  owner: operational-observability
+  public_interface_refs:
+  - interface_id: operational-observability-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: release-governance-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/operational_observability/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/operational_observability/policy.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_operational_observability.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary: &operational_observability_contract
+    repo_relative_path: docs/modules/operational-observability-contract-v1.md
+    sha256: 71eb256e80f7dd7ce540f2df25bf2fde82106ca5e324421aec99ada60654548f
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary: *operational_observability_contract
 interfaces:
 - interface_id: architecture-registry-api
   interface_version: 2.0.0
@@ -2429,10 +2465,11 @@ interfaces:
   interface_version: 1.0.0
   provider_module_id: release-governance
   consumers:
+  - consumer_module_id: operational-observability
   - consumer_module_id: state-migration
   input_contract: &release_governance_interface_contract
     repo_relative_path: docs/modules/release-governance-contract-v1.md
-    sha256: ec79a1278d124706130927e67d5bdfa7a186bad2650d84c31b8e384c384295dc
+    sha256: 920ae15a4e045da2ef505b8d2d27b64e75bbe7f4fdcd37154798a74ec2e10f75
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *release_governance_interface_contract
@@ -2469,3 +2506,17 @@ interfaces:
   side_effect_contract: *recovery_planning_interface_contract
   compatibility_policy: *recovery_planning_interface_contract
   replacement_revalidation_boundary: *recovery_planning_interface_contract
+- interface_id: operational-observability-api
+  interface_version: 1.0.0
+  provider_module_id: operational-observability
+  consumers: []
+  input_contract: &operational_observability_interface_contract
+    repo_relative_path: docs/modules/operational-observability-contract-v1.md
+    sha256: 71eb256e80f7dd7ce540f2df25bf2fde82106ca5e324421aec99ada60654548f
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract: *operational_observability_interface_contract
+  error_contract: *operational_observability_interface_contract
+  side_effect_contract: *operational_observability_interface_contract
+  compatibility_policy: *operational_observability_interface_contract
+  replacement_revalidation_boundary: *operational_observability_interface_contract

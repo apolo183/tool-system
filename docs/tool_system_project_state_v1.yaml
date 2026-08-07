@@ -1790,3 +1790,25 @@ p16d_backup_restore_and_disaster_recovery:
   p16_accepted: false
   next_package: P16E-OBSERVABILITY-SLO-AND-INCIDENT-RESPONSE
   optional_api_provider_plugin_v2: default_off_independent_deferred_not_p16_core_gate
+
+p16e_observability_slo_alerting_and_incident_response:
+  status: core_non_live_policy_contract_implemented_non_executing
+  canonical_base: 01fffab69a0db3e7110cd6edc7db6f188feb48ab
+  package: P16E-OBSERVABILITY-SLO-AND-INCIDENT-RESPONSE
+  implementation:
+    module: operational_observability
+    telemetry: caller_supplied_immutable_only
+    sli_slo: deterministic_integer_ppm
+    alerting: decision_only_delivery_unauthorized
+    incident_response: evidence_gated_state_machine_external_action_unauthorized
+  authority:
+    telemetry_collection_operations: 0
+    alert_delivery_operations: 0
+    incident_mutations: 0
+    deployment_operations: 0
+    production_operations: 0
+    provider_invocations: 0
+    credential_value_accesses: 0
+  p16_accepted: false
+  next_package: P16F-AUDIT-RUN-RETENTION-AND-ARCHIVAL
+  optional_api_provider_plugin_v2: default_off_independent_deferred_not_p16_core_gate
