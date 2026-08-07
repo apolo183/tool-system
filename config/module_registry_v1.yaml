@@ -1697,7 +1697,7 @@ modules:
   replacement_boundary: *release_governance_contract
 - module_id: state-migration
   module_version: 1.0.0
-  role: validate product-wide migration registries and compatibility matrices and produce deterministic dry-run upgrade or downgrade plans. Plan only from caller-supplied immutable values; never open state stores, execute migrations, mutate artifacts, inspect deployments, or grant release authority.
+  role: validate product-wide migration registries and compatibility matrices and produce deterministic dry-run upgrade or downgrade plans. Plan only from caller-supplied immutable values; never open state stores, execute migration steps, mutate artifacts, inspect deployments, or grant release authority.
   owner: state-migration
   public_interface_refs:
   - interface_id: state-migration-api
