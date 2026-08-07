@@ -249,8 +249,8 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
     "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
 )
 
-EXPECTED_RAW_SHA256 = "993b3c51547e938d3be0bb63a99e3f401301933f00131269878d1f8521d4db1c"
-EXPECTED_BYTE_LENGTH = 111_645
+EXPECTED_RAW_SHA256 = "69d1d2d9a6d2a18219c5075d22603229cd2afc99471b62bf772adcf9660b02a8"
+EXPECTED_BYTE_LENGTH = 111_650
 EXPECTED_SEMANTIC_SHA256 = (
     "0000000000000000000000000000000000000000000000000000000000000000"
 )
@@ -407,7 +407,7 @@ def authority_code_paths() -> dict[str, list[str]]:
         for current_id, contract in contracts.items()
     }
     flattened = [path for paths in result.values() for path in paths]
-    assert len(flattened) == len(set(flattened)) == 118
+    assert len(flattened) == len(set(flattened)) == 120
     python_owners = target_python_owner_by_path()
     assert {
         path: current_id
