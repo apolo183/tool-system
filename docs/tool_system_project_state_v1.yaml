@@ -1741,3 +1741,31 @@ p16b_release_version_and_deprecation_contract:
     production_operations: 0
     deployment_operations: 0
     rollback_operations: 0
+
+p16c_state_migration_and_compatibility:
+  baseline_commit: 315f4bb08aacf038e0391a0a55553fe1bed67a26
+  status: core_planning_contract_implemented_non_executing
+  module_id: state-migration
+  interface_id: state-migration-api
+  interface_version: 1.0.0
+  dependency:
+    module_id: release-governance
+    interface_version: 1.0.0
+  report: docs/reports/p16c_state_migration_compatibility_acceptance.md
+  task_manifest: examples/task_manifests/tool_system_p16c_state_migration_compatibility_v1.yaml
+  change_plan: examples/change_plans/tool_system_p16c_state_migration_compatibility_v1.yaml
+  migration_execution_authorized: false
+  database_access_authorized: false
+  production_deployment_authorized: false
+  p16_accepted: false
+  optional_api_provider_plugin_v2_is_core_gate: false
+  next_implementation_package: P16D-BACKUP-RESTORE-AND-DISASTER-RECOVERY
+  zero_operation_boundary:
+    state_store_reads: 0
+    state_store_writes: 0
+    migration_executions: 0
+    provider_invocations: 0
+    credential_value_accesses: 0
+    production_operations: 0
+    deployment_operations: 0
+    rollback_operations: 0
