@@ -116,6 +116,7 @@ DIRECT_EFFECT_EXPECTATIONS = {
     "development_loop": frozenset(),
     "local_git": frozenset({"repository_write", "data_write", "git_write"}),
     "release_governance": frozenset(),
+    "state_migration": frozenset(),
 }
 DELEGATED_EFFECT_EXPECTATIONS = {
     "architecture_registry": {},
@@ -163,6 +164,7 @@ DELEGATED_EFFECT_EXPECTATIONS = {
         )
     },
     "release_governance": {},
+    "state_migration": {},
 }
 TOKEN_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SEMVER_RE = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
@@ -253,13 +255,13 @@ def _mapping_contract() -> dict[str, Any]:
 def _mappings_by_current_id() -> dict[str, dict[str, Any]]:
     rows = _mapping_contract().get("mappings")
     _require(isinstance(rows, list), "module identity mappings must be a list")
-    _require(len(rows) == 20, "module identity mappings must contain twenty rows")
+    _require(len(rows) == 21, "module identity mappings must contain twenty rows")
     result = {
         str(row["current_module_id"]): row
         for row in rows
         if isinstance(row, dict)
     }
-    _require(len(result) == 20, "current module IDs must be unique")
+    _require(len(result) == 21, "current module IDs must be unique")
     return result
 
 
@@ -865,7 +867,7 @@ def _validate_contract_set(
     contracts: list[dict[str, Any]],
     digests: list[str],
 ) -> None:
-    _require(len(contracts) == 20, "exactly twenty module contracts are required")
+    _require(len(contracts) == 21, "exactly twenty-one module contracts are required")
     for key_path in (
         ("contract_path",),
         ("identity", "current_module_id"),
@@ -900,7 +902,7 @@ def _validated_contracts() -> tuple[list[dict[str, Any]], list[str]]:
         for mapping in mappings.values()
     }
     actual_paths = set(CONTRACT_DIR.glob("*.md"))
-    _require(actual_paths == expected_paths, "contract directory must contain exactly twenty owners")
+    _require(actual_paths == expected_paths, "contract directory must contain exactly twenty-one owners")
 
     contracts: list[dict[str, Any]] = []
     digests: list[str] = []
@@ -925,8 +927,8 @@ def _validated_contracts() -> tuple[list[dict[str, Any]], list[str]]:
 def test_all_module_contracts_match_module_registry_and_real_owner_evidence() -> None:
     contracts, digests = _validated_contracts()
 
-    assert len(contracts) == 20
-    assert len(digests) == len(set(digests)) == 20
+    assert len(contracts) == 21
+    assert len(digests) == len(set(digests)) == 21
     assert all(re.fullmatch(r"[0-9a-f]{64}", digest) for digest in digests)
 
 
