@@ -13,7 +13,7 @@ This is a tool-system-owned implementation and validation contract. It grants
 no execution, downstream-repository, cleanup, provider, or production
 authority, and it records no external policy state.
 
-## Twenty-two-row identity and aggregate-interface mapping
+## Twenty-three-row identity and aggregate-interface mapping
 
 The canonical registry IDs use hyphens while Python package and import names
 remain unchanged. The mapping below is the local identity owner used by the
@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 22
+  module_count: 23
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -309,6 +309,7 @@ mapping_contract:
       python_import_identities:
         - {kind: prefix, name: tool_system.release_governance}
       direct_consumer_module_ids:
+        - operational_observability
         - state_migration
       change_risk: "medium: deterministic non-authorizing release compatibility and deprecation boundary"
       rollback_identity: tool-system@c35be57de6ff1f7e31446469281fa369f529d937:release_governance@absent
@@ -335,6 +336,17 @@ mapping_contract:
       direct_consumer_module_ids: []
       change_risk: "medium: deterministic non-live backup verification, restore planning, and disaster-recovery evaluation boundary"
       rollback_identity: tool-system@a4042551e5c2b77e07db30ecdbdb5ae28f618ec7:recovery_planning@absent
+    - current_module_id: operational_observability
+      canonical_module_id: operational-observability
+      current_module_version: 1.0.0
+      aggregate_interface_id: operational-observability-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.operational_observability}
+      direct_consumer_module_ids: []
+      change_risk: "medium: deterministic non-executing telemetry SLO alert and incident-response boundary"
+      rollback_identity: tool-system@01fffab69a0db3e7110cd6edc7db6f188feb48ab:operational_observability@absent
 ~~~
 <!-- MODULE-IDENTITY-MAPPING:END -->
 
@@ -405,10 +417,12 @@ static_import_dag:
       - local_git
     local_git: []
     release_governance:
+      - operational_observability
       - state_migration
     state_migration:
       - recovery_planning
     recovery_planning: []
+    operational_observability: []
   zero_consumer_modules:
     - architecture_registry
     - adaptive_model_portfolio_and_economics
@@ -419,6 +433,7 @@ static_import_dag:
     - blueprint_compiler
     - development_loop
     - local_git
+    - operational_observability
     - recovery_planning
   non_claim: >-
     Static AST import equality does not prove absence of dynamic imports, CLI
