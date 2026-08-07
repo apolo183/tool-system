@@ -1691,7 +1691,7 @@ modules:
   permitted_side_effects: []
   rollback_boundary: &release_governance_contract
     repo_relative_path: docs/modules/release-governance-contract-v1.md
-    sha256: 4ffb60de4dba9e8add479480c9f5b27292ac4cdd535b0d18a67bad334712e122
+    sha256: 920ae15a4e045da2ef505b8d2d27b64e75bbe7f4fdcd37154798a74ec2e10f75
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *release_governance_contract
@@ -2469,7 +2469,7 @@ interfaces:
   - consumer_module_id: state-migration
   input_contract: &release_governance_interface_contract
     repo_relative_path: docs/modules/release-governance-contract-v1.md
-    sha256: 4ffb60de4dba9e8add479480c9f5b27292ac4cdd535b0d18a67bad334712e122
+    sha256: 920ae15a4e045da2ef505b8d2d27b64e75bbe7f4fdcd37154798a74ec2e10f75
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *release_governance_interface_contract
