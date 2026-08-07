@@ -1,0 +1,47 @@
+plan_id: tool-system-p16d-backup-restore-dr-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_p16d_backup_restore_disaster_recovery_v1.yaml
+changed_files:
+  - REPO_MANIFEST.md
+  - config/module_registry_v1.yaml
+  - docs/modules/state-migration-contract-v1.md
+  - docs/modules/recovery-planning-contract-v1.md
+  - docs/reports/p16d_backup_restore_disaster_recovery_acceptance.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_p16d_backup_restore_disaster_recovery_v1.yaml
+  - examples/task_manifests/tool_system_p16d_backup_restore_disaster_recovery_v1.yaml
+  - src/tool_system/recovery_planning/__init__.py
+  - src/tool_system/recovery_planning/planner.py
+  - tests/test_module_contracts.py
+  - tests/test_module_registry.py
+  - tests/test_recovery_planning.py
+  - tests/test_repo_manifest.py
+alignment:
+  parent:
+    document: docs/reports/p16a_sustainable_operations_acceptance_specification.md
+    section_or_key: P16D dependency
+    scope: Close non-live backup verification restore planning and disaster-recovery evaluation without execution authority.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P16_PRODUCTION_OPERATIONS_ACCEPTANCE.outputs
+    scope: Supply content-addressed backup integrity deterministic restore gating and explicit RPO and RTO decisions.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_recovery_planning.py tests/test_state_migration.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p16d_backup_restore_disaster_recovery_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p16d_backup_restore_disaster_recovery_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_connector_only_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/p16d-backup-restore-dr-v1
+  retain_feature_branch: true
+  exact_base: a4042551e5c2b77e07db30ecdbdb5ae28f618ec7
+  exact_base_tree: canonical_main_tree_at_a4042551e5c2b77e07db30ecdbdb5ae28f618ec7
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@a4042551e5c2b77e07db30ecdbdb5ae28f618ec7
+  execution_authorized: false

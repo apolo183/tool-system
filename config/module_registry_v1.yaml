@@ -1727,10 +1727,46 @@ modules:
   permitted_side_effects: []
   rollback_boundary: &state_migration_contract
     repo_relative_path: docs/modules/state-migration-contract-v1.md
-    sha256: f6ba34bc36aade05b736c090e2baed6b9df56f753e96809f6eacf16be77aa373
+    sha256: e710be9a571d8ac392f386fb44d0ba23282db214db215537d3d9a1797dbeca5c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *state_migration_contract
+- module_id: recovery-planning
+  module_version: 1.0.0
+  role: validate content-addressed backup manifests and produce deterministic non-live restore and disaster-recovery decisions. Evaluate only caller-supplied metadata and observations; never read backup bytes, open stores, restore data, execute migrations, deploy systems, or grant production authority.
+  owner: recovery-planning
+  public_interface_refs:
+  - interface_id: recovery-planning-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: state-migration-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/recovery_planning/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/recovery_planning/planner.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_recovery_planning.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary: &recovery_planning_contract
+    repo_relative_path: docs/modules/recovery-planning-contract-v1.md
+    sha256: 610a00a8da0aa68670953890fb034486d1e6ddf05065ffd2d558f0651e4bc819
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary: *recovery_planning_contract
 interfaces:
 - interface_id: architecture-registry-api
   interface_version: 2.0.0
@@ -2407,10 +2443,11 @@ interfaces:
 - interface_id: state-migration-api
   interface_version: 1.0.0
   provider_module_id: state-migration
-  consumers: []
+  consumers:
+  - consumer_module_id: recovery-planning
   input_contract: &state_migration_interface_contract
     repo_relative_path: docs/modules/state-migration-contract-v1.md
-    sha256: f6ba34bc36aade05b736c090e2baed6b9df56f753e96809f6eacf16be77aa373
+    sha256: e710be9a571d8ac392f386fb44d0ba23282db214db215537d3d9a1797dbeca5c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *state_migration_interface_contract
@@ -2418,3 +2455,17 @@ interfaces:
   side_effect_contract: *state_migration_interface_contract
   compatibility_policy: *state_migration_interface_contract
   replacement_revalidation_boundary: *state_migration_interface_contract
+- interface_id: recovery-planning-api
+  interface_version: 1.0.0
+  provider_module_id: recovery-planning
+  consumers: []
+  input_contract: &recovery_planning_interface_contract
+    repo_relative_path: docs/modules/recovery-planning-contract-v1.md
+    sha256: 610a00a8da0aa68670953890fb034486d1e6ddf05065ffd2d558f0651e4bc819
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract: *recovery_planning_interface_contract
+  error_contract: *recovery_planning_interface_contract
+  side_effect_contract: *recovery_planning_interface_contract
+  compatibility_policy: *recovery_planning_interface_contract
+  replacement_revalidation_boundary: *recovery_planning_interface_contract
