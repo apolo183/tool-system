@@ -1015,7 +1015,7 @@ def test_current_current_registry_is_authority_and_tmp_copy_is_not(
     fixture = _write_registry(tmp_path, current_registry_fixture())
     compatibility = validate_module_registry(fixture, ROOT)
 
-    assert current["status"] == "PASS"
+    assert current["status"] == "PASS", current["reasons"]
     assert current["registry_input_mode"] == CURRENT_REGISTRY_INPUT_MODE
     assert current["current_registry_authority"] is True
     assert current["validation_scope"] == "tool_system_current_module_registry"
