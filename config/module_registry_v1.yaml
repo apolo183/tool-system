@@ -1691,10 +1691,46 @@ modules:
   permitted_side_effects: []
   rollback_boundary: &release_governance_contract
     repo_relative_path: docs/modules/release-governance-contract-v1.md
-    sha256: 68c8915be670bf8190f7f741cd8245465ce67e74cb3b0934ec079840b0bc2eab
+    sha256: ec79a1278d124706130927e67d5bdfa7a186bad2650d84c31b8e384c384295dc
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *release_governance_contract
+- module_id: state-migration
+  module_version: 1.0.0
+  role: validate product-wide migration registries and compatibility matrices and produce deterministic dry-run upgrade or downgrade plans. Plan only from caller-supplied immutable values; never open state stores, execute migrations, mutate artifacts, inspect deployments, or grant release authority.
+  owner: state-migration
+  public_interface_refs:
+  - interface_id: state-migration-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: release-governance-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/state_migration/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/state_migration/planner.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_state_migration.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary: &state_migration_contract
+    repo_relative_path: docs/modules/state-migration-contract-v1.md
+    sha256: f6ba34bc36aade05b736c090e2baed6b9df56f753e96809f6eacf16be77aa373
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary: *state_migration_contract
 interfaces:
 - interface_id: architecture-registry-api
   interface_version: 2.0.0
@@ -2356,10 +2392,11 @@ interfaces:
 - interface_id: release-governance-api
   interface_version: 1.0.0
   provider_module_id: release-governance
-  consumers: []
+  consumers:
+  - consumer_module_id: state-migration
   input_contract: &release_governance_interface_contract
     repo_relative_path: docs/modules/release-governance-contract-v1.md
-    sha256: 68c8915be670bf8190f7f741cd8245465ce67e74cb3b0934ec079840b0bc2eab
+    sha256: ec79a1278d124706130927e67d5bdfa7a186bad2650d84c31b8e384c384295dc
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *release_governance_interface_contract
@@ -2367,3 +2404,17 @@ interfaces:
   side_effect_contract: *release_governance_interface_contract
   compatibility_policy: *release_governance_interface_contract
   replacement_revalidation_boundary: *release_governance_interface_contract
+- interface_id: state-migration-api
+  interface_version: 1.0.0
+  provider_module_id: state-migration
+  consumers: []
+  input_contract: &state_migration_interface_contract
+    repo_relative_path: docs/modules/state-migration-contract-v1.md
+    sha256: f6ba34bc36aade05b736c090e2baed6b9df56f753e96809f6eacf16be77aa373
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract: *state_migration_interface_contract
+  error_contract: *state_migration_interface_contract
+  side_effect_contract: *state_migration_interface_contract
+  compatibility_policy: *state_migration_interface_contract
+  replacement_revalidation_boundary: *state_migration_interface_contract
