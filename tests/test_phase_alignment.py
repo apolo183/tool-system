@@ -137,6 +137,35 @@ P15B_FILES = {
     "tests/test_repo_manifest.py",
     "tests/test_repository_context_builder.py",
 }
+P16I_ACCEPTANCE_REPORT = (
+    ROOT
+    / "docs"
+    / "reports"
+    / "p16i_production_operations_acceptance_decision.md"
+)
+P16_FINAL_ACCEPTANCE_MAPPING = (
+    ROOT / "docs" / "reports" / "p16_final_acceptance_mapping_v1.yaml"
+)
+P16I_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_p16i_production_operations_acceptance_decision_v1.yaml"
+)
+P16I_CHANGE_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_p16i_production_operations_acceptance_decision_v1.yaml"
+)
+P16I_FILES = {
+    "docs/reports/p16_final_acceptance_mapping_v1.yaml",
+    "docs/reports/p16i_production_operations_acceptance_decision.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_p16i_production_operations_acceptance_decision_v1.yaml",
+    "examples/task_manifests/tool_system_p16i_production_operations_acceptance_decision_v1.yaml",
+    "tests/test_phase_alignment.py",
+}
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
@@ -189,15 +218,19 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
 
     assert project_state["current_phase"] == {
         "id": EXPECTED_PHASE,
-        "status": "active",
+        "status": "accepted",
         "entry_record": "docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md",
         "entry_authorized": True,
-        "last_accepted_stage": "P15_MULTI_PROJECT_BENCHMARK",
-        "last_accepted_stage_record": "docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md",
+        "last_accepted_stage": EXPECTED_PHASE,
+        "last_accepted_stage_record": (
+            "docs/reports/p16i_production_operations_acceptance_decision.md"
+        ),
         "next_stage": None,
         "next_stage_authorized": False,
-        "active_stage": EXPECTED_PHASE,
-        "active_stage_status": "entered_subscription_primary_core_no_production_authority",
+        "active_stage": None,
+        "active_stage_status": (
+            "accepted_subscription_primary_sustainable_operations_core"
+        ),
         "next_phase": None,
         "next_phase_entry_authorized": False,
     }
@@ -1058,3 +1091,117 @@ def test_subscription_primary_core_acceptance_enters_p16_without_api_smoke() -> 
         "api_mode_required": False,
     }
     assert set(lifecycle["zero_operation_boundary"].values()) == {0}
+
+def test_p16i_manifest_and_change_plan_freeze_exact_acceptance_scope() -> None:
+    manifest_result = validate_task_manifest(
+        P16I_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(P16I_CHANGE_PLAN)
+    manifest = load_yaml_file(P16I_MANIFEST)
+    plan = load_yaml_file(P16I_CHANGE_PLAN)
+    closure = manifest["bounded_closure"]["frozen_before_execution"]
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == P16I_FILES
+    assert set(manifest["scope"]["in_scope"]) == P16I_FILES
+    assert set(plan["changed_files"]) == P16I_FILES
+    assert len(P16I_FILES) == 6
+    assert closure["baseline_commit"] == (
+        "02699469bf96024bb481980712d47494a4ef08ff"
+    )
+    assert closure["allowed_scope"] == "exact_6_paths_listed_below"
+    assert set(closure["finite_budgets"].values()) <= {0, 1, 3}
+    assert closure["finite_budgets"]["provider_invocations"] == 0
+    assert closure["finite_budgets"]["credential_value_accesses"] == 0
+    assert closure["finite_budgets"]["deployment_operations"] == 0
+    assert closure["finite_budgets"]["production_operations"] == 0
+    assert manifest["publication"]["retain_feature_branch"] is True
+    assert manifest["publication"]["branch_deletion_authorized"] is False
+    assert all(not path.startswith("src/") for path in P16I_FILES)
+    assert "blueprint/tool_system_v0.yaml" not in P16I_FILES
+    assert "REPO_MANIFEST.md" not in P16I_FILES
+
+
+def test_p16i_maps_all_blueprint_outputs_without_api_gating() -> None:
+    blueprint = load_yaml_file(BLUEPRINT)
+    mapping = load_yaml_file(P16_FINAL_ACCEPTANCE_MAPPING)
+    outputs = blueprint["milestones"][EXPECTED_PHASE]["outputs"]
+    rows = {row["output"]: row for row in mapping["outputs"]}
+
+    assert set(rows) == set(outputs)
+    assert len(rows) == 16
+    dispositions = [row["disposition"] for row in mapping["outputs"]]
+    assert dispositions.count("accepted_core") == 9
+    assert dispositions.count("optional_api_plugin_conditional_deferred") == 6
+    assert dispositions.count("p16_acceptance_decision_record") == 1
+    assert mapping["decision"] == (
+        "accepted_subscription_primary_sustainable_operations_core"
+    )
+    assert mapping["core_route"] == {
+        "daily_mainline": ["chatgpt_web", "codex_cli"],
+        "large_model_apis_default_enabled": False,
+        "api_activation_required_for_core_acceptance": False,
+    }
+    plugin = mapping["optional_api_provider_plugin_v2"]
+    assert plugin == {
+        "status": "default_disabled_independent_deferred",
+        "p16_core_hard_gate": False,
+        "implementation_authorized": False,
+        "release_authorized": False,
+    }
+    assert set(mapping["zero_operation_boundary"].values()) == {0}
+
+
+def test_p16i_accepts_only_core_and_preserves_every_external_stop() -> None:
+    state = load_yaml_file(PROJECT_STATE)
+    p16h = state["p16h_operator_runbook_and_production_readiness"]
+    p16i = state["p16i_production_operations_acceptance_decision"]
+    report = P16I_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
+
+    assert p16h["status"] == (
+        "merged_hosted_ci_passed_ready_for_p16_acceptance_review"
+    )
+    assert p16h["publication_receipt"] == {
+        "pull_request": 203,
+        "final_pr_head": "e48d7c2cda714c5fe578333eb5110b5c084f8c8c",
+        "canonical_squash_commit": (
+            "02699469bf96024bb481980712d47494a4ef08ff"
+        ),
+        "hosted_ci_run": 1199,
+        "hosted_ci_conclusion": "success",
+        "exact_changed_path_count": 19,
+        "feature_branch": (
+            "agent/p16h-operator-runbook-production-readiness-v1"
+        ),
+        "feature_branch_retained": True,
+    }
+    assert p16i["status"] == (
+        "accepted_subscription_primary_sustainable_operations_core"
+    )
+    assert p16i["p16_core"] == {
+        "accepted": True,
+        "route": "subscription_primary",
+        "daily_mainline": ["chatgpt_web", "codex_cli"],
+        "acceptance_scope": "sustainable_operations_non_live_core",
+    }
+    assert set(p16i["remaining_authority"].values()) == {False}
+    assert set(p16i["zero_operation_boundary"].values()) == {0}
+    assert p16i["optional_api_provider_plugin_v2"][
+        "p16_core_hard_gate"
+    ] is False
+    for marker in (
+        "accepted_subscription_primary_sustainable_operations_core",
+        "P16B through P16H",
+        "nine Core outputs",
+        "six API-mode-only outputs",
+        "OPTIONAL-API-PROVIDER-PLUGIN-v2",
+        "grants no production deployment",
+        "No such operation occurred",
+    ):
+        assert marker in report
+
