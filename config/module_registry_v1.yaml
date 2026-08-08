@@ -1763,7 +1763,7 @@ modules:
   permitted_side_effects: []
   rollback_boundary: &recovery_planning_contract
     repo_relative_path: docs/modules/recovery-planning-contract-v1.md
-    sha256: 610a00a8da0aa68670953890fb034486d1e6ddf05065ffd2d558f0651e4bc819
+    sha256: e87220c68731b6badbdc0396209a75a8b56c49eb840c1d24e870513c9895d15e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *recovery_planning_contract
@@ -1799,7 +1799,7 @@ modules:
   permitted_side_effects: []
   rollback_boundary: &operational_observability_contract
     repo_relative_path: docs/modules/operational-observability-contract-v1.md
-    sha256: e51ffda870ec5de84b79642e1acb6ee2f6bcd4e0a24f0d8ff1f09abd7cd7ead6
+    sha256: 643e2c8c9d1b438daceff211acb0f3de45f54410b94b74f5273d725e1a59e6b2
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *operational_observability_contract
@@ -1835,7 +1835,7 @@ modules:
   permitted_side_effects: []
   rollback_boundary: &record_retention_contract
     repo_relative_path: docs/modules/record-retention-contract-v1.md
-    sha256: ba29ba7d1131edcf787e32287ff887f6a28c5286d6430558b5fe7dcc6df5d6ad
+    sha256: a8a2bf3ce6489c91d709fb3227127f81bfa120a137dfa6ea1fcabfb74b83b3ab
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *record_retention_contract
@@ -1871,10 +1871,52 @@ modules:
   permitted_side_effects: []
   rollback_boundary: &subscription_capacity_contract
     repo_relative_path: docs/modules/subscription-capacity-contract-v1.md
-    sha256: 94bbfc36e9bd593c92ef4f1d6b2b086299e5f1b7463960b8fc9a1cdd2fcabc93
+    sha256: 2212bbaa68f78236ca16ad15a65fafa3f30a1e4cc5d8fda99f8b9413e6adc609
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *subscription_capacity_contract
+- module_id: production-readiness
+  module_version: 1.0.0
+  role: aggregate P16 Core recovery observability retention and subscription evidence into a deterministic operator-review readiness decision. Produce an in-memory decision only; never accept P16, deploy, operate production, inspect accounts, call providers, or perform external actions.
+  owner: production-readiness
+  public_interface_refs:
+  - interface_id: production-readiness-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: operational-observability-api
+    interface_version: 1.0.0
+  - interface_id: record-retention-api
+    interface_version: 1.0.0
+  - interface_id: recovery-planning-api
+    interface_version: 1.0.0
+  - interface_id: subscription-capacity-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/production_readiness/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/production_readiness/policy.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_production_readiness.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary: &production_readiness_contract
+    repo_relative_path: docs/modules/production-readiness-contract-v1.md
+    sha256: 0be6e611e8abe4c7dcc4d50b14ca129a7def40c507bd105773b918e380cea959
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary: *production_readiness_contract
 interfaces:
 - interface_id: architecture-registry-api
   interface_version: 2.0.0
@@ -2568,10 +2610,11 @@ interfaces:
 - interface_id: recovery-planning-api
   interface_version: 1.0.0
   provider_module_id: recovery-planning
-  consumers: []
+  consumers:
+  - consumer_module_id: production-readiness
   input_contract: &recovery_planning_interface_contract
     repo_relative_path: docs/modules/recovery-planning-contract-v1.md
-    sha256: 610a00a8da0aa68670953890fb034486d1e6ddf05065ffd2d558f0651e4bc819
+    sha256: e87220c68731b6badbdc0396209a75a8b56c49eb840c1d24e870513c9895d15e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *recovery_planning_interface_contract
@@ -2583,10 +2626,11 @@ interfaces:
   interface_version: 1.0.0
   provider_module_id: operational-observability
   consumers:
+  - consumer_module_id: production-readiness
   - consumer_module_id: record-retention
   input_contract: &operational_observability_interface_contract
     repo_relative_path: docs/modules/operational-observability-contract-v1.md
-    sha256: e51ffda870ec5de84b79642e1acb6ee2f6bcd4e0a24f0d8ff1f09abd7cd7ead6
+    sha256: 643e2c8c9d1b438daceff211acb0f3de45f54410b94b74f5273d725e1a59e6b2
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *operational_observability_interface_contract
@@ -2597,10 +2641,11 @@ interfaces:
 - interface_id: record-retention-api
   interface_version: 1.0.0
   provider_module_id: record-retention
-  consumers: []
+  consumers:
+  - consumer_module_id: production-readiness
   input_contract: &record_retention_interface_contract
     repo_relative_path: docs/modules/record-retention-contract-v1.md
-    sha256: ba29ba7d1131edcf787e32287ff887f6a28c5286d6430558b5fe7dcc6df5d6ad
+    sha256: a8a2bf3ce6489c91d709fb3227127f81bfa120a137dfa6ea1fcabfb74b83b3ab
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *record_retention_interface_contract
@@ -2611,10 +2656,11 @@ interfaces:
 - interface_id: subscription-capacity-api
   interface_version: 1.0.0
   provider_module_id: subscription-capacity
-  consumers: []
+  consumers:
+  - consumer_module_id: production-readiness
   input_contract: &subscription_capacity_interface_contract
     repo_relative_path: docs/modules/subscription-capacity-contract-v1.md
-    sha256: 94bbfc36e9bd593c92ef4f1d6b2b086299e5f1b7463960b8fc9a1cdd2fcabc93
+    sha256: 2212bbaa68f78236ca16ad15a65fafa3f30a1e4cc5d8fda99f8b9413e6adc609
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *subscription_capacity_interface_contract
@@ -2622,3 +2668,17 @@ interfaces:
   side_effect_contract: *subscription_capacity_interface_contract
   compatibility_policy: *subscription_capacity_interface_contract
   replacement_revalidation_boundary: *subscription_capacity_interface_contract
+- interface_id: production-readiness-api
+  interface_version: 1.0.0
+  provider_module_id: production-readiness
+  consumers: []
+  input_contract: &production_readiness_interface_contract
+    repo_relative_path: docs/modules/production-readiness-contract-v1.md
+    sha256: 0be6e611e8abe4c7dcc4d50b14ca129a7def40c507bd105773b918e380cea959
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract: *production_readiness_interface_contract
+  error_contract: *production_readiness_interface_contract
+  side_effect_contract: *production_readiness_interface_contract
+  compatibility_policy: *production_readiness_interface_contract
+  replacement_revalidation_boundary: *production_readiness_interface_contract
