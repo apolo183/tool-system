@@ -1691,7 +1691,7 @@ modules:
   permitted_side_effects: []
   rollback_boundary: &release_governance_contract
     repo_relative_path: docs/modules/release-governance-contract-v1.md
-    sha256: 920ae15a4e045da2ef505b8d2d27b64e75bbe7f4fdcd37154798a74ec2e10f75
+    sha256: 2b2cae79cae1a2bbe87b4d4aba9fa4d04cd45837342438d264e0810a01358a42
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *release_governance_contract
@@ -1839,6 +1839,42 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *record_retention_contract
+- module_id: subscription-capacity
+  module_version: 1.0.0
+  role: evaluate caller-supplied subscription capacity windows and renewal dates and choose a deterministic owner-gated channel recommendation. Produce in-memory decisions only; never inspect accounts, call providers, purchase, renew, switch channels, or grant external authority.
+  owner: subscription-capacity
+  public_interface_refs:
+  - interface_id: subscription-capacity-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: release-governance-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/subscription_capacity/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/subscription_capacity/policy.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_subscription_capacity.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary: &subscription_capacity_contract
+    repo_relative_path: docs/modules/subscription-capacity-contract-v1.md
+    sha256: 94bbfc36e9bd593c92ef4f1d6b2b086299e5f1b7463960b8fc9a1cdd2fcabc93
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary: *subscription_capacity_contract
 interfaces:
 - interface_id: architecture-registry-api
   interface_version: 2.0.0
@@ -2503,9 +2539,10 @@ interfaces:
   consumers:
   - consumer_module_id: operational-observability
   - consumer_module_id: state-migration
+  - consumer_module_id: subscription-capacity
   input_contract: &release_governance_interface_contract
     repo_relative_path: docs/modules/release-governance-contract-v1.md
-    sha256: 920ae15a4e045da2ef505b8d2d27b64e75bbe7f4fdcd37154798a74ec2e10f75
+    sha256: 2b2cae79cae1a2bbe87b4d4aba9fa4d04cd45837342438d264e0810a01358a42
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *release_governance_interface_contract
@@ -2571,3 +2608,17 @@ interfaces:
   side_effect_contract: *record_retention_interface_contract
   compatibility_policy: *record_retention_interface_contract
   replacement_revalidation_boundary: *record_retention_interface_contract
+- interface_id: subscription-capacity-api
+  interface_version: 1.0.0
+  provider_module_id: subscription-capacity
+  consumers: []
+  input_contract: &subscription_capacity_interface_contract
+    repo_relative_path: docs/modules/subscription-capacity-contract-v1.md
+    sha256: 94bbfc36e9bd593c92ef4f1d6b2b086299e5f1b7463960b8fc9a1cdd2fcabc93
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract: *subscription_capacity_interface_contract
+  error_contract: *subscription_capacity_interface_contract
+  side_effect_contract: *subscription_capacity_interface_contract
+  compatibility_policy: *subscription_capacity_interface_contract
+  replacement_revalidation_boundary: *subscription_capacity_interface_contract
