@@ -33,7 +33,8 @@ module_compound_contract:
     direction: provider-to-direct-consumer
     direct_provider_module_ids:
       - state_migration
-    direct_consumer_module_ids: []
+    direct_consumer_module_ids:
+      - production_readiness
   input_contract:
     registered_inputs:
       - backup_manifest_v1

@@ -25,7 +25,8 @@ module_compound_contract:
     basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids: [release_governance]
-    direct_consumer_module_ids: []
+    direct_consumer_module_ids:
+      - production_readiness
   input_contract:
     registered_inputs: [capacity_snapshot_v1, capacity_policy_v1, subscription_decision_set_v1]
     boundary: Accept immutable channel version capacity usage observation reset renewal enablement and threshold values.

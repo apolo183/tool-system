@@ -13,7 +13,7 @@ This is a tool-system-owned implementation and validation contract. It grants
 no execution, downstream-repository, cleanup, provider, or production
 authority, and it records no external policy state.
 
-## Twenty-five-row identity and aggregate-interface mapping
+## Twenty-six-row identity and aggregate-interface mapping
 
 The canonical registry IDs use hyphens while Python package and import names
 remain unchanged. The mapping below is the local identity owner used by the
@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 25
+  module_count: 26
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -334,7 +334,8 @@ mapping_contract:
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.recovery_planning}
-      direct_consumer_module_ids: []
+      direct_consumer_module_ids:
+        - production_readiness
       change_risk: "medium: deterministic non-live backup verification, restore planning, and disaster-recovery evaluation boundary"
       rollback_identity: tool-system@a4042551e5c2b77e07db30ecdbdb5ae28f618ec7:recovery_planning@absent
     - current_module_id: operational_observability
@@ -346,6 +347,7 @@ mapping_contract:
       python_import_identities:
         - {kind: prefix, name: tool_system.operational_observability}
       direct_consumer_module_ids:
+        - production_readiness
         - record_retention
       change_risk: "medium: deterministic non-executing telemetry SLO alert and incident-response boundary"
       rollback_identity: tool-system@01fffab69a0db3e7110cd6edc7db6f188feb48ab:operational_observability@absent
@@ -357,7 +359,8 @@ mapping_contract:
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.record_retention}
-      direct_consumer_module_ids: []
+      direct_consumer_module_ids:
+        - production_readiness
       change_risk: "medium: deterministic non-executing retention legal-hold archive and deletion-readiness boundary"
       rollback_identity: tool-system@c1e0e700831ed6ef19056f123722260774a79f2f:record_retention@absent
     - current_module_id: subscription_capacity
@@ -368,9 +371,21 @@ mapping_contract:
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.subscription_capacity}
-      direct_consumer_module_ids: []
+      direct_consumer_module_ids:
+        - production_readiness
       change_risk: "medium: deterministic non-executing subscription capacity renewal and channel recommendation boundary"
       rollback_identity: tool-system@e6aaa4b0af3b16d48dd5e151b8374810bc29d5fa:subscription_capacity@absent
+    - current_module_id: production_readiness
+      canonical_module_id: production-readiness
+      current_module_version: 1.0.0
+      aggregate_interface_id: production-readiness-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.production_readiness}
+      direct_consumer_module_ids: []
+      change_risk: "medium: deterministic non-executing P16 Core operations readiness and operator-review boundary"
+      rollback_identity: tool-system@8499b38ac796a80a815eb765363085c006d44e95:production_readiness@absent
 ~~~
 <!-- MODULE-IDENTITY-MAPPING:END -->
 
@@ -446,11 +461,16 @@ static_import_dag:
       - subscription_capacity
     state_migration:
       - recovery_planning
-    recovery_planning: []
+    recovery_planning:
+      - production_readiness
     operational_observability:
+      - production_readiness
       - record_retention
-    record_retention: []
-    subscription_capacity: []
+    record_retention:
+      - production_readiness
+    subscription_capacity:
+      - production_readiness
+    production_readiness: []
   zero_consumer_modules:
     - architecture_registry
     - adaptive_model_portfolio_and_economics

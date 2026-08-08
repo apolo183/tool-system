@@ -25,7 +25,8 @@ module_compound_contract:
     basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids: [operational_observability]
-    direct_consumer_module_ids: []
+    direct_consumer_module_ids:
+      - production_readiness
   input_contract:
     registered_inputs: [record_metadata_v1, retention_policy_v1, caller_observed_utc_v1]
     boundary: Accept immutable record identity class timestamp hash hold archive and incident-state values.

@@ -26,6 +26,7 @@ module_compound_contract:
     direction: provider-to-direct-consumer
     direct_provider_module_ids: [release_governance]
     direct_consumer_module_ids:
+      - production_readiness
       - record_retention
   input_contract:
     registered_inputs: [telemetry_sample_v1, slo_policy_v1, alert_policy_v1, incident_observation_v1]
