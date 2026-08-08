@@ -1812,3 +1812,26 @@ p16e_observability_slo_alerting_and_incident_response:
   p16_accepted: false
   next_package: P16F-AUDIT-RUN-RETENTION-AND-ARCHIVAL
   optional_api_provider_plugin_v2: default_off_independent_deferred_not_p16_core_gate
+
+p16f_audit_run_retention_and_archival:
+  status: core_non_live_retention_contract_implemented_non_executing
+  canonical_base: c1e0e700831ed6ef19056f123722260774a79f2f
+  package: P16F-AUDIT-RUN-RETENTION-AND-ARCHIVAL
+  implementation:
+    module: record_retention
+    index: deterministic_expiry_and_sha256_identity
+    legal_hold: deletion_fail_closed
+    archive: readiness_only_separate_execution_authorization_required
+    deletion: readiness_only_separate_execution_authorization_required
+  authority:
+    archive_operations: 0
+    deletion_operations: 0
+    legal_hold_mutations: 0
+    cleanup_operations: 0
+    deployment_operations: 0
+    production_operations: 0
+    provider_invocations: 0
+    credential_value_accesses: 0
+  p16_accepted: false
+  next_package: P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
+  optional_api_provider_plugin_v2: default_off_independent_deferred_not_p16_core_gate
