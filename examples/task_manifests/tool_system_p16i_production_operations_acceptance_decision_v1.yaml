@@ -1,5 +1,5 @@
 task_id: tool-system-p16i-production-operations-acceptance-decision-v1
-task_type: governance
+task_type: docs_update
 target_repo: apolo183/tool-system
 target_branch: agent/p16i-production-operations-acceptance-decision-v1
 phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
