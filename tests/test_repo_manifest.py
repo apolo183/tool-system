@@ -124,7 +124,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
     assert legacy_reasons == []
-    assert len(rows) == 286
+    assert len(rows) == 294
     assert EXACT_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
     assert all(
         not any(character in row["path"] for character in "*?[]{}") for row in rows
@@ -132,7 +132,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_file_count"] == 286
+    assert result["formal_file_count"] == 294
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == len(retained_paths)
@@ -379,7 +379,7 @@ def test_module_contract_files_are_registered_as_local_contracts() -> None:
 
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
-    assert len(matches) == 25
+    assert len(matches) == 26
     assert all(row["role"] == "module-owned compound contracts" for row in matches)
     assert all(
         row["owner"] == "respective natural module owners" for row in matches
