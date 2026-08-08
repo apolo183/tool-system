@@ -1,0 +1,105 @@
+schema_version: 1
+mapping_id: p16-final-acceptance-mapping-v1
+baseline_commit: 02699469bf96024bb481980712d47494a4ef08ff
+authority_effect: none
+decision: accepted_subscription_primary_sustainable_operations_core
+core_route:
+  daily_mainline: [chatgpt_web, codex_cli]
+  large_model_apis_default_enabled: false
+  api_activation_required_for_core_acceptance: false
+output_counts:
+  accepted_core: 9
+  optional_api_plugin_conditional_deferred: 6
+  p16_acceptance_decision_record: 1
+outputs:
+  - output: release_and_version_policy
+    disposition: accepted_core
+    package: P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT
+    evidence: [docs/reports/p16b_release_version_deprecation_acceptance.md, docs/modules/release-governance-contract-v1.md, src/tool_system/release_governance/__init__.py]
+  - output: schema_and_state_migration_strategy
+    disposition: accepted_core
+    package: P16C-STATE-MIGRATION-AND-COMPATIBILITY
+    evidence: [docs/reports/p16c_state_migration_compatibility_acceptance.md, docs/modules/state-migration-contract-v1.md, src/tool_system/state_migration/__init__.py]
+  - output: upgrade_downgrade_backup_restore_and_disaster_recovery_evidence
+    disposition: accepted_core
+    package: P16D-BACKUP-RESTORE-AND-DISASTER-RECOVERY
+    evidence: [docs/reports/p16d_backup_restore_disaster_recovery_acceptance.md, docs/modules/recovery-planning-contract-v1.md, src/tool_system/recovery_planning/__init__.py]
+  - output: observability_slos_alerting_and_incident_response
+    disposition: accepted_core
+    package: P16E-OBSERVABILITY-SLO-AND-INCIDENT-RESPONSE
+    evidence: [docs/reports/p16e_observability_slo_incident_acceptance.md, docs/modules/operational-observability-contract-v1.md, src/tool_system/operational_observability/__init__.py]
+  - output: audit_and_run_retention_policy
+    disposition: accepted_core
+    package: P16F-AUDIT-RUN-RETENTION-AND-ARCHIVAL
+    evidence: [docs/reports/p16f_audit_run_retention_archival_acceptance.md, docs/modules/record-retention-contract-v1.md, src/tool_system/record_retention/__init__.py]
+  - output: conditional_api_provider_model_release_deprecation_price_quota_health_refresh
+    disposition: optional_api_plugin_conditional_deferred
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: operator_configured_availability_critical_path_and_economic_recomputation
+    disposition: optional_api_plugin_conditional_deferred
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: operator_configured_changed_route_incremental_benchmarks
+    disposition: optional_api_plugin_conditional_deferred
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: conditional_task_class_portfolio_review_and_promotion_demotion
+    disposition: optional_api_plugin_conditional_deferred
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: subscription_completion_forecast_and_pre_renewal_review
+    disposition: accepted_core
+    package: P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
+    evidence: [docs/reports/p16g_subscription_capacity_renewal_acceptance.md, docs/modules/subscription-capacity-contract-v1.md, src/tool_system/subscription_capacity/__init__.py]
+  - output: enabled_route_lifecycle_discovery_quarantine_retirement
+    disposition: optional_api_plugin_conditional_deferred
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: versioned_atomic_enabled_route_publication_and_rollback
+    disposition: optional_api_plugin_conditional_deferred
+    package: OPTIONAL-API-PROVIDER-PLUGIN-v2
+  - output: total_economic_cost_quota_concentration_risk_provider_outage_controls
+    disposition: accepted_core
+    package: P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
+    evidence: [docs/reports/p16g_subscription_capacity_renewal_acceptance.md, docs/model_provider_portfolio_and_economics_contract_v1.md]
+  - output: disabled_api_and_unreleased_plugin_do_not_block_acceptance
+    disposition: accepted_core
+    package: inherited
+    evidence: [blueprint/tool_system_v0.yaml, docs/model_provider_portfolio_and_economics_contract_v1.md, tests/test_model_provider_portfolio_contract.py]
+  - output: operator_runbook_and_deprecation_policy
+    disposition: accepted_core
+    package: P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS
+    evidence: [docs/reports/p16h_operator_runbook_production_readiness_acceptance.md, docs/operator_runbook_and_deprecation_policy_v1.md, src/tool_system/production_readiness/__init__.py]
+  - output: production_acceptance_decision_record
+    disposition: p16_acceptance_decision_record
+    package: P16I-PRODUCTION-OPERATIONS-ACCEPTANCE-DECISION
+    evidence: [docs/reports/p16i_production_operations_acceptance_decision.md, docs/tool_system_project_state_v1.yaml]
+dependency_closure:
+  p16b_through_p16h_complete: true
+  production_readiness_result: READY_FOR_P16_ACCEPTANCE_REVIEW
+  public_interface_dag_validated: true
+  current_tree_full_hosted_ci_run: 1199
+  current_tree_full_hosted_ci_conclusion: success
+optional_api_provider_plugin_v2:
+  status: default_disabled_independent_deferred
+  p16_core_hard_gate: false
+  implementation_authorized: false
+  release_authorized: false
+remaining_separately_authorized_boundaries:
+  production_deployment: true
+  production_operation: true
+  real_environment_validation: true
+  provider_execution: true
+  credential_access: true
+  backup_restore_drill: true
+  disaster_recovery_drill: true
+  cleanup_execution: true
+  rollback_execution: true
+zero_operation_boundary:
+  provider_invocations: 0
+  credential_value_accesses: 0
+  live_smoke_executions: 0
+  benchmark_executions: 0
+  real_downstream_repository_accesses: 0
+  deployment_operations: 0
+  production_operations: 0
+  backup_restore_drills: 0
+  disaster_recovery_drills: 0
+  cleanup_operations: 0
+  rollback_operations: 0
