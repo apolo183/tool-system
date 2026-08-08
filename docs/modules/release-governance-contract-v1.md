@@ -35,6 +35,7 @@ module_compound_contract:
     direct_consumer_module_ids:
       - operational_observability
       - state_migration
+      - subscription_capacity
   input_contract:
     registered_inputs:
       - semantic_version_v1
