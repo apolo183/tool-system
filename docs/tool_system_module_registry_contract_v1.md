@@ -13,7 +13,7 @@ This is a tool-system-owned implementation and validation contract. It grants
 no execution, downstream-repository, cleanup, provider, or production
 authority, and it records no external policy state.
 
-## Twenty-three-row identity and aggregate-interface mapping
+## Twenty-four-row identity and aggregate-interface mapping
 
 The canonical registry IDs use hyphens while Python package and import names
 remain unchanged. The mapping below is the local identity owner used by the
@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 23
+  module_count: 24
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -344,9 +344,21 @@ mapping_contract:
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.operational_observability}
-      direct_consumer_module_ids: []
+      direct_consumer_module_ids:
+        - record_retention
       change_risk: "medium: deterministic non-executing telemetry SLO alert and incident-response boundary"
       rollback_identity: tool-system@01fffab69a0db3e7110cd6edc7db6f188feb48ab:operational_observability@absent
+    - current_module_id: record_retention
+      canonical_module_id: record-retention
+      current_module_version: 1.0.0
+      aggregate_interface_id: record-retention-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.record_retention}
+      direct_consumer_module_ids: []
+      change_risk: "medium: deterministic non-executing retention legal-hold archive and deletion-readiness boundary"
+      rollback_identity: tool-system@c1e0e700831ed6ef19056f123722260774a79f2f:record_retention@absent
 ~~~
 <!-- MODULE-IDENTITY-MAPPING:END -->
 
@@ -422,7 +434,9 @@ static_import_dag:
     state_migration:
       - recovery_planning
     recovery_planning: []
-    operational_observability: []
+    operational_observability:
+      - record_retention
+    record_retention: []
   zero_consumer_modules:
     - architecture_registry
     - adaptive_model_portfolio_and_economics
@@ -434,6 +448,7 @@ static_import_dag:
     - development_loop
     - local_git
     - operational_observability
+    - record_retention
     - recovery_planning
   non_claim: >-
     Static AST import equality does not prove absence of dynamic imports, CLI
