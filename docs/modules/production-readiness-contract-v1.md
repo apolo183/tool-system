@@ -17,7 +17,7 @@ module_compound_contract:
       - {kind: prefix, name: tool_system.production_readiness}
   role:
     summary: aggregate P16 Core recovery observability retention and subscription evidence into a deterministic operator-review readiness decision
-    responsibility_boundary: Produce an in-memory readiness decision only; never accept P16, deploy, operate production, inspect accounts, call providers, or perform external actions.
+    responsibility_boundary: Produce an in-memory decision only; never accept P16, deploy, operate production, inspect accounts, call providers, or perform external actions.
   natural_owner_evidence_paths:
     - src/tool_system/production_readiness/__init__.py
     - src/tool_system/production_readiness/policy.py
