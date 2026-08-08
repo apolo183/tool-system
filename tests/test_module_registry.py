@@ -249,12 +249,12 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
     "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
 )
 
-EXPECTED_RAW_SHA256 = "061f6fe802c6cb303fc9d030619d3ad5b987c258432bb61276911a6ac351b8d7"
-EXPECTED_BYTE_LENGTH = 116_420
+EXPECTED_RAW_SHA256 = "0d2e0ffdf74139d0fe3ffb25fe3d2075928122249479e5a746bc4db70973cb6c"
+EXPECTED_BYTE_LENGTH = 118_711
 EXPECTED_SEMANTIC_SHA256 = (
-    "dd020909462a31b214b45690c805a30338d83290474b8a0c46ebd51fdb24caa7"
+    "ee0d45c945d3113c00376ffa023abb20c1ae02f78c55d4f819ddde37641a8cd1"
 )
-EXPECTED_MANAGED_PYTHON_FILE_COUNT = 116
+EXPECTED_MANAGED_PYTHON_FILE_COUNT = 118
 EXPECTED_MODULE_IDS = {
     "architecture_registry",
     "manifest_validation",
@@ -279,6 +279,7 @@ EXPECTED_MODULE_IDS = {
     "state_migration",
     "recovery_planning",
     "operational_observability",
+    "record_retention",
 }
 TARGET_OWNER_DELTAS = {
     "src/tool_system/gate/command_runner.py": (
@@ -314,6 +315,7 @@ TEST_SELECTORS = {
     "state_migration": "tests/test_state_migration.py",
     "recovery_planning": "tests/test_recovery_planning.py",
     "operational_observability": "tests/test_operational_observability.py",
+    "record_retention": "tests/test_record_retention.py",
 }
 ADDITIONAL_TEST_SELECTORS = {
     "adaptive_model_portfolio_and_economics": (
@@ -411,7 +413,7 @@ def authority_code_paths() -> dict[str, list[str]]:
         for current_id, contract in contracts.items()
     }
     flattened = [path for paths in result.values() for path in paths]
-    assert len(flattened) == len(set(flattened)) == 124
+    assert len(flattened) == len(set(flattened)) == 126
     python_owners = target_python_owner_by_path()
     assert {
         path: current_id
@@ -987,22 +989,22 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert len(raw) == EXPECTED_BYTE_LENGTH
     assert hashlib.sha256(raw).hexdigest() == EXPECTED_RAW_SHA256
     assert hashlib.sha256(normalized).hexdigest() == EXPECTED_SEMANTIC_SHA256
-    assert len(registry["modules"]) == len(registry["interfaces"]) == 23
+    assert len(registry["modules"]) == len(registry["interfaces"]) == 24
     assert (
-        sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 124
+        sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 126
     )
     assert (
-        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 34
+        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 35
     )
     assert (
         sum(len(module["permitted_side_effects"]) for module in registry["modules"])
         == 45
     )
-    assert len(list(_iter_contract_references(registry))) == 229
+    assert len(list(_iter_contract_references(registry))) == 237
     assert (
         sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
     )
-    assert len(target_python_owner_by_path()) == 116
+    assert len(target_python_owner_by_path()) == 118
     assert_effect_oracle(registry)
 
 
@@ -1022,7 +1024,7 @@ def test_current_current_registry_is_authority_and_tmp_copy_is_not(
     assert current["current_registry_authority"] is True
     assert current["validation_scope"] == "tool_system_current_module_registry"
     assert current["compatibility_adapter"]["applied"] is False
-    assert current["contract_reference_count"] == 229
+    assert current["contract_reference_count"] == 237
     assert current["external_provider_count"] == 0
     assert compatibility["status"] == "PASS"
     assert compatibility["current_registry_authority"] is False
@@ -1099,7 +1101,7 @@ def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
         edge_count += len(expected_dependencies)
         key = (row["aggregate_interface_id"], row["aggregate_interface_version"])
         assert interfaces[key]["provider_module_id"] == canonical
-    assert edge_count == 34
+    assert edge_count == 35
     assert_effect_oracle(registry)
 
 

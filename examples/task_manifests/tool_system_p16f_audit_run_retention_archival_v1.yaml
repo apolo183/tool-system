@@ -1,0 +1,114 @@
+task_id: tool-system-p16f-audit-run-retention-archival-v1
+task_type: implementation
+target_repo: apolo183/tool-system
+target_branch: agent/p16f-audit-run-retention-archival-v1
+phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+alignment:
+  parent:
+    document: docs/reports/p16a_sustainable_operations_acceptance_specification.md
+    section_or_key: P16F dependency
+    scope: Close non-live audit run and incident retention archival and deletion-readiness policy.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P16_PRODUCTION_OPERATIONS_ACCEPTANCE.outputs
+    scope: Establish deterministic retention legal-hold archive and deletion decisions while preserving separate execution authority.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P16F-AUDIT-RUN-RETENTION-AND-ARCHIVAL-v1
+    baseline_commit: c1e0e700831ed6ef19056f123722260774a79f2f
+    baseline_tree: canonical_main_tree_at_c1e0e700831ed6ef19056f123722260774a79f2f
+    allowed_scope: exact_15_paths_listed_below
+    acceptance_set:
+      - expiry indexes use caller-supplied timestamps classes and SHA256 identity
+      - legal hold unexpired retention missing archive and open incident fail closed
+      - archive and deletion readiness never grant execution authority
+      - module registry contract manifest import graph and P16E dependency remain closed
+      - P16 remains unaccepted
+    validation_set:
+      - focused retention registry contract manifest import graph and full Hosted CI
+    terminal_predicate: guarded squash merge records non-executing P16F evidence and stops before P16G implementation
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 3
+      review_cycles: 1
+      provider_invocations: 0
+      credential_value_accesses: 0
+      archive_operations: 0
+      deletion_operations: 0
+      legal_hold_mutations: 0
+      production_operations: 0
+      deployment_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, validation_results, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, status_text]
+scope:
+  summary: Deterministic non-executing audit run and incident retention archive and deletion-readiness policy.
+  in_scope: &p16f_files
+    - REPO_MANIFEST.md
+    - config/module_registry_v1.yaml
+    - docs/modules/operational-observability-contract-v1.md
+    - docs/modules/record-retention-contract-v1.md
+    - docs/reports/p16f_audit_run_retention_archival_acceptance.md
+    - docs/tool_system_module_registry_contract_v1.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_p16f_audit_run_retention_archival_v1.yaml
+    - examples/task_manifests/tool_system_p16f_audit_run_retention_archival_v1.yaml
+    - src/tool_system/record_retention/__init__.py
+    - src/tool_system/record_retention/policy.py
+    - tests/test_module_contracts.py
+    - tests/test_module_registry.py
+    - tests/test_record_retention.py
+    - tests/test_repo_manifest.py
+  out_of_scope:
+    - record reads archive deletion hold mutation cleanup deployment production provider downstream or rollback
+    - blueprint workflow provider adapter operator configuration or optional API plugin modification
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/p16a_sustainable_operations_inventory_v1.yaml
+    commit_sha: c1e0e700831ed6ef19056f123722260774a79f2f
+    why_relevant: Freezes retention expiry legal-hold archive and deletion-authorization gaps as P16F.
+  - repo: apolo183/tool-system
+    path: src/tool_system/runtime/audit_bundle.py
+    commit_sha: c1e0e700831ed6ef19056f123722260774a79f2f
+    why_relevant: Supplies inherited redacted audit bundle primitive without product-wide retention closure.
+allowed_files: *p16f_files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/**
+  - examples/operator_config/**
+  - policy/**
+  - .github/workflows/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_record_retention.py tests/test_operational_observability.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_p16f_audit_run_retention_archival_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_p16f_audit_run_retention_archival_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@c1e0e700831ed6ef19056f123722260774a79f2f
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:continue_until_major_milestone
+  approved_at: 2026-08-08 UTC+09:00
