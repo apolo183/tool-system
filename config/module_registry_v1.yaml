@@ -1913,7 +1913,7 @@ modules:
   permitted_side_effects: []
   rollback_boundary: &production_readiness_contract
     repo_relative_path: docs/modules/production-readiness-contract-v1.md
-    sha256: 0be6e611e8abe4c7dcc4d50b14ca129a7def40c507bd105773b918e380cea959
+    sha256: a80d55d3851ac49a1a1f04c9352d88a911e5d6e9e89a31c4beb5ee1bbbd87a53
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *production_readiness_contract
@@ -2674,7 +2674,7 @@ interfaces:
   consumers: []
   input_contract: &production_readiness_interface_contract
     repo_relative_path: docs/modules/production-readiness-contract-v1.md
-    sha256: 0be6e611e8abe4c7dcc4d50b14ca129a7def40c507bd105773b918e380cea959
+    sha256: a80d55d3851ac49a1a1f04c9352d88a911e5d6e9e89a31c4beb5ee1bbbd87a53
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *production_readiness_interface_contract
