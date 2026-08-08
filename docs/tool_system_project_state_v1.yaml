@@ -1858,3 +1858,35 @@ p16g_subscription_capacity_and_renewal_review:
   p16_accepted: false
   next_package: P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS
   optional_api_provider_plugin_v2: default_off_independent_deferred_not_p16_core_gate
+
+p16h_operator_runbook_and_production_readiness:
+  status: core_non_live_runbook_and_readiness_contract_implemented_pending_hosted_ci
+  baseline_commit: 8499b38ac796a80a815eb765363085c006d44e95
+  package: P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS
+  dependencies:
+    p16d_recovery_planning: inherited_non_live
+    p16e_operational_observability: inherited_non_live
+    p16f_record_retention: inherited_non_live
+    p16g_subscription_capacity: inherited_non_live
+  versioned_operator_runbook: docs/operator_runbook_and_deprecation_policy_v1.md
+  readiness_result_ceiling: READY_FOR_P16_ACCEPTANCE_REVIEW
+  deprecation_lifecycle: [SUPPORTED, DEPRECATED, REMOVED]
+  optional_api_provider_plugin_v2:
+    default_enabled: false
+    independently_deferred: true
+    p16_core_hard_gate: false
+  authority:
+    p16_acceptance_authorized: false
+    production_deployment_authorized: false
+    production_operation_authorized: false
+    provider_invocations: 0
+    credential_value_accesses: 0
+    account_reads: 0
+    target_mutations: 0
+    backup_restore_operations: 0
+    disaster_recovery_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  p16_stage_accepted: false
+  next_package: P16I-PRODUCTION-OPERATIONS-ACCEPTANCE-DECISION
+  next_package_requires_separate_milestone_acceptance_review: true
