@@ -8,15 +8,15 @@ blueprint:
   process_state_allowed_in_blueprint: false
 current_phase:
   id: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
-  status: active
+  status: accepted
   entry_record: docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md
   entry_authorized: true
-  last_accepted_stage: P15_MULTI_PROJECT_BENCHMARK
-  last_accepted_stage_record: docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md
+  last_accepted_stage: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+  last_accepted_stage_record: docs/reports/p16i_production_operations_acceptance_decision.md
   next_stage: null
   next_stage_authorized: false
-  active_stage: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
-  active_stage_status: entered_subscription_primary_core_no_production_authority
+  active_stage: null
+  active_stage_status: accepted_subscription_primary_sustainable_operations_core
   next_phase: null
   next_phase_entry_authorized: false
 prior_acceptance:
@@ -1860,7 +1860,16 @@ p16g_subscription_capacity_and_renewal_review:
   optional_api_provider_plugin_v2: default_off_independent_deferred_not_p16_core_gate
 
 p16h_operator_runbook_and_production_readiness:
-  status: core_non_live_runbook_and_readiness_contract_implemented_pending_hosted_ci
+  status: merged_hosted_ci_passed_ready_for_p16_acceptance_review
+  publication_receipt:
+    pull_request: 203
+    final_pr_head: e48d7c2cda714c5fe578333eb5110b5c084f8c8c
+    canonical_squash_commit: 02699469bf96024bb481980712d47494a4ef08ff
+    hosted_ci_run: 1199
+    hosted_ci_conclusion: success
+    exact_changed_path_count: 19
+    feature_branch: agent/p16h-operator-runbook-production-readiness-v1
+    feature_branch_retained: true
   baseline_commit: 8499b38ac796a80a815eb765363085c006d44e95
   package: P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS
   dependencies:
@@ -1890,3 +1899,54 @@ p16h_operator_runbook_and_production_readiness:
   p16_stage_accepted: false
   next_package: P16I-PRODUCTION-OPERATIONS-ACCEPTANCE-DECISION
   next_package_requires_separate_milestone_acceptance_review: true
+
+p16i_production_operations_acceptance_decision:
+  authorization_packet: P16I-PRODUCTION-OPERATIONS-ACCEPTANCE-DECISION-LIFECYCLE-v1
+  baseline_commit: 02699469bf96024bb481980712d47494a4ef08ff
+  status: accepted_subscription_primary_sustainable_operations_core
+  decision_record: docs/reports/p16i_production_operations_acceptance_decision.md
+  final_acceptance_mapping: docs/reports/p16_final_acceptance_mapping_v1.yaml
+  evidence_closure:
+    p16b_release_governance: accepted_core_non_executing
+    p16c_state_migration: accepted_core_non_executing
+    p16d_recovery_planning: accepted_core_non_executing
+    p16e_operational_observability: accepted_core_non_executing
+    p16f_record_retention: accepted_core_non_executing
+    p16g_subscription_capacity: accepted_core_non_executing
+    p16h_production_readiness: ready_for_separate_acceptance_review
+    public_interface_dag: validated
+    hosted_ci_run: 1199
+    hosted_ci_conclusion: success
+  p16_core:
+    accepted: true
+    route: subscription_primary
+    daily_mainline: [chatgpt_web, codex_cli]
+    acceptance_scope: sustainable_operations_non_live_core
+  optional_api_provider_plugin_v2:
+    status: default_disabled_independent_deferred
+    p16_core_hard_gate: false
+    implementation_authorized: false
+    release_authorized: false
+  remaining_authority:
+    production_deployment_authorized: false
+    production_operation_authorized: false
+    real_environment_validation_authorized: false
+    provider_execution_authorized: false
+    credential_access_authorized: false
+    backup_restore_drill_authorized: false
+    disaster_recovery_drill_authorized: false
+    cleanup_authorized: false
+    rollback_authorized: false
+  zero_operation_boundary:
+    provider_invocations: 0
+    credential_value_accesses: 0
+    live_smoke_executions: 0
+    benchmark_executions: 0
+    real_downstream_repository_accesses: 0
+    deployment_operations: 0
+    production_operations: 0
+    backup_restore_drills: 0
+    disaster_recovery_drills: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  stop_boundary: accepted_p16_core_stop_before_deployment_real_environment_validation_or_optional_api_plugin_implementation
