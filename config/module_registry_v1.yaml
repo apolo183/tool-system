@@ -1799,10 +1799,46 @@ modules:
   permitted_side_effects: []
   rollback_boundary: &operational_observability_contract
     repo_relative_path: docs/modules/operational-observability-contract-v1.md
-    sha256: 71eb256e80f7dd7ce540f2df25bf2fde82106ca5e324421aec99ada60654548f
+    sha256: e51ffda870ec5de84b79642e1acb6ee2f6bcd4e0a24f0d8ff1f09abd7cd7ead6
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary: *operational_observability_contract
+- module_id: record-retention
+  module_version: 1.0.0
+  role: evaluate immutable audit run and incident record metadata against retention legal-hold archival and deletion policies. Produce in-memory index and readiness decisions only; never read records, archive, delete, mutate stores, release holds, or grant execution authority.
+  owner: record-retention
+  public_interface_refs:
+  - interface_id: record-retention-api
+    interface_version: 1.0.0
+  internal_dependencies:
+  - interface_id: operational-observability-api
+    interface_version: 1.0.0
+  external_dependencies: []
+  boundaries:
+    code:
+    - boundary_id: code-001
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/record_retention/__init__.py
+    - boundary_id: code-002
+      location_kind: repository_local
+      path_kind: exact
+      path: src/tool_system/record_retention/policy.py
+    data: []
+    tests:
+    - boundary_id: tests-001
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/test_record_retention.py
+    runtime_artifacts: []
+    cleanup: []
+  permitted_side_effects: []
+  rollback_boundary: &record_retention_contract
+    repo_relative_path: docs/modules/record-retention-contract-v1.md
+    sha256: ba29ba7d1131edcf787e32287ff887f6a28c5286d6430558b5fe7dcc6df5d6ad
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  replacement_boundary: *record_retention_contract
 interfaces:
 - interface_id: architecture-registry-api
   interface_version: 2.0.0
@@ -2509,10 +2545,11 @@ interfaces:
 - interface_id: operational-observability-api
   interface_version: 1.0.0
   provider_module_id: operational-observability
-  consumers: []
+  consumers:
+  - consumer_module_id: record-retention
   input_contract: &operational_observability_interface_contract
     repo_relative_path: docs/modules/operational-observability-contract-v1.md
-    sha256: 71eb256e80f7dd7ce540f2df25bf2fde82106ca5e324421aec99ada60654548f
+    sha256: e51ffda870ec5de84b79642e1acb6ee2f6bcd4e0a24f0d8ff1f09abd7cd7ead6
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *operational_observability_interface_contract
@@ -2520,3 +2557,17 @@ interfaces:
   side_effect_contract: *operational_observability_interface_contract
   compatibility_policy: *operational_observability_interface_contract
   replacement_revalidation_boundary: *operational_observability_interface_contract
+- interface_id: record-retention-api
+  interface_version: 1.0.0
+  provider_module_id: record-retention
+  consumers: []
+  input_contract: &record_retention_interface_contract
+    repo_relative_path: docs/modules/record-retention-contract-v1.md
+    sha256: ba29ba7d1131edcf787e32287ff887f6a28c5286d6430558b5fe7dcc6df5d6ad
+    format_identity: tool-system-module-compound-contract-v1
+    schema_identity: tool-system-module-compound-contract-schema-v1
+  output_contract: *record_retention_interface_contract
+  error_contract: *record_retention_interface_contract
+  side_effect_contract: *record_retention_interface_contract
+  compatibility_policy: *record_retention_interface_contract
+  replacement_revalidation_boundary: *record_retention_interface_contract
