@@ -13,7 +13,7 @@ This is a tool-system-owned implementation and validation contract. It grants
 no execution, downstream-repository, cleanup, provider, or production
 authority, and it records no external policy state.
 
-## Twenty-four-row identity and aggregate-interface mapping
+## Twenty-five-row identity and aggregate-interface mapping
 
 The canonical registry IDs use hyphens while Python package and import names
 remain unchanged. The mapping below is the local identity owner used by the
@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 24
+  module_count: 25
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -311,6 +311,7 @@ mapping_contract:
       direct_consumer_module_ids:
         - operational_observability
         - state_migration
+        - subscription_capacity
       change_risk: "medium: deterministic non-authorizing release compatibility and deprecation boundary"
       rollback_identity: tool-system@c35be57de6ff1f7e31446469281fa369f529d937:release_governance@absent
     - current_module_id: state_migration
@@ -359,6 +360,17 @@ mapping_contract:
       direct_consumer_module_ids: []
       change_risk: "medium: deterministic non-executing retention legal-hold archive and deletion-readiness boundary"
       rollback_identity: tool-system@c1e0e700831ed6ef19056f123722260774a79f2f:record_retention@absent
+    - current_module_id: subscription_capacity
+      canonical_module_id: subscription-capacity
+      current_module_version: 1.0.0
+      aggregate_interface_id: subscription-capacity-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.subscription_capacity}
+      direct_consumer_module_ids: []
+      change_risk: "medium: deterministic non-executing subscription capacity renewal and channel recommendation boundary"
+      rollback_identity: tool-system@e6aaa4b0af3b16d48dd5e151b8374810bc29d5fa:subscription_capacity@absent
 ~~~
 <!-- MODULE-IDENTITY-MAPPING:END -->
 
@@ -431,12 +443,14 @@ static_import_dag:
     release_governance:
       - operational_observability
       - state_migration
+      - subscription_capacity
     state_migration:
       - recovery_planning
     recovery_planning: []
     operational_observability:
       - record_retention
     record_retention: []
+    subscription_capacity: []
   zero_consumer_modules:
     - architecture_registry
     - adaptive_model_portfolio_and_economics
@@ -450,6 +464,7 @@ static_import_dag:
     - operational_observability
     - record_retention
     - recovery_planning
+    - subscription_capacity
   non_claim: >-
     Static AST import equality does not prove absence of dynamic imports, CLI
     invocation dependencies, data dependencies, configuration dependencies,
