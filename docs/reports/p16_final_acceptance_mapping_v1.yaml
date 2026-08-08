@@ -12,61 +12,61 @@ output_counts:
   optional_api_plugin_conditional_deferred: 6
   p16_acceptance_decision_record: 1
 outputs:
-  - output: release_and_version_policy
+  - output: release and version policy
     disposition: accepted_core
     package: P16B-RELEASE-VERSION-AND-DEPRECATION-CONTRACT
     evidence: [docs/reports/p16b_release_version_deprecation_acceptance.md, docs/modules/release-governance-contract-v1.md, src/tool_system/release_governance/__init__.py]
-  - output: schema_and_state_migration_strategy
+  - output: schema and state migration strategy
     disposition: accepted_core
     package: P16C-STATE-MIGRATION-AND-COMPATIBILITY
     evidence: [docs/reports/p16c_state_migration_compatibility_acceptance.md, docs/modules/state-migration-contract-v1.md, src/tool_system/state_migration/__init__.py]
-  - output: upgrade_downgrade_backup_restore_and_disaster_recovery_evidence
+  - output: upgrade, downgrade, backup, restore, and disaster recovery evidence
     disposition: accepted_core
     package: P16D-BACKUP-RESTORE-AND-DISASTER-RECOVERY
     evidence: [docs/reports/p16d_backup_restore_disaster_recovery_acceptance.md, docs/modules/recovery-planning-contract-v1.md, src/tool_system/recovery_planning/__init__.py]
-  - output: observability_slos_alerting_and_incident_response
+  - output: observability SLOs, alerting, and incident response
     disposition: accepted_core
     package: P16E-OBSERVABILITY-SLO-AND-INCIDENT-RESPONSE
     evidence: [docs/reports/p16e_observability_slo_incident_acceptance.md, docs/modules/operational-observability-contract-v1.md, src/tool_system/operational_observability/__init__.py]
-  - output: audit_and_run_retention_policy
+  - output: audit and run retention policy
     disposition: accepted_core
     package: P16F-AUDIT-RUN-RETENTION-AND-ARCHIVAL
     evidence: [docs/reports/p16f_audit_run_retention_archival_acceptance.md, docs/modules/record-retention-contract-v1.md, src/tool_system/record_retention/__init__.py]
-  - output: conditional_api_provider_model_release_deprecation_price_quota_health_refresh
+  - output: conditional API-mode provider-model release deprecation price policy quota and health refresh
     disposition: optional_api_plugin_conditional_deferred
     package: OPTIONAL-API-PROVIDER-PLUGIN-v2
-  - output: operator_configured_availability_critical_path_and_economic_recomputation
+  - output: operator-configured availability critical-path and economic recomputation when API mode is enabled
     disposition: optional_api_plugin_conditional_deferred
     package: OPTIONAL-API-PROVIDER-PLUGIN-v2
-  - output: operator_configured_changed_route_incremental_benchmarks
+  - output: operator-configured changed-route incremental benchmarks when API mode is enabled
     disposition: optional_api_plugin_conditional_deferred
     package: OPTIONAL-API-PROVIDER-PLUGIN-v2
-  - output: conditional_task_class_portfolio_review_and_promotion_demotion
+  - output: conditional task-class portfolio review and promotion-demotion decisions
     disposition: optional_api_plugin_conditional_deferred
     package: OPTIONAL-API-PROVIDER-PLUGIN-v2
-  - output: subscription_completion_forecast_and_pre_renewal_review
+  - output: subscription completion-forecast and pre-renewal review without requiring API activation
     disposition: accepted_core
     package: P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
     evidence: [docs/reports/p16g_subscription_capacity_renewal_acceptance.md, docs/modules/subscription-capacity-contract-v1.md, src/tool_system/subscription_capacity/__init__.py]
-  - output: enabled_route_lifecycle_discovery_quarantine_retirement
+  - output: enabled-route lifecycle from discovery and quarantine through retirement when applicable
     disposition: optional_api_plugin_conditional_deferred
     package: OPTIONAL-API-PROVIDER-PLUGIN-v2
-  - output: versioned_atomic_enabled_route_publication_and_rollback
+  - output: versioned atomic enabled-route publication and rollback when API mode is enabled
     disposition: optional_api_plugin_conditional_deferred
     package: OPTIONAL-API-PROVIDER-PLUGIN-v2
-  - output: total_economic_cost_quota_concentration_risk_provider_outage_controls
+  - output: total-economic-cost, quota, concentration-risk, and provider-outage controls
     disposition: accepted_core
     package: P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
     evidence: [docs/reports/p16g_subscription_capacity_renewal_acceptance.md, docs/model_provider_portfolio_and_economics_contract_v1.md]
-  - output: disabled_api_and_unreleased_plugin_do_not_block_acceptance
+  - output: proof that disabled or unavailable API providers and an unreleased optional API plugin do not block production-operations acceptance
     disposition: accepted_core
     package: inherited
     evidence: [blueprint/tool_system_v0.yaml, docs/model_provider_portfolio_and_economics_contract_v1.md, tests/test_model_provider_portfolio_contract.py]
-  - output: operator_runbook_and_deprecation_policy
+  - output: operator runbook and deprecation policy
     disposition: accepted_core
     package: P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS
     evidence: [docs/reports/p16h_operator_runbook_production_readiness_acceptance.md, docs/operator_runbook_and_deprecation_policy_v1.md, src/tool_system/production_readiness/__init__.py]
-  - output: production_acceptance_decision_record
+  - output: production acceptance decision record
     disposition: p16_acceptance_decision_record
     package: P16I-PRODUCTION-OPERATIONS-ACCEPTANCE-DECISION
     evidence: [docs/reports/p16i_production_operations_acceptance_decision.md, docs/tool_system_project_state_v1.yaml]
