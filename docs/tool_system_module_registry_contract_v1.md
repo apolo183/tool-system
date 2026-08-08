@@ -309,8 +309,10 @@ mapping_contract:
       python_import_identities:
         - {kind: prefix, name: tool_system.release_governance}
       direct_consumer_module_ids:
-            - state_migration
-          change_risk: "medium: deterministic non-authorizing release compatibility and deprecation boundary"
+        - operational_observability
+        - state_migration
+        - subscription_capacity
+      change_risk: "medium: deterministic non-authorizing release compatibility and deprecation boundary"
       rollback_identity: tool-system@c35be57de6ff1f7e31446469281fa369f529d937:release_governance@absent
     - current_module_id: state_migration
       canonical_module_id: state-migration
@@ -321,7 +323,8 @@ mapping_contract:
       python_import_identities:
         - {kind: prefix, name: tool_system.state_migration}
       direct_consumer_module_ids:
-          change_risk: "medium: deterministic product-wide migration compatibility and dry-run planning boundary"
+        - recovery_planning
+      change_risk: "medium: deterministic product-wide migration compatibility and dry-run planning boundary"
       rollback_identity: tool-system@315f4bb08aacf038e0391a0a55553fe1bed67a26:state_migration@absent
     - current_module_id: recovery_planning
       canonical_module_id: recovery-planning
@@ -345,7 +348,8 @@ mapping_contract:
         - {kind: prefix, name: tool_system.operational_observability}
       direct_consumer_module_ids:
         - production_readiness
-          change_risk: "medium: deterministic non-executing telemetry SLO alert and incident-response boundary"
+        - record_retention
+      change_risk: "medium: deterministic non-executing telemetry SLO alert and incident-response boundary"
       rollback_identity: tool-system@01fffab69a0db3e7110cd6edc7db6f188feb48ab:operational_observability@absent
     - current_module_id: record_retention
       canonical_module_id: record-retention
