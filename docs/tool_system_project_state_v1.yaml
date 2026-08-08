@@ -1835,3 +1835,26 @@ p16f_audit_run_retention_and_archival:
   p16_accepted: false
   next_package: P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
   optional_api_provider_plugin_v2: default_off_independent_deferred_not_p16_core_gate
+
+p16g_subscription_capacity_and_renewal_review:
+  status: core_non_live_subscription_contract_implemented_non_executing
+  canonical_base: e6aaa4b0af3b16d48dd5e151b8374810bc29d5fa
+  package: P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
+  implementation:
+    module: subscription_capacity
+    channels: [chatgpt_web, codex_cli]
+    capacity: caller_supplied_integer_ppm_decisions
+    renewal: review_only_no_purchase_or_renewal_authority
+    channel_choice: deterministic_owner_review_required
+  authority:
+    account_reads: 0
+    purchase_operations: 0
+    renewal_operations: 0
+    channel_switches: 0
+    provider_invocations: 0
+    credential_value_accesses: 0
+    deployment_operations: 0
+    production_operations: 0
+  p16_accepted: false
+  next_package: P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS
+  optional_api_provider_plugin_v2: default_off_independent_deferred_not_p16_core_gate
