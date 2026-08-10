@@ -13,6 +13,7 @@ from tool_system.cli.validate_change_plan import validate as validate_change_pla
 from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
 from tool_system.development_loop import FrozenDevelopmentContract
 import tool_system.gate.command_runner as command_runner
+import tool_system.runner.task_runner as task_runner_module
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.runner.task_runner import (
     run_subscription_development_pipeline,
@@ -461,6 +462,98 @@ def test_subscription_public_entry_preflight_rejects_unbound_generic_pair() -> N
     assert result["worker_execution_authorized"] is False
 
 
+def test_subscription_public_entry_preflight_rejects_duplicate_binding(
+    tmp_path: Path,
+) -> None:
+    manifest_path, plan_path = _bound_subscription_task_pair(
+        tmp_path,
+        repository_root=ROOT,
+        expected_head="a" * 40,
+        blueprint_path="blueprint/tool_system_v0.yaml",
+        module_registry_path="config/module_registry_v1.yaml",
+        milestone_ids=["P16"],
+        acceptance_requirements=["subscription-core-remains-bounded"],
+        governance_paths=["AGENTS.md"],
+        query_terms=["task-runner"],
+        seed_paths=["src/tool_system/runner/task_runner.py"],
+    )
+    manifest_path.write_text(
+        manifest_path.read_text(encoding="utf-8")
+        + "\nsubscription_public_entry: {}\n",
+        encoding="utf-8",
+    )
+
+    result = run_subscription_public_entry_preflight(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=ROOT,
+        expected_head="a" * 40,
+        blueprint_path="blueprint/tool_system_v0.yaml",
+        module_registry_path="config/module_registry_v1.yaml",
+        milestone_ids=["P16"],
+        acceptance_requirements=["subscription-core-remains-bounded"],
+        governance_paths=["AGENTS.md"],
+        query_terms=["task-runner"],
+        seed_paths=["src/tool_system/runner/task_runner.py"],
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_AUTHORITY_INPUT_CAPTURE_BLOCKED"
+    assert result["reasons"] == ["SUBSCRIPTION_AUTHORITY_MANIFEST_AMBIGUOUS"]
+    assert result["repository_context_built"] is False
+
+
+def test_subscription_public_entry_preflight_detects_pair_byte_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    selections = {
+        "blueprint_path": "blueprint/tool_system_v0.yaml",
+        "module_registry_path": "config/module_registry_v1.yaml",
+        "milestone_ids": ["P16"],
+        "acceptance_requirements": ["subscription-core-remains-bounded"],
+        "governance_paths": ["AGENTS.md"],
+        "query_terms": ["task-runner"],
+        "seed_paths": ["src/tool_system/runner/task_runner.py"],
+    }
+    manifest_path, plan_path = _bound_subscription_task_pair(
+        tmp_path,
+        repository_root=ROOT,
+        expected_head="a" * 40,
+        **selections,
+    )
+    real_pipeline = task_runner_module.run_task_pipeline
+
+    def mutate_after_validation(**arguments: object) -> dict[str, object]:
+        result = real_pipeline(**arguments)
+        plan_path.write_text(
+            plan_path.read_text(encoding="utf-8") + "\n# drift\n",
+            encoding="utf-8",
+        )
+        return result
+
+    monkeypatch.setattr(
+        task_runner_module,
+        "run_task_pipeline",
+        mutate_after_validation,
+    )
+    result = run_subscription_public_entry_preflight(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=ROOT,
+        expected_head="a" * 40,
+        **selections,
+        process_authority_path=ROOT / "config/process_authority_v1.yaml",
+        policy_path=ROOT / "policy/repo_write_policy.yaml",
+        autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_AUTHORITY_BINDING_BLOCKED"
+    assert result["reasons"] == ["SUBSCRIPTION_AUTHORITY_INPUT_DRIFT"]
+    assert result["repository_context_built"] is False
+
+
 def test_subscription_public_entry_preflight_rejects_input_before_file_reads() -> None:
     result = run_subscription_public_entry_preflight(
         task_manifest_path="not-read.yaml",
@@ -633,6 +726,31 @@ def test_subscription_context_compiler_package_freezes_exact_scope() -> None:
     assert set(manifest["scope"]["in_scope"]) == CONTEXT_COMPILER_FILES
     assert set(plan["changed_files"]) == CONTEXT_COMPILER_FILES
     assert len(CONTEXT_COMPILER_FILES) == 14
+    assert manifest["publication"]["retain_feature_branch"] is True
+    assert manifest["bounded_closure"]["frozen_before_execution"][
+        "finite_budgets"
+    ]["real_downstream_accesses"] == 0
+
+
+
+def test_snapshot_authority_binding_package_freezes_exact_scope() -> None:
+    manifest_result = validate_task_manifest(
+        SNAPSHOT_BINDING_MANIFEST,
+        ROOT / "policy/repo_write_policy.yaml",
+        ROOT / "policy/autonomy_policy.yaml",
+    )
+    plan_result = validate_change_plan(SNAPSHOT_BINDING_PLAN)
+    manifest = load_yaml_file(SNAPSHOT_BINDING_MANIFEST)
+    plan = load_yaml_file(SNAPSHOT_BINDING_PLAN)
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == SNAPSHOT_BINDING_FILES
+    assert set(manifest["scope"]["in_scope"]) == SNAPSHOT_BINDING_FILES
+    assert set(plan["changed_files"]) == SNAPSHOT_BINDING_FILES
+    assert len(SNAPSHOT_BINDING_FILES) == 15
     assert manifest["publication"]["retain_feature_branch"] is True
     assert manifest["bounded_closure"]["frozen_before_execution"][
         "finite_budgets"
