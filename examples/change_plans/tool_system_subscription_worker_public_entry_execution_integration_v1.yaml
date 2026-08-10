@@ -1,0 +1,46 @@
+plan_id: tool-system-subscription-worker-public-entry-execution-integration-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_public_entry_execution_integration_v1.yaml
+changed_files:
+  - config/module_registry_v1.yaml
+  - docs/modules/cli-frontend-contract-v1.md
+  - docs/modules/development-loop-contract-v1.md
+  - docs/modules/local-git-contract-v1.md
+  - docs/modules/task-runner-contract-v1.md
+  - docs/reports/subscription_worker_public_entry_execution_integration_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - examples/change_plans/tool_system_subscription_worker_public_entry_execution_integration_v1.yaml
+  - examples/task_manifests/tool_system_subscription_worker_public_entry_execution_integration_v1.yaml
+  - src/tool_system/cli/main.py
+  - src/tool_system/development_loop/loop.py
+  - src/tool_system/gate/command_runner.py
+  - src/tool_system/local_git/__init__.py
+  - src/tool_system/local_git/orchestrator.py
+  - src/tool_system/runner/task_runner.py
+  - tests/test_command_runner.py
+  - tests/test_module_registry.py
+  - tests/test_root_cli.py
+  - tests/test_task_runner.py
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    section_or_key: Required public flow
+    scope: Compose the accepted modules behind the existing CLI without remote publication.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Complete a bounded subscription-primary isolated local Git workflow with APIs default off.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_command_runner.py tests/test_development_loop.py tests/test_local_git_orchestrator.py tests/test_task_runner.py tests/test_root_cli.py tests/test_module_registry.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  method: github_app_connector_only_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-public-entry-execution-integration-v1
+  retain_feature_branch: true
+  exact_base: 9c596282dbc784d8a5afdc1f4d283f4828adbf6b
+rollback:
+  method: git_revert
+  reference: tool-system@9c596282dbc784d8a5afdc1f4d283f4828adbf6b
+  execution_authorized: false

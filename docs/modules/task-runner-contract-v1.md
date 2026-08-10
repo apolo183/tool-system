@@ -4,10 +4,10 @@ This file defines the module contract owned by the current
 `task_runner` module. Configured commands and audit paths remain bounded by the
 explicit current task pair and caller authorization. The public-entry context
 stage accepts only an exact manifest-bound repository read and delegates hardened
-read-only snapshot inspection plus pure compilation. The subscription-development
-path accepts only the guarded Codex CLI subscription adapter kind and returns an
-in-memory candidate; neither stage grants API, target-repository mutation,
-local-Git write, remote, or production authority.
+read-only snapshot inspection plus pure compilation. The subscription-development path accepts only the guarded Codex CLI subscription
+adapter kind. A separately exact-bound public execution route composes isolated
+candidate validation and remote-free local Git, while API, source/target mutation,
+remote publication, production, cleanup, and rollback remain unauthorized.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -18,10 +18,10 @@ module_compound_contract:
   identity:
     canonical_module_id: task-runner
     current_module_id: task_runner
-    module_version: 1.1.0
+    module_version: 1.2.0
     aggregate_interface:
       interface_id: task-runner-api
-      interface_version: 1.0.0
+      interface_version: 1.1.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
@@ -38,8 +38,8 @@ module_compound_contract:
       - kind: exact
         name: tool_system.runner.task_runner
   role:
-    summary: execute validated task plans and compose authority, read-only context, compilation, and bounded development stages through explicit gates
-    responsibility_boundary: Resolve one explicit current task pair, run validation and policy gates, optionally execute its configured local commands, aggregate batches or graphs, byte-seal and require one exact manifest-bound subscription public-entry repository read before composing repository-context and blueprint-compiler, compose one guarded subscription-worker adapter with the in-memory development loop, and record local audit results without granting downstream effects.
+    summary: execute validated task plans and compose authority, read-only context, compilation, guarded subscription development, isolated validation, durable state, and one remote-free local Git commit through exact gates without source, target, remote, API, credential, or production authority
+    responsibility_boundary: Resolve one explicit current task pair, run validation and policy gates, optionally execute its configured local commands, aggregate batches or graphs, byte-seal and require one exact manifest-bound subscription public-entry repository read before composing repository-context and blueprint-compiler, and on a separately exact execution binding compose the guarded subscription worker, current-candidate loop, protected validation clone, two deterministic reviews, durable state, and one remote-free local Git commit while returning redacted local evidence and a non-executing draft-PR plan.
   natural_owner_evidence_paths:
     - src/tool_system/gate/command_runner.py
     - src/tool_system/gate/test_gate.py
@@ -52,6 +52,7 @@ module_compound_contract:
     direct_provider_module_ids:
       - blueprint_compiler
       - development_loop
+      - local_git
       - manifest_validation
       - process_authority
       - repository_context
@@ -66,14 +67,16 @@ module_compound_contract:
       - frozen_development_contract_baseline_and_explicit_subscription_worker_adapter
       - explicit_subscription_public_entry_authority_and_bounded_selection
       - exact_manifest_bound_repository_context_and_compiler_limits
-    boundary: Accept one explicit validated manifest/change-plan pair or a validated batch, graph, or requirement route with caller-selected policies, working directory, and audit path; for subscription context, require the manifest to bind the hashed repository identity, expected commit, blueprint, module registry, milestone, acceptance, governance, query, seed, repository-read authority, and false worker/local-Git write authority exactly to the requested finite selections; or accept a frozen development contract, in-memory baseline, guarded subscription-worker adapter request, validators, reviewers, finite limits, resume state, and cancellation callback.
+      - exact_subscription_execution_binding_worker_configuration_workspace_state_validation_and_local_git_identity
+    boundary: Accept one explicit validated manifest/change-plan pair or a validated batch, graph, or requirement route with caller-selected policies, working directory, and audit path; for subscription context, require the manifest to bind the hashed repository identity, expected commit, blueprint, module registry, milestone, acceptance, governance, query, seed, repository-read authority, and false worker/local-Git write authority exactly to the requested finite selections; or accept a frozen development contract, in-memory baseline, guarded subscription-worker adapter request, validators, reviewers, finite limits, resume state, and cancellation callback. The public execution route additionally requires a second exact manifest mapping that binds path identities, source commit/tree, existing/addable topology, current acceptance and captured plan commands, worker configuration digest, finite budgets, validation limits, data transfer, isolated workspace, durable state, branch, commit message, one-commit ceiling, and hard-false API, credential, remote, target, production, cleanup, and rollback fields.
   output_contract:
     registered_outputs:
       - pipeline_result_gate_decision_and_audit_record
       - sealed_subscription_worker_candidate_and_effect_boundary_record
       - nonexecuting_subscription_public_entry_authority_packet
       - redacted_manifest_bound_context_and_blueprint_compilation_packet
-    boundary: Return pair resolution, validation, gate, command, batch, graph, stage, status, reason, and optional audit-path evidence; a passing public-entry preflight returns a canonical packet with hashed repository-root, task-pair input, and exact authority-binding evidence; the manifest-bound context stage returns redacted exact-snapshot evidence, deterministic compiled task DAG and hashes without repository-root or selected-content disclosure; the subscription development path additionally returns the bounded loop result, sealed in-memory candidate, adapter kind, worker-call count, and explicit zero API, provider, provider-credential, target-repository mutation, remote-repository, local-Git write, and production effect evidence.
+      - redacted_subscription_local_commit_and_nonexecuting_draft_pr_plan
+    boundary: Return pair resolution, validation, gate, command, batch, graph, stage, status, reason, and optional audit-path evidence; a passing public-entry preflight returns a canonical packet with hashed repository-root, task-pair input, and exact authority-binding evidence; the manifest-bound context stage returns redacted exact-snapshot evidence, deterministic compiled task DAG and hashes without repository-root or selected-content disclosure; the subscription development path returns the bounded in-memory result; the exact public execution route returns only hashes, counts, terminal status, finite worker usage, local branch/commit/tree identity, and non-executing disposition plans, with zero API, provider, credential, source/target mutation, remote-repository, production, cleanup, and rollback operations.
   error_contract:
     registered_error_semantics:
       - first_failed_gate_or_command_stops_pipeline
@@ -81,7 +84,8 @@ module_compound_contract:
       - invalid_public_entry_input_or_failed_authority_blocks_packet_creation
       - missing_mismatched_ambiguous_or_drifting_snapshot_authority_binding_blocks_before_context
       - unclassified_stale_dirty_unsafe_malformed_or_rejected_context_blocks_compilation
-    boundary: Missing current pair, invalid replay request, invalid repository identity or bounded public-entry selection, absent, duplicate, mismatched, authority-bearing, or byte-drifting manifest binding, failed authority, stale or dirty snapshot, unsafe or missing evidence, invalid committed YAML mappings, rejected compilation, manifest, plan, policy, gate, command, graph, batch, unsupported subscription adapter, invalid structured worker result, or blocked development-loop input stops downstream execution.
+      - missing_mismatched_or_drifting_execution_binding_workspace_state_scope_validation_or_git_identity_blocks_before_unreceipted_commit
+    boundary: Missing current pair, invalid replay request, invalid repository identity or bounded public-entry selection, absent, duplicate, mismatched, authority-bearing, or byte-drifting manifest binding, failed authority, stale or dirty snapshot, unsafe or missing evidence, invalid committed YAML mappings, rejected compilation, manifest, plan, policy, gate, command, graph, batch, unsupported subscription adapter, invalid structured worker result, candidate validation command failure, unsafe workspace or state path, local-Git receipt ambiguity, or blocked development-loop input stops before any unreceipted commit or downstream execution.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -142,8 +146,8 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve explicit-pair resolution, input byte sealing, exact manifest-bound repository-read authorization, gate order, stop behavior, command-result fields, batch and graph aggregation, non-executing public-entry packet fields and digests, the legacy fixture compiler envelope, exact-snapshot context and freshness checks, deterministic compiler output, repository-root and selected-content redaction, guarded subscription-adapter selection, structured in-memory candidate results, hard-zero downstream write and external effect fields, no-target flags, and audit result shapes.
-    interface_incompatible_change: Requires a new aggregate interface version and revalidation of the CLI plus every upstream validation and planning boundary.
+    interface_compatible_replacement: Preserve explicit-pair resolution, separate execution-binding closure, input byte sealing, exact manifest-bound repository-read authorization, gate order, stop behavior, command-result fields, batch and graph aggregation, non-executing public-entry packet fields and digests, the legacy fixture compiler envelope, exact-snapshot context and freshness checks, deterministic compiler output, repository-root and selected-content redaction, guarded subscription-adapter selection, structured in-memory candidate results, hard-zero downstream write and external effect fields, no-target flags, and audit result shapes.
+    interface_incompatible_change: Weakening exact execution binding, adding source/remote/production effects, or changing the public result shape requires a new aggregate interface version and revalidation of the CLI plus every upstream validation and planning boundary.
   rollback_contract:
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_runner@1.1.0
     method: Revert through a separately audited pull request and preserve prior task, batch, graph, stage, command, and audit evidence.
@@ -190,12 +194,23 @@ module_compound_contract:
           - src/tool_system/runner/task_runner.py
         evidence_symbols:
           - run_subscription_public_entry_context_compilation
+          - run_subscription_public_entry_execution
         boundary_parameters:
           - repository_root
           - expected_head
           - blueprint_path
           - module_registry_path
-        constraint: Require an exact byte-stable task-pair manifest binding and an explicit read request before delegating one exact clean snapshot to repository-context; parse only selected committed mappings, redact the root and contents from output, and perform no repository or Git write.
+        constraint: Both public routes inspect one exact clean committed source snapshot without changing it; all source identity and selected-content evidence is redacted.
+      - root_id: manifest-bound-subscription-execution-workspace-and-state
+        access: read-write
+        evidence_paths:
+          - src/tool_system/runner/task_runner.py
+        evidence_symbols:
+          - run_subscription_public_entry_execution
+        boundary_parameters:
+          - workspace_root
+          - durable_state_path
+        constraint: Only the separately exact-bound execution route may create or resume the creator-owned remote-free workspace and hardened durable state outside the source; candidate validation uses private ephemeral clones and all private roots and contents remain redacted.
   external_system_contracts:
     declaration: declared
     systems:
@@ -210,6 +225,11 @@ module_compound_contract:
         evidence_paths:
           - src/tool_system/runner/task_runner.py
         boundary: Delegate only to repository-context after the current exact task-pair passes, captured manifest and plan bytes remain unchanged, every bounded selection matches the manifest, and repository read is explicitly authorized; preserve fixed expected HEAD, clean-worktree, no-remote, no-hook, no-lock, no-write, freshness, and finite-limit boundaries.
+      - system_id: local-git-and-durable-subscription-workflow
+        mode: separately exact-bound isolated local execution
+        evidence_paths:
+          - src/tool_system/runner/task_runner.py
+        boundary: Compose local-git-api and durable-orchestrator-api only after the current task pair and execution binding match; create at most one remote-free local commit and return only non-executing remote, cleanup, and rollback plans.
       - system_id: codex-cli-subscription-worker
         mode: explicitly injected guarded adapter only
         evidence_paths:

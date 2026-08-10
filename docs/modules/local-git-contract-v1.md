@@ -1,8 +1,9 @@
 # Local Git Orchestrator Module Compound Contract v1
 
-This contract owns P14G durable orchestration of one isolated, remote-free local
-Git fixture. It consumes the accepted development loop and durable SQLite store;
-it does not publish a branch, open a pull request, or mutate a downstream repo.
+This contract owns durable orchestration of one isolated, remote-free local Git
+workspace created from an exact clean local source snapshot. It consumes the
+accepted development loop and durable SQLite store; it does not publish a branch,
+open a pull request, or mutate the source or any remote repository.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -13,10 +14,10 @@ module_compound_contract:
   identity:
     canonical_module_id: local-git
     current_module_id: local_git
-    module_version: 1.1.0
+    module_version: 1.2.0
     aggregate_interface:
       interface_id: local-git-api
-      interface_version: 1.1.0
+      interface_version: 1.2.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
@@ -25,8 +26,8 @@ module_compound_contract:
       - kind: prefix
         name: tool_system.local_git
   role:
-    summary: durably record one bounded change in an isolated local Git fixture
-    responsibility_boundary: Freeze Git identity, scope, and exact baseline presence/content topology, consume a sealed development-loop result containing a subset of the allowed scope, bind it to durable leases/checkpoints/side-effect receipts, stage the exact add/modify/delete delta, create one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
+    summary: create or resume one exact hook-disabled remote-free workspace from a clean local source snapshot and durably record at most one bounded branch and commit with cancellation, receipt reconciliation, zero network effects, and non-executing disposition plans
+    responsibility_boundary: Validate one clean exact local source commit/tree, create or identify a hook-disabled configuration-isolated local clone with every remote removed, freeze Git identity, scope, and exact baseline presence/content topology, pass cancellation into the development loop, bind the sealed candidate to durable leases/checkpoints/side-effect receipts, stage the exact add/modify/delete delta, create at most one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
   natural_owner_evidence_paths:
     - src/tool_system/local_git/__init__.py
     - src/tool_system/local_git/orchestrator.py
@@ -36,23 +37,25 @@ module_compound_contract:
     direct_provider_module_ids:
       - development_loop
       - durable_orchestrator
-    direct_consumer_module_ids: []
+    direct_consumer_module_ids:
+      - task_runner
   input_contract:
     registered_inputs:
       - frozen_development_contract_and_callbacks_v1
       - isolated_local_git_identity_v1
       - durable_orchestrator_store_v1
-    boundary: Accept an absolute remote-free clean fixture root, exact base commit/tree, one agent branch, an allowed scope whose baseline mapping exactly represents the paths present at base, frozen P14F callbacks and budgets, and one caller-selected hardened durable store. Allowed paths absent from the baseline may be added; present paths may be modified or deleted.
+      - exact_local_source_and_workspace_identity_v1
+    boundary: Accept an absolute clean local source root, an exact absent-or-receipted isolated workspace path under a protected parent, exact base commit/tree, one agent branch, an allowed scope whose baseline mapping exactly represents the paths present at base, frozen development callbacks and budgets, optional cancellation, and one local-Git-owned hardened durable store created from separately bound state inputs or supplied by an existing internal caller. Allowed paths absent from the baseline may be added; present paths may be modified or deleted.
   output_contract:
     registered_outputs:
       - durable_local_git_change_receipt_v1
       - unauthorized_local_disposition_plans_v1
-    boundary: Return the sealed candidate identity, one local branch/commit/tree, durable completion, zero remote/provider/credential counts, and rollback, creator-cleanup, and draft-PR plans whose execution remains false.
+    boundary: Return hashed workspace/source evidence, the sealed candidate identity and finite worker usage, one local branch/commit/tree, durable completion or idempotent completed-effect resume, zero network/remote/provider/credential counts, and rollback, creator-cleanup, and draft-PR plans whose execution remains false.
   error_contract:
     registered_error_semantics:
       - precondition_scope_lease_and_receipt_conflicts_fail_closed
       - ambiguous_side_effect_never_replays
-    boundary: Remote configuration, dirty state, symlink or root drift, head/tree mismatch, baseline presence/content mismatch, unreceipted branch, ambiguous in-progress effect, lease conflict, candidate scope expansion, empty candidate delta, staged-delta mismatch, or Git failure blocks without remote fallback.
+    boundary: Unsafe source or workspace parent, source head/tree drift, clone or hook/config isolation failure, remote configuration, dirty state, symlink or root drift, head/tree mismatch, baseline presence/content mismatch, unreceipted branch, ambiguous in-progress effect, lease conflict, candidate scope expansion, empty candidate delta, staged-delta mismatch, or Git failure blocks without remote fallback.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -67,13 +70,13 @@ module_compound_contract:
     direct_effects:
       - effect_class: repository_write
         evidence_paths: [src/tool_system/local_git/orchestrator.py]
-        boundary: Add, modify, or delete only the exact changed subset of frozen paths inside the caller-owned isolated local fixture.
+        boundary: Create one isolated local workspace from the exact local source, then add, modify, or delete only the exact changed subset of frozen paths inside that workspace; the source remains read-only.
       - effect_class: data_write
         evidence_paths: [src/tool_system/local_git/orchestrator.py]
         boundary: Persist task checkpoints and side-effect receipts through durable-orchestrator-api and write exact fixture content.
       - effect_class: git_write
         evidence_paths: [src/tool_system/local_git/orchestrator.py]
-        boundary: Create one local agent branch and one commit in a repository with no configured remotes.
+        boundary: Perform a local clone with no checkout hooks or remote retention, then create one local agent branch and one commit in a repository with no configured remotes.
     delegated_effects:
       - capability_id: durable-orchestrator-store
         capability_state: conditional-delegated-maximum
@@ -91,8 +94,8 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve remote-free preflight, exact base/scope and baseline-topology binding, exact add/modify/delete staging, durable effect ordering, no-duplicate completed-effect resume, and non-executing disposition plans.
-    interface_incompatible_change: Remote support, automatic rollback/cleanup, a new persistence schema, or weaker receipt reconciliation requires a new interface version and separate authorization.
+    interface_compatible_replacement: Preserve exact source-to-workspace construction, hook/global-config isolation, remote removal, cancellation, remote-free preflight, exact base/scope and baseline-topology binding, exact add/modify/delete staging, durable effect ordering, no-duplicate completed-effect resume, and non-executing disposition plans.
+    interface_incompatible_change: Network clone or remote support, automatic rollback/cleanup, a new persistence schema, or weaker receipt reconciliation requires a new interface version and separate authorization.
   rollback_contract:
     rollback_identity: tool-system@22dedb0f2a2c0b38a0bd4c67f36c1c2454ca19d5:local_git@absent
     method: Revert the module through a separately audited pull request; runtime rollback plans remain non-executing.
@@ -108,7 +111,7 @@ module_compound_contract:
   local_boundaries:
     repository:
       mode: isolated-local-git-read-write
-      contract: The root is absolute, clean, non-symlink, has no configured remote, and matches exact base commit/tree before the first effect.
+      contract: The source root is absolute, clean, non-symlink, and exact; the separate workspace root is created locally or reconciled through receipts, has no configured remote, and matches exact base commit/tree before the first effect.
     data:
       mode: durable-single-host
       contract: State is recorded through the hardened caller-selected SQLite store outside the fixture root.
@@ -124,16 +127,16 @@ module_compound_contract:
       - root_id: isolated-local-git-fixture
         access: read-write
         evidence_paths: [src/tool_system/local_git/orchestrator.py]
-        evidence_symbols: [run_durable_local_git]
-        boundary_parameters: [repository_root]
-        constraint: Exact absolute remote-free fixture root; no target or tool-system repository is authorized.
+        evidence_symbols: [create_isolated_local_workspace, run_durable_local_git]
+        boundary_parameters: [source_repository_root, workspace_root, repository_root]
+        constraint: Read only one exact local source and write only one separately bound remote-free workspace; no source, remote, target, or tool-system repository mutation is authorized.
   external_system_contracts:
     declaration: declared
     systems:
       - system_id: local-git-process
         mode: isolated-local-only
         evidence_paths: [src/tool_system/local_git/orchestrator.py]
-        boundary: Invoke local git only after remote-free and identity preflight; network and GitHub operations are absent.
+        boundary: Invoke local Git with hooks, signing, prompts, and global/system configuration disabled; transfer objects only from the exact local source, remove origin before checkout, and perform no network or GitHub operation.
   non_claims:
     provider_execution_authorized: false
     target_repo_mutation_authorized: false

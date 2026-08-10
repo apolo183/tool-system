@@ -13,10 +13,10 @@ module_compound_contract:
   identity:
     canonical_module_id: cli-frontend
     current_module_id: cli_frontend
-    module_version: 1.1.0
+    module_version: 1.2.0
     aggregate_interface:
       interface_id: cli-frontend-api
-      interface_version: 1.0.0
+      interface_version: 1.1.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
@@ -59,8 +59,8 @@ module_compound_contract:
       - kind: exact
         name: tool_system.cli.target_repo_pr_plan_preview
   role:
-    summary: expose stable command-line entry points that delegate to registered public module interfaces
-    responsibility_boundary: Parse command-line arguments, including the subscription-development authority and explicit manifest-bound repository-read request, select one current public module entry point, render its redacted result, and derive a process exit code without changing delegated authority.
+    summary: expose stable command-line entry points that delegate to registered public module interfaces, including read-only develop and separately exact-bound develop-execute routes, while rendering only redacted results and never expanding delegated authority
+    responsibility_boundary: Parse command-line arguments, including the read-only subscription context route and the separately exact-bound develop-execute route, select one current public module entry point, render its redacted result, and derive a process exit code without changing delegated authority.
   natural_owner_evidence_paths:
     - src/tool_system/cli/__init__.py
     - src/tool_system/cli/cleanup_plan.py
@@ -97,12 +97,14 @@ module_compound_contract:
       - command_line_arguments_and_versioned_module_inputs
       - subscription_development_authority_preflight_arguments
       - explicit_manifest_bound_repository_read_request
-    boundary: Accept command-line arguments for one selected current entry point, including explicit paths, repository identifiers, PR numbers, flags, and module inputs; the develop command requires one explicit current manifest/change-plan pair, an absolute repository-root identity, exact expected commit, bounded blueprint, module-registry, milestone, acceptance, governance, query, and seed selections, plus an explicit repository-read request that grants no authority by itself; the prior isolated-fixture spelling remains a compatibility alias.
+      - explicit_subscription_execution_workspace_state_worker_validation_and_local_git_request
+    boundary: Accept command-line arguments for one selected current entry point, including explicit paths, repository identifiers, PR numbers, flags, and module inputs; the develop command requires one explicit current manifest/change-plan pair, an absolute repository-root identity, exact expected commit, bounded blueprint, module-registry, milestone, acceptance, governance, query, and seed selections, plus an explicit repository-read request that grants no authority by itself; the prior isolated-fixture spelling remains a compatibility alias. The develop-execute command additionally requires exact source tree, workspace and durable-state paths, repository-external Codex executable limits, and five explicit request flags whose presence grants no authority without the matching manifest execution binding.
   output_contract:
     registered_outputs:
       - exit_code_and_structured_or_human_readable_result
       - nonexecuting_subscription_authority_packet_result
       - redacted_manifest_bound_context_compilation_result
+      - redacted_subscription_local_commit_and_nonexecuting_draft_pr_plan
     boundary: Print the delegated structured result and return zero only for the selected entry point's accepted success status; develop prints hashed-root, task-pair, authority-binding, exact-snapshot, and deterministic compilation evidence without the repository-root value or selected file contents and explicitly grants no worker, local-Git write, API, provider, credential, remote, or production authority.
   error_contract:
     registered_error_semantics:
@@ -146,8 +148,8 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve command names including develop, required and optional argument semantics, the primary manifest-bound read-request flag and legacy fixture alias, authority/context/compiler ordering, repository-root and selected-content redaction, module delegation, structured output, and exit-code behavior.
-    interface_incompatible_change: Requires a new aggregate interface version, entry-point migration, packaging review, and all delegated CLI tests.
+    interface_compatible_replacement: Preserve command names including develop and develop-execute, required and optional argument semantics, the primary manifest-bound read-request flag and legacy fixture alias, authority/context/compiler ordering, repository-root and selected-content redaction, module delegation, structured output, and exit-code behavior.
+    interface_incompatible_change: Removing or weakening a required develop-execute request flag, exposing private roots or content, or changing result semantics requires a new aggregate interface version, entry-point migration, packaging review, and all delegated CLI tests.
   rollback_contract:
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cli_frontend@1.1.0
     method: Revert through a separately audited pull request and restore the prior entry-point delegation and argument contract.
@@ -189,9 +191,11 @@ module_compound_contract:
           - cwd
           - audit_path
           - repository_root
+          - workspace_root
+          - durable_state
           - blueprint_path
           - module_registry_path
-        constraint: Parse explicit path arguments and delegate them unchanged to the selected module; develop requires an explicit repository-read request while the validated manifest grants and exactly binds that read, the task runner opens only the exact read-only snapshot through repository-context, public output hashes the repository-root identity and omits selected contents, and no CLI path may infer broader roots or permissions.
+        constraint: Parse explicit path arguments and delegate them unchanged to the selected module; develop remains read-only, while develop-execute requires all five explicit request flags plus a separate exact manifest execution binding. Public output hashes repository, workspace, and state identities and omits private paths, selected contents, prompts, and raw worker output; no CLI path may infer broader roots or permissions.
   external_system_contracts:
     declaration: declared
     systems:

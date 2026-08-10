@@ -6,6 +6,7 @@ import os
 import re
 import stat
 import subprocess
+import tempfile
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -48,18 +49,55 @@ class LocalGitIdentity:
             raise DurableLocalGitError("INVALID_COMMIT_MESSAGE")
 
 
-def _git(root: Path, *args: str, check: bool = True) -> str:
-    completed = subprocess.run(
-        ["git", *args],
-        cwd=root,
-        check=False,
-        capture_output=True,
-        text=True,
-        env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+def _git_environment() -> dict[str, str]:
+    names = (
+        "PATH",
+        "HOME",
+        "LANG",
+        "LC_ALL",
+        "SYSTEMROOT",
+        "WINDIR",
+        "TMPDIR",
+        "TEMP",
+        "TMP",
     )
+    return {
+        **{name: os.environ[name] for name in names if name in os.environ},
+        "GIT_TERMINAL_PROMPT": "0",
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+    }
+
+
+def _git(root: Path, *args: str, check: bool = True) -> str:
+    try:
+        completed = subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.hooksPath=" + os.devnull,
+                "-c",
+                "commit.gpgSign=false",
+                *args,
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            shell=False,
+            env=_git_environment(),
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise DurableLocalGitError("LOCAL_GIT_COMMAND_FAILED") from exc
     if check and completed.returncode:
         raise DurableLocalGitError("LOCAL_GIT_COMMAND_FAILED")
-    return completed.stdout.strip()
+    if (
+        len((completed.stdout or "").encode("utf-8")) > 1_048_576
+        or len((completed.stderr or "").encode("utf-8")) > 1_048_576
+    ):
+        raise DurableLocalGitError("LOCAL_GIT_OUTPUT_LIMIT")
+    return (completed.stdout or "").strip()
 
 
 def _canonical(value: object) -> str:
@@ -209,6 +247,158 @@ def _write_candidate(
             target.unlink()
 
 
+def _validated_local_repository(root: Path) -> tuple[str, str]:
+    if not root.is_absolute() or root.is_symlink() or not root.is_dir():
+        raise DurableLocalGitError("INVALID_SOURCE_REPOSITORY_ROOT")
+    git_dir = root / ".git"
+    if git_dir.is_symlink() or not git_dir.is_dir():
+        raise DurableLocalGitError("INVALID_SOURCE_GIT_DIRECTORY")
+    if Path(_git(root, "rev-parse", "--show-toplevel")) != root:
+        raise DurableLocalGitError("SOURCE_REPOSITORY_ROOT_MISMATCH")
+    if _git(root, "status", "--porcelain=v1", "--untracked-files=all"):
+        raise DurableLocalGitError("DIRTY_SOURCE_WORKTREE")
+    return _git(root, "rev-parse", "HEAD"), _git(root, "rev-parse", "HEAD^{tree}")
+
+
+def create_durable_local_git_store(
+    *,
+    database_path: str | Path,
+    forbidden_roots: tuple[str | Path, ...],
+) -> DurableOrchestratorStore:
+    """Construct the local-Git-owned hardened durable state boundary."""
+
+    return DurableOrchestratorStore(
+        database_path,
+        forbidden_roots=forbidden_roots,
+    )
+
+
+def create_isolated_local_workspace(
+    *,
+    source_repository_root: str | Path,
+    workspace_root: str | Path,
+    expected_head_sha: str,
+    expected_tree_sha: str,
+) -> dict[str, object]:
+    """Create or identify one exact remote-free local workspace.
+
+    The source is read locally at one clean commit. Clone checkout disables hooks,
+    global/system Git configuration, prompting, signing, submodules, and every
+    remote after the local object transfer. Existing workspaces are not changed;
+    durable-local-Git receipt reconciliation remains authoritative for resume.
+    """
+
+    raw_source = Path(source_repository_root)
+    raw_workspace = Path(workspace_root)
+    try:
+        if not raw_source.is_absolute() or raw_source.is_symlink():
+            raise DurableLocalGitError("INVALID_SOURCE_REPOSITORY_ROOT")
+        source = raw_source.resolve(strict=True)
+        if _SHA.fullmatch(expected_head_sha) is None:
+            raise DurableLocalGitError("INVALID_EXPECTED_HEAD")
+        if _SHA.fullmatch(expected_tree_sha) is None:
+            raise DurableLocalGitError("INVALID_EXPECTED_TREE")
+        source_head, source_tree = _validated_local_repository(source)
+        if source_head != expected_head_sha:
+            raise DurableLocalGitError("SOURCE_HEAD_PRECONDITION_DRIFT")
+        if source_tree != expected_tree_sha:
+            raise DurableLocalGitError("SOURCE_TREE_PRECONDITION_DRIFT")
+        if not raw_workspace.is_absolute() or raw_workspace.name in {"", ".", ".."}:
+            raise DurableLocalGitError("INVALID_WORKSPACE_ROOT")
+        parent = raw_workspace.parent.resolve(strict=True)
+        if raw_workspace.parent.is_symlink() or not parent.is_dir():
+            raise DurableLocalGitError("INVALID_WORKSPACE_PARENT")
+        parent_stat = parent.lstat()
+        if (
+            parent_stat.st_uid != os.geteuid()
+            or parent_stat.st_mode & (stat.S_IWGRP | stat.S_IWOTH)
+        ):
+            raise DurableLocalGitError("UNSAFE_WORKSPACE_PARENT")
+        target = parent / raw_workspace.name
+        if target.exists() or target.is_symlink():
+            if target.is_symlink() or not target.is_dir():
+                raise DurableLocalGitError("UNSAFE_EXISTING_WORKSPACE")
+            git_dir = target / ".git"
+            if git_dir.is_symlink() or not git_dir.is_dir():
+                raise DurableLocalGitError("UNSAFE_EXISTING_WORKSPACE")
+            if target.lstat().st_uid != os.geteuid():
+                raise DurableLocalGitError("UNSAFE_EXISTING_WORKSPACE")
+            if _git(target, "remote"):
+                raise DurableLocalGitError("REMOTE_REPOSITORY_FORBIDDEN")
+            if _git(target, "rev-parse", "HEAD") != expected_head_sha:
+                raise DurableLocalGitError("WORKSPACE_HEAD_PRECONDITION_DRIFT")
+            if _git(target, "rev-parse", "HEAD^{tree}") != expected_tree_sha:
+                raise DurableLocalGitError("WORKSPACE_TREE_PRECONDITION_DRIFT")
+            if _git(target, "status", "--porcelain=v1", "--untracked-files=all"):
+                raise DurableLocalGitError("DIRTY_EXISTING_WORKSPACE")
+            return {
+                "status": "PASS",
+                "workspace_state": "EXISTING",
+                "workspace_created": False,
+                "workspace_identity_sha256": hashlib.sha256(
+                    str(target).encode("utf-8")
+                ).hexdigest(),
+                "source_head": source_head,
+                "source_tree": source_tree,
+                "remote_count": 0,
+                "network_operations": 0,
+            }
+        with tempfile.TemporaryDirectory(
+            prefix=".tool-system-workspace-",
+            dir=parent,
+        ) as temporary_directory:
+            stage = Path(temporary_directory) / "repository"
+            _git(
+                parent,
+                "-c",
+                "protocol.file.allow=always",
+                "clone",
+                "--no-local",
+                "--no-hardlinks",
+                "--no-checkout",
+                "--no-tags",
+                "--",
+                str(source),
+                str(stage),
+            )
+            if _git(stage, "remote"):
+                _git(stage, "remote", "remove", "origin")
+            _git(stage, "checkout", "--detach", expected_head_sha)
+            if _git(stage, "remote"):
+                raise DurableLocalGitError("REMOTE_REPOSITORY_FORBIDDEN")
+            if _git(stage, "rev-parse", "HEAD") != expected_head_sha:
+                raise DurableLocalGitError("WORKSPACE_HEAD_PRECONDITION_DRIFT")
+            if _git(stage, "rev-parse", "HEAD^{tree}") != expected_tree_sha:
+                raise DurableLocalGitError("WORKSPACE_TREE_PRECONDITION_DRIFT")
+            if _git(stage, "status", "--porcelain=v1", "--untracked-files=all"):
+                raise DurableLocalGitError("DIRTY_WORKSPACE_AFTER_CLONE")
+            os.replace(stage, target)
+        return {
+            "status": "PASS",
+            "workspace_state": "CREATED",
+            "workspace_created": True,
+            "workspace_identity_sha256": hashlib.sha256(
+                str(target).encode("utf-8")
+            ).hexdigest(),
+            "source_head": source_head,
+            "source_tree": source_tree,
+            "remote_count": 0,
+            "network_operations": 0,
+        }
+    except (OSError, DurableLocalGitError) as exc:
+        return {
+            "status": "BLOCK",
+            "terminal_code": (
+                exc.code
+                if isinstance(exc, DurableLocalGitError)
+                else "WORKSPACE_CREATION_FAILED"
+            ),
+            "workspace_created": False,
+            "remote_count": 0,
+            "network_operations": 0,
+        }
+
+
 def run_durable_local_git(
     *,
     repository_root: str | Path,
@@ -226,6 +416,7 @@ def run_durable_local_git(
     limits: DevelopmentLoopLimits | None = None,
     lease_seconds: float = 60.0,
     after_effect: Callable[[str], None] | None = None,
+    cancellation_requested: Callable[[], bool] | None = None,
 ) -> dict[str, object]:
     """Seal one P14F candidate and commit it in an isolated local repository.
 
@@ -287,6 +478,12 @@ def run_durable_local_git(
                 "branch": identity.branch_name,
                 "commit": result["commit"],
                 "tree": result["tree"],
+                "candidate_tree": result.get("candidate_tree"),
+                "worker_call_count": int(result.get("worker_call_count", 0)),
+                "total_duration_ms": int(result.get("total_duration_ms", 0)),
+                "total_cost_microunits": int(
+                    result.get("total_cost_microunits", 0)
+                ),
                 "rollback_plan": {"authorized": False, "base": identity.expected_head_sha},
                 "cleanup_plan": {"authorized": False, "branch": identity.branch_name},
                 "draft_pr_plan": {"authorized": False, "remote_operations": 0},
@@ -303,6 +500,7 @@ def run_durable_local_git(
             contract_reviewer=contract_reviewer,
             limits=limits,
             resume_state=task["checkpoint"].get("loop_result"),
+            cancellation_requested=cancellation_requested,
         )
         store.checkpoint_task(
             run_id,
@@ -394,7 +592,14 @@ def run_durable_local_git(
             lease_owner=lease_owner,
             task_attempt=attempt,
             expected_precondition_sha=identity.expected_head_sha,
-            result={"commit": commit_sha, "tree": commit_tree},
+            result={
+                "commit": commit_sha,
+                "tree": commit_tree,
+                "candidate_tree": loop_result["candidate_tree"],
+                "worker_call_count": loop_result["worker_call_count"],
+                "total_duration_ms": loop_result["total_duration_ms"],
+                "total_cost_microunits": loop_result["total_cost_microunits"],
+            },
             event_kind="local_git_commit_created",
             event_payload={"commit": commit_sha, "tree": commit_tree},
         )
@@ -416,6 +621,11 @@ def run_durable_local_git(
             "commit": commit_sha,
             "tree": commit_tree,
             "candidate_tree": loop_result["candidate_tree"],
+            "worker_call_count": int(loop_result["worker_call_count"]),
+            "total_duration_ms": int(loop_result["total_duration_ms"]),
+            "total_cost_microunits": int(
+                loop_result["total_cost_microunits"]
+            ),
             "rollback_plan": {"authorized": False, "action": "reset_fixture_to_base", "base": identity.expected_head_sha},
             "cleanup_plan": {"authorized": False, "action": "delete_creator_owned_fixture_branch", "branch": identity.branch_name},
             "draft_pr_plan": {"authorized": False, "remote_operations": 0},

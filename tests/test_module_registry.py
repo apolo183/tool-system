@@ -249,10 +249,10 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
     "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
 )
 
-EXPECTED_RAW_SHA256 = "d61357d38df5f8e38d358a19e8595859dcd2dda11070251d6a5e9bf89d49a95f"
-EXPECTED_BYTE_LENGTH = 124_800
+EXPECTED_RAW_SHA256 = "25568d9f0c4c53bea334dcc736477dd1c8b8078b906da73bc52a902da957999a"
+EXPECTED_BYTE_LENGTH = 125_880
 EXPECTED_SEMANTIC_SHA256 = (
-    "a6cb7735b66e542a768173cb0a99dcc64e97fac2a3ae8674b08c56e31ecc8fee"
+    "fd6b632975c7923d94486003062be5771192e7e9121d5494b8cb27d129c6347b"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 122
 EXPECTED_MODULE_IDS = {
@@ -1105,7 +1105,7 @@ def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
         edge_count += len(expected_dependencies)
         key = (row["aggregate_interface_id"], row["aggregate_interface_version"])
         assert interfaces[key]["provider_module_id"] == canonical
-    assert edge_count == 44
+    assert edge_count == 45
     assert_effect_oracle(registry)
 
 

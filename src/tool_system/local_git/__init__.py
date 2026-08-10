@@ -3,11 +3,15 @@
 from tool_system.local_git.orchestrator import (
     DurableLocalGitError,
     LocalGitIdentity,
+    create_durable_local_git_store,
+    create_isolated_local_workspace,
     run_durable_local_git,
 )
 
 __all__ = [
     "DurableLocalGitError",
     "LocalGitIdentity",
+    "create_durable_local_git_store",
+    "create_isolated_local_workspace",
     "run_durable_local_git",
 ]

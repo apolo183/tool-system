@@ -1,8 +1,8 @@
 # Development Loop Module Compound Contract v1
 
 This file defines the module contract owned by the current `development_loop`
-module. The module executes only against caller-owned in-memory fixture files
-and injected fixture callbacks. Returned cycle state is persistable evidence,
+module. The module executes only against caller-owned bounded in-memory files
+and injected callbacks. Returned cycle state is persistable evidence,
 not execution authority.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
@@ -26,8 +26,8 @@ module_compound_contract:
       - kind: prefix
         name: tool_system.development_loop
   role:
-    summary: execute bounded structured patch, validation, diagnosis, repair, and independent review cycles against isolated in-memory fixture repositories
-    responsibility_boundary: Freeze acceptance and finite budgets, enforce atomic exact-scope patch preconditions, honor a caller-owned cancellation signal before worker dispatch and before applying returned patches, classify validation and review blockers, terminate repeated or non-progressing cycles, seal successful candidates, and apply evidence non-reopening semantics without performing external operations.
+    summary: execute bounded structured patch, validation, diagnosis, repair, and independent review cycles against isolated in-memory repositories while supplying the exact current candidate files to every worker cycle and preserving cancellation, no-progress, and zero-external-effect semantics
+    responsibility_boundary: Freeze acceptance and finite budgets, expose the current authorized candidate-file mapping to each worker cycle, enforce atomic exact-scope patch preconditions, honor a caller-owned cancellation signal before worker dispatch and before applying returned patches, classify validation and review blockers, terminate repeated or non-progressing cycles, seal successful candidates, and apply evidence non-reopening semantics without performing external operations.
   natural_owner_evidence_paths:
     - src/tool_system/development_loop/__init__.py
     - src/tool_system/development_loop/loop.py
@@ -41,11 +41,11 @@ module_compound_contract:
   input_contract:
     registered_inputs:
       - frozen_development_contract_virtual_repository_and_fixture_callbacks_v1
-    boundary: Accept a frozen task digest, baseline tree, exact scope, acceptance and validation sets, fixed terminal predicate, finite budgets, caller-owned in-memory files, injected worker, validator and two independent reviewer callbacks, optional caller-persisted resume state, and an optional caller-owned boolean cancellation callback.
+    boundary: Accept a frozen task digest, baseline tree, exact scope, acceptance and validation sets, fixed terminal predicate, finite budgets, caller-owned in-memory files, injected worker, validator and two independent reviewer callbacks, optional caller-persisted resume state, and an optional caller-owned boolean cancellation callback; every worker request includes a fresh copy of the current candidate files plus its candidate-tree digest.
   output_contract:
     registered_outputs:
       - bounded_development_cycle_state_v1
-    boundary: Return canonical candidate files and tree digest, per-cycle fingerprints, blockers, satisfied acceptance, validation and review evidence, finite usage, cancellation or other stop classification, sealed-candidate status, and zero-operation counters. Cancellation before worker dispatch performs no worker call; cancellation after worker return discards that unapplied patch.
+    boundary: Return canonical candidate files and tree digest after every worker has received the matching current candidate mapping, per-cycle fingerprints, blockers, satisfied acceptance, validation and review evidence, finite usage, cancellation or other stop classification, sealed-candidate status, and zero-operation counters. Cancellation before worker dispatch performs no worker call; cancellation after worker return discards that unapplied patch.
   error_contract:
     registered_error_semantics:
       - invalid_drifted_out_of_scope_stale_unbounded_repeated_or_non_progressing_input_blocks
@@ -57,7 +57,7 @@ module_compound_contract:
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve exact frozen-contract semantics, atomic patch preconditions, caller cancellation checkpoints, validation and review set closure, recurrence fingerprint fields and exclusions, finite budgets, evidence non-reopening, canonical output, and zero external side effects.
+    interface_compatible_replacement: Preserve exact frozen-contract semantics, current-candidate worker request context, atomic patch preconditions, caller cancellation checkpoints, validation and review set closure, recurrence fingerprint fields and exclusions, finite budgets, evidence non-reopening, canonical output, and zero external side effects.
     interface_incompatible_change: Requires a new aggregate interface version and explicit revalidation of local-Git, task-runner, blueprint-compiler, and future durable-orchestrator consumers.
   rollback_contract:
     rollback_identity: tool-system@0b5110a2eea79ebde650e1088b787c781ddab171:development_loop@absent
@@ -74,7 +74,7 @@ module_compound_contract:
   local_boundaries:
     repository:
       mode: caller-owned-in-memory-fixture-only
-      contract: Repository paths and UTF-8 text are mappings; this module performs no filesystem or Git operation.
+      contract: Repository paths and UTF-8 text are mappings copied into each worker request; this module performs no filesystem or Git operation.
     data:
       mode: in-memory-and-caller-persistable-state
       contract: Cycle state is canonical JSON-compatible data; durable storage and leases belong to P14G.

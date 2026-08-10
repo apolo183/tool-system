@@ -18,6 +18,7 @@ from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.runner.task_runner import (
     run_subscription_development_pipeline,
     run_subscription_public_entry_context_compilation,
+    run_subscription_public_entry_execution,
     run_subscription_public_entry_preflight,
     run_task_pipeline,
 )
@@ -269,14 +270,20 @@ def test_task_runner_delegates_execution_to_protected_revalidation(
 
 
 def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
-    calls: list[list[str]] = []
+    calls: list[dict[str, object]] = []
 
     def fake_run(
         argv: list[str], **kwargs: Any
     ) -> subprocess.CompletedProcess[str]:
-        calls.append(argv)
         prompt = json.loads(str(kwargs["input"]))
-        assert prompt["attempt_number"] == 1
+        calls.append(prompt)
+        attempt = len(calls)
+        expected_content = "return 1\n" if attempt == 1 else "return 0\n"
+        replacement_content = "return 0\n" if attempt == 1 else "return 2\n"
+        assert prompt["attempt_number"] == attempt
+        assert prompt["candidate_files"] == {
+            "src/app.py": expected_content
+        }
         assert argv[-1] == "-"
         assert "--ignore-user-config" in argv
         assert argv[argv.index("--sandbox") + 1] == "read-only"
@@ -286,9 +293,9 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
                     "op": "replace",
                     "path": "src/app.py",
                     "expected_sha256": hashlib.sha256(
-                        b"return 1\n"
+                        expected_content.encode("utf-8")
                     ).hexdigest(),
-                    "content": "return 2\n",
+                    "content": replacement_content,
                 }
             ],
             "usage": {"duration_ms": 1, "cost_microunits": 0},
@@ -320,6 +327,19 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
         validation_set=("pytest",),
     )
 
+    def validator(files: dict[str, str]) -> dict[str, object]:
+        passed = files.get("src/app.py") == "return 2\n"
+        return {
+            "validation_results": {
+                "pytest": {
+                    "status": "PASS" if passed else "BLOCK",
+                }
+            },
+            "satisfied_acceptance_items": (
+                ["implementation-correct"] if passed else []
+            ),
+        }
+
     result = run_subscription_development_pipeline(
         contract=contract,
         baseline_files={"src/app.py": "return 1\n"},
@@ -333,18 +353,7 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
                 "subscription_worker_authorized": True,
             },
         ),
-        validator=lambda files: {
-            "validation_results": {
-                "pytest": {
-                    "status": (
-                        "PASS"
-                        if files.get("src/app.py") == "return 2\n"
-                        else "BLOCK"
-                    )
-                }
-            },
-            "satisfied_acceptance_items": ["implementation-correct"],
-        },
+        validator=validator,
         code_reviewer=lambda _: {"violated_acceptance_items": []},
         contract_reviewer=lambda _: {"violated_acceptance_items": []},
     )
@@ -353,14 +362,14 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
     assert result["terminal_candidate_sealed"] is True
     assert result["candidate_files"] == {"src/app.py": "return 2\n"}
     assert result["adapter_kind"] == "codex_cli_subscription_worker_adapter"
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert result["api_mode_enabled"] is False
     assert result["provider_invocations"] == 0
     assert result["provider_credential_value_accesses"] == 0
     assert result["target_repo_mutations"] == 0
     assert result["remote_repository_operations"] == 0
     assert result["local_git_operations"] == 0
-    assert result["subscription_worker_invocations"] == 1
+    assert result["subscription_worker_invocations"] == 2
 
 
 def test_subscription_pipeline_rejects_unknown_adapter_before_invocation() -> None:
@@ -765,3 +774,337 @@ def test_snapshot_authority_binding_package_freezes_exact_scope() -> None:
     assert manifest["bounded_closure"]["frozen_before_execution"][
         "finite_budgets"
     ]["real_downstream_accesses"] == 0
+
+def _bound_subscription_execution_pair(
+    tmp_path: Path,
+    *,
+    repository_root: Path,
+    workspace_root: Path,
+    durable_state_path: Path,
+    expected_head: str,
+    expected_tree: str,
+    config: CodexCLIAdapterConfig,
+) -> tuple[Path, Path, str]:
+    acceptance = ["billing behavior passes"]
+    validation_command = (
+        'python -c "from src.billing.service import total; '
+        'assert total(2) == 2"'
+    )
+    manifest_path, plan_path = _bound_subscription_task_pair(
+        tmp_path,
+        repository_root=repository_root,
+        expected_head=expected_head,
+        blueprint_path="blueprint.yaml",
+        module_registry_path="module-registry.yaml",
+        milestone_ids=["M1_BILLING"],
+        acceptance_requirements=acceptance,
+        governance_paths=["GOVERNANCE.md"],
+        query_terms=["billing", "total"],
+        seed_paths=[
+            "src/billing/service.py",
+            "tests/test_billing.py",
+        ],
+    )
+    plan = load_yaml_file(plan_path)
+    plan["verification"]["commands"] = [validation_command]
+    plan_path.write_text(
+        yaml.safe_dump(plan, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    manifest = load_yaml_file(manifest_path)
+    manifest["verification"]["commands"] = [validation_command]
+    manifest["subscription_public_entry_execution"] = {
+        "binding_version": "subscription_public_entry_execution_binding_v1",
+        "enabled": True,
+        "repository_root_identity_sha256": hashlib.sha256(
+            str(repository_root).encode("utf-8")
+        ).hexdigest(),
+        "workspace_root_identity_sha256": hashlib.sha256(
+            str(workspace_root).encode("utf-8")
+        ).hexdigest(),
+        "durable_state_identity_sha256": hashlib.sha256(
+            str(durable_state_path).encode("utf-8")
+        ).hexdigest(),
+        "expected_head": expected_head,
+        "expected_tree": expected_tree,
+        "existing_scope_paths": [
+            "src/billing/service.py",
+            "tests/test_billing.py",
+        ],
+        "addable_scope_paths": [],
+        "allowed_scope": [
+            "src/billing/service.py",
+            "tests/test_billing.py",
+        ],
+        "acceptance_set": acceptance,
+        "validation_set": [validation_command],
+        "worker_configuration_sha256": (
+            task_runner_module._worker_configuration_sha256(config)
+        ),
+        "branch_name": "agent/bounded-billing-v1",
+        "commit_message": "Implement bounded billing",
+        "finite_budgets": {
+            "max_cycles": 2,
+            "max_worker_calls": 2,
+            "max_patch_operations_per_cycle": 8,
+            "max_total_duration_ms": 30_000,
+            "max_total_cost_microunits": 1,
+        },
+        "validation_timeout_seconds": 30,
+        "max_validation_output_bytes": 65_536,
+        "repository_read_authorized": True,
+        "worker_execution_authorized": True,
+        "validation_execution_authorized": True,
+        "subscription_data_transfer_authorized": True,
+        "local_git_write_authorized": True,
+        "api_mode_enabled": False,
+        "provider_execution_authorized": False,
+        "credential_value_access_authorized": False,
+        "remote_repository_operations_authorized": False,
+        "target_repo_mutation_authorized": False,
+        "production_operation_authorized": False,
+        "cleanup_execution_authorized": False,
+        "rollback_execution_authorized": False,
+        "max_local_commits": 1,
+    }
+    manifest_path.write_text(
+        yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    return manifest_path, plan_path, validation_command
+
+
+def test_subscription_public_entry_executes_one_fake_worker_local_commit(
+    tmp_path: Path,
+) -> None:
+    repository, expected_head = _subscription_context_fixture(tmp_path)
+    expected_tree = _fixture_git(repository, "rev-parse", "HEAD^{tree}")
+    workspace_parent = tmp_path / "workspaces"
+    workspace_parent.mkdir(mode=0o700)
+    workspace = workspace_parent / "billing"
+    state_parent = tmp_path / "state"
+    state_parent.mkdir(mode=0o700)
+    state = state_parent / "subscription.sqlite3"
+    config = CodexCLIAdapterConfig(executable="codex", enabled=True)
+    manifest_path, plan_path, validation_command = (
+        _bound_subscription_execution_pair(
+            tmp_path,
+            repository_root=repository,
+            workspace_root=workspace,
+            durable_state_path=state,
+            expected_head=expected_head,
+            expected_tree=expected_tree,
+            config=config,
+        )
+    )
+    calls: list[dict[str, object]] = []
+
+    def fake_run(
+        argv: list[str],
+        **kwargs: Any,
+    ) -> subprocess.CompletedProcess[str]:
+        prompt = json.loads(str(kwargs["input"]))
+        calls.append(prompt)
+        expected_content = (
+            "def total(value: int) -> int:\n"
+            "    return value * 100\n"
+        )
+        replacement_content = (
+            "def total(value: int) -> int:\n"
+            "    return value\n"
+        )
+        assert prompt["candidate_files"]["src/billing/service.py"] == (
+            expected_content
+        )
+        structured = {
+            "operations": [
+                {
+                    "op": "replace",
+                    "path": "src/billing/service.py",
+                    "expected_sha256": hashlib.sha256(
+                        expected_content.encode("utf-8")
+                    ).hexdigest(),
+                    "content": replacement_content,
+                }
+            ],
+            "usage": {"duration_ms": 1, "cost_microunits": 0},
+        }
+        Path(
+            argv[argv.index("--output-last-message") + 1]
+        ).write_text(json.dumps(structured), encoding="utf-8")
+        return subprocess.CompletedProcess(
+            argv,
+            0,
+            stdout='{"type":"turn.completed"}\n',
+            stderr="",
+        )
+
+    adapter = CodexCLISubscriptionWorkerAdapter(
+        config,
+        process_runner=fake_run,
+        source_environment={"PATH": "/usr/bin", "HOME": "/isolated/home"},
+    )
+    result = run_subscription_public_entry_execution(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=repository,
+        workspace_root=workspace,
+        durable_state_path=state,
+        expected_head=expected_head,
+        expected_tree=expected_tree,
+        blueprint_path="blueprint.yaml",
+        module_registry_path="module-registry.yaml",
+        milestone_ids=["M1_BILLING"],
+        acceptance_requirements=["billing behavior passes"],
+        governance_paths=["GOVERNANCE.md"],
+        query_terms=["billing", "total"],
+        seed_paths=[
+            "src/billing/service.py",
+            "tests/test_billing.py",
+        ],
+        codex_config=config,
+        repository_read_authorized=True,
+        worker_execution_authorized=True,
+        validation_execution_authorized=True,
+        subscription_data_transfer_authorized=True,
+        local_git_write_authorized=True,
+        adapter=adapter,
+    )
+
+    assert result["status"] == "PASS", result
+    assert result["terminal_code"] == "LOCAL_COMMIT_RECORDED"
+    assert result["worker_invocations"] == 1
+    assert result["validation_command_invocations"] == 1
+    assert result["provider_invocations"] == 0
+    assert result["remote_repository_operations"] == 0
+    assert result["target_repo_mutations"] == 0
+    assert result["draft_pr_plan"]["authorized"] is False
+    assert len(calls) == 1
+    assert _fixture_git(workspace, "remote") == ""
+    assert _fixture_git(
+        workspace,
+        "rev-list",
+        "--count",
+        f"{expected_head}..HEAD",
+    ) == "1"
+    assert (
+        _fixture_git(workspace, "show", "HEAD:src/billing/service.py")
+        == "def total(value: int) -> int:\n    return value"
+    )
+    assert validation_command not in json.dumps(result, sort_keys=True)
+
+
+def test_subscription_public_entry_missing_flag_blocks_before_workspace(
+    tmp_path: Path,
+) -> None:
+    repository, expected_head = _subscription_context_fixture(tmp_path)
+    expected_tree = _fixture_git(repository, "rev-parse", "HEAD^{tree}")
+    workspace_parent = tmp_path / "workspaces"
+    workspace_parent.mkdir(mode=0o700)
+    workspace = workspace_parent / "blocked"
+    state_parent = tmp_path / "state"
+    state_parent.mkdir(mode=0o700)
+    state = state_parent / "blocked.sqlite3"
+    config = CodexCLIAdapterConfig(executable="codex", enabled=True)
+    manifest_path, plan_path, _ = _bound_subscription_execution_pair(
+        tmp_path,
+        repository_root=repository,
+        workspace_root=workspace,
+        durable_state_path=state,
+        expected_head=expected_head,
+        expected_tree=expected_tree,
+        config=config,
+    )
+
+    result = run_subscription_public_entry_execution(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=repository,
+        workspace_root=workspace,
+        durable_state_path=state,
+        expected_head=expected_head,
+        expected_tree=expected_tree,
+        blueprint_path="blueprint.yaml",
+        module_registry_path="module-registry.yaml",
+        milestone_ids=["M1_BILLING"],
+        acceptance_requirements=["billing behavior passes"],
+        governance_paths=["GOVERNANCE.md"],
+        query_terms=["billing", "total"],
+        seed_paths=[
+            "src/billing/service.py",
+            "tests/test_billing.py",
+        ],
+        codex_config=config,
+        repository_read_authorized=True,
+        worker_execution_authorized=False,
+        validation_execution_authorized=True,
+        subscription_data_transfer_authorized=True,
+        local_git_write_authorized=True,
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == (
+        "SUBSCRIPTION_EXECUTION_NOT_EXPLICITLY_REQUESTED"
+    )
+    assert not workspace.exists()
+    assert not state.exists()
+
+def test_candidate_materialization_rejects_symlinked_parent(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "candidate"
+    root.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (root / "src").symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(
+        ValueError,
+        match="SUBSCRIPTION_EXECUTION_CANDIDATE_PATH_UNSAFE",
+    ):
+        task_runner_module._materialize_candidate(
+            root=root,
+            baseline_files={},
+            candidate_files={"src/service.py": "safe = True\n"},
+            allowed_scope=("src/service.py",),
+        )
+
+    assert not (outside / "service.py").exists()
+
+def test_public_execution_workspace_dependency_blocks_symlink_and_dirty_resume(
+    tmp_path: Path,
+) -> None:
+    source, expected_head = _subscription_context_fixture(tmp_path)
+    expected_tree = _fixture_git(source, "rev-parse", "HEAD^{tree}")
+    workspace_parent = tmp_path / "workspace-guards"
+    workspace_parent.mkdir(mode=0o700)
+    source_alias = tmp_path / "source-alias"
+    source_alias.symlink_to(source, target_is_directory=True)
+
+    blocked_alias = task_runner_module.create_isolated_local_workspace(
+        source_repository_root=source_alias,
+        workspace_root=workspace_parent / "alias",
+        expected_head_sha=expected_head,
+        expected_tree_sha=expected_tree,
+    )
+    assert blocked_alias["status"] == "BLOCK"
+    assert blocked_alias["terminal_code"] == "INVALID_SOURCE_REPOSITORY_ROOT"
+
+    workspace = workspace_parent / "dirty"
+    created = task_runner_module.create_isolated_local_workspace(
+        source_repository_root=source,
+        workspace_root=workspace,
+        expected_head_sha=expected_head,
+        expected_tree_sha=expected_tree,
+    )
+    assert created["status"] == "PASS"
+    (workspace / "untracked.txt").write_text("drift\n", encoding="utf-8")
+    blocked_resume = task_runner_module.create_isolated_local_workspace(
+        source_repository_root=source,
+        workspace_root=workspace,
+        expected_head_sha=expected_head,
+        expected_tree_sha=expected_tree,
+    )
+    assert blocked_resume["status"] == "BLOCK"
+    assert blocked_resume["terminal_code"] == "DIRTY_EXISTING_WORKSPACE"
+

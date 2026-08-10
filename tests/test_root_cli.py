@@ -105,3 +105,85 @@ def test_root_cli_develop_routes_manifest_bound_context_compilation(
     assert '"worker_execution_authorized": false' in output
     assert '"repository_root_identity_sha256"' in output
     assert str(private_repository_root) not in output
+
+def test_root_cli_develop_execute_requires_and_routes_explicit_boundaries(
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+) -> None:
+    repository = tmp_path / "source"
+    workspace = tmp_path / "workspace"
+    state = tmp_path / "state" / "run.sqlite3"
+    captured: dict[str, object] = {}
+
+    def fake_execution(**arguments: object) -> dict[str, object]:
+        captured.update(arguments)
+        return {
+            "status": "PASS",
+            "mode": "subscription_worker_public_entry_execution",
+            "terminal_code": "LOCAL_COMMIT_RECORDED",
+            "repository_root_identity_sha256": "a" * 64,
+            "workspace_root_identity_sha256": "b" * 64,
+            "durable_state_identity_sha256": "c" * 64,
+            "worker_invocations": 1,
+            "provider_invocations": 0,
+            "remote_repository_operations": 0,
+        }
+
+    monkeypatch.setattr(
+        "tool_system.cli.main.run_subscription_public_entry_execution",
+        fake_execution,
+    )
+    exit_code = main([
+        "develop-execute",
+        "manifest.yaml",
+        "--change-plan",
+        "plan.yaml",
+        "--repository-root",
+        str(repository),
+        "--workspace-root",
+        str(workspace),
+        "--durable-state",
+        str(state),
+        "--expected-head",
+        "d" * 40,
+        "--expected-tree",
+        "e" * 40,
+        "--milestone",
+        "M1",
+        "--acceptance",
+        "tests-pass",
+        "--governance-path",
+        "GOVERNANCE.md",
+        "--query-term",
+        "owner",
+        "--seed-path",
+        "src/app.py",
+        "--codex-executable",
+        "codex",
+        "--repository-read-authorized",
+        "--subscription-worker-execution-authorized",
+        "--validation-execution-authorized",
+        "--subscription-data-transfer-authorized",
+        "--local-git-write-authorized",
+    ])
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert captured["repository_root"] == repository
+    assert captured["workspace_root"] == workspace
+    assert captured["durable_state_path"] == state
+    assert captured["repository_read_authorized"] is True
+    assert captured["worker_execution_authorized"] is True
+    assert captured["validation_execution_authorized"] is True
+    assert captured["subscription_data_transfer_authorized"] is True
+    assert captured["local_git_write_authorized"] is True
+    config = captured["codex_config"]
+    assert isinstance(config, dict)
+    assert config["executable"] == "codex"
+    assert config["enabled"] is True
+    assert '"mode": "subscription_worker_public_entry_execution"' in output
+    assert str(repository) not in output
+    assert str(workspace) not in output
+    assert str(state) not in output
+
