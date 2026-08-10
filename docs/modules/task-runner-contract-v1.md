@@ -38,7 +38,7 @@ module_compound_contract:
       - kind: exact
         name: tool_system.runner.task_runner
   role:
-    summary: execute validated task plans and compose authority, read-only context, compilation, and bounded development stages through explicit gates
+    summary: execute validated task plans and compose authority, read-only context, compilation, guarded subscription development, isolated validation, durable state, and one remote-free local Git commit through exact gates without source, target, remote, API, credential, or production authority
     responsibility_boundary: Resolve one explicit current task pair, run validation and policy gates, optionally execute its configured local commands, aggregate batches or graphs, byte-seal and require one exact manifest-bound subscription public-entry repository read before composing repository-context and blueprint-compiler, and on a separately exact execution binding compose the guarded subscription worker, current-candidate loop, protected validation clone, two deterministic reviews, durable state, and one remote-free local Git commit while returning redacted local evidence and a non-executing draft-PR plan.
   natural_owner_evidence_paths:
     - src/tool_system/gate/command_runner.py
@@ -52,7 +52,6 @@ module_compound_contract:
     direct_provider_module_ids:
       - blueprint_compiler
       - development_loop
-      - durable_orchestrator
       - local_git
       - manifest_validation
       - process_authority
