@@ -55,7 +55,6 @@ def _subscription_pipeline_boundary_record(
     }
 
 
-
 def run_subscription_development_pipeline(
     *,
     contract: FrozenDevelopmentContract,
