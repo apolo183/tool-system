@@ -492,5 +492,5 @@ def test_subscription_context_compiler_package_freezes_exact_scope() -> None:
     assert len(CONTEXT_COMPILER_FILES) == 14
     assert manifest["publication"]["retain_feature_branch"] is True
     assert manifest["bounded_closure"]["frozen_before_execution"][
-        "real_downstream_accesses"
-    ] == 0
+        "finite_budgets"
+    ]["real_downstream_accesses"] == 0
