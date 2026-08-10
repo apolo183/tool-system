@@ -179,8 +179,9 @@ def test_root_cli_develop_execute_requires_and_routes_explicit_boundaries(
     assert captured["subscription_data_transfer_authorized"] is True
     assert captured["local_git_write_authorized"] is True
     config = captured["codex_config"]
-    assert config.executable == "codex"
-    assert config.enabled is True
+    assert isinstance(config, dict)
+    assert config["executable"] == "codex"
+    assert config["enabled"] is True
     assert '"mode": "subscription_worker_public_entry_execution"' in output
     assert str(repository) not in output
     assert str(workspace) not in output
