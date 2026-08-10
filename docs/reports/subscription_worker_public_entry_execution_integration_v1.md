@@ -7,7 +7,7 @@ Compose the accepted subscription-primary modules behind one existing root-CLI r
 ## Frozen boundary
 
 - canonical base: `9c596282dbc784d8a5afdc1f4d283f4828adbf6b`
-- exact scope: 21 paths in the paired task manifest and change plan
+- exact scope: 19 changed paths in the paired task manifest and change plan; the content-addressed development-loop and local-Git test files remain byte-identical, with their integration assertions consolidated in `tests/test_task_runner.py`
 - APIs and provider credentials: absent and disabled
 - real Codex, downstream repositories, remotes, production, cleanup, and rollback: zero operations
 - Hosted CI: injected fake Codex process and temporary local Git repositories only
@@ -29,4 +29,4 @@ The task-runner composes existing module APIs. The local-Git owner creates or re
 
 ## Current status
 
-The exact 21-path implementation closure is complete and pending Hosted CI fake-I/O plus governance seals. This report is evidence only and grants no worker execution, runtime, remote publication, production, cleanup, or rollback authority.
+The exact 19-path implementation closure is complete and pending Hosted CI fake-I/O plus governance seals. This report is evidence only and grants no worker execution, runtime, remote publication, production, cleanup, or rollback authority.
