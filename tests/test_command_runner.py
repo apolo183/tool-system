@@ -267,3 +267,78 @@ def test_input_mutation_between_validation_and_dispatch_blocks(
     assert result["subprocess_call_count"] == 0
     assert any(target in reason for reason in result["reasons"])
     assert calls == []
+
+def test_cancellation_blocks_before_command_dispatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = _record_subprocess(monkeypatch)
+
+    result = run_commands(
+        **_protected_kwargs(cancellation_requested=lambda: True)
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["subprocess_call_count"] == 0
+    assert result["reasons"] == ["command execution cancelled by caller"]
+    assert calls == []
+
+
+def test_command_output_limit_and_timeout_fail_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def oversized(
+        args: list[str],
+        **_: Any,
+    ) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args,
+            0,
+            stdout="x" * 33,
+            stderr="",
+        )
+
+    monkeypatch.setattr(command_runner.subprocess, "run", oversized)
+    limited = run_commands(
+        **_protected_kwargs(max_output_bytes=32)
+    )
+    assert limited["status"] == "BLOCK"
+    assert limited["subprocess_call_count"] == 1
+    assert limited["command_results"] == []
+    assert limited["reasons"] == [
+        "configured command output exceeded byte limit"
+    ]
+
+    def timeout(args: list[str], **_: Any) -> subprocess.CompletedProcess[str]:
+        raise subprocess.TimeoutExpired(args, 1)
+
+    monkeypatch.setattr(command_runner.subprocess, "run", timeout)
+    timed_out = run_commands(**_protected_kwargs(timeout_seconds=1))
+    assert timed_out["status"] == "BLOCK"
+    assert timed_out["subprocess_call_count"] == 1
+    assert timed_out["command_results"] == []
+    assert timed_out["reasons"] == ["configured command exceeded timeout"]
+
+
+def test_command_environment_excludes_provider_credentials(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observed_environments: list[dict[str, str]] = []
+
+    def fake_run(
+        args: list[str],
+        **kwargs: Any,
+    ) -> subprocess.CompletedProcess[str]:
+        observed_environments.append(dict(kwargs["env"]))
+        return subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(command_runner.subprocess, "run", fake_run)
+    monkeypatch.setenv("OPENAI_API_KEY", "not-forwarded")
+    result = run_commands(**_protected_kwargs())
+
+    assert result["status"] == "PASS"
+    assert observed_environments
+    assert all(
+        "OPENAI_API_KEY" not in environment
+        for environment in observed_environments
+    )
+
