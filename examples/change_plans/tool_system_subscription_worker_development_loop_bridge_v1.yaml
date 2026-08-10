@@ -1,0 +1,33 @@
+plan_id: tool-system-subscription-worker-development-loop-bridge-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_development_loop_bridge_v1.yaml
+changed_files:
+  - docs/reports/subscription_worker_development_loop_bridge_v1.md
+  - examples/change_plans/tool_system_subscription_worker_development_loop_bridge_v1.yaml
+  - examples/task_manifests/tool_system_subscription_worker_development_loop_bridge_v1.yaml
+  - src/tool_system/worker_adapter/__init__.py
+  - src/tool_system/worker_adapter/orchestration.py
+  - tests/test_worker_adapter_orchestration.py
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    section_or_key: required public flow
+    scope: Prepare the adapter-to-loop public interface edge.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded structured development.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_worker_adapter_orchestration.py tests/test_worker_adapter_contract.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  method: github_app_connector_only_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-development-loop-bridge-v1
+  retain_feature_branch: true
+  exact_base: ed41d7ab96cea1d6d14d129532140c1d926230ad
+rollback:
+  method: git_revert
+  reference: tool-system@ed41d7ab96cea1d6d14d129532140c1d926230ad
+  execution_authorized: false
