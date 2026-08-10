@@ -243,6 +243,7 @@ def _subscription_context_compilation_boundary(
     reasons: Sequence[str],
     repository_context_built: bool = False,
     blueprint_compiled: bool = False,
+    local_git_read_only_context_authorized: bool = False,
 ) -> dict[str, object]:
     return {
         "status": status,
@@ -252,7 +253,9 @@ def _subscription_context_compilation_boundary(
         "repository_context_built": repository_context_built,
         "blueprint_compiled": blueprint_compiled,
         "repository_read_mode": "isolated_fixture_only",
-        "local_git_read_only_context_authorized": True,
+        "local_git_read_only_context_authorized": (
+            local_git_read_only_context_authorized
+        ),
         "worker_execution_authorized": False,
         "worker_invocations": 0,
         "api_mode_enabled": False,
@@ -359,6 +362,7 @@ def run_subscription_public_entry_context_compilation(
             reasons=["authority packet is missing"],
         )
     bounded_context = repository_context_limits or RepositoryContextLimits()
+    context: Mapping[str, object] | None = None
     try:
         context_governance = tuple(
             dict.fromkeys(
@@ -425,6 +429,8 @@ def run_subscription_public_entry_context_compilation(
             status="BLOCK",
             terminal_code="SUBSCRIPTION_CONTEXT_COMPILATION_BLOCKED",
             reasons=[reason],
+            repository_context_built=context is not None,
+            local_git_read_only_context_authorized=True,
         )
 
     snapshot = context["snapshot"]
@@ -484,6 +490,7 @@ def run_subscription_public_entry_context_compilation(
             reasons=[],
             repository_context_built=True,
             blueprint_compiled=True,
+            local_git_read_only_context_authorized=True,
         ),
         "authority_packet_sha256": packet["packet_sha256"],
         "context_evidence": context_evidence,
