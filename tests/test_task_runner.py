@@ -1038,3 +1038,25 @@ def test_subscription_public_entry_missing_flag_blocks_before_workspace(
     assert not workspace.exists()
     assert not state.exists()
 
+def test_candidate_materialization_rejects_symlinked_parent(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "candidate"
+    root.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (root / "src").symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(
+        ValueError,
+        match="SUBSCRIPTION_EXECUTION_CANDIDATE_PATH_UNSAFE",
+    ):
+        task_runner_module._materialize_candidate(
+            root=root,
+            baseline_files={},
+            candidate_files={"src/service.py": "safe = True\n"},
+            allowed_scope=("src/service.py",),
+        )
+
+    assert not (outside / "service.py").exists()
+
