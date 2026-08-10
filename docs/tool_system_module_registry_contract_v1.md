@@ -166,7 +166,7 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_planner@1.1.0
     - current_module_id: task_runner
       canonical_module_id: task-runner
-      current_module_version: 1.1.0
+      current_module_version: 1.2.0
       aggregate_interface_id: task-runner-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
@@ -178,7 +178,7 @@ mapping_contract:
         - {kind: exact, name: tool_system.runner.task_runner}
       direct_consumer_module_ids:
         - cli_frontend
-      change_risk: "critical: configured command execution and audit boundary"
+      change_risk: "critical: configured command execution, read-only context compilation, and audit boundary"
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_runner@1.1.0
     - current_module_id: role_runtime
       canonical_module_id: role-runtime
@@ -230,7 +230,7 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cleanup_planner@1.0.0
     - current_module_id: cli_frontend
       canonical_module_id: cli-frontend
-      current_module_version: 1.1.0
+      current_module_version: 1.2.0
       aggregate_interface_id: cli-frontend-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
@@ -258,24 +258,26 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cli_frontend@1.1.0
     - current_module_id: repository_context
       canonical_module_id: repository-context
-      current_module_version: 1.0.0
+      current_module_version: 1.0.1
       aggregate_interface_id: repository-context-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.repository_context}
-      direct_consumer_module_ids: []
+      direct_consumer_module_ids:
+        - task_runner
       change_risk: "medium: bounded read-only local Git context and non-authorizing natural-owner evidence boundary"
       rollback_identity: tool-system@7e3a114a25d70c3ebecc952f13ce68b1adbbbc80:repository_context@absent
     - current_module_id: blueprint_compiler
       canonical_module_id: blueprint-compiler
-      current_module_version: 1.0.0
+      current_module_version: 1.0.1
       aggregate_interface_id: blueprint-compiler-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.blueprint_compiler}
-      direct_consumer_module_ids: []
+      direct_consumer_module_ids:
+        - task_runner
       change_risk: "medium: deterministic non-authorizing blueprint compilation and task-graph compatibility boundary"
       rollback_identity: tool-system@00793ad07bba2e3fe3bd29882e83788d32697da6:blueprint_compiler@absent
     - current_module_id: development_loop
@@ -453,8 +455,10 @@ static_import_dag:
     cleanup_planner:
       - cli_frontend
     cli_frontend: []
-    repository_context: []
-    blueprint_compiler: []
+    repository_context:
+      - task_runner
+    blueprint_compiler:
+      - task_runner
     development_loop:
       - local_git
       - task_runner
