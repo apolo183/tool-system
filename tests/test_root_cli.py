@@ -56,13 +56,14 @@ def test_root_cli_develop_preflight_is_nonexecuting_and_redacted(
     monkeypatch,
 ) -> None:
     monkeypatch.chdir(ROOT)
+    private_repository_root = tmp_path / "target-fixture"
     exit_code = main([
         "develop",
         "examples/task_manifests/tool_system_audit_bundle.yaml",
         "--change-plan",
         "examples/change_plans/tool_system_audit_bundle.yaml",
         "--repository-root",
-        str(ROOT),
+        str(private_repository_root),
         "--expected-head",
         "b" * 40,
         "--milestone",
@@ -82,5 +83,5 @@ def test_root_cli_develop_preflight_is_nonexecuting_and_redacted(
     assert '"mode": "subscription_worker_public_entry_authority_preflight"' in output
     assert '"worker_execution_authorized": false' in output
     assert '"repository_root_identity_sha256"' in output
-    assert str(ROOT) not in output
+    assert str(private_repository_root) not in output
     assert not (tmp_path / "unexpected").exists()
