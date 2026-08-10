@@ -13,7 +13,7 @@ module_compound_contract:
   identity:
     canonical_module_id: blueprint-compiler
     current_module_id: blueprint_compiler
-    module_version: 1.0.1
+    module_version: 1.0.0
     aggregate_interface:
       interface_id: blueprint-compiler-api
       interface_version: 1.0.0
