@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from pathlib import Path
+import hashlib
+import json
+import re
+from collections.abc import Callable, Mapping, Sequence
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
@@ -31,6 +34,190 @@ from tool_system.worker_adapter import (
 
 
 _SUBSCRIPTION_WORKER_ADAPTER_KIND = "codex_cli_subscription_worker_adapter"
+_COMMIT_SHA = re.compile(r"^[0-9a-f]{40}$")
+_SUBSCRIPTION_PACKET_VERSION = "subscription_development_authority_packet_v1"
+
+
+def _subscription_preflight_boundary(
+    *,
+    status: str,
+    terminal_code: str,
+    reasons: Sequence[str],
+) -> dict[str, object]:
+    return {
+        "status": status,
+        "mode": "subscription_worker_public_entry_authority_preflight",
+        "terminal_code": terminal_code,
+        "reasons": [str(reason) for reason in reasons],
+        "repository_context_built": False,
+        "blueprint_compiled": False,
+        "worker_execution_authorized": False,
+        "api_mode_enabled": False,
+        "provider_invocations": 0,
+        "provider_credential_value_accesses": 0,
+        "target_repo_mutations": 0,
+        "remote_repository_operations": 0,
+        "local_git_operations": 0,
+        "production_operations": 0,
+        "cleanup_operations": 0,
+        "rollback_operations": 0,
+    }
+
+
+def _bounded_subscription_values(
+    values: Sequence[str],
+    *,
+    field: str,
+    maximum: int,
+    repository_paths: bool = False,
+    required: bool = True,
+) -> tuple[str, ...]:
+    normalized = tuple(str(value) for value in values)
+    if required and not normalized:
+        raise ValueError(f"{field} is required")
+    if len(normalized) > maximum or len(set(normalized)) != len(normalized):
+        raise ValueError(f"{field} exceeds its bound or contains duplicates")
+    for value in normalized:
+        if not value or len(value) > 256 or "\x00" in value:
+            raise ValueError(f"{field} contains an invalid value")
+        if repository_paths:
+            path = PurePosixPath(value)
+            if (
+                path.is_absolute()
+                or ".." in path.parts
+                or "\\" in value
+                or value in {".", ""}
+            ):
+                raise ValueError(f"{field} must contain safe repo-relative paths")
+    return normalized
+
+
+def run_subscription_public_entry_preflight(
+    *,
+    task_manifest_path: str | Path,
+    change_plan_path: str | Path,
+    repository_root: str | Path,
+    expected_head: str,
+    blueprint_path: str,
+    module_registry_path: str,
+    milestone_ids: Sequence[str],
+    acceptance_requirements: Sequence[str],
+    governance_paths: Sequence[str],
+    query_terms: Sequence[str],
+    seed_paths: Sequence[str] = (),
+    policy_path: str | Path = "policy/repo_write_policy.yaml",
+    autonomy_policy_path: str | Path = "policy/autonomy_policy.yaml",
+    process_authority_path: str | Path = "config/process_authority_v1.yaml",
+) -> dict[str, object]:
+    """Validate authority and freeze a non-executing public-entry packet."""
+
+    try:
+        root = Path(repository_root)
+        if not root.is_absolute() or "\x00" in str(root):
+            raise ValueError("repository_root must be an absolute local path")
+        head = str(expected_head)
+        if _COMMIT_SHA.fullmatch(head) is None:
+            raise ValueError("expected_head must be one lowercase 40-character SHA")
+        blueprint = _bounded_subscription_values(
+            [blueprint_path],
+            field="blueprint_path",
+            maximum=1,
+            repository_paths=True,
+        )[0]
+        registry = _bounded_subscription_values(
+            [module_registry_path],
+            field="module_registry_path",
+            maximum=1,
+            repository_paths=True,
+        )[0]
+        milestones = _bounded_subscription_values(
+            milestone_ids,
+            field="milestone_ids",
+            maximum=32,
+        )
+        acceptance = _bounded_subscription_values(
+            acceptance_requirements,
+            field="acceptance_requirements",
+            maximum=64,
+        )
+        governance = _bounded_subscription_values(
+            governance_paths,
+            field="governance_paths",
+            maximum=32,
+            repository_paths=True,
+        )
+        terms = _bounded_subscription_values(
+            query_terms,
+            field="query_terms",
+            maximum=32,
+        )
+        seeds = _bounded_subscription_values(
+            seed_paths,
+            field="seed_paths",
+            maximum=64,
+            repository_paths=True,
+            required=False,
+        )
+    except (TypeError, ValueError) as exc:
+        return _subscription_preflight_boundary(
+            status="BLOCK",
+            terminal_code="INVALID_SUBSCRIPTION_PREFLIGHT_INPUT",
+            reasons=[str(exc)],
+        )
+
+    authority = run_task_pipeline(
+        task_manifest_path=task_manifest_path,
+        change_plan_path=change_plan_path,
+        policy_path=policy_path,
+        autonomy_policy_path=autonomy_policy_path,
+        process_authority_path=process_authority_path,
+        execute_commands=False,
+    )
+    if authority["status"] != "PASS":
+        blocked = _subscription_preflight_boundary(
+            status="BLOCK",
+            terminal_code="SUBSCRIPTION_AUTHORITY_PREFLIGHT_BLOCKED",
+            reasons=[str(reason) for reason in authority.get("reasons", [])],
+        )
+        return {**blocked, "authority_result": authority}
+
+    packet: dict[str, object] = {
+        "packet_version": _SUBSCRIPTION_PACKET_VERSION,
+        "authority_status": "PASS",
+        "repository_root_identity_sha256": hashlib.sha256(
+            str(root).encode("utf-8")
+        ).hexdigest(),
+        "expected_head": head,
+        "blueprint_path": blueprint,
+        "module_registry_path": registry,
+        "milestone_ids": list(milestones),
+        "acceptance_requirements": list(acceptance),
+        "governance_paths": list(governance),
+        "query_terms": list(terms),
+        "seed_paths": list(seeds),
+        "repository_context_required": True,
+        "blueprint_compilation_required": True,
+        "worker_execution_authorized": False,
+        "local_git_execution_authorized": False,
+    }
+    packet["packet_sha256"] = hashlib.sha256(
+        json.dumps(
+            packet,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    passed = _subscription_preflight_boundary(
+        status="PASS",
+        terminal_code="SUBSCRIPTION_AUTHORITY_PREFLIGHT_PASS",
+        reasons=[],
+    )
+    return {
+        **passed,
+        "authority_result": authority,
+        "dispatch_packet": packet,
+    }
 
 
 def _subscription_pipeline_boundary_record(
