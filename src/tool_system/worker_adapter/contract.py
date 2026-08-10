@@ -480,9 +480,12 @@ class CodexCLISubscriptionWorkerAdapter:
             _write_private_file(result_path, b"")
             argv = [
                 self.config.executable,
+                "--ask-for-approval",
+                "never",
                 "exec",
                 "--json",
                 "--ephemeral",
+                "--ignore-user-config",
                 "--sandbox",
                 "read-only",
                 "--output-schema",
@@ -600,9 +603,12 @@ class CodexCLISubscriptionWorkerAdapter:
                 "session_persistence": "ephemeral",
                 "argv_shape": [
                     "<configured-codex>",
+                    "--ask-for-approval",
+                    "never",
                     "exec",
                     "--json",
                     "--ephemeral",
+                    "--ignore-user-config",
                     "--sandbox",
                     "read-only",
                     "--output-schema",
