@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import subprocess
+
 from tool_system.agent_worker.interface import WorkerRequest
 from tool_system.worker_adapter.contract import (
     AdapterRequest,
+    CodexCLIAdapterConfig,
+    CodexCLISubscriptionWorkerAdapter,
     DryRunWorkerAdapter,
     build_adapter_request_from_worker_request,
     run_adapter_requests,
@@ -121,3 +125,117 @@ def test_run_adapter_requests_uses_dry_run_adapter_by_default() -> None:
             },
         }
     ]
+
+
+def _subscription_request(**overrides: object) -> AdapterRequest:
+    values: dict[str, object] = {
+        "adapter_id": "subscription-001",
+        "role": "patch_author",
+        "action": "prepare_patch",
+        "context": {
+            "prompt": '{"task_id":"fixture-task"}',
+            "workspace": "/isolated/workspace",
+            "subscription_worker_authorized": True,
+        },
+        "execute": True,
+        "calls_external_worker": True,
+    }
+    values.update(overrides)
+    return AdapterRequest(**values)
+
+
+def test_codex_subscription_adapter_is_disabled_by_default() -> None:
+    calls: list[object] = []
+    adapter = CodexCLISubscriptionWorkerAdapter(
+        CodexCLIAdapterConfig(executable="codex"),
+        process_runner=lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
+
+    result = adapter.run(_subscription_request())
+
+    assert result.status == "BLOCK"
+    assert result.execute is False
+    assert result.calls_external_worker is False
+    assert result.reasons == ["subscription worker adapter is disabled"]
+    assert calls == []
+
+
+def test_codex_subscription_adapter_uses_exact_argv_and_minimal_environment() -> None:
+    observed: dict[str, object] = {}
+
+    def fake_runner(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        observed["argv"] = argv
+        observed.update(kwargs)
+        return subprocess.CompletedProcess(argv, 0, stdout='{"type":"result"}\n', stderr="")
+
+    adapter = CodexCLISubscriptionWorkerAdapter(
+        CodexCLIAdapterConfig(
+            executable="codex",
+            enabled=True,
+            timeout_seconds=17,
+            inherited_environment_names=("PATH", "LANG"),
+        ),
+        process_runner=fake_runner,
+        source_environment={"PATH": "/bin", "LANG": "C", "OPENAI_API_KEY": "not-forwarded"},
+    )
+
+    result = adapter.run(_subscription_request())
+
+    assert result.status == "PASS"
+    assert observed["argv"] == [
+        "codex",
+        "exec",
+        "--json",
+        "--skip-git-repo-check",
+        '{"task_id":"fixture-task"}',
+    ]
+    assert observed["cwd"] == "/isolated/workspace"
+    assert observed["env"] == {"PATH": "/bin", "LANG": "C"}
+    assert observed["shell"] is False
+    assert observed["timeout"] == 17
+    assert result.output["raw_output_recorded"] is False
+    assert result.output["environment_names"] == ["LANG", "PATH"]
+
+
+def test_codex_subscription_adapter_blocks_credentials_mutation_and_missing_authority() -> None:
+    adapter = CodexCLISubscriptionWorkerAdapter(
+        CodexCLIAdapterConfig(
+            executable="codex",
+            enabled=True,
+            inherited_environment_names=("PATH", "OPENAI_API_KEY"),
+        )
+    )
+    request = _subscription_request(
+        context={"prompt": "fixture", "workspace": "/tmp/work"},
+        writes_target_repo=True,
+    )
+
+    result = adapter.run(request)
+
+    assert result.status == "BLOCK"
+    assert "provider credential environment names are forbidden" in result.reasons
+    assert "subscription worker execution is not explicitly authorized" in result.reasons
+    assert "subscription worker cannot receive target mutation or production authority" in result.reasons
+
+
+def test_codex_subscription_adapter_fails_closed_on_timeout_and_output_limit() -> None:
+    def timeout_runner(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+        raise subprocess.TimeoutExpired(cmd="codex", timeout=1)
+
+    timeout_adapter = CodexCLISubscriptionWorkerAdapter(
+        CodexCLIAdapterConfig(executable="codex", enabled=True),
+        process_runner=timeout_runner,
+    )
+    timeout = timeout_adapter.run(_subscription_request())
+    assert timeout.status == "BLOCK"
+    assert timeout.reasons == ["subscription worker process failed closed: TimeoutExpired"]
+
+    output_adapter = CodexCLISubscriptionWorkerAdapter(
+        CodexCLIAdapterConfig(executable="codex", enabled=True, max_output_bytes=4),
+        process_runner=lambda argv, **kwargs: subprocess.CompletedProcess(
+            argv, 0, stdout="12345", stderr=""
+        ),
+    )
+    output = output_adapter.run(_subscription_request())
+    assert output.status == "BLOCK"
+    assert output.reasons == ["subscription worker output exceeded the configured byte limit"]
