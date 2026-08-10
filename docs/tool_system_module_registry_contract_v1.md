@@ -114,8 +114,7 @@ mapping_contract:
       direct_consumer_module_ids:
         - process_authority
         - local_git
-        - task_runner
-      change_risk: "high: persistent SQLite state, race-safe optional-sidecar validation, recovery, burn-on-claim authorization, and exact subscription execution state boundary"
+      change_risk: "high: persistent SQLite state, race-safe optional-sidecar validation, recovery, and burn-on-claim authorization boundary"
       rollback_identity: tool-system@783a1bf16c48e717da281d9fefc134e68bf879c4:durable_orchestrator@1.1.0
     - current_module_id: repository_controller
       canonical_module_id: repository-controller
@@ -202,7 +201,6 @@ mapping_contract:
       python_import_identities:
         - {kind: prefix, name: tool_system.worker_adapter}
       direct_consumer_module_ids:
-        - cli_frontend
         - task_runner
       change_risk: "high: default dry-run plus non-interactive config-isolated stdin, schema-bound read-only Codex, and process-group cancellation boundary"
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:worker_adapter@1.0.0
@@ -432,7 +430,6 @@ static_import_dag:
     durable_orchestrator:
       - process_authority
       - local_git
-      - task_runner
     repository_controller:
       - cleanup_planner
       - cli_frontend
@@ -453,7 +450,6 @@ static_import_dag:
     role_runtime:
       - cli_frontend
     worker_adapter:
-      - cli_frontend
       - task_runner
     target_repo_adapter:
       - cli_frontend
