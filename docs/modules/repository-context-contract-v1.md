@@ -13,7 +13,7 @@ module_compound_contract:
   identity:
     canonical_module_id: repository-context
     current_module_id: repository_context
-    module_version: 1.0.1
+    module_version: 1.0.0
     aggregate_interface:
       interface_id: repository-context-api
       interface_version: 1.0.0
