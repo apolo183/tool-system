@@ -158,7 +158,7 @@ module_compound_contract:
           - _write_private_file
           - _read_private_result
         boundary_parameters:
-          - system_temporary_root
+          - temporary_root
           - max_output_bytes
         constraint: Create one mode-0700 temporary directory containing mode-0600 schema and final-message files, never expose their paths, bound every read, and remove them when the invocation lifetime ends.
   external_system_contracts:
