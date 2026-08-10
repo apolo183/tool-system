@@ -144,7 +144,10 @@ DELEGATED_EFFECT_EXPECTATIONS = {
     },
     "task_planner": {},
     "task_runner": {
-        "configured-command-execution": frozenset(TOOL_SYSTEM_EFFECT_CLASSES)
+        "configured-command-execution": frozenset(TOOL_SYSTEM_EFFECT_CLASSES),
+        "guarded-subscription-worker-development-pipeline": frozenset(
+            {"network_write", "external_system_write"}
+        ),
     },
     "role_runtime": {
         "repository-controller-jsonl-persistence": frozenset(
