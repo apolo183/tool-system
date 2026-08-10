@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import tempfile
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -21,9 +23,15 @@ from tool_system.development_loop import (
     FrozenDevelopmentContract,
     run_development_loop,
 )
-from tool_system.gate.command_runner import run_commands
+from tool_system.gate.command_runner import commands_from_change_plan, run_commands
 from tool_system.gate.test_gate import build_gate_decision
+from tool_system.local_git import (
+    LocalGitIdentity,
+    create_isolated_local_workspace,
+    run_durable_local_git,
+)
 from tool_system.manifest.task_manifest import load_yaml_file
+from tool_system.orchestrator import DurableOrchestratorStore
 from tool_system.process_authority.contract import (
     validate_explicit_task_pair,
     validate_process_authority,
@@ -41,6 +49,8 @@ from tool_system.runner.active_gate_resolver import (
 )
 from tool_system.worker_adapter import (
     AdapterRequest,
+    CodexCLIAdapterConfig,
+    CodexCLISubscriptionWorkerAdapter,
     WorkerAdapter,
     build_subscription_development_worker,
 )
@@ -56,6 +66,9 @@ _SUBSCRIPTION_AUTHORITY_BINDING_VERSION = (
     "subscription_public_entry_authority_binding_v1"
 )
 _SUBSCRIPTION_AUTHORITY_INPUT_MAX_BYTES = 1_048_576
+_SUBSCRIPTION_EXECUTION_BINDING_VERSION = (
+    "subscription_public_entry_execution_binding_v1"
+)
 
 
 class _SubscriptionUniqueKeyLoader(yaml.SafeLoader):
@@ -720,6 +733,874 @@ def run_subscription_development_pipeline(
             result.get("worker_call_count", 0)
         ),
     }
+
+
+
+def _canonical_sha256(value: object) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            value,
+            allow_nan=False,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+    ).hexdigest()
+
+
+def _private_path_identity(raw_path: str | Path, label: str) -> tuple[Path, str]:
+    path = Path(raw_path)
+    if not path.is_absolute() or "\x00" in str(path):
+        raise ValueError(f"{label} must be one absolute local path")
+    if path.exists() and path.is_symlink():
+        raise ValueError(f"{label} must not be a symlink")
+    return path, hashlib.sha256(str(path).encode("utf-8")).hexdigest()
+
+
+def _worker_configuration_sha256(config: CodexCLIAdapterConfig) -> str:
+    return _canonical_sha256(
+        {
+            "executable": config.executable,
+            "enabled": config.enabled,
+            "timeout_seconds": config.timeout_seconds,
+            "termination_grace_seconds": config.termination_grace_seconds,
+            "max_prompt_bytes": config.max_prompt_bytes,
+            "max_output_bytes": config.max_output_bytes,
+            "inherited_environment_names": list(
+                config.inherited_environment_names
+            ),
+        }
+    )
+
+
+def _captured_plan_commands(plan_bytes: bytes) -> tuple[str, ...]:
+    try:
+        plan = yaml.load(
+            plan_bytes.decode("utf-8"),
+            Loader=_SubscriptionUniqueKeyLoader,
+        )
+        if not isinstance(plan, dict):
+            raise ValueError("SUBSCRIPTION_EXECUTION_PLAN_INVALID")
+        commands = commands_from_change_plan(plan)
+    except (UnicodeError, ValueError, yaml.YAMLError) as exc:
+        raise ValueError("SUBSCRIPTION_EXECUTION_PLAN_INVALID") from exc
+    if not commands or len(commands) > 32 or len(set(commands)) != len(commands):
+        raise ValueError("SUBSCRIPTION_EXECUTION_VALIDATION_SET_INVALID")
+    if any(
+        not command.strip() or len(command.encode("utf-8")) > 4_096
+        for command in commands
+    ):
+        raise ValueError("SUBSCRIPTION_EXECUTION_VALIDATION_SET_INVALID")
+    return tuple(commands)
+
+
+def _execution_binding(
+    *,
+    manifest: Mapping[str, object],
+    repository_identity_sha256: str,
+    workspace_identity_sha256: str,
+    durable_state_identity_sha256: str,
+    expected_head: str,
+    expected_tree: str,
+    acceptance_set: tuple[str, ...],
+    validation_set: tuple[str, ...],
+    worker_configuration_sha256: str,
+    authority_flags: Mapping[str, bool],
+) -> tuple[dict[str, object], FrozenDevelopmentContract, DevelopmentLoopLimits]:
+    observed = manifest.get("subscription_public_entry_execution")
+    if not isinstance(observed, Mapping):
+        raise ValueError("SUBSCRIPTION_EXECUTION_BINDING_MISSING")
+    exact_keys = {
+        "binding_version",
+        "enabled",
+        "repository_root_identity_sha256",
+        "workspace_root_identity_sha256",
+        "durable_state_identity_sha256",
+        "expected_head",
+        "expected_tree",
+        "existing_scope_paths",
+        "addable_scope_paths",
+        "allowed_scope",
+        "acceptance_set",
+        "validation_set",
+        "worker_configuration_sha256",
+        "branch_name",
+        "commit_message",
+        "finite_budgets",
+        "validation_timeout_seconds",
+        "max_validation_output_bytes",
+        "repository_read_authorized",
+        "worker_execution_authorized",
+        "validation_execution_authorized",
+        "subscription_data_transfer_authorized",
+        "local_git_write_authorized",
+        "api_mode_enabled",
+        "provider_execution_authorized",
+        "credential_value_access_authorized",
+        "remote_repository_operations_authorized",
+        "target_repo_mutation_authorized",
+        "production_operation_authorized",
+        "cleanup_execution_authorized",
+        "rollback_execution_authorized",
+        "max_local_commits",
+    }
+    if set(observed) != exact_keys:
+        raise ValueError("SUBSCRIPTION_EXECUTION_BINDING_SHAPE_MISMATCH")
+    existing_scope = _bounded_subscription_values(
+        observed["existing_scope_paths"],
+        field="existing_scope_paths",
+        maximum=128,
+        repository_paths=True,
+        required=False,
+    )
+    addable_scope = _bounded_subscription_values(
+        observed["addable_scope_paths"],
+        field="addable_scope_paths",
+        maximum=128,
+        repository_paths=True,
+        required=False,
+    )
+    if set(existing_scope).intersection(addable_scope):
+        raise ValueError("SUBSCRIPTION_EXECUTION_SCOPE_OVERLAP")
+    allowed_scope = _bounded_subscription_values(
+        observed["allowed_scope"],
+        field="allowed_scope",
+        maximum=128,
+        repository_paths=True,
+    )
+    if tuple([*existing_scope, *addable_scope]) != allowed_scope:
+        raise ValueError("SUBSCRIPTION_EXECUTION_SCOPE_TOPOLOGY_MISMATCH")
+    observed_acceptance = _bounded_subscription_values(
+        observed["acceptance_set"],
+        field="acceptance_set",
+        maximum=64,
+    )
+    observed_validation = _bounded_subscription_values(
+        observed["validation_set"],
+        field="validation_set",
+        maximum=32,
+    )
+    if observed_acceptance != acceptance_set:
+        raise ValueError("SUBSCRIPTION_EXECUTION_ACCEPTANCE_MISMATCH")
+    if observed_validation != validation_set:
+        raise ValueError("SUBSCRIPTION_EXECUTION_VALIDATION_MISMATCH")
+    finite = observed["finite_budgets"]
+    if not isinstance(finite, Mapping) or set(finite) != {
+        "max_cycles",
+        "max_worker_calls",
+        "max_patch_operations_per_cycle",
+        "max_total_duration_ms",
+        "max_total_cost_microunits",
+    }:
+        raise ValueError("SUBSCRIPTION_EXECUTION_BUDGET_SHAPE_MISMATCH")
+    try:
+        limits = DevelopmentLoopLimits(
+            max_cycles=int(finite["max_cycles"]),
+            max_worker_calls=int(finite["max_worker_calls"]),
+            max_patch_operations_per_cycle=int(
+                finite["max_patch_operations_per_cycle"]
+            ),
+            max_total_duration_ms=int(finite["max_total_duration_ms"]),
+            max_total_cost_microunits=int(
+                finite["max_total_cost_microunits"]
+            ),
+        )
+        limits.validate()
+    except (TypeError, ValueError) as exc:
+        raise ValueError("SUBSCRIPTION_EXECUTION_BUDGET_INVALID") from exc
+    if any(
+        isinstance(finite[name], bool) or type(finite[name]) is not int
+        for name in finite
+    ):
+        raise ValueError("SUBSCRIPTION_EXECUTION_BUDGET_INVALID")
+    validation_timeout = observed["validation_timeout_seconds"]
+    validation_output = observed["max_validation_output_bytes"]
+    if (
+        type(validation_timeout) is not int
+        or validation_timeout < 1
+        or validation_timeout > 3_600
+        or type(validation_output) is not int
+        or validation_output < 1
+        or validation_output > 16_777_216
+    ):
+        raise ValueError("SUBSCRIPTION_EXECUTION_VALIDATION_BUDGET_INVALID")
+    branch_name = observed["branch_name"]
+    commit_message = observed["commit_message"]
+    if not isinstance(branch_name, str) or not isinstance(commit_message, str):
+        raise ValueError("SUBSCRIPTION_EXECUTION_GIT_IDENTITY_INVALID")
+    expected: dict[str, object] = {
+        "binding_version": _SUBSCRIPTION_EXECUTION_BINDING_VERSION,
+        "enabled": True,
+        "repository_root_identity_sha256": repository_identity_sha256,
+        "workspace_root_identity_sha256": workspace_identity_sha256,
+        "durable_state_identity_sha256": durable_state_identity_sha256,
+        "expected_head": expected_head,
+        "expected_tree": expected_tree,
+        "existing_scope_paths": list(existing_scope),
+        "addable_scope_paths": list(addable_scope),
+        "allowed_scope": list(allowed_scope),
+        "acceptance_set": list(acceptance_set),
+        "validation_set": list(validation_set),
+        "worker_configuration_sha256": worker_configuration_sha256,
+        "branch_name": branch_name,
+        "commit_message": commit_message,
+        "finite_budgets": dict(finite),
+        "validation_timeout_seconds": validation_timeout,
+        "max_validation_output_bytes": validation_output,
+        **dict(authority_flags),
+        "api_mode_enabled": False,
+        "provider_execution_authorized": False,
+        "credential_value_access_authorized": False,
+        "remote_repository_operations_authorized": False,
+        "target_repo_mutation_authorized": False,
+        "production_operation_authorized": False,
+        "cleanup_execution_authorized": False,
+        "rollback_execution_authorized": False,
+        "max_local_commits": 1,
+    }
+    if dict(observed) != expected:
+        raise ValueError("SUBSCRIPTION_EXECUTION_BINDING_MISMATCH")
+    task_digest = _canonical_sha256(expected)
+    contract = FrozenDevelopmentContract(
+        task_digest=task_digest,
+        baseline_tree=expected_tree,
+        allowed_scope=allowed_scope,
+        acceptance_set=acceptance_set,
+        validation_set=validation_set,
+    )
+    contract.validate()
+    LocalGitIdentity(
+        expected_head_sha=expected_head,
+        expected_tree_sha=expected_tree,
+        branch_name=branch_name,
+        commit_message=commit_message,
+    ).validate()
+    return expected, contract, limits
+
+
+def _selected_text_files(context: Mapping[str, object]) -> dict[str, str]:
+    selected = context.get("selected_context")
+    if not isinstance(selected, list):
+        raise ValueError("SUBSCRIPTION_EXECUTION_CONTEXT_INVALID")
+    result: dict[str, str] = {}
+    for record in selected:
+        if (
+            not isinstance(record, Mapping)
+            or not isinstance(record.get("path"), str)
+            or not isinstance(record.get("content"), str)
+            or record["path"] in result
+        ):
+            raise ValueError("SUBSCRIPTION_EXECUTION_CONTEXT_INVALID")
+        result[str(record["path"])] = str(record["content"])
+    return result
+
+
+def _write_text_files(root: Path, files: Mapping[str, str]) -> None:
+    for raw_path, content in files.items():
+        path = PurePosixPath(raw_path)
+        if (
+            path.is_absolute()
+            or str(path) != raw_path
+            or any(part in {"", ".", ".."} for part in path.parts)
+        ):
+            raise ValueError("SUBSCRIPTION_EXECUTION_PATH_INVALID")
+        target = root.joinpath(*path.parts)
+        parent = root
+        for part in path.parts[:-1]:
+            parent /= part
+            if parent.is_symlink() or (
+                parent.exists() and not parent.is_dir()
+            ):
+                raise ValueError("SUBSCRIPTION_EXECUTION_PATH_UNSAFE")
+        if target.is_symlink() or (
+            target.exists() and not target.is_file()
+        ):
+            raise ValueError("SUBSCRIPTION_EXECUTION_PATH_UNSAFE")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+
+
+def _materialize_candidate(
+    *,
+    root: Path,
+    baseline_files: Mapping[str, str],
+    candidate_files: Mapping[str, str],
+    allowed_scope: tuple[str, ...],
+) -> None:
+    if not set(candidate_files) <= set(allowed_scope):
+        raise ValueError("SUBSCRIPTION_EXECUTION_CANDIDATE_SCOPE_DRIFT")
+    for content in candidate_files.values():
+        if not isinstance(content, str):
+            raise ValueError("SUBSCRIPTION_EXECUTION_CANDIDATE_INVALID")
+    changed = [
+        path
+        for path in allowed_scope
+        if (path in baseline_files) != (path in candidate_files)
+        or baseline_files.get(path) != candidate_files.get(path)
+    ]
+    for path in changed:
+        target = root.joinpath(*PurePosixPath(path).parts)
+        if target.is_symlink() or (
+            target.exists() and not target.is_file()
+        ):
+            raise ValueError("SUBSCRIPTION_EXECUTION_CANDIDATE_PATH_UNSAFE")
+        if path in candidate_files:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(candidate_files[path], encoding="utf-8")
+        else:
+            if not target.is_file():
+                raise ValueError("SUBSCRIPTION_EXECUTION_DELETE_DRIFT")
+            target.unlink()
+
+
+def _build_public_entry_validator(
+    *,
+    source_repository_root: Path,
+    expected_head: str,
+    expected_tree: str,
+    task_manifest_path: Path,
+    change_plan_path: Path,
+    process_authority_path: str | Path,
+    policy_path: str | Path,
+    autonomy_policy_path: str | Path,
+    baseline_files: Mapping[str, str],
+    contract: FrozenDevelopmentContract,
+    timeout_seconds: int,
+    max_output_bytes: int,
+    cancellation_requested: Callable[[], bool] | None,
+) -> Callable[[Mapping[str, str]], Mapping[str, object]]:
+    def validator(candidate_files: Mapping[str, str]) -> Mapping[str, object]:
+        with tempfile.TemporaryDirectory(
+            prefix="tool-system-candidate-validation-"
+        ) as temporary_directory:
+            temporary_root = Path(temporary_directory)
+            os.chmod(temporary_root, 0o700)
+            validation_root = temporary_root / "repository"
+            workspace = create_isolated_local_workspace(
+                source_repository_root=source_repository_root,
+                workspace_root=validation_root,
+                expected_head_sha=expected_head,
+                expected_tree_sha=expected_tree,
+            )
+            if workspace.get("status") != "PASS":
+                return {
+                    "validation_results": {
+                        name: {
+                            "status": "BLOCK",
+                            "diagnostic": "isolated validation workspace blocked",
+                        }
+                        for name in contract.validation_set
+                    },
+                    "satisfied_acceptance_items": [],
+                }
+            _materialize_candidate(
+                root=validation_root,
+                baseline_files=baseline_files,
+                candidate_files=candidate_files,
+                allowed_scope=contract.allowed_scope,
+            )
+            command_result = run_commands(
+                task_manifest_path=task_manifest_path,
+                change_plan_path=change_plan_path,
+                process_authority_path=process_authority_path,
+                policy_path=policy_path,
+                autonomy_policy_path=autonomy_policy_path,
+                cwd=validation_root,
+                timeout_seconds=timeout_seconds,
+                max_output_bytes=max_output_bytes,
+                cancellation_requested=cancellation_requested,
+            )
+            observed_results = {
+                str(record.get("name")): record
+                for record in command_result.get("command_results", [])
+                if isinstance(record, Mapping)
+            }
+            validation_results: dict[str, dict[str, object]] = {}
+            for command in contract.validation_set:
+                record = observed_results.get(command)
+                passed = (
+                    command_result.get("status") == "PASS"
+                    and isinstance(record, Mapping)
+                    and record.get("exit_code") == 0
+                )
+                diagnostic = None
+                if not passed:
+                    diagnostic = (
+                        f"exit_code={record.get('exit_code')}"
+                        if isinstance(record, Mapping)
+                        else "validated command did not complete"
+                    )
+                validation_results[command] = {
+                    "status": "PASS" if passed else "BLOCK",
+                    "diagnostic": diagnostic,
+                }
+            all_passed = all(
+                record["status"] == "PASS"
+                for record in validation_results.values()
+            )
+            return {
+                "validation_results": validation_results,
+                "satisfied_acceptance_items": (
+                    list(contract.acceptance_set) if all_passed else []
+                ),
+            }
+
+    return validator
+
+
+def _public_entry_code_reviewer(
+    contract: FrozenDevelopmentContract,
+) -> Callable[[Mapping[str, object]], Mapping[str, object]]:
+    def reviewer(review_input: Mapping[str, object]) -> Mapping[str, object]:
+        files = review_input.get("candidate_files")
+        invalid = (
+            not isinstance(files, Mapping)
+            or not set(files) <= set(contract.allowed_scope)
+            or any(not isinstance(value, str) for value in files.values())
+        )
+        return {
+            "violated_acceptance_items": (
+                list(contract.acceptance_set) if invalid else []
+            ),
+            "suggestions": [],
+        }
+
+    return reviewer
+
+
+def _public_entry_contract_reviewer(
+    contract: FrozenDevelopmentContract,
+) -> Callable[[Mapping[str, object]], Mapping[str, object]]:
+    def reviewer(review_input: Mapping[str, object]) -> Mapping[str, object]:
+        validation = review_input.get("validation_results")
+        invalid = (
+            not isinstance(validation, Mapping)
+            or set(validation) != set(contract.validation_set)
+            or any(
+                not isinstance(record, Mapping)
+                or record.get("status") != "PASS"
+                for record in validation.values()
+            )
+            or tuple(review_input.get("acceptance_set", ()))
+            != contract.acceptance_set
+        )
+        return {
+            "violated_acceptance_items": (
+                list(contract.acceptance_set) if invalid else []
+            ),
+            "suggestions": [],
+        }
+
+    return reviewer
+
+
+def _subscription_execution_boundary(
+    *,
+    status: str,
+    terminal_code: str,
+    reasons: Sequence[str] = (),
+) -> dict[str, object]:
+    return {
+        "status": status,
+        "mode": "subscription_worker_public_entry_execution",
+        "terminal_code": terminal_code,
+        "reasons": [str(reason) for reason in reasons],
+        "repository_context_built": False,
+        "blueprint_compiled": False,
+        "worker_execution_authorized": False,
+        "worker_invocations": 0,
+        "validation_command_invocations": 0,
+        "local_workspace_created": False,
+        "local_git_operations": 0,
+        "api_mode_enabled": False,
+        "provider_invocations": 0,
+        "provider_credential_value_accesses": 0,
+        "target_repo_mutations": 0,
+        "remote_repository_operations": 0,
+        "production_operations": 0,
+        "cleanup_operations": 0,
+        "rollback_operations": 0,
+    }
+
+
+def run_subscription_public_entry_execution(
+    *,
+    task_manifest_path: str | Path,
+    change_plan_path: str | Path,
+    repository_root: str | Path,
+    workspace_root: str | Path,
+    durable_state_path: str | Path,
+    expected_head: str,
+    expected_tree: str,
+    blueprint_path: str,
+    module_registry_path: str,
+    milestone_ids: Sequence[str],
+    acceptance_requirements: Sequence[str],
+    governance_paths: Sequence[str],
+    query_terms: Sequence[str],
+    seed_paths: Sequence[str] = (),
+    codex_config: CodexCLIAdapterConfig,
+    repository_read_authorized: bool = False,
+    worker_execution_authorized: bool = False,
+    validation_execution_authorized: bool = False,
+    subscription_data_transfer_authorized: bool = False,
+    local_git_write_authorized: bool = False,
+    policy_path: str | Path = "policy/repo_write_policy.yaml",
+    autonomy_policy_path: str | Path = "policy/autonomy_policy.yaml",
+    process_authority_path: str | Path = "config/process_authority_v1.yaml",
+    repository_context_limits: RepositoryContextLimits | None = None,
+    blueprint_compiler_limits: BlueprintCompilerLimits | None = None,
+    cancellation_requested: Callable[[], bool] | None = None,
+    adapter: WorkerAdapter | None = None,
+) -> dict[str, object]:
+    """Run one exact subscription-primary workflow in an isolated local clone."""
+
+    authority_flags = {
+        "repository_read_authorized": repository_read_authorized,
+        "worker_execution_authorized": worker_execution_authorized,
+        "validation_execution_authorized": validation_execution_authorized,
+        "subscription_data_transfer_authorized": (
+            subscription_data_transfer_authorized
+        ),
+        "local_git_write_authorized": local_git_write_authorized,
+    }
+    if any(value is not True for value in authority_flags.values()):
+        return _subscription_execution_boundary(
+            status="BLOCK",
+            terminal_code="SUBSCRIPTION_EXECUTION_NOT_EXPLICITLY_REQUESTED",
+            reasons=["all execution authority requests must be explicit"],
+        )
+    if _COMMIT_SHA.fullmatch(str(expected_tree)) is None:
+        return _subscription_execution_boundary(
+            status="BLOCK",
+            terminal_code="SUBSCRIPTION_EXECUTION_TREE_INVALID",
+            reasons=["expected_tree must be one lowercase 40-character SHA"],
+        )
+    try:
+        source_path, repository_identity = _private_path_identity(
+            repository_root,
+            "repository_root",
+        )
+        workspace_path, workspace_identity = _private_path_identity(
+            workspace_root,
+            "workspace_root",
+        )
+        state_path, state_identity = _private_path_identity(
+            durable_state_path,
+            "durable_state_path",
+        )
+        captured_manifest, captured_plan, manifest = (
+            _capture_subscription_authority_inputs(
+                task_manifest_path,
+                change_plan_path,
+            )
+        )
+        validation_set = _captured_plan_commands(captured_plan)
+        acceptance_set = _bounded_subscription_values(
+            acceptance_requirements,
+            field="acceptance_requirements",
+            maximum=64,
+        )
+        if codex_config.enabled is not True or codex_config.violations():
+            raise ValueError("SUBSCRIPTION_EXECUTION_WORKER_CONFIG_INVALID")
+    except (OSError, TypeError, ValueError) as exc:
+        return _subscription_execution_boundary(
+            status="BLOCK",
+            terminal_code="SUBSCRIPTION_EXECUTION_INPUT_BLOCKED",
+            reasons=[str(exc)],
+        )
+
+    context_result = run_subscription_public_entry_context_compilation(
+        task_manifest_path=task_manifest_path,
+        change_plan_path=change_plan_path,
+        repository_root=source_path,
+        expected_head=expected_head,
+        blueprint_path=blueprint_path,
+        module_registry_path=module_registry_path,
+        milestone_ids=milestone_ids,
+        acceptance_requirements=acceptance_requirements,
+        governance_paths=governance_paths,
+        query_terms=query_terms,
+        seed_paths=seed_paths,
+        repository_read_authorized=True,
+        repository_context_limits=repository_context_limits,
+        blueprint_compiler_limits=blueprint_compiler_limits,
+        policy_path=policy_path,
+        autonomy_policy_path=autonomy_policy_path,
+        process_authority_path=process_authority_path,
+    )
+    if context_result.get("status") != "PASS":
+        return {
+            **_subscription_execution_boundary(
+                status="BLOCK",
+                terminal_code="SUBSCRIPTION_EXECUTION_CONTEXT_BLOCKED",
+                reasons=[
+                    str(reason)
+                    for reason in context_result.get("reasons", [])
+                ],
+            ),
+            "context_result": context_result,
+        }
+
+    try:
+        if (
+            Path(task_manifest_path).read_bytes() != captured_manifest
+            or Path(change_plan_path).read_bytes() != captured_plan
+        ):
+            raise ValueError("SUBSCRIPTION_EXECUTION_AUTHORITY_INPUT_DRIFT")
+        context_governance = tuple(
+            dict.fromkeys([*governance_paths, module_registry_path])
+        )
+        context = build_repository_context(
+            source_path,
+            expected_head=expected_head,
+            blueprint_path=blueprint_path,
+            governance_paths=context_governance,
+            query_terms=query_terms,
+            seed_paths=seed_paths,
+            limits=repository_context_limits or RepositoryContextLimits(),
+        )
+        snapshot = context["snapshot"]
+        if (
+            not isinstance(snapshot, Mapping)
+            or snapshot.get("tree") != expected_tree
+        ):
+            raise ValueError("SUBSCRIPTION_EXECUTION_TREE_DRIFT")
+        compilation_packet = context_result.get("compilation_packet")
+        if (
+            not isinstance(compilation_packet, Mapping)
+            or compilation_packet.get("context_sha256")
+            != snapshot.get("context_sha256")
+        ):
+            raise ValueError("SUBSCRIPTION_EXECUTION_CONTEXT_DRIFT")
+        selected_files = _selected_text_files(context)
+        index = context.get("repository_index")
+        if not isinstance(index, list):
+            raise ValueError("SUBSCRIPTION_EXECUTION_CONTEXT_INVALID")
+        index_paths = {
+            str(record["path"])
+            for record in index
+            if isinstance(record, Mapping)
+            and isinstance(record.get("path"), str)
+        }
+        binding, contract, limits = _execution_binding(
+            manifest=manifest,
+            repository_identity_sha256=repository_identity,
+            workspace_identity_sha256=workspace_identity,
+            durable_state_identity_sha256=state_identity,
+            expected_head=expected_head,
+            expected_tree=expected_tree,
+            acceptance_set=acceptance_set,
+            validation_set=validation_set,
+            worker_configuration_sha256=_worker_configuration_sha256(
+                codex_config
+            ),
+            authority_flags=authority_flags,
+        )
+        existing_scope = tuple(binding["existing_scope_paths"])
+        addable_scope = tuple(binding["addable_scope_paths"])
+        if (
+            not set(existing_scope) <= set(seed_paths)
+            or not set(existing_scope) <= index_paths
+            or not set(existing_scope) <= set(selected_files)
+            or set(addable_scope).intersection(index_paths)
+        ):
+            raise ValueError("SUBSCRIPTION_EXECUTION_SCOPE_TOPOLOGY_DRIFT")
+        baseline_files = {
+            path: selected_files[path] for path in existing_scope
+        }
+        freshness = validate_repository_context_freshness(
+            source_path,
+            snapshot,
+            max_tracked_files=(
+                repository_context_limits or RepositoryContextLimits()
+            ).max_tracked_files,
+        )
+        if freshness.get("status") != "PASS":
+            raise ValueError("SUBSCRIPTION_EXECUTION_SOURCE_STALE")
+        if (
+            Path(task_manifest_path).read_bytes() != captured_manifest
+            or Path(change_plan_path).read_bytes() != captured_plan
+        ):
+            raise ValueError("SUBSCRIPTION_EXECUTION_AUTHORITY_INPUT_DRIFT")
+    except (
+        OSError,
+        BlueprintCompilerError,
+        RepositoryContextError,
+        TypeError,
+        ValueError,
+    ) as exc:
+        reason = (
+            exc.code
+            if isinstance(exc, (BlueprintCompilerError, RepositoryContextError))
+            else str(exc)
+        )
+        return _subscription_execution_boundary(
+            status="BLOCK",
+            terminal_code="SUBSCRIPTION_EXECUTION_BINDING_BLOCKED",
+            reasons=[reason],
+        )
+
+    workspace_result = create_isolated_local_workspace(
+        source_repository_root=source_path,
+        workspace_root=workspace_path,
+        expected_head_sha=expected_head,
+        expected_tree_sha=expected_tree,
+    )
+    if workspace_result.get("status") != "PASS":
+        return {
+            **_subscription_execution_boundary(
+                status="BLOCK",
+                terminal_code=str(
+                    workspace_result.get(
+                        "terminal_code",
+                        "SUBSCRIPTION_EXECUTION_WORKSPACE_BLOCKED",
+                    )
+                ),
+            ),
+            "workspace_result": workspace_result,
+        }
+
+    try:
+        state_parent = state_path.parent.resolve(strict=True)
+        store = DurableOrchestratorStore(
+            state_path,
+            forbidden_roots=(source_path, workspace_path),
+        )
+        concrete_adapter = adapter or CodexCLISubscriptionWorkerAdapter(
+            codex_config
+        )
+        with tempfile.TemporaryDirectory(
+            prefix="tool-system-subscription-context-"
+        ) as temporary_directory:
+            context_root = Path(temporary_directory)
+            os.chmod(context_root, 0o700)
+            _write_text_files(context_root, selected_files)
+            adapter_request = AdapterRequest(
+                adapter_id="subscription-" + contract.task_digest[:16],
+                role="implementation",
+                action="bounded_public_entry_development",
+                task_id=contract.task_digest,
+                input_refs=[
+                    str(snapshot["context_sha256"]),
+                    str(context_result["compilation_packet"]["compilation_sha256"]),
+                ],
+                context={
+                    "workspace": str(context_root),
+                    "subscription_worker_authorized": True,
+                    "repository_context_sha256": snapshot["context_sha256"],
+                },
+                execute=True,
+                calls_external_worker=True,
+                writes_target_repo=False,
+                executes_target_repo_mutation=False,
+                production_deployment=False,
+            )
+            worker = build_subscription_development_worker(
+                adapter=concrete_adapter,
+                request_template=adapter_request,
+            )
+            validator = _build_public_entry_validator(
+                source_repository_root=source_path,
+                expected_head=expected_head,
+                expected_tree=expected_tree,
+                task_manifest_path=Path(task_manifest_path).resolve(strict=True),
+                change_plan_path=Path(change_plan_path).resolve(strict=True),
+                process_authority_path=process_authority_path,
+                policy_path=policy_path,
+                autonomy_policy_path=autonomy_policy_path,
+                baseline_files=baseline_files,
+                contract=contract,
+                timeout_seconds=int(binding["validation_timeout_seconds"]),
+                max_output_bytes=int(binding["max_validation_output_bytes"]),
+                cancellation_requested=cancellation_requested,
+            )
+            identity = LocalGitIdentity(
+                expected_head_sha=expected_head,
+                expected_tree_sha=expected_tree,
+                branch_name=str(binding["branch_name"]),
+                commit_message=str(binding["commit_message"]),
+            )
+            local_result = run_durable_local_git(
+                repository_root=workspace_path,
+                store=store,
+                run_id="subscription-" + contract.task_digest[:24],
+                task_id="bounded-change",
+                lease_owner="subscription-public-entry",
+                identity=identity,
+                contract=contract,
+                baseline_files=baseline_files,
+                worker=worker,
+                validator=validator,
+                code_reviewer=_public_entry_code_reviewer(contract),
+                contract_reviewer=_public_entry_contract_reviewer(contract),
+                limits=limits,
+                cancellation_requested=cancellation_requested,
+            )
+    except (OSError, TypeError, ValueError) as exc:
+        return {
+            **_subscription_execution_boundary(
+                status="BLOCK",
+                terminal_code="SUBSCRIPTION_EXECUTION_RUNTIME_BLOCKED",
+                reasons=[type(exc).__name__],
+            ),
+            "workspace_identity_sha256": workspace_identity,
+            "durable_state_identity_sha256": state_identity,
+            "local_workspace_created": bool(
+                workspace_result.get("workspace_created")
+            ),
+        }
+
+    status = str(local_result.get("status", "BLOCK"))
+    worker_calls = int(local_result.get("worker_call_count", 0))
+    result = {
+        **_subscription_execution_boundary(
+            status=status,
+            terminal_code=str(
+                local_result.get(
+                    "terminal_code",
+                    "SUBSCRIPTION_EXECUTION_RUNTIME_BLOCKED",
+                )
+            ),
+        ),
+        "repository_context_built": True,
+        "blueprint_compiled": True,
+        "worker_execution_authorized": True,
+        "worker_invocations": worker_calls,
+        "validation_command_invocations": (
+            len(validation_set) * worker_calls
+        ),
+        "local_workspace_created": bool(
+            workspace_result.get("workspace_created")
+        ),
+        "local_git_operations": 2 if status == "PASS" else 0,
+        "repository_root_identity_sha256": repository_identity,
+        "workspace_root_identity_sha256": workspace_identity,
+        "durable_state_identity_sha256": state_identity,
+        "authority_binding_sha256": _canonical_sha256(binding),
+        "context_sha256": snapshot["context_sha256"],
+        "compilation_sha256": context_result["compilation_packet"][
+            "compilation_sha256"
+        ],
+        "task_digest": contract.task_digest,
+        "candidate_tree": local_result.get("candidate_tree"),
+        "branch": local_result.get("branch"),
+        "commit": local_result.get("commit"),
+        "tree": local_result.get("tree"),
+        "worker_usage": {
+            "duration_ms": int(local_result.get("total_duration_ms", 0)),
+            "cost_microunits": int(
+                local_result.get("total_cost_microunits", 0)
+            ),
+        },
+        "rollback_plan": local_result.get("rollback_plan"),
+        "cleanup_plan": local_result.get("cleanup_plan"),
+        "draft_pr_plan": local_result.get("draft_pr_plan"),
+        "state_parent_identity_sha256": hashlib.sha256(
+            str(state_parent).encode("utf-8")
+        ).hexdigest(),
+    }
+    return result
 
 
 def _status_from_reasons(reasons: list[str]) -> str:
