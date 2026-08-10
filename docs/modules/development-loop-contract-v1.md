@@ -14,7 +14,7 @@ module_compound_contract:
   identity:
     canonical_module_id: development-loop
     current_module_id: development_loop
-    module_version: 1.2.0
+    module_version: 1.1.0
     aggregate_interface:
       interface_id: development-loop-api
       interface_version: 1.1.0
