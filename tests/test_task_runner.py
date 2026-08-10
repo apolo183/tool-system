@@ -13,6 +13,7 @@ from tool_system.development_loop import FrozenDevelopmentContract
 import tool_system.gate.command_runner as command_runner
 from tool_system.runner.task_runner import (
     run_subscription_development_pipeline,
+    run_subscription_public_entry_preflight,
     run_task_pipeline,
 )
 from tool_system.worker_adapter.contract import (
@@ -210,3 +211,56 @@ def test_subscription_pipeline_rejects_unknown_adapter_before_invocation() -> No
     assert result["provider_invocations"] == 0
     assert result["remote_repository_operations"] == 0
     assert result["local_git_operations"] == 0
+
+
+def test_subscription_public_entry_preflight_freezes_nonexecuting_packet() -> None:
+    result = run_subscription_public_entry_preflight(
+        task_manifest_path=MANIFEST_PATH,
+        change_plan_path=PLAN_PATH,
+        repository_root=ROOT,
+        expected_head="a" * 40,
+        blueprint_path="blueprint/tool_system_v0.yaml",
+        module_registry_path="config/module_registry_v1.yaml",
+        milestone_ids=["P16"],
+        acceptance_requirements=["subscription-core-remains-bounded"],
+        governance_paths=["AGENTS.md"],
+        query_terms=["task-runner"],
+        seed_paths=["src/tool_system/runner/task_runner.py"],
+        process_authority_path=ROOT / "config/process_authority_v1.yaml",
+        policy_path=ROOT / "policy/repo_write_policy.yaml",
+        autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
+    )
+
+    assert result["status"] == "PASS"
+    assert result["worker_execution_authorized"] is False
+    assert result["repository_context_built"] is False
+    assert result["blueprint_compiled"] is False
+    assert result["provider_invocations"] == 0
+    packet = result["dispatch_packet"]
+    assert packet["packet_version"] == (
+        "subscription_development_authority_packet_v1"
+    )
+    assert packet["expected_head"] == "a" * 40
+    assert len(packet["repository_root_identity_sha256"]) == 64
+    assert "repository_root" not in packet
+    assert len(packet["packet_sha256"]) == 64
+
+
+def test_subscription_public_entry_preflight_rejects_input_before_file_reads() -> None:
+    result = run_subscription_public_entry_preflight(
+        task_manifest_path="not-read.yaml",
+        change_plan_path="not-read-plan.yaml",
+        repository_root="relative/path",
+        expected_head="not-a-commit",
+        blueprint_path="../blueprint.yaml",
+        module_registry_path="config/module_registry_v1.yaml",
+        milestone_ids=[],
+        acceptance_requirements=[],
+        governance_paths=[],
+        query_terms=[],
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "INVALID_SUBSCRIPTION_PREFLIGHT_INPUT"
+    assert result["worker_execution_authorized"] is False
+    assert result["provider_invocations"] == 0
