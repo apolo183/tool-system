@@ -1,0 +1,89 @@
+task_id: tool-system-subscription-worker-public-cli-authority-preflight-v1
+task_type: implementation
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-public-cli-preflight-v1
+phase: POST_P16_PRODUCT_COMPLETION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    section_or_key: required public flow
+    scope: Establish the existing root CLI command and exact authority preflight before repository-context, compiler, adapter, or local-Git integration.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded blueprint-driven subscription-primary development with API providers default off.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: SUBSCRIPTION-WORKER-PUBLIC-CLI-AUTHORITY-PREFLIGHT-v1
+    baseline_commit: 6d570cedbd0a119d1221ced2e4aae2cff1bc3113
+    baseline_tree: canonical_main_tree_at_6d570cedbd0a119d1221ced2e4aae2cff1bc3113
+    allowed_scope: exact_11_paths_listed_below
+    acceptance_set:
+      - the existing root CLI exposes one develop preflight command
+      - an explicit current manifest and change plan are required
+      - process authority policy manifest plan and pair binding pass before packet creation
+      - invalid repository identity commit or bounded selection input fails closed
+      - the public result hashes rather than prints the repository-root identity
+      - the packet grants no worker repository Git remote API provider credential production cleanup or rollback authority
+      - task-runner and CLI contracts plus registry seals remain exact
+    validation_set:
+      - focused root CLI task-runner and module-registry tests
+      - full Hosted CI and governance validation
+    terminal_predicate: authority-preflight CLI is merged while context compiler adapter and local-Git dispatch remain explicitly pending
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 3
+      review_cycles: 1
+      provider_invocations: 0
+      credential_value_accesses: 0
+      real_codex_invocations: 0
+      downstream_accesses: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, validation_results, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, status_text]
+scope:
+  summary: Add the non-executing authority-preflight stage to the existing root CLI.
+  in_scope: &files
+    - config/module_registry_v1.yaml
+    - docs/modules/cli-frontend-contract-v1.md
+    - docs/modules/task-runner-contract-v1.md
+    - docs/reports/subscription_worker_public_cli_authority_preflight_v1.md
+    - examples/change_plans/tool_system_subscription_worker_public_cli_authority_preflight_v1.yaml
+    - examples/task_manifests/tool_system_subscription_worker_public_cli_authority_preflight_v1.yaml
+    - src/tool_system/cli/main.py
+    - src/tool_system/runner/task_runner.py
+    - tests/test_module_registry.py
+    - tests/test_root_cli.py
+    - tests/test_task_runner.py
+  out_of_scope:
+    - repository content reads blueprint compilation adapter invocation local Git real Codex APIs credentials downstream production cleanup or rollback
+allowed_files: *files
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_root_cli.py tests/test_task_runner.py tests/test_module_registry.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  squash_merge_authorized: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+rollback:
+  method: git_revert
+  reference: tool-system@6d570cedbd0a119d1221ced2e4aae2cff1bc3113
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: authorized_subscription_worker_public_entry_production_closure_lifecycle
+  approved_at: 2026-08-10 UTC+09:00
