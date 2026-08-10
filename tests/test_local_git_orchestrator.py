@@ -5,7 +5,11 @@ import subprocess
 from pathlib import Path
 
 from tool_system.development_loop import FrozenDevelopmentContract
-from tool_system.local_git import LocalGitIdentity, run_durable_local_git
+from tool_system.local_git import (
+    LocalGitIdentity,
+    create_isolated_local_workspace,
+    run_durable_local_git,
+)
 from tool_system.orchestrator import DurableOrchestratorStore
 
 
@@ -88,6 +92,67 @@ def _run(root: Path, store: DurableOrchestratorStore, identity: LocalGitIdentity
         code_reviewer=_review,
         contract_reviewer=_review,
     )
+
+
+def test_creates_exact_remote_free_workspace_and_reuses_identity(
+    tmp_path: Path,
+) -> None:
+    source, _, identity = _fixture(tmp_path)
+    workspace_parent = tmp_path / "workspaces"
+    workspace_parent.mkdir(mode=0o700)
+    workspace = workspace_parent / "bounded-run"
+
+    created = create_isolated_local_workspace(
+        source_repository_root=source,
+        workspace_root=workspace,
+        expected_head_sha=identity.expected_head_sha,
+        expected_tree_sha=identity.expected_tree_sha,
+    )
+
+    assert created["status"] == "PASS"
+    assert created["workspace_state"] == "CREATED"
+    assert created["network_operations"] == 0
+    assert _git(workspace, "remote") == ""
+    assert _git(workspace, "rev-parse", "HEAD") == identity.expected_head_sha
+    assert _git(workspace, "rev-parse", "HEAD^{tree}") == identity.expected_tree_sha
+
+    existing = create_isolated_local_workspace(
+        source_repository_root=source,
+        workspace_root=workspace,
+        expected_head_sha=identity.expected_head_sha,
+        expected_tree_sha=identity.expected_tree_sha,
+    )
+    assert existing["status"] == "PASS"
+    assert existing["workspace_state"] == "EXISTING"
+    assert existing["workspace_created"] is False
+
+
+def test_local_git_honors_cancellation_before_worker_and_commit(
+    tmp_path: Path,
+) -> None:
+    root, store, identity = _fixture(tmp_path)
+
+    result = run_durable_local_git(
+        repository_root=root,
+        store=store,
+        run_id="cancelled-run",
+        task_id="local-change",
+        lease_owner="fixture-worker",
+        identity=identity,
+        contract=_contract(),
+        baseline_files={"app.txt": "old\n"},
+        worker=_worker,
+        validator=_validator,
+        code_reviewer=_review,
+        contract_reviewer=_review,
+        cancellation_requested=lambda: True,
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "CANCELLED_BY_CALLER"
+    assert _git(root, "branch", "--show-current") == "main"
+    assert _git(root, "rev-parse", "HEAD") == identity.expected_head_sha
+    assert store.get_side_effect("cancelled-run:branch") is None
 
 
 def test_records_one_isolated_local_branch_and_commit(tmp_path: Path) -> None:
