@@ -178,7 +178,7 @@ mapping_contract:
         - {kind: exact, name: tool_system.runner.task_runner}
       direct_consumer_module_ids:
         - cli_frontend
-      change_risk: "critical: configured command execution, read-only context compilation, and audit boundary"
+      change_risk: "critical: configured command execution, exact manifest-bound read-only context compilation, byte-sealed task-pair authority, and audit boundary"
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_runner@1.1.0
     - current_module_id: role_runtime
       canonical_module_id: role-runtime
@@ -254,7 +254,7 @@ mapping_contract:
         - {kind: exact, name: tool_system.cli.target_repo_dry_run}
         - {kind: exact, name: tool_system.cli.target_repo_pr_plan_preview}
       direct_consumer_module_ids: []
-      change_risk: "high: public entrypoint delegation surface"
+      change_risk: "high: public entrypoint delegation and non-authorizing manifest-bound read-request surface"
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cli_frontend@1.1.0
     - current_module_id: repository_context
       canonical_module_id: repository-context
@@ -278,7 +278,7 @@ mapping_contract:
         - {kind: prefix, name: tool_system.blueprint_compiler}
       direct_consumer_module_ids:
         - task_runner
-      change_risk: "medium: deterministic non-authorizing blueprint compilation and task-graph compatibility boundary"
+      change_risk: "medium: deterministic non-authorizing blueprint compilation, dual compatible read-envelope classification, and task-graph compatibility boundary"
       rollback_identity: tool-system@00793ad07bba2e3fe3bd29882e83788d32697da6:blueprint_compiler@absent
     - current_module_id: development_loop
       canonical_module_id: development-loop
