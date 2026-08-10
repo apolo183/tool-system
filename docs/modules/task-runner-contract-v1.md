@@ -18,7 +18,7 @@ module_compound_contract:
   identity:
     canonical_module_id: task-runner
     current_module_id: task_runner
-    module_version: 1.2.0
+    module_version: 1.1.0
     aggregate_interface:
       interface_id: task-runner-api
       interface_version: 1.0.0
