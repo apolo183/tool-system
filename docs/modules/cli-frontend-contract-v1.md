@@ -13,7 +13,7 @@ module_compound_contract:
   identity:
     canonical_module_id: cli-frontend
     current_module_id: cli_frontend
-    module_version: 1.2.0
+    module_version: 1.1.0
     aggregate_interface:
       interface_id: cli-frontend-api
       interface_version: 1.0.0
