@@ -1,0 +1,32 @@
+plan_id: tool-system-subscription-worker-public-entry-spec-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_public_entry_spec_v1.yaml
+changed_files:
+  - docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+  - examples/change_plans/tool_system_subscription_worker_public_entry_spec_v1.yaml
+  - examples/task_manifests/tool_system_subscription_worker_public_entry_spec_v1.yaml
+alignment:
+  parent:
+    document: docs/reports/p16i_production_operations_acceptance_decision.md
+    section_or_key: accepted Core stop boundary
+    scope: Preserve accepted P16 Core and specify the remaining public-entry product closure.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective.required_end_to_end_flow
+    scope: Establish the dependency-ordered subscription-primary implementation path.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_public_entry_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_public_entry_spec_v1.yaml
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  method: github_app_connector_only_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-public-entry-spec-v1
+  retain_feature_branch: true
+  exact_base: afe7632ea9ec42d9697ca686196b7b7d52e12c65
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@afe7632ea9ec42d9697ca686196b7b7d52e12c65
+  execution_authorized: false

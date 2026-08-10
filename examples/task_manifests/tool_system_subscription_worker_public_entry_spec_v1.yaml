@@ -1,0 +1,80 @@
+task_id: tool-system-subscription-worker-public-entry-spec-v1
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-public-entry-spec-v1
+phase: POST_P16_PRODUCT_COMPLETION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/p16i_production_operations_acceptance_decision.md
+    section_or_key: accepted Core stop boundary
+    scope: Preserve P16 Core while specifying the remaining product-wide public-entry closure.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective.required_end_to_end_flow
+    scope: Close the subscription-primary blueprint-to-code public execution path without enabling APIs.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: SUBSCRIPTION-WORKER-PUBLIC-ENTRY-CLOSURE-SPECIFICATION-v1
+    baseline_commit: afe7632ea9ec42d9697ca686196b7b7d52e12c65
+    baseline_tree: canonical_main_tree_at_afe7632ea9ec42d9697ca686196b7b7d52e12c65
+    allowed_scope: exact_3_paths_listed_below
+    acceptance_set:
+      - map the missing formal CLI to subscription-worker and local-Git production call chain
+      - freeze provider-neutral adapter interface and Codex CLI safety boundary
+      - define dependency-ordered implementation and acceptance packages
+      - preserve every API as default off optional and non-gating
+      - grant no external execution or repository mutation authority
+    validation_set:
+      - manifest and change-plan validation
+      - full Hosted CI fake-I/O and governance validation
+    terminal_predicate: specification is merged and implementation remains separately gated by this frozen dependency order
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 2
+      review_cycles: 1
+      provider_invocations: 0
+      credential_value_accesses: 0
+      real_downstream_repository_accesses: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, validation_results, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, status_text]
+scope:
+  summary: Freeze the product-wide subscription-worker public-entry closure before runtime implementation.
+  in_scope: &files
+    - docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    - examples/change_plans/tool_system_subscription_worker_public_entry_spec_v1.yaml
+    - examples/task_manifests/tool_system_subscription_worker_public_entry_spec_v1.yaml
+  out_of_scope:
+    - runtime source tests blueprint configuration module contracts registry project state README AGENTS workflows
+    - real Codex execution API calls credentials downstream access remote Git production cleanup or rollback
+allowed_files: *files
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_public_entry_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_public_entry_spec_v1.yaml
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  squash_merge_authorized: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+rollback:
+  method: git_revert
+  reference: tool-system@afe7632ea9ec42d9697ca686196b7b7d52e12c65
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_agreement_to_SUBSCRIPTION-WORKER-PUBLIC-ENTRY-PRODUCTION-CLOSURE-v1
+  approved_at: 2026-08-10 UTC+09:00
