@@ -1,0 +1,37 @@
+plan_id: tool-system-subscription-worker-multi-stack-acceptance-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_multi_stack_acceptance_v1.yaml
+changed_files:
+  - docs/reports/subscription_worker_multi_stack_acceptance_v1.md
+  - examples/change_plans/tool_system_subscription_worker_multi_stack_acceptance_v1.yaml
+  - examples/task_manifests/tool_system_subscription_worker_multi_stack_acceptance_v1.yaml
+  - src/tool_system/local_git/orchestrator.py
+  - tests/test_task_runner.py
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    section_or_key: Implementation packages
+    scope: Execute the frozen package 3 Python and TypeScript fake-I-O acceptance matrix.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Validate bounded subscription-primary local development while every API and external effect remains disabled.
+implementation:
+  - admit a creator-owned clean remote-free advanced workspace only for durable receipt reconciliation
+  - retain exact baseline workspace preflight and fail closed when completed receipts are absent ambiguous or mismatched
+  - exercise Python and TypeScript implementation repair denial cancellation replay and one-commit scenarios through the canonical public entry
+  - retain fake process temporary repository temporary SQLite and no-network boundaries
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_task_runner.py tests/test_local_git_orchestrator.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  method: github_app_connector_only_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-multi-stack-acceptance-v1
+  retain_feature_branch: true
+  exact_base: dcf01353a4b86f7f472649a2b2c352d44393f748
+rollback:
+  method: git_revert
+  reference: tool-system@dcf01353a4b86f7f472649a2b2c352d44393f748
+  execution_authorized: false
