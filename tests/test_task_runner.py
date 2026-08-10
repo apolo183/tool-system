@@ -354,7 +354,7 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
     assert result["terminal_candidate_sealed"] is True
     assert result["candidate_files"] == {"src/app.py": "return 2\n"}
     assert result["adapter_kind"] == "codex_cli_subscription_worker_adapter"
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert result["api_mode_enabled"] is False
     assert result["provider_invocations"] == 0
     assert result["provider_credential_value_accesses"] == 0
@@ -896,8 +896,27 @@ def test_subscription_public_entry_executes_one_fake_worker_local_commit(
     ) -> subprocess.CompletedProcess[str]:
         prompt = json.loads(str(kwargs["input"]))
         calls.append(prompt)
-        assert prompt["candidate_files"]["src/billing/service.py"].endswith(
-            "return value * 100\n"
+        if len(calls) == 1:
+            expected_content = (
+                "def total(value: int) -> int:\n"
+                "    return value * 100\n"
+            )
+            replacement_content = (
+                "def total(value: int) -> int:\n"
+                "    return value * 2\n"
+            )
+        else:
+            expected_content = (
+                "def total(value: int) -> int:\n"
+                "    return value * 2\n"
+            )
+            replacement_content = (
+                "def total(value: int) -> int:\n"
+                "    return value\n"
+            )
+        assert (
+            prompt["candidate_files"]["src/billing/service.py"]
+            == expected_content
         )
         structured = {
             "operations": [
@@ -905,15 +924,9 @@ def test_subscription_public_entry_executes_one_fake_worker_local_commit(
                     "op": "replace",
                     "path": "src/billing/service.py",
                     "expected_sha256": hashlib.sha256(
-                        (
-                            "def total(value: int) -> int:\n"
-                            "    return value * 100\n"
-                        ).encode("utf-8")
+                        expected_content.encode("utf-8")
                     ).hexdigest(),
-                    "content": (
-                        "def total(value: int) -> int:\n"
-                        "    return value\n"
-                    ),
+                    "content": replacement_content,
                 }
             ],
             "usage": {"duration_ms": 1, "cost_microunits": 0},
@@ -962,8 +975,8 @@ def test_subscription_public_entry_executes_one_fake_worker_local_commit(
 
     assert result["status"] == "PASS"
     assert result["terminal_code"] == "LOCAL_COMMIT_RECORDED"
-    assert result["worker_invocations"] == 1
-    assert result["validation_command_invocations"] == 1
+    assert result["worker_invocations"] == 2
+    assert result["validation_command_invocations"] == 2
     assert result["provider_invocations"] == 0
     assert result["remote_repository_operations"] == 0
     assert result["target_repo_mutations"] == 0
@@ -1059,4 +1072,41 @@ def test_candidate_materialization_rejects_symlinked_parent(
         )
 
     assert not (outside / "service.py").exists()
+
+def test_public_execution_workspace_dependency_blocks_symlink_and_dirty_resume(
+    tmp_path: Path,
+) -> None:
+    source, expected_head = _subscription_context_fixture(tmp_path)
+    expected_tree = _fixture_git(source, "rev-parse", "HEAD^{tree}")
+    workspace_parent = tmp_path / "workspace-guards"
+    workspace_parent.mkdir(mode=0o700)
+    source_alias = tmp_path / "source-alias"
+    source_alias.symlink_to(source, target_is_directory=True)
+
+    blocked_alias = task_runner_module.create_isolated_local_workspace(
+        source_repository_root=source_alias,
+        workspace_root=workspace_parent / "alias",
+        expected_head_sha=expected_head,
+        expected_tree_sha=expected_tree,
+    )
+    assert blocked_alias["status"] == "BLOCK"
+    assert blocked_alias["terminal_code"] == "INVALID_SOURCE_REPOSITORY_ROOT"
+
+    workspace = workspace_parent / "dirty"
+    created = task_runner_module.create_isolated_local_workspace(
+        source_repository_root=source,
+        workspace_root=workspace,
+        expected_head_sha=expected_head,
+        expected_tree_sha=expected_tree,
+    )
+    assert created["status"] == "PASS"
+    (workspace / "untracked.txt").write_text("drift\n", encoding="utf-8")
+    blocked_resume = task_runner_module.create_isolated_local_workspace(
+        source_repository_root=source,
+        workspace_root=workspace,
+        expected_head_sha=expected_head,
+        expected_tree_sha=expected_tree,
+    )
+    assert blocked_resume["status"] == "BLOCK"
+    assert blocked_resume["terminal_code"] == "DIRTY_EXISTING_WORKSPACE"
 
