@@ -59,7 +59,7 @@ module_compound_contract:
       - kind: exact
         name: tool_system.cli.target_repo_pr_plan_preview
   role:
-    summary: expose stable command-line entry points that delegate to registered public module interfaces
+    summary: expose stable command-line entry points that delegate to registered public module interfaces, including read-only develop and separately exact-bound develop-execute routes, while rendering only redacted results and never expanding delegated authority
     responsibility_boundary: Parse command-line arguments, including the read-only subscription context route and the separately exact-bound develop-execute route, select one current public module entry point, render its redacted result, and derive a process exit code without changing delegated authority.
   natural_owner_evidence_paths:
     - src/tool_system/cli/__init__.py
