@@ -202,7 +202,7 @@ mapping_contract:
         - {kind: prefix, name: tool_system.worker_adapter}
       direct_consumer_module_ids:
         - task_runner
-      change_risk: "high: default dry-run and explicitly guarded subscription-worker adapter boundary"
+      change_risk: "high: default dry-run plus guarded stdin, schema-bound read-only Codex, and process-group cancellation boundary"
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:worker_adapter@1.0.0
     - current_module_id: target_repo_adapter
       canonical_module_id: target-repo-adapter
