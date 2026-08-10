@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import shlex
 import subprocess
 from pathlib import Path
+from collections.abc import Callable, Sequence
 from typing import Any
 
 import yaml
@@ -99,6 +101,21 @@ def run_commands(
     autonomy_policy_path: str | Path,
     cwd: str | Path,
     timeout_seconds: int = 120,
+    max_output_bytes: int = 1_048_576,
+    cancellation_requested: Callable[[], bool] | None = None,
+    inherited_environment_names: Sequence[str] = (
+        "PATH",
+        "HOME",
+        "LANG",
+        "LC_ALL",
+        "PYTHONPATH",
+        "VIRTUAL_ENV",
+        "SYSTEMROOT",
+        "WINDIR",
+        "TMPDIR",
+        "TEMP",
+        "TMP",
+    ),
 ) -> dict[str, object]:
     """Validate real process inputs and run only the captured plan commands.
 
@@ -195,6 +212,23 @@ def run_commands(
         reasons.append(f"cwd is missing, symlinked, or not a directory: {working_dir}")
     if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
         reasons.append("timeout_seconds must be a positive integer")
+    if (
+        not isinstance(max_output_bytes, int)
+        or isinstance(max_output_bytes, bool)
+        or max_output_bytes <= 0
+        or max_output_bytes > 16_777_216
+    ):
+        reasons.append("max_output_bytes must be between 1 and 16777216")
+    if cancellation_requested is not None and not callable(cancellation_requested):
+        reasons.append("cancellation_requested must be callable")
+    forbidden_environment_names = {
+        "OPENAI_API_KEY",
+        "DEEPSEEK_API_KEY",
+        "DASHSCOPE_API_KEY",
+        "ZHIPUAI_API_KEY",
+    }
+    if forbidden_environment_names.intersection(inherited_environment_names):
+        reasons.append("provider credential environment names are forbidden")
     if reasons:
         return _blocked_result(
             reasons=reasons,
@@ -217,29 +251,63 @@ def run_commands(
         )
 
     command_results: list[dict[str, Any]] = []
+    dispatch_reasons: list[str] = []
+    environment = {
+        name: os.environ[name]
+        for name in inherited_environment_names
+        if name in os.environ
+    }
     for command in commands:
-        completed = subprocess.run(
-            shlex.split(command),
-            cwd=working_dir,
-            text=True,
-            capture_output=True,
-            timeout=timeout_seconds,
-            check=False,
-        )
+        if cancellation_requested is not None:
+            try:
+                cancelled = cancellation_requested()
+            except Exception as exc:  # noqa: BLE001 - fail closed at cancellation boundary
+                dispatch_reasons.append(
+                    f"cancellation check raised an exception: {type(exc).__name__}"
+                )
+                break
+            if cancelled is not False and cancelled is not True:
+                dispatch_reasons.append("cancellation check must return bool")
+                break
+            if cancelled:
+                dispatch_reasons.append("command execution cancelled by caller")
+                break
+        try:
+            completed = subprocess.run(
+                shlex.split(command),
+                cwd=working_dir,
+                text=True,
+                capture_output=True,
+                timeout=timeout_seconds,
+                check=False,
+                shell=False,
+                env=environment,
+            )
+        except subprocess.TimeoutExpired:
+            dispatch_reasons.append("configured command exceeded timeout")
+            break
+        stdout = completed.stdout or ""
+        stderr = completed.stderr or ""
+        if (
+            len(stdout.encode("utf-8")) > max_output_bytes
+            or len(stderr.encode("utf-8")) > max_output_bytes
+        ):
+            dispatch_reasons.append("configured command output exceeded byte limit")
+            break
         command_results.append(
             {
                 "name": command,
                 "exit_code": completed.returncode,
-                "stdout": completed.stdout,
-                "stderr": completed.stderr,
+                "stdout": stdout,
+                "stderr": stderr,
             }
         )
     return {
-        "status": "PASS",
+        "status": "BLOCK" if dispatch_reasons else "PASS",
         "preflight": preflight,
         "input_sha256_before": _input_sha256(before),
         "input_sha256_after": _input_sha256(after),
         "command_results": command_results,
         "subprocess_call_count": len(command_results),
-        "reasons": [],
+        "reasons": dispatch_reasons,
     }
