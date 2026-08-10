@@ -73,7 +73,33 @@ scope:
     - worker or real Codex invocation
     - local Git writes branch or commit creation
     - API provider credential remote real downstream production cleanup or rollback operations
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    commit_sha: 7cc77c189e579e36a38ba246baa08e01d350fbd3
+    why_relevant: The accepted lifecycle fixes authority context compiler worker and local-Git ordering.
+  - repo: apolo183/tool-system
+    path: docs/modules/repository-context-contract-v1.md
+    commit_sha: 7cc77c189e579e36a38ba246baa08e01d350fbd3
+    why_relevant: The accepted provider contract defines exact clean snapshot and hardened read-only local Git behavior.
+  - repo: apolo183/tool-system
+    path: docs/modules/blueprint-compiler-contract-v1.md
+    commit_sha: 7cc77c189e579e36a38ba246baa08e01d350fbd3
+    why_relevant: The accepted provider contract defines pure bounded compilation and the historical isolated-fixture envelope.
 allowed_files: *files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/**
+  - policy/**
+  - .github/**
+  - src/tool_system/ai_worker/**
+  - src/tool_system/worker_adapter/**
+  - src/tool_system/local_git/**
+  - src/tool_system/repo_controller/**
+  - docs/tool_system_project_state_v1.yaml
+  - docs/tool_system_global_development_principles_v1.md
 write_mode: pull_request
 verification:
   commands:
