@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -7,8 +8,13 @@ from typing import Any
 import pytest
 
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
+from tool_system.development_loop import FrozenDevelopmentContract
 import tool_system.gate.command_runner as command_runner
-from tool_system.runner.task_runner import run_task_pipeline
+from tool_system.runner.task_runner import (
+    run_subscription_development_pipeline,
+    run_task_pipeline,
+)
+from tool_system.worker_adapter.contract import AdapterRequest, AdapterResult
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,3 +85,87 @@ def test_task_runner_delegates_execution_to_protected_revalidation(
     assert protected["preflight"]["validation_to_dispatch_inputs_equal"] is True
     assert protected["input_sha256_before"] == protected["input_sha256_after"]
     assert protected["subprocess_call_count"] == len(calls)
+
+
+class _PipelineAdapter:
+    adapter_kind = "fixture_subscription_pipeline_adapter"
+
+    def run(self, request: AdapterRequest) -> AdapterResult:
+        prompt = str(request.context["prompt"])
+        assert '"attempt_number":1' in prompt
+        return AdapterResult(
+            adapter_id=request.adapter_id,
+            role=request.role,
+            action=request.action,
+            status="PASS",
+            adapter_kind=self.adapter_kind,
+            execute=True,
+            calls_external_worker=True,
+            writes_target_repo=False,
+            executes_target_repo_mutation=False,
+            production_deployment=False,
+            output={
+                "structured_result": {
+                    "operations": [
+                        {
+                            "op": "replace",
+                            "path": "src/app.py",
+                            "expected_sha256": hashlib.sha256(
+                                b"return 1\n"
+                            ).hexdigest(),
+                            "content": "return 2\n",
+                        }
+                    ],
+                    "usage": {"duration_ms": 1, "cost_microunits": 0},
+                }
+            },
+        )
+
+
+def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
+    contract = FrozenDevelopmentContract(
+        task_digest="a" * 64,
+        baseline_tree="b" * 40,
+        allowed_scope=("src/app.py",),
+        acceptance_set=("implementation-correct",),
+        validation_set=("pytest",),
+    )
+
+    result = run_subscription_development_pipeline(
+        contract=contract,
+        baseline_files={"src/app.py": "return 1\n"},
+        adapter=_PipelineAdapter(),
+        adapter_request=AdapterRequest(
+            adapter_id="pipeline-adapter",
+            role="patch_author",
+            action="implement",
+            context={
+                "workspace": "/isolated/workspace",
+                "subscription_worker_authorized": True,
+            },
+        ),
+        validator=lambda files: {
+            "validation_results": {
+                "pytest": {
+                    "status": (
+                        "PASS"
+                        if files.get("src/app.py") == "return 2\n"
+                        else "BLOCK"
+                    )
+                }
+            },
+            "satisfied_acceptance_items": ["implementation-correct"],
+        },
+        code_reviewer=lambda _: {"violated_acceptance_items": []},
+        contract_reviewer=lambda _: {"violated_acceptance_items": []},
+    )
+
+    assert result["status"] == "PASS"
+    assert result["terminal_candidate_sealed"] is True
+    assert result["candidate_files"] == {"src/app.py": "return 2\n"}
+    assert result["adapter_kind"] == "fixture_subscription_pipeline_adapter"
+    assert result["api_mode_enabled"] is False
+    assert result["provider_invocations"] == 0
+    assert result["credential_value_accesses"] == 0
+    assert result["remote_operations"] == 0
+    assert result["local_git_operations"] == 0
