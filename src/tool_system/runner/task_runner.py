@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
 from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
+from tool_system.development_loop import (
+    DevelopmentLoopLimits,
+    FrozenDevelopmentContract,
+    run_development_loop,
+)
 from tool_system.gate.command_runner import run_commands
 from tool_system.gate.test_gate import build_gate_decision
 from tool_system.manifest.task_manifest import load_yaml_file
@@ -13,11 +19,58 @@ from tool_system.process_authority.contract import (
     validate_process_authority,
 )
 from tool_system.repo_controller.artifact import write_jsonl_record
+from tool_system.worker_adapter import (
+    AdapterRequest,
+    WorkerAdapter,
+    build_subscription_development_worker,
+)
 from tool_system.runner.active_gate_resolver import (
     paths_match,
     resolve_change_plan_from_active_gates,
 )
 
+
+
+def run_subscription_development_pipeline(
+    *,
+    contract: FrozenDevelopmentContract,
+    baseline_files: Mapping[str, object],
+    adapter: WorkerAdapter,
+    adapter_request: AdapterRequest,
+    validator: Callable[[Mapping[str, str]], Mapping[str, object]],
+    code_reviewer: Callable[[Mapping[str, object]], Mapping[str, object]],
+    contract_reviewer: Callable[[Mapping[str, object]], Mapping[str, object]],
+    limits: DevelopmentLoopLimits | None = None,
+    resume_state: Mapping[str, object] | None = None,
+    cancellation_requested: Callable[[], bool] | None = None,
+) -> dict[str, object]:
+    """Run the bounded development loop through one explicitly injected adapter."""
+
+    worker = build_subscription_development_worker(
+        adapter=adapter,
+        request_template=adapter_request,
+    )
+    result = run_development_loop(
+        contract=contract,
+        baseline_files=baseline_files,
+        worker=worker,
+        validator=validator,
+        code_reviewer=code_reviewer,
+        contract_reviewer=contract_reviewer,
+        limits=limits,
+        resume_state=resume_state,
+        cancellation_requested=cancellation_requested,
+    )
+    return {
+        **result,
+        "mode": "subscription_worker_development_pipeline",
+        "adapter_kind": getattr(adapter, "adapter_kind", "unknown"),
+        "api_mode_enabled": False,
+        "provider_invocations": 0,
+        "credential_value_accesses": 0,
+        "remote_operations": 0,
+        "local_git_operations": 0,
+    }
 
 def _status_from_reasons(reasons: list[str]) -> str:
     return "PASS" if not reasons else "BLOCK"
