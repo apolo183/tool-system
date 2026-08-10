@@ -5,7 +5,7 @@ role: repository overview
 purpose: define the domain-agnostic tool system boundary and current controller contract  
 author: ChatGPT / apolo183  
 created_at: 2026-07-05 20:00 UTC+08:00  
-updated_at: 2026-08-06 00:21 UTC+09:00
+updated_at: 2026-08-10 UTC+09:00
 
 ## Definition
 
@@ -36,7 +36,7 @@ Its permanent product objective is bounded blueprint-driven autonomous software 
 - Define and operate controlled target-repository PR pilot gates after explicit execution approval.
 - Execute a real local process-backed worker inside a controlled fixture-only runtime after minimum safety gates pass.
 - Persist and reconcile single-host orchestration state inside the accepted local-fixture SQLite boundary.
-- Build the missing blueprint-to-code autonomous implementation, test, repair, review, and local Git loop before multi-project benchmarking.
+- Maintain the accepted bounded blueprint-to-code implementation, test, repair, review, and local Git loop while preserving its isolated-repository and separately authorized side-effect boundaries.
 - Qualify replaceable provider adapters and select models per task class under hard safety, quality, data, and authorization floors.
 - Optimize expected total economic cost per accepted module, including critical-path time and avoidable renewal cost, without committing private economic values.
 
@@ -64,7 +64,7 @@ The independent optional API plugin proof requires one explicitly enabled and cu
 
 The soft objective is expected total economic cost per accepted module. It includes subscription capacity, enabled-provider usage, future renewals caused by delay, critical-path operating burn, local compute and electricity, verification, retry, rework, recovery, rollback, and opportunity cost. Safety, quality, data, and authorization remain hard constraints. Exact salaries, rent, electricity rates, subscription dates, billing values, and revenue assumptions are private installation inputs and never public-repository constants. The detailed contract is `docs/model_provider_portfolio_and_economics_contract_v1.md`.
 
-P14 remains the provider-neutral autonomous-development core plus its accepted bounded historical provider proof. P15 owns multi-project core evidence, fake-I/O adapter qualification, and failure/economics evidence. The final single-provider backup smoke belongs to an independent optional API plugin that may be completed later. P16 owns sustainable operations; provider/model discovery, price/health refresh, and portfolio cadence apply only when API mode is explicitly enabled and are not default-off completion gates. P15 and P16 still require their separate acceptance and entry decisions.
+P14 is the accepted provider-neutral autonomous-development core plus its accepted bounded historical provider proof. P15 Core is accepted with multi-project evidence, fake-I/O adapter qualification, and failure/economics evidence. P16 Core is accepted for subscription-primary sustainable operations. The final single-provider backup smoke belongs to an independent optional API plugin that may be completed later; provider/model discovery, price/health refresh, and portfolio cadence apply only when API mode is explicitly enabled and are not Core completion gates. Production deployment and real-environment validation remain separately authorized.
 
 ## Current project state
 
@@ -80,7 +80,7 @@ through the explicit manifest/change-plan pair validated by
 branches, commits, or CI results cannot grant a provider call, repository
 mutation, lifecycle transition, cleanup, rollback, or production action.
 
-The machine-readable durable inventory is `config/module_registry_v1.yaml`, whose four-field top-level shape is owned by tool-system and validated by `tool-system-validate-module-registry`. It registers 14 current tool-system modules, their exact natural-owner and repository-local boundary paths, versioned interfaces, reciprocal dependency edges, evidence boundaries, and authorization envelopes. The local validator fails closed on malformed identities and contracts, unclaimed required source/config paths, owner or boundary overlap, ContractReference SHA-256 drift, managed Python import edges that disagree with declared consumers, invalid side-effect target bindings, stale dependency versions, non-reciprocal edges, and declared cycles. This structural and source-graph evidence does not prove runtime containment, behavioral interface compatibility, or automatic module replacement.
+The machine-readable durable inventory is `config/module_registry_v1.yaml`, whose four-field top-level shape is owned by tool-system and validated by `tool-system-validate-module-registry`. It registers 26 current tool-system modules, their exact natural-owner and repository-local boundary paths, versioned interfaces, reciprocal dependency edges, evidence boundaries, and authorization envelopes. The local validator fails closed on malformed identities and contracts, unclaimed required source/config paths, owner or boundary overlap, ContractReference SHA-256 drift, managed Python import edges that disagree with declared consumers, invalid side-effect target bindings, stale dependency versions, non-reciprocal edges, and declared cycles. This structural and source-graph evidence does not prove runtime containment, behavioral interface compatibility, or automatic module replacement.
 
 Every P14-P16 milestone must identify the exact missing link it closes in the global product flow, prove alignment to its immediate parent, and independently prove alignment to `blueprint/tool_system_v0.yaml:product_objective`. Missing either alignment is a fail-closed condition.
 
