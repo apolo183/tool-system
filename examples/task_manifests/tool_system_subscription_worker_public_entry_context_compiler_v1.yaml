@@ -25,6 +25,7 @@ bounded_closure:
     acceptance_set:
       - the existing root develop command composes current authority repository context and blueprint compilation in that order
       - repository context opens only one exact clean committed local Git snapshot through its accepted hardened read-only interface
+      - an explicit isolated fixture classification is required before any repository read and real downstream repositories remain blocked
       - selected blueprint and module registry bytes come from the accepted committed context and parse as mappings
       - stale dirty unsafe missing ambiguous malformed cyclic overlapping or unbounded inputs fail closed before compilation output
       - the public result omits the repository-root value and selected file contents
