@@ -1,0 +1,99 @@
+task_id: tool-system-post-p16-canonical-description-consistency-v1
+task_type: docs_update
+target_repo: apolo183/tool-system
+target_branch: agent/post-p16-canonical-description-consistency-v1
+phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/p16i_production_operations_acceptance_decision.md
+    section_or_key: final decision
+    scope: Preserve accepted P16 Core facts without expanding authority.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Keep the repository overview consistent with accepted bounded Core evidence.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: POST-P16-CANONICAL-DESCRIPTION-CONSISTENCY-v1
+    baseline_commit: a747ccdc3a6c176721497ef5c5750525f33e423c
+    baseline_tree: canonical_main_tree_at_a747ccdc3a6c176721497ef5c5750525f33e423c
+    allowed_scope: exact_5_paths_listed_below
+    acceptance_set:
+      - README states the current 26-module inventory
+      - README no longer describes accepted P14 through P16 Core work as missing or pending
+      - optional API plugin and production authority boundaries remain unchanged
+      - no runtime blueprint provider configuration workflow or project-state modification
+    validation_set:
+      - focused phase-alignment consistency test
+      - manifest and change-plan validation
+      - full Hosted CI and governance validation
+    terminal_predicate: guarded squash merge preserves accepted Core facts and all external authority boundaries
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 2
+      review_cycles: 1
+      provider_invocations: 0
+      credential_value_accesses: 0
+      live_smoke_executions: 0
+      benchmark_executions: 0
+      real_downstream_repository_accesses: 0
+      deployment_operations: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, validation_results, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, status_text]
+scope:
+  summary: Reconcile stale README phase and module-count wording with canonical accepted facts.
+  in_scope: &files
+    - README.md
+    - docs/reports/post_p16_canonical_description_consistency.md
+    - examples/change_plans/tool_system_post_p16_canonical_description_consistency_v1.yaml
+    - examples/task_manifests/tool_system_post_p16_canonical_description_consistency_v1.yaml
+    - tests/test_phase_alignment.py
+  out_of_scope:
+    - runtime source blueprint project state provider adapters configuration templates module contracts workflows or repository manifest
+    - provider calls credentials live smoke benchmark downstream access deployment production cleanup or rollback
+allowed_files: *files
+forbidden_files:
+  - AGENTS.md
+  - REPO_MANIFEST.md
+  - blueprint/**
+  - config/**
+  - docs/modules/**
+  - docs/tool_system_project_state_v1.yaml
+  - examples/operator_config/**
+  - policy/**
+  - src/**
+  - .github/workflows/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_phase_alignment.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_post_p16_canonical_description_consistency_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_post_p16_canonical_description_consistency_v1.yaml
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@a747ccdc3a6c176721497ef5c5750525f33e423c
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: standing_chat_authority_for_routine_tool_system_development
+  approved_at: 2026-08-10 UTC+09:00
