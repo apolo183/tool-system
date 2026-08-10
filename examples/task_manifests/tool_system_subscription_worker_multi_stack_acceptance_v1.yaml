@@ -1,0 +1,120 @@
+task_id: tool-system-subscription-worker-multi-stack-acceptance-v1
+task_type: acceptance_implementation
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-multi-stack-acceptance-v1
+phase: POST_P16_PRODUCT_COMPLETION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    section_or_key: Implementation packages
+    scope: Execute package 3 with isolated Python and TypeScript fixtures covering implementation, repair, scope denial, cancellation, replay, and one local commit.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Validate bounded subscription-primary blueprint-to-code development while API, downstream, remote, production, cleanup, and rollback effects remain unauthorized.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: SUBSCRIPTION-WORKER-MULTI-STACK-ACCEPTANCE-v1
+    baseline_commit: dcf01353a4b86f7f472649a2b2c352d44393f748
+    baseline_tree: canonical_main_tree_at_dcf01353a4b86f7f472649a2b2c352d44393f748
+    allowed_scope: exact_5_paths_listed_below
+    acceptance_set:
+      - isolated Python and TypeScript public-entry fixtures use only fake Codex process I-O temporary local repositories and temporary durable state
+      - both stacks prove one-cycle implementation and exactly one remote-free local commit
+      - both stacks prove bounded failing-test repair and that the second worker prompt carries the exact current candidate
+      - both stacks reject an out-of-scope patch before an unreceipted branch or commit
+      - both stacks discard a returned patch when caller cancellation is observed before apply
+      - both stacks resume one completed durable local commit without another worker call branch or commit
+      - a clean advanced workspace has no authority and proceeds only to exact durable receipt reconciliation
+      - a clean advanced workspace without matching completed receipts fails closed before mutation
+      - default API mode remains disabled and provider credential downstream remote production cleanup and rollback operations remain zero
+      - Hosted CI passes focused multi-stack fake-I-O tests full pytest and governance validation
+      - this package does not accept the final public-entry milestone
+    validation_set:
+      - focused task-runner and local-Git fake-I-O acceptance tests
+      - Python isolated validation command
+      - TypeScript local Node isolated validation command with no package install or network
+      - full Hosted CI and governance validation
+    terminal_predicate: every frozen Python and TypeScript acceptance scenario passes at the exact five-path closure with all external-effect counters zero
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 4
+      review_cycles: 1
+      hosted_ci_runs: 5
+      fake_codex_invocations: 40
+      real_codex_invocations: 0
+      provider_invocations: 0
+      credential_value_accesses: 0
+      real_downstream_accesses: 0
+      remote_repository_operations: 0
+      production_operations: 0
+      project_cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, validation_results, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, status_text]
+scope:
+  summary: Validate the public subscription-worker route across isolated Python and TypeScript repositories and close completed-commit replay.
+  in_scope: &files
+    - docs/reports/subscription_worker_multi_stack_acceptance_v1.md
+    - examples/change_plans/tool_system_subscription_worker_multi_stack_acceptance_v1.yaml
+    - examples/task_manifests/tool_system_subscription_worker_multi_stack_acceptance_v1.yaml
+    - src/tool_system/local_git/orchestrator.py
+    - tests/test_task_runner.py
+  out_of_scope:
+    - real Codex ChatGPT Web browser or API provider invocation
+    - dependency install package download benchmark or real downstream access
+    - remote push pull-request publication target mutation production deployment cleanup or rollback
+    - blueprint project-state provider adapter workflow registry contract or credential changes
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    commit_sha: dcf01353a4b86f7f472649a2b2c352d44393f748
+    why_relevant: It explicitly defines this package and its acceptance matrix.
+  - repo: apolo183/tool-system
+    path: src/tool_system/runner/task_runner.py
+    commit_sha: dcf01353a4b86f7f472649a2b2c352d44393f748
+    why_relevant: It owns the accepted exact-bound public execution composition.
+  - repo: apolo183/tool-system
+    path: src/tool_system/local_git/orchestrator.py
+    commit_sha: dcf01353a4b86f7f472649a2b2c352d44393f748
+    why_relevant: It owns remote-free workspace creation and durable completed-commit reconciliation.
+allowed_files: *files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/**
+  - config/**
+  - policy/**
+  - .github/**
+  - docs/tool_system_project_state_v1.yaml
+  - docs/modules/**
+  - src/tool_system/ai_worker/**
+  - src/tool_system/provider_portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_task_runner.py tests/test_local_git_orchestrator.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  squash_merge_authorized: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+rollback:
+  method: git_revert
+  reference: tool-system@dcf01353a4b86f7f472649a2b2c352d44393f748
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: standing_user_instruction_auto_advance_routine_tool_system_packages_until_major_milestone
+  approved_at: 2026-08-10 UTC+09:00
