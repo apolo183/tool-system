@@ -52,6 +52,34 @@ _SUBSCRIPTION_PACKET_VERSION = "subscription_development_authority_packet_v1"
 _SUBSCRIPTION_COMPILATION_PACKET_VERSION = (
     "subscription_development_context_compilation_packet_v1"
 )
+_SUBSCRIPTION_AUTHORITY_BINDING_VERSION = (
+    "subscription_public_entry_authority_binding_v1"
+)
+_SUBSCRIPTION_AUTHORITY_INPUT_MAX_BYTES = 1_048_576
+
+
+class _SubscriptionUniqueKeyLoader(yaml.SafeLoader):
+    """Reject ambiguous mapping keys in public-entry authority manifests."""
+
+
+def _construct_subscription_unique_mapping(
+    loader: _SubscriptionUniqueKeyLoader,
+    node: yaml.MappingNode,
+    deep: bool = False,
+) -> dict[str, object]:
+    mapping: dict[str, object] = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if not isinstance(key, str) or key in mapping:
+            raise ValueError("SUBSCRIPTION_AUTHORITY_MANIFEST_AMBIGUOUS")
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+_SubscriptionUniqueKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    _construct_subscription_unique_mapping,
+)
 
 
 def _subscription_preflight_boundary(
@@ -106,6 +134,67 @@ def _bounded_subscription_values(
             ):
                 raise ValueError(f"{field} must contain safe repo-relative paths")
     return normalized
+
+
+def _capture_subscription_authority_inputs(
+    task_manifest_path: str | Path,
+    change_plan_path: str | Path,
+) -> tuple[bytes, bytes, Mapping[str, object]]:
+    captured: list[bytes] = []
+    for raw_path in (task_manifest_path, change_plan_path):
+        path = Path(raw_path)
+        if path.is_symlink() or not path.is_file():
+            raise ValueError("SUBSCRIPTION_AUTHORITY_INPUT_UNAVAILABLE")
+        data = path.read_bytes()
+        if not data or len(data) > _SUBSCRIPTION_AUTHORITY_INPUT_MAX_BYTES:
+            raise ValueError("SUBSCRIPTION_AUTHORITY_INPUT_LIMIT_EXCEEDED")
+        captured.append(data)
+    try:
+        manifest = yaml.load(
+            captured[0].decode("utf-8"),
+            Loader=_SubscriptionUniqueKeyLoader,
+        )
+    except (UnicodeError, yaml.YAMLError) as exc:
+        raise ValueError("SUBSCRIPTION_AUTHORITY_MANIFEST_INVALID") from exc
+    if not isinstance(manifest, Mapping):
+        raise ValueError("SUBSCRIPTION_AUTHORITY_MANIFEST_INVALID")
+    return captured[0], captured[1], manifest
+
+
+def _subscription_authority_binding(
+    manifest: Mapping[str, object],
+    packet: Mapping[str, object],
+) -> tuple[Mapping[str, object], str]:
+    expected: dict[str, object] = {
+        "binding_version": _SUBSCRIPTION_AUTHORITY_BINDING_VERSION,
+        "enabled": True,
+        "repository_root_identity_sha256": packet[
+            "repository_root_identity_sha256"
+        ],
+        "expected_head": packet["expected_head"],
+        "blueprint_path": packet["blueprint_path"],
+        "module_registry_path": packet["module_registry_path"],
+        "milestone_ids": list(packet["milestone_ids"]),
+        "acceptance_requirements": list(packet["acceptance_requirements"]),
+        "governance_paths": list(packet["governance_paths"]),
+        "query_terms": list(packet["query_terms"]),
+        "seed_paths": list(packet["seed_paths"]),
+        "repository_read_authorized": True,
+        "worker_execution_authorized": False,
+        "local_git_write_authorized": False,
+    }
+    observed = manifest.get("subscription_public_entry")
+    if not isinstance(observed, Mapping) or dict(observed) != expected:
+        raise ValueError("SUBSCRIPTION_AUTHORITY_BINDING_MISMATCH")
+    binding_sha256 = hashlib.sha256(
+        json.dumps(
+            expected,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    return expected, binding_sha256
 
 
 def run_subscription_public_entry_preflight(
