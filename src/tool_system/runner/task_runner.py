@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
 from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
+from tool_system.development_loop import (
+    DevelopmentLoopLimits,
+    FrozenDevelopmentContract,
+    run_development_loop,
+)
 from tool_system.gate.command_runner import run_commands
 from tool_system.gate.test_gate import build_gate_decision
 from tool_system.manifest.task_manifest import load_yaml_file
@@ -17,6 +23,93 @@ from tool_system.runner.active_gate_resolver import (
     paths_match,
     resolve_change_plan_from_active_gates,
 )
+from tool_system.worker_adapter import (
+    AdapterRequest,
+    WorkerAdapter,
+    build_subscription_development_worker,
+)
+
+
+_SUBSCRIPTION_WORKER_ADAPTER_KIND = "codex_cli_subscription_worker_adapter"
+
+
+def _subscription_pipeline_boundary_record(
+    *,
+    status: str,
+    adapter_kind: str,
+    terminal_code: str | None = None,
+    reasons: list[str] | None = None,
+) -> dict[str, object]:
+    return {
+        "status": status,
+        "mode": "subscription_worker_development_pipeline",
+        "adapter_kind": adapter_kind,
+        "terminal_code": terminal_code,
+        "reasons": list(reasons or []),
+        "api_mode_enabled": False,
+        "provider_invocations": 0,
+        "provider_credential_value_accesses": 0,
+        "target_repo_mutations": 0,
+        "remote_repository_operations": 0,
+        "local_git_operations": 0,
+    }
+
+
+def run_subscription_development_pipeline(
+    *,
+    contract: FrozenDevelopmentContract,
+    baseline_files: Mapping[str, object],
+    adapter: WorkerAdapter,
+    adapter_request: AdapterRequest,
+    validator: Callable[[Mapping[str, str]], Mapping[str, object]],
+    code_reviewer: Callable[[Mapping[str, object]], Mapping[str, object]],
+    contract_reviewer: Callable[[Mapping[str, object]], Mapping[str, object]],
+    limits: DevelopmentLoopLimits | None = None,
+    resume_state: Mapping[str, object] | None = None,
+    cancellation_requested: Callable[[], bool] | None = None,
+) -> dict[str, object]:
+    """Run the bounded loop through the guarded subscription-worker adapter."""
+
+    adapter_kind = str(getattr(adapter, "adapter_kind", "unknown"))
+    if adapter_kind != _SUBSCRIPTION_WORKER_ADAPTER_KIND:
+        return _subscription_pipeline_boundary_record(
+            status="BLOCK",
+            adapter_kind=adapter_kind,
+            terminal_code="UNSUPPORTED_SUBSCRIPTION_WORKER_ADAPTER",
+            reasons=["only the guarded Codex CLI subscription adapter is accepted"],
+        )
+
+    worker = build_subscription_development_worker(
+        adapter=adapter,
+        request_template=adapter_request,
+    )
+    result = run_development_loop(
+        contract=contract,
+        baseline_files=baseline_files,
+        worker=worker,
+        validator=validator,
+        code_reviewer=code_reviewer,
+        contract_reviewer=contract_reviewer,
+        limits=limits,
+        resume_state=resume_state,
+        cancellation_requested=cancellation_requested,
+    )
+    return {
+        **result,
+        **_subscription_pipeline_boundary_record(
+            status=str(result.get("status", "BLOCK")),
+            adapter_kind=adapter_kind,
+            terminal_code=(
+                str(result["terminal_code"])
+                if result.get("terminal_code") is not None
+                else None
+            ),
+            reasons=[str(reason) for reason in result.get("reasons", [])],
+        ),
+        "subscription_worker_invocations": int(
+            result.get("worker_call_count", 0)
+        ),
+    }
 
 
 def _status_from_reasons(reasons: list[str]) -> str:

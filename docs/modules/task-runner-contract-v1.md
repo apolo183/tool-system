@@ -2,7 +2,10 @@
 
 This file defines the module contract owned by the current
 `task_runner` module. Configured commands and audit paths remain bounded by the
-explicit current task pair and caller authorization.
+explicit current task pair and caller authorization. The subscription-development
+path accepts only the guarded Codex CLI subscription adapter kind and returns an
+in-memory candidate; it grants no API, target-repository, local-Git, remote, or
+production authority.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -33,8 +36,8 @@ module_compound_contract:
       - kind: exact
         name: tool_system.runner.task_runner
   role:
-    summary: execute validated task, batch, graph, and stage plans through bounded gates
-    responsibility_boundary: Resolve one explicit current task pair, run validation and policy gates, optionally execute its configured local commands, aggregate batches or graphs, and record local audit results.
+    summary: execute validated task plans and compose bounded subscription-worker development pipelines through bounded gates
+    responsibility_boundary: Resolve one explicit current task pair, run validation and policy gates, optionally execute its configured local commands, aggregate batches or graphs, compose one guarded subscription-worker adapter with the in-memory development loop, and record local audit results without granting downstream effects.
   natural_owner_evidence_paths:
     - src/tool_system/gate/command_runner.py
     - src/tool_system/gate/test_gate.py
@@ -45,24 +48,29 @@ module_compound_contract:
     basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids:
+      - development_loop
       - manifest_validation
       - process_authority
       - repository_controller
       - task_planner
+      - worker_adapter
     direct_consumer_module_ids:
       - cli_frontend
   input_contract:
     registered_inputs:
       - validated_task_manifest_change_plan_and_task_graph
-    boundary: Accept one explicit validated manifest/change-plan pair or a validated batch, graph, or requirement route with caller-selected policies, working directory, and audit path.
+      - frozen_development_contract_baseline_and_explicit_subscription_worker_adapter
+    boundary: Accept one explicit validated manifest/change-plan pair or a validated batch, graph, or requirement route with caller-selected policies, working directory, and audit path; or accept a frozen development contract, in-memory baseline, guarded subscription-worker adapter request, validators, reviewers, finite limits, resume state, and cancellation callback.
   output_contract:
     registered_outputs:
       - pipeline_result_gate_decision_and_audit_record
-    boundary: Return pair resolution, validation, gate, command, batch, graph, stage, status, reason, and optional audit-path evidence.
+      - sealed_subscription_worker_candidate_and_effect_boundary_record
+    boundary: Return pair resolution, validation, gate, command, batch, graph, stage, status, reason, and optional audit-path evidence; the subscription path additionally returns the bounded development-loop result, sealed in-memory candidate, adapter kind, worker-call count, and explicit zero API, provider, provider-credential, target-repository, remote-repository, local-Git, and production effect evidence.
   error_contract:
     registered_error_semantics:
       - first_failed_gate_or_command_stops_pipeline
-    boundary: Missing current pair, invalid replay request, failed authority, manifest, plan, policy, gate, command, graph, or batch input stops downstream execution.
+      - unsupported_adapter_or_blocked_development_loop_stops_before_downstream_effects
+    boundary: Missing current pair, invalid replay request, failed authority, manifest, plan, policy, gate, command, graph, batch, unsupported subscription adapter, invalid structured worker result, or blocked development-loop input stops downstream execution.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -111,15 +119,25 @@ module_compound_contract:
         activation_condition: An exact configured command is selected from the explicit current change plan and every process-authority, manifest, policy, gate, and caller authorization precondition passes.
         boundary: This is the conservative maximum classification of the exact configured command. It is not a claim that the runner directly performs a production operation and does not grant command execution or any listed effect authority.
         classification_grants_authority: false
+      - capability_id: guarded-subscription-worker-development-pipeline
+        capability_state: conditional-delegated-maximum
+        effect_classes:
+          - network_write
+          - external_system_write
+        evidence_paths:
+          - src/tool_system/runner/task_runner.py
+        activation_condition: A caller explicitly injects the guarded Codex CLI subscription adapter with its own enabled configuration, subscription-worker authorization, isolated workspace, finite limits, and cancellation boundary.
+        boundary: The task runner rejects every other adapter kind before invocation. This conservative classification grants no API, provider, provider-credential, target-repository, local-Git, remote-repository, production, cleanup, or rollback authority.
+        classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve explicit-pair resolution, gate order, stop behavior, command-result fields, batch and graph aggregation, no-target flags, and audit result shapes.
+    interface_compatible_replacement: Preserve explicit-pair resolution, gate order, stop behavior, command-result fields, batch and graph aggregation, guarded subscription-adapter selection, structured in-memory candidate results, hard-zero downstream effect fields, no-target flags, and audit result shapes.
     interface_incompatible_change: Requires a new aggregate interface version and revalidation of the CLI plus every upstream validation and planning boundary.
   rollback_contract:
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_runner@1.1.0
     method: Revert through a separately audited pull request and preserve prior task, batch, graph, stage, command, and audit evidence.
   replacement_contract:
-    activation_rule: Replace only after explicit-pair, replay-block, policy, command, batch, graph, stage, audit, no-target-mutation, and CLI tests pass.
+    activation_rule: Replace only after explicit-pair, replay-block, policy, command, batch, graph, stage, audit, guarded subscription-adapter, fake-process development-loop, unsupported-adapter denial, no-target-mutation, and CLI tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -164,6 +182,11 @@ module_compound_contract:
           - src/tool_system/gate/command_runner.py
           - src/tool_system/runner/task_runner.py
         boundary: Invoke the exact configured command only after explicit-pair, process-authority, manifest, plan, policy, gate, and caller authorization preconditions pass; classification itself grants no execution authority.
+      - system_id: codex-cli-subscription-worker
+        mode: explicitly injected guarded adapter only
+        evidence_paths:
+          - src/tool_system/runner/task_runner.py
+        boundary: Compose the in-memory development loop with only the guarded Codex CLI subscription adapter kind after adapter-owned enablement and authorization checks; reject unknown or optional-API adapters before invocation and grant no downstream effect authority.
   non_claims:
     provider_execution_authorized: false
     target_repo_mutation_authorized: false

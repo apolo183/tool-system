@@ -1,0 +1,90 @@
+task_id: tool-system-subscription-worker-task-runner-pipeline-core-v1
+task_type: implementation
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-public-entry-integration-v1
+phase: POST_P16_PRODUCT_COMPLETION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    section_or_key: required public flow
+    scope: Compose the guarded subscription adapter with the bounded development loop inside task-runner before formal CLI and local-Git integration.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded structured development with the subscription route as the default product mainline and API providers default off.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: SUBSCRIPTION-WORKER-TASK-RUNNER-PIPELINE-CORE-v1
+    baseline_commit: 205637aa9453cd16972c08909d91f16f251414d5
+    baseline_tree: canonical_main_tree_at_205637aa9453cd16972c08909d91f16f251414d5
+    allowed_scope: exact_12_paths_listed_below
+    acceptance_set:
+      - task-runner composes the guarded Codex CLI adapter with the bounded development loop
+      - every other adapter kind is rejected before invocation
+      - only structured allowed-scope patches reach validation and independent review
+      - successful in-memory candidates are sealed
+      - API mode provider calls provider credentials target repository remote repository local Git and production operations remain zero
+      - task-runner development-loop and worker-adapter dependency contracts and registry seals are exact
+      - Hosted CI uses an injected fake subprocess and fixture repository only
+    validation_set:
+      - focused task-runner worker-adapter development-loop and module-registry tests
+      - full Hosted CI and governance validation
+    terminal_predicate: pipeline core is merged while formal CLI and local-Git closure remain explicitly pending
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 3
+      review_cycles: 1
+      provider_invocations: 0
+      credential_value_accesses: 0
+      real_codex_invocations: 0
+      downstream_accesses: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, validation_results, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, status_text]
+scope:
+  summary: Close the task-runner-owned guarded subscription adapter to in-memory development-loop pipeline core.
+  in_scope: &files
+    - config/module_registry_v1.yaml
+    - docs/modules/development-loop-contract-v1.md
+    - docs/modules/task-runner-contract-v1.md
+    - docs/modules/worker-adapter-contract-v1.md
+    - docs/reports/subscription_worker_task_runner_pipeline_core_v1.md
+    - docs/tool_system_module_registry_contract_v1.md
+    - examples/change_plans/tool_system_subscription_worker_task_runner_pipeline_core_v1.yaml
+    - examples/task_manifests/tool_system_subscription_worker_task_runner_pipeline_core_v1.yaml
+    - src/tool_system/runner/task_runner.py
+    - tests/test_module_contracts.py
+    - tests/test_module_registry.py
+    - tests/test_task_runner.py
+  out_of_scope:
+    - formal CLI parsing repository-context blueprint compiler task graph isolated filesystem workspace local Git real Codex APIs credentials downstream production cleanup or rollback
+allowed_files: *files
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_task_runner.py tests/test_worker_adapter_contract.py tests/test_worker_adapter_orchestration.py tests/test_development_loop.py tests/test_module_registry.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  squash_merge_authorized: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+rollback:
+  method: git_revert
+  reference: tool-system@205637aa9453cd16972c08909d91f16f251414d5
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: authorized_subscription_worker_public_entry_production_closure_lifecycle
+  approved_at: 2026-08-10 UTC+09:00

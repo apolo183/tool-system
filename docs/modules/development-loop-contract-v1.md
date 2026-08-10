@@ -37,6 +37,7 @@ module_compound_contract:
     direct_provider_module_ids: []
     direct_consumer_module_ids:
       - local_git
+      - task_runner
   input_contract:
     registered_inputs:
       - frozen_development_contract_virtual_repository_and_fixture_callbacks_v1
@@ -57,7 +58,7 @@ module_compound_contract:
     classification_grants_authority: false
   compatibility_policy:
     interface_compatible_replacement: Preserve exact frozen-contract semantics, atomic patch preconditions, caller cancellation checkpoints, validation and review set closure, recurrence fingerprint fields and exclusions, finite budgets, evidence non-reopening, canonical output, and zero external side effects.
-    interface_incompatible_change: Requires a new aggregate interface version and explicit revalidation of blueprint-compiler and future durable-orchestrator consumers.
+    interface_incompatible_change: Requires a new aggregate interface version and explicit revalidation of local-Git, task-runner, blueprint-compiler, and future durable-orchestrator consumers.
   rollback_contract:
     rollback_identity: tool-system@0b5110a2eea79ebde650e1088b787c781ddab171:development_loop@absent
     method: Revert through a separately audited pull request while preserving P14E, repository history, and P14F acceptance evidence.
