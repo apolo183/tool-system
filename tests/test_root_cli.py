@@ -94,13 +94,13 @@ def test_root_cli_develop_routes_isolated_context_compilation(
         "task-runner",
         "--seed-path",
         "src/tool_system/runner/task_runner.py",
-        "--isolated-fixture-repository",
+        "--repository-read-authorized",
     ])
 
     output = capsys.readouterr().out
     assert exit_code == 0
     assert captured["repository_root"] == private_repository_root
-    assert captured["isolated_fixture_repository"] is True
+    assert captured["repository_read_authorized"] is True
     assert '"mode": "subscription_worker_public_entry_context_compile"' in output
     assert '"worker_execution_authorized": false' in output
     assert '"repository_root_identity_sha256"' in output
