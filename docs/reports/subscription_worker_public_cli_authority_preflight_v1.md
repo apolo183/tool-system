@@ -1,0 +1,7 @@
+# Subscription Worker Public CLI Authority Preflight v1
+
+This package extends the existing root `tool-system` CLI with one `develop` command that accepts an explicit manifest/change-plan pair plus bounded subscription-development selection metadata. The task-runner validates current process authority, manifest, change plan, policy, and exact pair binding with command execution disabled. Only a passing authority result produces a canonical, content-addressed, non-executing dispatch packet.
+
+The packet records a hash of the caller-selected repository-root identity rather than printing the private path. It fixes the expected commit, blueprint and module-registry repo-relative paths, milestones, acceptance items, governance paths, query terms, and seed paths. It explicitly states that repository context is not yet built, the blueprint is not yet compiled, worker execution is not authorized, and API/provider, credential, repository, Git, remote, production, cleanup, and rollback operations are zero.
+
+This short stage establishes the formal public command and authority ordering only. The next package must consume this packet, revalidate the real repository snapshot, and compose repository-context and blueprint-compiler interfaces before any subscription adapter can be reached. No real Codex, API, credential, repository mutation, Git, remote, production, cleanup, or rollback operation occurs.

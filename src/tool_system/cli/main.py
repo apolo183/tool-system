@@ -6,7 +6,11 @@ from pathlib import Path
 from typing import Sequence
 
 from tool_system.runner.task_graph_runner import run_task_graph_pipeline
-from tool_system.runner.task_runner import run_batch_file, run_task_pipeline
+from tool_system.runner.task_runner import (
+    run_batch_file,
+    run_subscription_public_entry_preflight,
+    run_task_pipeline,
+)
 
 
 def _add_common_options(parser: argparse.ArgumentParser) -> None:
@@ -43,6 +47,43 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--audit-path", type=Path, default=Path("artifacts/task_runner_audit.jsonl"))
     _add_common_options(run_parser)
 
+    develop_parser = subparsers.add_parser(
+        "develop",
+        help="Validate one subscription-development authority packet without execution.",
+    )
+    develop_parser.add_argument("task_manifest", type=Path)
+    develop_parser.add_argument("--change-plan", type=Path, required=True)
+    develop_parser.add_argument("--repository-root", type=Path, required=True)
+    develop_parser.add_argument("--expected-head", required=True)
+    develop_parser.add_argument(
+        "--blueprint-path",
+        default="blueprint/tool_system_v0.yaml",
+    )
+    develop_parser.add_argument(
+        "--module-registry-path",
+        default="config/module_registry_v1.yaml",
+    )
+    develop_parser.add_argument("--milestone", action="append", required=True)
+    develop_parser.add_argument("--acceptance", action="append", required=True)
+    develop_parser.add_argument("--governance-path", action="append", required=True)
+    develop_parser.add_argument("--query-term", action="append", required=True)
+    develop_parser.add_argument("--seed-path", action="append", default=[])
+    develop_parser.add_argument(
+        "--process-authority",
+        type=Path,
+        default=Path("config/process_authority_v1.yaml"),
+    )
+    develop_parser.add_argument(
+        "--policy",
+        type=Path,
+        default=Path("policy/repo_write_policy.yaml"),
+    )
+    develop_parser.add_argument(
+        "--autonomy-policy",
+        type=Path,
+        default=Path("policy/autonomy_policy.yaml"),
+    )
+
     batch_parser = subparsers.add_parser("batch", help="Run multiple task manifest and change-plan pairs.")
     batch_parser.add_argument("batch", type=Path)
     batch_parser.add_argument("--audit-path", type=Path, default=Path("artifacts/batch_runner_audit.jsonl"))
@@ -71,6 +112,23 @@ def main(argv: Sequence[str] | None = None) -> int:
             cwd=args.cwd,
             audit_path=args.audit_path,
             execute_commands=not args.skip_commands,
+        )
+    elif args.command == "develop":
+        output = run_subscription_public_entry_preflight(
+            task_manifest_path=args.task_manifest,
+            change_plan_path=args.change_plan,
+            repository_root=args.repository_root,
+            expected_head=args.expected_head,
+            blueprint_path=args.blueprint_path,
+            module_registry_path=args.module_registry_path,
+            milestone_ids=args.milestone,
+            acceptance_requirements=args.acceptance,
+            governance_paths=args.governance_path,
+            query_terms=args.query_term,
+            seed_paths=args.seed_path,
+            process_authority_path=args.process_authority,
+            policy_path=args.policy,
+            autonomy_policy_path=args.autonomy_policy,
         )
     elif args.command == "batch":
         output = run_batch_file(
