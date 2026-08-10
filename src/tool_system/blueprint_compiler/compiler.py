@@ -128,10 +128,9 @@ def _repository_paths(context: Mapping[str, Any]) -> set[str]:
     return paths
 
 
-def _authorization(envelope: Mapping[str, Any]) -> None:
+def _authorization(envelope: Mapping[str, Any]) -> str:
     required = {
         "blueprint_approved": True,
-        "isolated_fixture_repositories_only": True,
         "target_repo_mutation_authorized": False,
         "provider_execution_authorized": False,
         "credential_value_access_authorized": False,
@@ -140,6 +139,11 @@ def _authorization(envelope: Mapping[str, Any]) -> None:
     }
     if any(envelope.get(key) is not value for key, value in required.items()):
         raise BlueprintCompilerError("AUTHORIZATION_ENVELOPE_BLOCKED")
+    if envelope.get("repository_context_read_authorized") is True:
+        return "manifest_bound_repository_context_read"
+    if envelope.get("isolated_fixture_repositories_only") is True:
+        return "legacy_isolated_fixture"
+    raise BlueprintCompilerError("AUTHORIZATION_ENVELOPE_BLOCKED")
 
 
 def _module_change(
@@ -312,7 +316,9 @@ def compile_blueprint(
 
     bounded = limits or BlueprintCompilerLimits()
     bounded.validate()
-    _authorization(authorization_envelope)
+    repository_context_authorization_mode = _authorization(
+        authorization_envelope
+    )
     tracked_paths = _repository_paths(repository_context)
     registered_modules = _registry_modules(module_registry)
     product_objective = blueprint.get("product_objective")
@@ -399,6 +405,9 @@ def compile_blueprint(
         "status": "PASS",
         "mode": "tool_system_bounded_blueprint_compile",
         "authority_effect": "none",
+        "repository_context_authorization_mode": (
+            repository_context_authorization_mode
+        ),
         "product_objective_id": product_objective["id"],
         "repository_snapshot": {
             key: repository_context["snapshot"][key]
