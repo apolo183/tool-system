@@ -21,7 +21,7 @@ bounded_closure:
     task_identity: SUBSCRIPTION-WORKER-PUBLIC-ENTRY-EXECUTION-INTEGRATION-v1
     baseline_commit: 9c596282dbc784d8a5afdc1f4d283f4828adbf6b
     baseline_tree: canonical_main_tree_at_9c596282dbc784d8a5afdc1f4d283f4828adbf6b
-    allowed_scope: exact_21_paths_listed_below
+    allowed_scope: exact_19_paths_listed_below
     acceptance_set:
       - the existing root CLI exposes one develop-execute route while the existing develop route remains read-only
       - default invocation performs no worker call workspace write database write or local Git effect
@@ -78,8 +78,6 @@ scope:
     - src/tool_system/local_git/orchestrator.py
     - src/tool_system/runner/task_runner.py
     - tests/test_command_runner.py
-    - tests/test_development_loop.py
-    - tests/test_local_git_orchestrator.py
     - tests/test_module_registry.py
     - tests/test_root_cli.py
     - tests/test_task_runner.py
