@@ -270,14 +270,20 @@ def test_task_runner_delegates_execution_to_protected_revalidation(
 
 
 def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
-    calls: list[list[str]] = []
+    calls: list[dict[str, object]] = []
 
     def fake_run(
         argv: list[str], **kwargs: Any
     ) -> subprocess.CompletedProcess[str]:
-        calls.append(argv)
         prompt = json.loads(str(kwargs["input"]))
-        assert prompt["attempt_number"] == 1
+        calls.append(prompt)
+        attempt = len(calls)
+        expected_content = "return 1\n" if attempt == 1 else "return 0\n"
+        replacement_content = "return 0\n" if attempt == 1 else "return 2\n"
+        assert prompt["attempt_number"] == attempt
+        assert prompt["candidate_files"] == {
+            "src/app.py": expected_content
+        }
         assert argv[-1] == "-"
         assert "--ignore-user-config" in argv
         assert argv[argv.index("--sandbox") + 1] == "read-only"
@@ -287,9 +293,9 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
                     "op": "replace",
                     "path": "src/app.py",
                     "expected_sha256": hashlib.sha256(
-                        b"return 1\n"
+                        expected_content.encode("utf-8")
                     ).hexdigest(),
-                    "content": "return 2\n",
+                    "content": replacement_content,
                 }
             ],
             "usage": {"duration_ms": 1, "cost_microunits": 0},
@@ -321,6 +327,19 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
         validation_set=("pytest",),
     )
 
+    def validator(files: dict[str, str]) -> dict[str, object]:
+        passed = files.get("src/app.py") == "return 2\n"
+        return {
+            "validation_results": {
+                "pytest": {
+                    "status": "PASS" if passed else "BLOCK",
+                }
+            },
+            "satisfied_acceptance_items": (
+                ["implementation-correct"] if passed else []
+            ),
+        }
+
     result = run_subscription_development_pipeline(
         contract=contract,
         baseline_files={"src/app.py": "return 1\n"},
@@ -334,18 +353,7 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
                 "subscription_worker_authorized": True,
             },
         ),
-        validator=lambda files: {
-            "validation_results": {
-                "pytest": {
-                    "status": (
-                        "PASS"
-                        if files.get("src/app.py") == "return 2\n"
-                        else "BLOCK"
-                    )
-                }
-            },
-            "satisfied_acceptance_items": ["implementation-correct"],
-        },
+        validator=validator,
         code_reviewer=lambda _: {"violated_acceptance_items": []},
         contract_reviewer=lambda _: {"violated_acceptance_items": []},
     )
@@ -361,7 +369,7 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
     assert result["target_repo_mutations"] == 0
     assert result["remote_repository_operations"] == 0
     assert result["local_git_operations"] == 0
-    assert result["subscription_worker_invocations"] == 1
+    assert result["subscription_worker_invocations"] == 2
 
 
 def test_subscription_pipeline_rejects_unknown_adapter_before_invocation() -> None:
@@ -896,27 +904,16 @@ def test_subscription_public_entry_executes_one_fake_worker_local_commit(
     ) -> subprocess.CompletedProcess[str]:
         prompt = json.loads(str(kwargs["input"]))
         calls.append(prompt)
-        if len(calls) == 1:
-            expected_content = (
-                "def total(value: int) -> int:\n"
-                "    return value * 100\n"
-            )
-            replacement_content = (
-                "def total(value: int) -> int:\n"
-                "    return value * 2\n"
-            )
-        else:
-            expected_content = (
-                "def total(value: int) -> int:\n"
-                "    return value * 2\n"
-            )
-            replacement_content = (
-                "def total(value: int) -> int:\n"
-                "    return value\n"
-            )
-        assert (
-            prompt["candidate_files"]["src/billing/service.py"]
-            == expected_content
+        expected_content = (
+            "def total(value: int) -> int:\n"
+            "    return value * 100\n"
+        )
+        replacement_content = (
+            "def total(value: int) -> int:\n"
+            "    return value\n"
+        )
+        assert prompt["candidate_files"]["src/billing/service.py"] == (
+            expected_content
         )
         structured = {
             "operations": [
@@ -973,10 +970,10 @@ def test_subscription_public_entry_executes_one_fake_worker_local_commit(
         adapter=adapter,
     )
 
-    assert result["status"] == "PASS"
+    assert result["status"] == "PASS", result
     assert result["terminal_code"] == "LOCAL_COMMIT_RECORDED"
-    assert result["worker_invocations"] == 2
-    assert result["validation_command_invocations"] == 2
+    assert result["worker_invocations"] == 1
+    assert result["validation_command_invocations"] == 1
     assert result["provider_invocations"] == 0
     assert result["remote_repository_operations"] == 0
     assert result["target_repo_mutations"] == 0
