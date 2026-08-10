@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -14,7 +15,11 @@ from tool_system.runner.task_runner import (
     run_subscription_development_pipeline,
     run_task_pipeline,
 )
-from tool_system.worker_adapter.contract import AdapterRequest, AdapterResult
+from tool_system.worker_adapter.contract import (
+    AdapterRequest,
+    CodexCLIAdapterConfig,
+    CodexCLISubscriptionWorkerAdapter,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -87,42 +92,41 @@ def test_task_runner_delegates_execution_to_protected_revalidation(
     assert protected["subprocess_call_count"] == len(calls)
 
 
-class _PipelineAdapter:
-    adapter_kind = "fixture_subscription_pipeline_adapter"
-
-    def run(self, request: AdapterRequest) -> AdapterResult:
-        prompt = str(request.context["prompt"])
-        assert '"attempt_number":1' in prompt
-        return AdapterResult(
-            adapter_id=request.adapter_id,
-            role=request.role,
-            action=request.action,
-            status="PASS",
-            adapter_kind=self.adapter_kind,
-            execute=True,
-            calls_external_worker=True,
-            writes_target_repo=False,
-            executes_target_repo_mutation=False,
-            production_deployment=False,
-            output={
-                "structured_result": {
-                    "operations": [
-                        {
-                            "op": "replace",
-                            "path": "src/app.py",
-                            "expected_sha256": hashlib.sha256(
-                                b"return 1\n"
-                            ).hexdigest(),
-                            "content": "return 2\n",
-                        }
-                    ],
-                    "usage": {"duration_ms": 1, "cost_microunits": 0},
-                }
-            },
-        )
-
 
 def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
+    calls: list[list[str]] = []
+
+    def fake_run(
+        argv: list[str], **_: Any
+    ) -> subprocess.CompletedProcess[str]:
+        calls.append(argv)
+        prompt = json.loads(argv[-1])
+        assert prompt["attempt_number"] == 1
+        structured = {
+            "operations": [
+                {
+                    "op": "replace",
+                    "path": "src/app.py",
+                    "expected_sha256": hashlib.sha256(
+                        b"return 1\n"
+                    ).hexdigest(),
+                    "content": "return 2\n",
+                }
+            ],
+            "usage": {"duration_ms": 1, "cost_microunits": 0},
+        }
+        return subprocess.CompletedProcess(
+            argv,
+            0,
+            stdout=json.dumps(structured, sort_keys=True) + "\n",
+            stderr="",
+        )
+
+    adapter = CodexCLISubscriptionWorkerAdapter(
+        CodexCLIAdapterConfig(executable="codex", enabled=True),
+        process_runner=fake_run,
+        source_environment={"PATH": "/usr/bin", "HOME": "/isolated/home"},
+    )
     contract = FrozenDevelopmentContract(
         task_digest="a" * 64,
         baseline_tree="b" * 40,
@@ -134,7 +138,7 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
     result = run_subscription_development_pipeline(
         contract=contract,
         baseline_files={"src/app.py": "return 1\n"},
-        adapter=_PipelineAdapter(),
+        adapter=adapter,
         adapter_request=AdapterRequest(
             adapter_id="pipeline-adapter",
             role="patch_author",
@@ -163,9 +167,46 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
     assert result["status"] == "PASS"
     assert result["terminal_candidate_sealed"] is True
     assert result["candidate_files"] == {"src/app.py": "return 2\n"}
-    assert result["adapter_kind"] == "fixture_subscription_pipeline_adapter"
+    assert result["adapter_kind"] == "codex_cli_subscription_worker_adapter"
+    assert len(calls) == 1
     assert result["api_mode_enabled"] is False
     assert result["provider_invocations"] == 0
-    assert result["credential_value_accesses"] == 0
-    assert result["remote_operations"] == 0
+    assert result["provider_credential_value_accesses"] == 0
+    assert result["target_repo_mutations"] == 0
+    assert result["remote_repository_operations"] == 0
+    assert result["local_git_operations"] == 0
+    assert result["subscription_worker_invocations"] == 1
+
+
+def test_subscription_pipeline_rejects_unknown_adapter_before_invocation() -> None:
+    class UnknownAdapter:
+        adapter_kind = "optional_api_provider_adapter"
+
+        def run(self, _: AdapterRequest) -> object:
+            raise AssertionError("unknown adapter must not be invoked")
+
+    result = run_subscription_development_pipeline(
+        contract=FrozenDevelopmentContract(
+            task_digest="a" * 64,
+            baseline_tree="b" * 40,
+            allowed_scope=("src/app.py",),
+            acceptance_set=("implementation-correct",),
+            validation_set=("pytest",),
+        ),
+        baseline_files={"src/app.py": "return 1\n"},
+        adapter=UnknownAdapter(),  # type: ignore[arg-type]
+        adapter_request=AdapterRequest(
+            adapter_id="unknown",
+            role="patch_author",
+            action="implement",
+        ),
+        validator=lambda _: {},
+        code_reviewer=lambda _: {},
+        contract_reviewer=lambda _: {},
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "UNSUPPORTED_SUBSCRIPTION_WORKER_ADAPTER"
+    assert result["provider_invocations"] == 0
+    assert result["remote_repository_operations"] == 0
     assert result["local_git_operations"] == 0
