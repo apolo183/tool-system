@@ -812,6 +812,7 @@ def _bound_subscription_execution_pair(
         encoding="utf-8",
     )
     manifest = load_yaml_file(manifest_path)
+    manifest["verification"]["commands"] = [validation_command]
     manifest["subscription_public_entry_execution"] = {
         "binding_version": "subscription_public_entry_execution_binding_v1",
         "enabled": True,
