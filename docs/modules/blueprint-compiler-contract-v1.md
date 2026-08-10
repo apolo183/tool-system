@@ -39,15 +39,15 @@ module_compound_contract:
   input_contract:
     registered_inputs:
       - approved_blueprint_repository_context_module_registry_authorization_and_acceptance_v1
-    boundary: Accept caller-owned mappings for one approved product objective, selected milestones with exact module-change bindings, accepted repository context, current module inventory, an isolated-fixture authorization envelope, finite limits, and acceptance requirements.
+    boundary: Accept caller-owned mappings for one approved product objective, selected milestones with exact module-change bindings, accepted repository context, current module inventory, a non-authorizing envelope that either carries exact manifest-bound repository-context read authority or retains the legacy isolated-fixture route, finite limits, and acceptance requirements.
   output_contract:
     registered_outputs:
       - bounded_blueprint_development_compilation_v1
-    boundary: Return deterministic milestone-module bindings, module and executable task DAGs, non-authorizing document descriptors, isolation paths, replacement and rollback nodes, compatibility validation, hashes, and zero-operation counters.
+    boundary: Return deterministic milestone-module bindings, module and executable task DAGs, non-authorizing document descriptors, isolation paths, replacement and rollback nodes, compatibility validation, repository-context authorization-mode classification, hashes, and zero-operation counters.
   error_contract:
     registered_error_semantics:
       - ambiguous_stale_unauthorized_unbounded_overlapping_or_cyclic_input_blocks
-    boundary: Missing approval, rejected context, authority-bearing owner proposals, malformed identifiers or paths, invalid module preconditions, unknown dependencies, overlap, cycles, invalid task graphs, and exceeded finite limits fail closed.
+    boundary: Missing approval, rejected context, missing compatible repository-context authorization, authority-bearing owner proposals, malformed identifiers or paths, invalid module preconditions, unknown dependencies, overlap, cycles, invalid task graphs, and exceeded finite limits fail closed.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes: []
@@ -55,13 +55,13 @@ module_compound_contract:
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve exact module-change binding, finite limits, deterministic ordering and hashes, task-planner graph and task-runner consumer compatibility, non-authorizing outputs, fail-closed errors, and zero side effects.
+    interface_compatible_replacement: Preserve exact module-change binding, the manifest-bound and retained legacy fixture authorization modes, finite limits, deterministic ordering and hashes, task-planner graph and task-runner consumer compatibility, non-authorizing outputs, fail-closed errors, and zero side effects.
     interface_incompatible_change: Requires a new aggregate interface version and explicit revalidation of repository-context and future development-loop consumers.
   rollback_contract:
     rollback_identity: tool-system@00793ad07bba2e3fe3bd29882e83788d32697da6:blueprint_compiler@absent
     method: Revert through a separately audited pull request while preserving P14D, repository history, and P14E acceptance evidence.
   replacement_contract:
-    activation_rule: Replace only after deterministic compilation, module binding, graph compatibility, limit, authorization, overlap, cycle, path, and no-side-effect tests pass.
+    activation_rule: Replace only after deterministic compilation, both compatible repository-context authorization modes, module binding, graph compatibility, limit, overlap, cycle, path, and no-side-effect tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
