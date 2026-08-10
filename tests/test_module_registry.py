@@ -546,7 +546,7 @@ def _registry_effect_matrix(
 
 def assert_effect_oracle(registry: dict[str, Any]) -> None:
     expanded, grouped = authority_effect_matrices()
-    assert len(expanded) == 96
+    assert len(expanded) == 97
     assert len(grouped) == 45
     assert _registry_effect_matrix(registry) == grouped
 
@@ -1105,7 +1105,7 @@ def test_module_contracts_close_identity_boundaries_dag_and_effects() -> None:
         edge_count += len(expected_dependencies)
         key = (row["aggregate_interface_id"], row["aggregate_interface_version"])
         assert interfaces[key]["provider_module_id"] == canonical
-    assert edge_count == 40
+    assert edge_count == 42
     assert_effect_oracle(registry)
 
 
