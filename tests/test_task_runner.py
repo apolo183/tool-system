@@ -272,11 +272,14 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
     calls: list[list[str]] = []
 
     def fake_run(
-        argv: list[str], **_: Any
+        argv: list[str], **kwargs: Any
     ) -> subprocess.CompletedProcess[str]:
         calls.append(argv)
-        prompt = json.loads(argv[-1])
+        prompt = json.loads(str(kwargs["input"]))
         assert prompt["attempt_number"] == 1
+        assert argv[-1] == "-"
+        assert "--ignore-user-config" in argv
+        assert argv[argv.index("--sandbox") + 1] == "read-only"
         structured = {
             "operations": [
                 {
@@ -290,10 +293,17 @@ def test_subscription_pipeline_composes_adapter_and_development_loop() -> None:
             ],
             "usage": {"duration_ms": 1, "cost_microunits": 0},
         }
+        final_message = Path(
+            argv[argv.index("--output-last-message") + 1]
+        )
+        final_message.write_text(
+            json.dumps(structured, sort_keys=True),
+            encoding="utf-8",
+        )
         return subprocess.CompletedProcess(
             argv,
             0,
-            stdout=json.dumps(structured, sort_keys=True) + "\n",
+            stdout='{"type":"turn.completed"}\n',
             stderr="",
         )
 
