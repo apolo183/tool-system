@@ -325,21 +325,31 @@ def create_isolated_local_workspace(
                 raise DurableLocalGitError("UNSAFE_EXISTING_WORKSPACE")
             if _git(target, "remote"):
                 raise DurableLocalGitError("REMOTE_REPOSITORY_FORBIDDEN")
-            if _git(target, "rev-parse", "HEAD") != expected_head_sha:
-                raise DurableLocalGitError("WORKSPACE_HEAD_PRECONDITION_DRIFT")
-            if _git(target, "rev-parse", "HEAD^{tree}") != expected_tree_sha:
-                raise DurableLocalGitError("WORKSPACE_TREE_PRECONDITION_DRIFT")
+            workspace_head = _git(target, "rev-parse", "HEAD")
+            workspace_tree = _git(target, "rev-parse", "HEAD^{tree}")
             if _git(target, "status", "--porcelain=v1", "--untracked-files=all"):
                 raise DurableLocalGitError("DIRTY_EXISTING_WORKSPACE")
+            if (
+                workspace_head == expected_head_sha
+                and workspace_tree != expected_tree_sha
+            ):
+                raise DurableLocalGitError("WORKSPACE_TREE_PRECONDITION_DRIFT")
+            workspace_state = (
+                "EXISTING"
+                if workspace_head == expected_head_sha
+                else "EXISTING_RECEIPT_RECONCILIATION_REQUIRED"
+            )
             return {
                 "status": "PASS",
-                "workspace_state": "EXISTING",
+                "workspace_state": workspace_state,
                 "workspace_created": False,
                 "workspace_identity_sha256": hashlib.sha256(
                     str(target).encode("utf-8")
                 ).hexdigest(),
                 "source_head": source_head,
                 "source_tree": source_tree,
+                "workspace_head": workspace_head,
+                "workspace_tree": workspace_tree,
                 "remote_count": 0,
                 "network_operations": 0,
             }
