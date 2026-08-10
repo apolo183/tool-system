@@ -33,6 +33,6 @@ Creator-owned temporary schema/result creation and automatic removal are impleme
 
 ## Validation boundary
 
-Hosted CI uses injected fake process controllers only. Tests prove exact argv shape, stdin prompt transfer, minimal environment, private schema file, schema-bound final-message parsing, strict patch rejection, independent byte limits, nonzero status, timeout, process-group TERM/KILL cancellation, redaction, and default-disabled behavior. No real Codex, ChatGPT Web, browser, API provider, credential, downstream repository, production, cleanup, or rollback operation is performed.
+Hosted CI uses injected fake process controllers only. Tests prove exact argv shape, stdin prompt transfer, minimal environment, private schema file, schema-bound final-message parsing, strict patch rejection, independent byte limits, nonzero status, timeout, process-group TERM/KILL cancellation, redaction, and default-disabled behavior. The existing task-runner subscription-pipeline integration test is updated to feed the prompt through stdin and the patch through the private final-message path; production task-runner code is unchanged. No real Codex, ChatGPT Web, browser, API provider, credential, downstream repository, production, cleanup, or rollback operation is performed.
 
 After merge, the next independent package may compose this adapter with the existing public entry only after isolated-workspace and exact authority bindings are proven.
