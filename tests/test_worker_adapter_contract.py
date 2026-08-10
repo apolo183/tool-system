@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import json
+import signal
 import subprocess
+from pathlib import Path
+
+import pytest
 
 from tool_system.agent_worker.interface import WorkerRequest
 from tool_system.worker_adapter.contract import (
@@ -8,6 +13,7 @@ from tool_system.worker_adapter.contract import (
     CodexCLIAdapterConfig,
     CodexCLISubscriptionWorkerAdapter,
     DryRunWorkerAdapter,
+    _run_codex_process,
     build_adapter_request_from_worker_request,
     run_adapter_requests,
 )
@@ -144,6 +150,25 @@ def _subscription_request(**overrides: object) -> AdapterRequest:
     return AdapterRequest(**values)
 
 
+def _structured_patch() -> dict[str, object]:
+    return {
+        "operations": [
+            {
+                "op": "add",
+                "path": "src/app.py",
+                "content": "return 1\n",
+            }
+        ],
+        "usage": {"duration_ms": 3, "cost_microunits": 0},
+        "material_evidence": "fake-process fixture",
+    }
+
+
+def _write_final_result(argv: list[str], value: object) -> None:
+    output_path = Path(argv[argv.index("--output-last-message") + 1])
+    output_path.write_text(json.dumps(value), encoding="utf-8")
+
+
 def test_codex_subscription_adapter_is_disabled_by_default() -> None:
     calls: list[object] = []
     adapter = CodexCLISubscriptionWorkerAdapter(
@@ -160,42 +185,78 @@ def test_codex_subscription_adapter_is_disabled_by_default() -> None:
     assert calls == []
 
 
-def test_codex_subscription_adapter_uses_exact_argv_and_minimal_environment() -> None:
+def test_codex_subscription_adapter_uses_schema_final_message_stdin_and_minimal_environment() -> None:
     observed: dict[str, object] = {}
 
     def fake_runner(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        schema_path = Path(argv[argv.index("--output-schema") + 1])
+        output_path = Path(argv[argv.index("--output-last-message") + 1])
         observed["argv"] = argv
+        observed["schema"] = json.loads(schema_path.read_text(encoding="utf-8"))
+        observed["schema_mode"] = schema_path.stat().st_mode & 0o777
+        observed["result_mode"] = output_path.stat().st_mode & 0o777
+        observed["temporary_parent_shared"] = schema_path.parent == output_path.parent
         observed.update(kwargs)
-        return subprocess.CompletedProcess(argv, 0, stdout='{"type":"result"}\n', stderr="")
+        _write_final_result(argv, _structured_patch())
+        return subprocess.CompletedProcess(
+            argv,
+            0,
+            stdout='{"type":"thread.started"}\n{"type":"turn.completed"}\n',
+            stderr="",
+        )
 
     adapter = CodexCLISubscriptionWorkerAdapter(
         CodexCLIAdapterConfig(
             executable="codex",
             enabled=True,
             timeout_seconds=17,
+            termination_grace_seconds=3,
             inherited_environment_names=("PATH", "LANG"),
         ),
         process_runner=fake_runner,
-        source_environment={"PATH": "/bin", "LANG": "C", "OPENAI_API_KEY": "not-forwarded"},
+        source_environment={
+            "PATH": "/bin",
+            "LANG": "C",
+            "OPENAI_API_KEY": "not-forwarded",
+        },
     )
 
     result = adapter.run(_subscription_request())
 
     assert result.status == "PASS"
-    assert observed["argv"] == [
+    argv = observed["argv"]
+    assert isinstance(argv, list)
+    assert argv[:7] == [
         "codex",
         "exec",
         "--json",
-        "--skip-git-repo-check",
-        '{"task_id":"fixture-task"}',
+        "--ephemeral",
+        "--sandbox",
+        "read-only",
+        "--output-schema",
     ]
+    assert argv[8] == "--output-last-message"
+    assert argv[10:] == ["--skip-git-repo-check", "-"]
+    assert '{"task_id":"fixture-task"}' not in argv
+    assert observed["input"] == '{"task_id":"fixture-task"}'
     assert observed["cwd"] == "/isolated/workspace"
     assert observed["env"] == {"PATH": "/bin", "LANG": "C"}
     assert observed["shell"] is False
     assert observed["timeout"] == 17
+    assert observed["termination_grace_seconds"] == 3
+    assert observed["schema"]["additionalProperties"] is False
+    assert observed["schema"]["required"] == ["operations"]
+    assert observed["schema_mode"] == 0o600
+    assert observed["result_mode"] == 0o600
+    assert observed["temporary_parent_shared"] is True
     assert result.output["raw_output_recorded"] is False
-    assert result.output["structured_result"] == {"type": "result"}
+    assert result.output["structured_result"] == _structured_patch()
     assert result.output["environment_names"] == ["LANG", "PATH"]
+    assert result.output["prompt_on_stdin"] is True
+    assert result.output["sandbox_mode"] == "read-only"
+    assert result.output["session_persistence"] == "ephemeral"
+    assert "<creator-owned-schema>" in result.output["argv_shape"]
+    assert "<creator-owned-result>" in result.output["argv_shape"]
 
 
 def test_codex_subscription_adapter_blocks_credentials_mutation_and_missing_authority() -> None:
@@ -219,7 +280,7 @@ def test_codex_subscription_adapter_blocks_credentials_mutation_and_missing_auth
     assert "subscription worker cannot receive target mutation or production authority" in result.reasons
 
 
-def test_codex_subscription_adapter_fails_closed_on_timeout_and_output_limit() -> None:
+def test_codex_subscription_adapter_fails_closed_on_timeout_and_event_output_limit() -> None:
     def timeout_runner(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
         raise subprocess.TimeoutExpired(cmd="codex", timeout=1)
 
@@ -242,18 +303,178 @@ def test_codex_subscription_adapter_fails_closed_on_timeout_and_output_limit() -
     assert output.reasons == ["subscription worker output exceeded the configured byte limit"]
 
 
-def test_codex_subscription_adapter_rejects_non_json_success_output() -> None:
+def test_codex_subscription_adapter_fails_closed_on_terminal_result_limit() -> None:
+    def oversized_result(
+        argv: list[str],
+        **kwargs: object,
+    ) -> subprocess.CompletedProcess[str]:
+        output_path = Path(argv[argv.index("--output-last-message") + 1])
+        output_path.write_text("x" * 65, encoding="utf-8")
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+
     adapter = CodexCLISubscriptionWorkerAdapter(
-        CodexCLIAdapterConfig(executable="codex", enabled=True),
-        process_runner=lambda argv, **kwargs: subprocess.CompletedProcess(
-            argv, 0, stdout="not-json\n", stderr=""
+        CodexCLIAdapterConfig(
+            executable="codex",
+            enabled=True,
+            max_output_bytes=64,
         ),
+        process_runner=oversized_result,
     )
 
     result = adapter.run(_subscription_request())
 
     assert result.status == "BLOCK"
     assert result.reasons == [
-        "subscription worker did not return valid JSON object records"
+        "subscription worker output exceeded the configured byte limit"
+    ]
+
+
+@pytest.mark.parametrize(
+    "terminal_value",
+    [
+        "not-an-object",
+        {"operations": []},
+        {
+            "operations": [
+                {
+                    "op": "add",
+                    "path": "src/app.py",
+                    "content": "x",
+                }
+            ],
+            "acceptance_set": ["invented-authority"],
+        },
+        {
+            "operations": [
+                {
+                    "op": "delete",
+                    "path": "src/app.py",
+                    "expected_sha256": "bad",
+                }
+            ]
+        },
+    ],
+)
+def test_codex_subscription_adapter_rejects_invalid_schema_bound_patch(
+    terminal_value: object,
+) -> None:
+    def invalid_result(
+        argv: list[str],
+        **kwargs: object,
+    ) -> subprocess.CompletedProcess[str]:
+        _write_final_result(argv, terminal_value)
+        return subprocess.CompletedProcess(
+            argv,
+            0,
+            stdout='{"type":"turn.completed"}\n',
+            stderr="",
+        )
+
+    adapter = CodexCLISubscriptionWorkerAdapter(
+        CodexCLIAdapterConfig(executable="codex", enabled=True),
+        process_runner=invalid_result,
+    )
+
+    result = adapter.run(_subscription_request())
+
+    assert result.status == "BLOCK"
+    assert result.reasons == [
+        "subscription worker did not return a valid schema-bound structured patch"
     ]
     assert result.output == {"returncode": 0, "raw_output_recorded": False}
+
+
+def test_codex_subscription_adapter_rejects_invalid_jsonl_event_stream() -> None:
+    def invalid_events(
+        argv: list[str],
+        **kwargs: object,
+    ) -> subprocess.CompletedProcess[str]:
+        _write_final_result(argv, _structured_patch())
+        return subprocess.CompletedProcess(argv, 0, stdout="not-json\n", stderr="")
+
+    adapter = CodexCLISubscriptionWorkerAdapter(
+        CodexCLIAdapterConfig(executable="codex", enabled=True),
+        process_runner=invalid_events,
+    )
+
+    result = adapter.run(_subscription_request())
+
+    assert result.status == "BLOCK"
+    assert result.reasons == [
+        "subscription worker event stream was not valid JSONL objects"
+    ]
+
+
+class _TimeoutProcess:
+    pid = 4242
+    returncode = -1
+
+    def __init__(self, wait_outcomes: list[str]) -> None:
+        self.wait_outcomes = wait_outcomes
+        self.popen_options: dict[str, object] = {}
+        self.communicate_input: str | None = None
+        self.communicate_timeout: int | None = None
+
+    def communicate(
+        self,
+        *,
+        input: str,
+        timeout: int,
+    ) -> tuple[str, str]:
+        self.communicate_input = input
+        self.communicate_timeout = timeout
+        raise subprocess.TimeoutExpired(cmd="codex", timeout=timeout)
+
+    def wait(self, *, timeout: int) -> int:
+        outcome = self.wait_outcomes.pop(0)
+        if outcome == "timeout":
+            raise subprocess.TimeoutExpired(cmd="codex", timeout=timeout)
+        return 0
+
+    def terminate(self) -> None:
+        raise AssertionError("POSIX cancellation must address the process group")
+
+    def kill(self) -> None:
+        raise AssertionError("POSIX cancellation must address the process group")
+
+
+@pytest.mark.parametrize(
+    "wait_outcomes,expected_signals",
+    [
+        (["complete"], [signal.SIGTERM]),
+        (["timeout", "complete"], [signal.SIGTERM, signal.SIGKILL]),
+    ],
+)
+def test_codex_process_timeout_cancels_posix_process_group(
+    wait_outcomes: list[str],
+    expected_signals: list[int],
+) -> None:
+    process = _TimeoutProcess(list(wait_outcomes))
+    group_signals: list[tuple[int, int]] = []
+
+    def fake_popen(argv: list[str], **kwargs: object) -> _TimeoutProcess:
+        process.popen_options = kwargs
+        return process
+
+    with pytest.raises(subprocess.TimeoutExpired):
+        _run_codex_process(
+            ["codex", "exec", "-"],
+            cwd="/isolated/workspace",
+            env={"PATH": "/bin"},
+            shell=False,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=17,
+            input="structured prompt",
+            termination_grace_seconds=3,
+            popen_factory=fake_popen,
+            platform_name="posix",
+            group_killer=lambda group, sig: group_signals.append((group, sig)),
+        )
+
+    assert process.popen_options["start_new_session"] is True
+    assert process.popen_options["shell"] is False
+    assert process.communicate_input == "structured prompt"
+    assert process.communicate_timeout == 17
+    assert group_signals == [(process.pid, item) for item in expected_signals]
