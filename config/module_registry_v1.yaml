@@ -722,7 +722,7 @@ modules:
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: task-runner
   module_version: 1.2.0
-  role: execute validated task plans and compose authority, read-only context, compilation, guarded subscription development, isolated validation, durable state, and one remote-free local Git commit through exact gates without source, target, remote, API, credential, or production authority.
+  role: execute validated task plans and compose authority, read-only context, compilation, guarded subscription development, isolated validation, durable state, and one remote-free local Git commit through exact gates without source, target, remote, API, credential, or production authority. Resolve one explicit current task pair, run validation and policy gates, optionally execute its configured local commands, aggregate batches or graphs, byte-seal and require one exact manifest-bound subscription public-entry repository read before composing repository-context and blueprint-compiler, and on a separately exact execution binding compose the guarded subscription worker, current-candidate loop, protected validation clone, two deterministic reviews, durable state, and one remote-free local Git commit while returning redacted local evidence and a non-executing draft-PR plan.
   owner: task-runner
   public_interface_refs:
   - interface_id: task-runner-api
@@ -1301,7 +1301,7 @@ modules:
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: cli-frontend
   module_version: 1.2.0
-  role: expose stable command-line entry points that delegate to registered public module interfaces, including read-only develop and separately exact-bound develop-execute routes, while rendering only redacted results and never expanding delegated authority.
+  role: expose stable command-line entry points that delegate to registered public module interfaces, including read-only develop and separately exact-bound develop-execute routes, while rendering only redacted results and never expanding delegated authority. Parse command-line arguments, including the read-only subscription context route and the separately exact-bound develop-execute route, select one current public module entry point, render its redacted result, and derive a process exit code without changing delegated authority.
   owner: cli-frontend
   public_interface_refs:
   - interface_id: cli-frontend-api
@@ -1589,7 +1589,7 @@ modules:
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: development-loop
   module_version: 1.1.0
-  role: execute bounded structured patch, validation, diagnosis, repair, and independent review cycles against isolated in-memory repositories while supplying the exact current candidate files to every worker cycle and preserving cancellation, no-progress, and zero-external-effect semantics.
+  role: execute bounded structured patch, validation, diagnosis, repair, and independent review cycles against isolated in-memory repositories while supplying the exact current candidate files to every worker cycle and preserving cancellation, no-progress, and zero-external-effect semantics. Freeze acceptance and finite budgets, expose the current authorized candidate-file mapping to each worker cycle, enforce atomic exact-scope patch preconditions, honor a caller-owned cancellation signal before worker dispatch and before applying returned patches, classify validation and review blockers, terminate repeated or non-progressing cycles, seal successful candidates, and apply evidence non-reopening semantics without performing external operations.
   owner: development-loop
   public_interface_refs:
   - interface_id: development-loop-api
@@ -1627,7 +1627,7 @@ modules:
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: local-git
   module_version: 1.2.0
-  role: create or resume one exact hook-disabled remote-free workspace from a clean local source snapshot and durably record at most one bounded branch and commit with cancellation, receipt reconciliation, zero network effects, and non-executing disposition plans.
+  role: create or resume one exact hook-disabled remote-free workspace from a clean local source snapshot and durably record at most one bounded branch and commit with cancellation, receipt reconciliation, zero network effects, and non-executing disposition plans. Validate one clean exact local source commit/tree, create or identify a hook-disabled configuration-isolated local clone with every remote removed, freeze Git identity, scope, and exact baseline presence/content topology, pass cancellation into the development loop, bind the sealed candidate to durable leases/checkpoints/side-effect receipts, stage the exact add/modify/delete delta, create at most one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
   owner: local-git
   public_interface_refs:
   - interface_id: local-git-api
