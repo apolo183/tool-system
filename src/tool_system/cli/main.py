@@ -49,7 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     develop_parser = subparsers.add_parser(
         "develop",
-        help="Validate authority and compile one isolated-fixture repository context without worker execution.",
+        help="Validate exact manifest-bound read authority and compile one repository context without worker execution.",
     )
     develop_parser.add_argument("task_manifest", type=Path)
     develop_parser.add_argument("--change-plan", type=Path, required=True)
