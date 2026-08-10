@@ -21,7 +21,7 @@ bounded_closure:
     task_identity: SUBSCRIPTION-WORKER-CODEX-STRUCTURED-OUTPUT-SANDBOX-CORRECTION-v1
     baseline_commit: a6fdc2969ae163b8cbdcb6e5f9f74c2279dfaba5
     baseline_tree: canonical_main_tree_at_a6fdc2969ae163b8cbdcb6e5f9f74c2279dfaba5
-    allowed_scope: exact_9_paths_listed_below
+    allowed_scope: exact_10_paths_listed_below
     acceptance_set:
       - the prompt is supplied through stdin and never appears in the process argument vector
       - the exact Codex vector denies interactive approval ignores user behavioral configuration and explicitly selects ephemeral read-only execution with a schema-bound final-message file
@@ -31,6 +31,7 @@ bounded_closure:
       - timeout terminates the complete process group with finite TERM-to-KILL escalation and fails closed
       - shell execution provider credential environment forwarding target mutation and production authority remain prohibited
       - default adapter execution remains disabled and no public CLI or task-runner dispatch is added
+      - the existing subscription pipeline fake integration consumes stdin and the schema-bound final-message result without adding production dispatch
       - Hosted CI uses injected fake processes only and performs no real Codex API provider credential downstream production cleanup or rollback operation
       - the worker-adapter contract mapping and module registry seals remain exact without interface-version drift
     validation_set:
@@ -42,7 +43,7 @@ bounded_closure:
       implementation_cycles: 1
       repair_cycles: 3
       review_cycles: 1
-      fake_process_invocations: 12
+      fake_process_invocations: 16
       real_codex_invocations: 0
       provider_invocations: 0
       credential_value_accesses: 0
@@ -65,6 +66,7 @@ scope:
     - examples/task_manifests/tool_system_subscription_worker_codex_structured_output_sandbox_correction_v1.yaml
     - src/tool_system/worker_adapter/contract.py
     - tests/test_module_registry.py
+    - tests/test_task_runner.py
     - tests/test_worker_adapter_contract.py
   out_of_scope:
     - public CLI task-runner or local-Git dispatch
@@ -103,7 +105,7 @@ write_mode: pull_request
 verification:
   commands:
     - git diff --check
-    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_worker_adapter_contract.py tests/test_module_registry.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_worker_adapter_contract.py tests/test_task_runner.py tests/test_module_registry.py
     - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
 publication:
   draft_pr_required: true
