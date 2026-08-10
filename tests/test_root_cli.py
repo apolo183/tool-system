@@ -48,3 +48,39 @@ def test_root_cli_change_plan_validates() -> None:
 
     assert result["status"] == "PASS"
     assert result["reasons"] == []
+
+
+def test_root_cli_develop_preflight_is_nonexecuting_and_redacted(
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+) -> None:
+    monkeypatch.chdir(ROOT)
+    exit_code = main([
+        "develop",
+        "examples/task_manifests/tool_system_audit_bundle.yaml",
+        "--change-plan",
+        "examples/change_plans/tool_system_audit_bundle.yaml",
+        "--repository-root",
+        str(ROOT),
+        "--expected-head",
+        "b" * 40,
+        "--milestone",
+        "P16",
+        "--acceptance",
+        "subscription-core-remains-bounded",
+        "--governance-path",
+        "AGENTS.md",
+        "--query-term",
+        "task-runner",
+        "--seed-path",
+        "src/tool_system/runner/task_runner.py",
+    ])
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert '"mode": "subscription_worker_public_entry_authority_preflight"' in output
+    assert '"worker_execution_authorized": false' in output
+    assert '"repository_root_identity_sha256"' in output
+    assert str(ROOT) not in output
+    assert not (tmp_path / "unexpected").exists()
