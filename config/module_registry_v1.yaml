@@ -986,7 +986,7 @@ modules:
     target_boundary_id: code-003
     effect_contract:
       repo_relative_path: docs/modules/worker-adapter-contract-v1.md
-      sha256: e8779439ccdb45a888d72584dd8efba7682b00fff83f802d4da5272d1b5e5784
+      sha256: da5b8133149b017b3dd7ddad9e4685fdc1e8c907ea22936d56865fc52a0fc76c
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: direct-effects-code-004
@@ -997,7 +997,7 @@ modules:
     target_boundary_id: code-004
     effect_contract:
       repo_relative_path: docs/modules/worker-adapter-contract-v1.md
-      sha256: e8779439ccdb45a888d72584dd8efba7682b00fff83f802d4da5272d1b5e5784
+      sha256: da5b8133149b017b3dd7ddad9e4685fdc1e8c907ea22936d56865fc52a0fc76c
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-002
@@ -1013,17 +1013,17 @@ modules:
     target_boundary_id: code-002
     effect_contract:
       repo_relative_path: docs/modules/worker-adapter-contract-v1.md
-      sha256: e8779439ccdb45a888d72584dd8efba7682b00fff83f802d4da5272d1b5e5784
+      sha256: da5b8133149b017b3dd7ddad9e4685fdc1e8c907ea22936d56865fc52a0fc76c
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   rollback_boundary:
     repo_relative_path: docs/modules/worker-adapter-contract-v1.md
-    sha256: e8779439ccdb45a888d72584dd8efba7682b00fff83f802d4da5272d1b5e5784
+    sha256: da5b8133149b017b3dd7ddad9e4685fdc1e8c907ea22936d56865fc52a0fc76c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/worker-adapter-contract-v1.md
-    sha256: e8779439ccdb45a888d72584dd8efba7682b00fff83f802d4da5272d1b5e5784
+    sha256: da5b8133149b017b3dd7ddad9e4685fdc1e8c907ea22936d56865fc52a0fc76c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: target-repo-adapter
@@ -2335,32 +2335,32 @@ interfaces:
   - consumer_module_id: task-runner
   input_contract:
     repo_relative_path: docs/modules/worker-adapter-contract-v1.md
-    sha256: e8779439ccdb45a888d72584dd8efba7682b00fff83f802d4da5272d1b5e5784
+    sha256: da5b8133149b017b3dd7ddad9e4685fdc1e8c907ea22936d56865fc52a0fc76c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/worker-adapter-contract-v1.md
-    sha256: e8779439ccdb45a888d72584dd8efba7682b00fff83f802d4da5272d1b5e5784
+    sha256: da5b8133149b017b3dd7ddad9e4685fdc1e8c907ea22936d56865fc52a0fc76c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/worker-adapter-contract-v1.md
-    sha256: e8779439ccdb45a888d72584dd8efba7682b00fff83f802d4da5272d1b5e5784
+    sha256: da5b8133149b017b3dd7ddad9e4685fdc1e8c907ea22936d56865fc52a0fc76c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/worker-adapter-contract-v1.md
-    sha256: e8779439ccdb45a888d72584dd8efba7682b00fff83f802d4da5272d1b5e5784
+    sha256: da5b8133149b017b3dd7ddad9e4685fdc1e8c907ea22936d56865fc52a0fc76c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/worker-adapter-contract-v1.md
-    sha256: e8779439ccdb45a888d72584dd8efba7682b00fff83f802d4da5272d1b5e5784
+    sha256: da5b8133149b017b3dd7ddad9e4685fdc1e8c907ea22936d56865fc52a0fc76c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/worker-adapter-contract-v1.md
-    sha256: e8779439ccdb45a888d72584dd8efba7682b00fff83f802d4da5272d1b5e5784
+    sha256: da5b8133149b017b3dd7ddad9e4685fdc1e8c907ea22936d56865fc52a0fc76c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: target-repo-adapter-api
