@@ -721,7 +721,7 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: task-runner
-  module_version: 1.2.0
+  module_version: 1.1.0
   role: execute validated task plans and compose authority, read-only context, compilation, and bounded development stages through explicit gates. Resolve one explicit current task pair, run validation and policy gates, optionally execute its configured local commands, aggregate batches or graphs, freeze one non-executing and content-addressed subscription public-entry packet, compose the accepted repository-context and blueprint-compiler interfaces for an explicitly selected isolated fixture, compose one guarded subscription-worker adapter with the in-memory development loop, and record local audit results without granting downstream effects.
   owner: task-runner
   public_interface_refs:
@@ -784,7 +784,7 @@ modules:
     target_boundary_id: code-003
     effect_contract:
       repo_relative_path: docs/modules/task-runner-contract-v1.md
-      sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+      sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: direct-effects-code-004
@@ -795,7 +795,7 @@ modules:
     target_boundary_id: code-004
     effect_contract:
       repo_relative_path: docs/modules/task-runner-contract-v1.md
-      sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+      sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: direct-effects-code-005
@@ -806,7 +806,7 @@ modules:
     target_boundary_id: code-005
     effect_contract:
       repo_relative_path: docs/modules/task-runner-contract-v1.md
-      sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+      sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-001
@@ -822,7 +822,7 @@ modules:
     target_boundary_id: code-001
     effect_contract:
       repo_relative_path: docs/modules/task-runner-contract-v1.md
-      sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+      sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-005
@@ -838,17 +838,17 @@ modules:
     target_boundary_id: code-005
     effect_contract:
       repo_relative_path: docs/modules/task-runner-contract-v1.md
-      sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+      sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   rollback_boundary:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+    sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+    sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: role-runtime
@@ -1298,7 +1298,7 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: cli-frontend
-  module_version: 1.2.0
+  module_version: 1.1.0
   role: expose stable command-line entry points that delegate to registered public module interfaces. Parse command-line arguments, including the subscription-development authority and explicit isolated-fixture context-compilation selection, select one current public module entry point, render its redacted result, and derive a process exit code without changing delegated authority.
   owner: cli-frontend
   public_interface_refs:
@@ -1416,7 +1416,7 @@ modules:
     target_boundary_id: code-003
     effect_contract:
       repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-      sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+      sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-007
@@ -1432,7 +1432,7 @@ modules:
     target_boundary_id: code-007
     effect_contract:
       repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-      sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+      sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-008
@@ -1448,7 +1448,7 @@ modules:
     target_boundary_id: code-008
     effect_contract:
       repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-      sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+      sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-010
@@ -1464,7 +1464,7 @@ modules:
     target_boundary_id: code-010
     effect_contract:
       repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-      sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+      sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-011
@@ -1480,7 +1480,7 @@ modules:
     target_boundary_id: code-011
     effect_contract:
       repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-      sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+      sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-017
@@ -1496,21 +1496,21 @@ modules:
     target_boundary_id: code-017
     effect_contract:
       repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-      sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+      sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   rollback_boundary:
     repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-    sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+    sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-    sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+    sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: repository-context
-  module_version: 1.0.1
+  module_version: 1.0.0
   role: build deterministic bounded repository context and natural-owner evidence from one clean committed local Git snapshot. Index tracked blobs, map static dependencies and tests, select relevant context, and propose a natural owner without writing the repository, contacting a remote, or granting authority.
   owner: repository-context
   public_interface_refs:
@@ -1539,16 +1539,16 @@ modules:
   permitted_side_effects: []
   rollback_boundary:
     repo_relative_path: docs/modules/repository-context-contract-v1.md
-    sha256: aba983a3ecb6c1c457e6bb34670fa10c91f117788d3f25018af1a12fba6d921d
+    sha256: f7dd3a3e589e1fadd9183e7225ceed48e8b3822e59b58b1e5ea5798b9394787c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/repository-context-contract-v1.md
-    sha256: aba983a3ecb6c1c457e6bb34670fa10c91f117788d3f25018af1a12fba6d921d
+    sha256: f7dd3a3e589e1fadd9183e7225ceed48e8b3822e59b58b1e5ea5798b9394787c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: blueprint-compiler
-  module_version: 1.0.1
+  module_version: 1.0.0
   role: compile approved blueprint milestones and accepted repository evidence into deterministic bounded development plans. Validate explicit module-change bindings and derive module and task DAGs, documents, manifests, plans, gates, tests, isolation, replacement, and rollback nodes without persisting or executing them.
   owner: blueprint-compiler
   public_interface_refs:
@@ -1577,12 +1577,12 @@ modules:
   permitted_side_effects: []
   rollback_boundary:
     repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
-    sha256: 4cde0211f8e533b237ad333664430293876ff54c07eceb3cd56d907a95b2b651
+    sha256: a47ff2ffef946922c84b12fd78323bab467d863bc6c36de62ae60f72b95eef6a
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
-    sha256: 4cde0211f8e533b237ad333664430293876ff54c07eceb3cd56d907a95b2b651
+    sha256: a47ff2ffef946922c84b12fd78323bab467d863bc6c36de62ae60f72b95eef6a
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: development-loop
@@ -2265,32 +2265,32 @@ interfaces:
   - consumer_module_id: cli-frontend
   input_contract:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+    sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+    sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+    sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+    sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+    sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 578cfa504a846570e8c3bc069f867e83a9cab7a7e8aa842ed96c18a7aba0f91b
+    sha256: ddafd51d764783a0a1845ce67d4c6fd80a687fae4b7b77dd25e92f59c2f8811e
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: role-runtime-api
@@ -2439,32 +2439,32 @@ interfaces:
   consumers: []
   input_contract:
     repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-    sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+    sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-    sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+    sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-    sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+    sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-    sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+    sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-    sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+    sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/cli-frontend-contract-v1.md
-    sha256: 63feec56f5294a87534862b4133da51fc8317c061a0615fb0cb41f09f9986b57
+    sha256: 2ec39ddc62214de7fdc19ea4efbb3c9eb04288d712a24856024da2917340eee6
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: repository-context-api
@@ -2474,32 +2474,32 @@ interfaces:
   - consumer_module_id: task-runner
   input_contract:
     repo_relative_path: docs/modules/repository-context-contract-v1.md
-    sha256: aba983a3ecb6c1c457e6bb34670fa10c91f117788d3f25018af1a12fba6d921d
+    sha256: f7dd3a3e589e1fadd9183e7225ceed48e8b3822e59b58b1e5ea5798b9394787c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/repository-context-contract-v1.md
-    sha256: aba983a3ecb6c1c457e6bb34670fa10c91f117788d3f25018af1a12fba6d921d
+    sha256: f7dd3a3e589e1fadd9183e7225ceed48e8b3822e59b58b1e5ea5798b9394787c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/repository-context-contract-v1.md
-    sha256: aba983a3ecb6c1c457e6bb34670fa10c91f117788d3f25018af1a12fba6d921d
+    sha256: f7dd3a3e589e1fadd9183e7225ceed48e8b3822e59b58b1e5ea5798b9394787c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/repository-context-contract-v1.md
-    sha256: aba983a3ecb6c1c457e6bb34670fa10c91f117788d3f25018af1a12fba6d921d
+    sha256: f7dd3a3e589e1fadd9183e7225ceed48e8b3822e59b58b1e5ea5798b9394787c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/repository-context-contract-v1.md
-    sha256: aba983a3ecb6c1c457e6bb34670fa10c91f117788d3f25018af1a12fba6d921d
+    sha256: f7dd3a3e589e1fadd9183e7225ceed48e8b3822e59b58b1e5ea5798b9394787c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/repository-context-contract-v1.md
-    sha256: aba983a3ecb6c1c457e6bb34670fa10c91f117788d3f25018af1a12fba6d921d
+    sha256: f7dd3a3e589e1fadd9183e7225ceed48e8b3822e59b58b1e5ea5798b9394787c
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: blueprint-compiler-api
@@ -2509,32 +2509,32 @@ interfaces:
   - consumer_module_id: task-runner
   input_contract:
     repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
-    sha256: 4cde0211f8e533b237ad333664430293876ff54c07eceb3cd56d907a95b2b651
+    sha256: a47ff2ffef946922c84b12fd78323bab467d863bc6c36de62ae60f72b95eef6a
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
-    sha256: 4cde0211f8e533b237ad333664430293876ff54c07eceb3cd56d907a95b2b651
+    sha256: a47ff2ffef946922c84b12fd78323bab467d863bc6c36de62ae60f72b95eef6a
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
-    sha256: 4cde0211f8e533b237ad333664430293876ff54c07eceb3cd56d907a95b2b651
+    sha256: a47ff2ffef946922c84b12fd78323bab467d863bc6c36de62ae60f72b95eef6a
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
-    sha256: 4cde0211f8e533b237ad333664430293876ff54c07eceb3cd56d907a95b2b651
+    sha256: a47ff2ffef946922c84b12fd78323bab467d863bc6c36de62ae60f72b95eef6a
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
-    sha256: 4cde0211f8e533b237ad333664430293876ff54c07eceb3cd56d907a95b2b651
+    sha256: a47ff2ffef946922c84b12fd78323bab467d863bc6c36de62ae60f72b95eef6a
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/blueprint-compiler-contract-v1.md
-    sha256: 4cde0211f8e533b237ad333664430293876ff54c07eceb3cd56d907a95b2b651
+    sha256: a47ff2ffef946922c84b12fd78323bab467d863bc6c36de62ae60f72b95eef6a
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: development-loop-api
