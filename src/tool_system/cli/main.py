@@ -9,8 +9,10 @@ from tool_system.runner.task_graph_runner import run_task_graph_pipeline
 from tool_system.runner.task_runner import (
     run_batch_file,
     run_subscription_public_entry_context_compilation,
+    run_subscription_public_entry_execution,
     run_task_pipeline,
 )
+from tool_system.worker_adapter import CodexCLIAdapterConfig
 
 
 def _add_common_options(parser: argparse.ArgumentParser) -> None:
@@ -95,6 +97,97 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path("policy/autonomy_policy.yaml"),
     )
 
+    execute_parser = subparsers.add_parser(
+        "develop-execute",
+        help=(
+            "Run one exact manifest-bound subscription development workflow "
+            "in an isolated local workspace."
+        ),
+    )
+    execute_parser.add_argument("task_manifest", type=Path)
+    execute_parser.add_argument("--change-plan", type=Path, required=True)
+    execute_parser.add_argument("--repository-root", type=Path, required=True)
+    execute_parser.add_argument("--workspace-root", type=Path, required=True)
+    execute_parser.add_argument("--durable-state", type=Path, required=True)
+    execute_parser.add_argument("--expected-head", required=True)
+    execute_parser.add_argument("--expected-tree", required=True)
+    execute_parser.add_argument(
+        "--blueprint-path",
+        default="blueprint/tool_system_v0.yaml",
+    )
+    execute_parser.add_argument(
+        "--module-registry-path",
+        default="config/module_registry_v1.yaml",
+    )
+    execute_parser.add_argument("--milestone", action="append", required=True)
+    execute_parser.add_argument("--acceptance", action="append", required=True)
+    execute_parser.add_argument(
+        "--governance-path",
+        action="append",
+        required=True,
+    )
+    execute_parser.add_argument("--query-term", action="append", required=True)
+    execute_parser.add_argument("--seed-path", action="append", default=[])
+    execute_parser.add_argument("--codex-executable", required=True)
+    execute_parser.add_argument(
+        "--codex-timeout-seconds",
+        type=int,
+        default=120,
+    )
+    execute_parser.add_argument(
+        "--codex-termination-grace-seconds",
+        type=int,
+        default=2,
+    )
+    execute_parser.add_argument(
+        "--codex-max-prompt-bytes",
+        type=int,
+        default=1_048_576,
+    )
+    execute_parser.add_argument(
+        "--codex-max-output-bytes",
+        type=int,
+        default=1_048_576,
+    )
+    for option, destination in (
+        ("--repository-read-authorized", "repository_read_authorized"),
+        (
+            "--subscription-worker-execution-authorized",
+            "worker_execution_authorized",
+        ),
+        (
+            "--validation-execution-authorized",
+            "validation_execution_authorized",
+        ),
+        (
+            "--subscription-data-transfer-authorized",
+            "subscription_data_transfer_authorized",
+        ),
+        ("--local-git-write-authorized", "local_git_write_authorized"),
+    ):
+        execute_parser.add_argument(
+            option,
+            dest=destination,
+            action="store_true",
+            required=True,
+            help="Explicit request only; the exact manifest binding remains authoritative.",
+        )
+    execute_parser.add_argument(
+        "--process-authority",
+        type=Path,
+        default=Path("config/process_authority_v1.yaml"),
+    )
+    execute_parser.add_argument(
+        "--policy",
+        type=Path,
+        default=Path("policy/repo_write_policy.yaml"),
+    )
+    execute_parser.add_argument(
+        "--autonomy-policy",
+        type=Path,
+        default=Path("policy/autonomy_policy.yaml"),
+    )
+
     batch_parser = subparsers.add_parser("batch", help="Run multiple task manifest and change-plan pairs.")
     batch_parser.add_argument("batch", type=Path)
     batch_parser.add_argument("--audit-path", type=Path, default=Path("artifacts/batch_runner_audit.jsonl"))
@@ -138,6 +231,51 @@ def main(argv: Sequence[str] | None = None) -> int:
             query_terms=args.query_term,
             seed_paths=args.seed_path,
             repository_read_authorized=args.repository_read_authorized,
+            process_authority_path=args.process_authority,
+            policy_path=args.policy,
+            autonomy_policy_path=args.autonomy_policy,
+        )
+    elif args.command == "develop-execute":
+        output = run_subscription_public_entry_execution(
+            task_manifest_path=args.task_manifest,
+            change_plan_path=args.change_plan,
+            repository_root=args.repository_root,
+            workspace_root=args.workspace_root,
+            durable_state_path=args.durable_state,
+            expected_head=args.expected_head,
+            expected_tree=args.expected_tree,
+            blueprint_path=args.blueprint_path,
+            module_registry_path=args.module_registry_path,
+            milestone_ids=args.milestone,
+            acceptance_requirements=args.acceptance,
+            governance_paths=args.governance_path,
+            query_terms=args.query_term,
+            seed_paths=args.seed_path,
+            codex_config=CodexCLIAdapterConfig(
+                executable=args.codex_executable,
+                enabled=True,
+                timeout_seconds=args.codex_timeout_seconds,
+                termination_grace_seconds=(
+                    args.codex_termination_grace_seconds
+                ),
+                max_prompt_bytes=args.codex_max_prompt_bytes,
+                max_output_bytes=args.codex_max_output_bytes,
+            ),
+            repository_read_authorized=(
+                args.repository_read_authorized
+            ),
+            worker_execution_authorized=(
+                args.worker_execution_authorized
+            ),
+            validation_execution_authorized=(
+                args.validation_execution_authorized
+            ),
+            subscription_data_transfer_authorized=(
+                args.subscription_data_transfer_authorized
+            ),
+            local_git_write_authorized=(
+                args.local_git_write_authorized
+            ),
             process_authority_path=args.process_authority,
             policy_path=args.policy,
             autonomy_policy_path=args.autonomy_policy,
