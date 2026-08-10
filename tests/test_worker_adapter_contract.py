@@ -194,6 +194,7 @@ def test_codex_subscription_adapter_uses_exact_argv_and_minimal_environment() ->
     assert observed["shell"] is False
     assert observed["timeout"] == 17
     assert result.output["raw_output_recorded"] is False
+    assert result.output["structured_result"] == {"type": "result"}
     assert result.output["environment_names"] == ["LANG", "PATH"]
 
 
@@ -239,3 +240,20 @@ def test_codex_subscription_adapter_fails_closed_on_timeout_and_output_limit() -
     output = output_adapter.run(_subscription_request())
     assert output.status == "BLOCK"
     assert output.reasons == ["subscription worker output exceeded the configured byte limit"]
+
+
+def test_codex_subscription_adapter_rejects_non_json_success_output() -> None:
+    adapter = CodexCLISubscriptionWorkerAdapter(
+        CodexCLIAdapterConfig(executable="codex", enabled=True),
+        process_runner=lambda argv, **kwargs: subprocess.CompletedProcess(
+            argv, 0, stdout="not-json\n", stderr=""
+        ),
+    )
+
+    result = adapter.run(_subscription_request())
+
+    assert result.status == "BLOCK"
+    assert result.reasons == [
+        "subscription worker did not return valid JSON object records"
+    ]
+    assert result.output == {"returncode": 0, "raw_output_recorded": False}
