@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from collections.abc import Callable, Mapping
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -7,10 +10,48 @@ from tool_system.agent_worker.interface import WorkerRequest
 from tool_system.repo_controller.artifact import write_jsonl_record
 from tool_system.worker_adapter.contract import (
     AdapterRequest,
+    WorkerAdapter,
     build_adapter_request_from_worker_request,
     run_adapter_requests,
 )
 
+
+
+DevelopmentWorker = Callable[[Mapping[str, object]], Mapping[str, object]]
+
+
+def build_subscription_development_worker(
+    *,
+    adapter: WorkerAdapter,
+    request_template: AdapterRequest,
+) -> DevelopmentWorker:
+    """Adapt bounded development-loop requests to one explicit worker adapter."""
+
+    def worker(loop_request: Mapping[str, object]) -> Mapping[str, object]:
+        if not isinstance(loop_request, Mapping):
+            return {"subscription_worker_bridge_blocked": "invalid_loop_request"}
+        prompt = json.dumps(
+            dict(loop_request),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        cycle_request = replace(
+            request_template,
+            context={**dict(request_template.context), "prompt": prompt},
+            execute=True,
+            calls_external_worker=True,
+            writes_target_repo=False,
+            executes_target_repo_mutation=False,
+            production_deployment=False,
+        )
+        result = adapter.run(cycle_request)
+        structured = result.output.get("structured_result")
+        if result.status != "PASS" or not isinstance(structured, Mapping):
+            return {"subscription_worker_bridge_blocked": "adapter_result_not_usable"}
+        return dict(structured)
+
+    return worker
 
 def _no_mutation_violations(label: str, record: dict[str, object]) -> list[str]:
     reasons: list[str] = []
