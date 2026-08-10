@@ -7,9 +7,11 @@ changed_files:
   - docs/modules/task-runner-contract-v1.md
   - docs/modules/worker-adapter-contract-v1.md
   - docs/reports/subscription_worker_task_runner_pipeline_core_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
   - examples/change_plans/tool_system_subscription_worker_task_runner_pipeline_core_v1.yaml
   - examples/task_manifests/tool_system_subscription_worker_task_runner_pipeline_core_v1.yaml
   - src/tool_system/runner/task_runner.py
+  - tests/test_module_contracts.py
   - tests/test_module_registry.py
   - tests/test_task_runner.py
 alignment:
