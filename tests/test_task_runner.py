@@ -9,8 +9,10 @@ from typing import Any
 import pytest
 
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
+from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
 from tool_system.development_loop import FrozenDevelopmentContract
 import tool_system.gate.command_runner as command_runner
+from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.runner.task_runner import (
     run_subscription_development_pipeline,
     run_subscription_public_entry_context_compilation,
@@ -28,6 +30,34 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_audit_bundle.yaml"
 PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_audit_bundle.yaml"
 P6_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_run_entry.yaml"
+CONTEXT_COMPILER_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_subscription_worker_public_entry_context_compiler_v1.yaml"
+)
+CONTEXT_COMPILER_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_subscription_worker_public_entry_context_compiler_v1.yaml"
+)
+CONTEXT_COMPILER_FILES = {
+    "config/module_registry_v1.yaml",
+    "docs/modules/blueprint-compiler-contract-v1.md",
+    "docs/modules/cli-frontend-contract-v1.md",
+    "docs/modules/repository-context-contract-v1.md",
+    "docs/modules/task-runner-contract-v1.md",
+    "docs/reports/subscription_worker_public_entry_context_compiler_v1.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "examples/change_plans/tool_system_subscription_worker_public_entry_context_compiler_v1.yaml",
+    "examples/task_manifests/tool_system_subscription_worker_public_entry_context_compiler_v1.yaml",
+    "src/tool_system/cli/main.py",
+    "src/tool_system/runner/task_runner.py",
+    "tests/test_module_registry.py",
+    "tests/test_root_cli.py",
+    "tests/test_task_runner.py",
+}
 
 
 def _fixture_git(repository: Path, *arguments: str) -> str:
@@ -439,3 +469,28 @@ def test_subscription_public_entry_context_blocks_stale_fixture(
     assert result["blueprint_compiled"] is False
     assert result["worker_invocations"] == 0
     assert result["local_git_write_operations"] == 0
+
+
+
+def test_subscription_context_compiler_package_freezes_exact_scope() -> None:
+    manifest_result = validate_task_manifest(
+        CONTEXT_COMPILER_MANIFEST,
+        ROOT / "policy/repo_write_policy.yaml",
+        ROOT / "policy/autonomy_policy.yaml",
+    )
+    plan_result = validate_change_plan(CONTEXT_COMPILER_PLAN)
+    manifest = load_yaml_file(CONTEXT_COMPILER_MANIFEST)
+    plan = load_yaml_file(CONTEXT_COMPILER_PLAN)
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == CONTEXT_COMPILER_FILES
+    assert set(manifest["scope"]["in_scope"]) == CONTEXT_COMPILER_FILES
+    assert set(plan["changed_files"]) == CONTEXT_COMPILER_FILES
+    assert len(CONTEXT_COMPILER_FILES) == 14
+    assert manifest["publication"]["retain_feature_branch"] is True
+    assert manifest["bounded_closure"]["frozen_before_execution"][
+        "real_downstream_accesses"
+    ] == 0
