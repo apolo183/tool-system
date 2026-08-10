@@ -373,6 +373,7 @@ def run_development_loop(
             "task_digest": contract.task_digest,
             "baseline_tree": contract.baseline_tree,
             "candidate_tree": _candidate_tree(files),
+            "candidate_files": dict(files),
             "allowed_scope": list(contract.allowed_scope),
             "acceptance_set": list(contract.acceptance_set),
             "validation_set": list(contract.validation_set),
