@@ -1,8 +1,10 @@
 # Worker Adapter Module Compound Contract v1
 
 This file defines the module contract owned by the current
-`worker_adapter` module. The current adapter is a no-mutation dry-run adapter
-and does not call an external worker.
+`worker_adapter` module. The default adapter is a no-mutation dry-run adapter.
+A separately configured guarded Codex CLI subscription adapter is available only
+through explicit injection, enablement, authorization, finite limits, and an
+isolated workspace; it never grants target-repository or production authority.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -25,8 +27,8 @@ module_compound_contract:
       - kind: prefix
         name: tool_system.worker_adapter
   role:
-    summary: adapt no-mutation worker requests into policy-gated orchestration records
-    responsibility_boundary: Convert worker requests into adapter requests, run the deterministic no-mutation adapter, assemble orchestration and rollback records, and enforce all false mutation flags.
+    summary: adapt worker requests into policy-gated orchestration and guarded subscription-worker records
+    responsibility_boundary: Convert worker requests into adapter requests, keep the deterministic no-mutation adapter as default, expose a separately enabled and explicitly authorized Codex CLI subscription adapter, assemble orchestration and rollback records, and enforce false target-mutation and production flags.
   natural_owner_evidence_paths:
     - src/tool_system/worker_adapter/__init__.py
     - src/tool_system/worker_adapter/contract.py
@@ -38,19 +40,23 @@ module_compound_contract:
     direct_provider_module_ids:
       - agent_worker_runtime
       - repository_controller
-    direct_consumer_module_ids: []
+    direct_consumer_module_ids:
+      - task_runner
   input_contract:
     registered_inputs:
       - AdapterRequest_v1_and_WorkerRequest_v1
-    boundary: Accept worker or adapter requests whose execute, external-worker, target-write, target-mutation, and production flags are all false.
+      - explicitly_authorized_subscription_worker_request_v1
+    boundary: Accept no-mutation worker or adapter requests by default; the guarded subscription path additionally requires adapter enablement, an explicit authorization boolean, fixed executable identity, isolated workspace, structured prompt, finite timeout and output limits, and false target-write, target-mutation, and production flags.
   output_contract:
     registered_outputs:
       - adapter_orchestration_and_policy_gate_record_v1
-    boundary: Return deterministic adapter results, orchestration audit and rollback records, policy-gate decisions, and structured reasons with all mutation flags false.
+      - guarded_subscription_worker_structured_result_v1
+    boundary: Return deterministic adapter results, orchestration audit and rollback records, policy-gate decisions, and structured reasons with all target-mutation and production flags false; a successful guarded subscription call returns only the validated terminal JSON object and redacted process metadata, never raw output.
   error_contract:
     registered_error_semantics:
       - policy_denial_or_worker_contract_error
-    boundary: Any requested execution, external worker, target write, target mutation, production operation, missing record, parity failure, or nested true flag blocks.
+      - subscription_worker_preflight_process_or_structured_output_block
+    boundary: Any unauthorized execution or external worker, target write, target mutation, production operation, missing record, parity failure, forbidden provider-credential environment name, invalid executable or workspace, timeout, oversized output, nonzero process status, or invalid structured terminal output blocks.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -92,18 +98,18 @@ module_compound_contract:
           - production_operation
         evidence_paths:
           - src/tool_system/worker_adapter/contract.py
-        activation_condition: A caller explicitly injects a non-default WorkerAdapter into run_adapter_requests under its own provider-specific effect contract and applicable authorization.
-        boundary: The default remains DryRunWorkerAdapter. The current runtime does not dynamically validate provider effect-contract completeness; this conservative maximum does not claim direct external, Git, database, network, or production effects and grants no authority.
+        activation_condition: A caller explicitly injects a non-default WorkerAdapter into run_adapter_requests or the subscription development bridge under its own effect contract and applicable authorization.
+        boundary: The default remains DryRunWorkerAdapter. The guarded Codex CLI adapter separately requires enablement, authorization, fixed argv without a shell, minimal credential-name-denying environment, isolated workspace, timeout, bounded output, and structured terminal JSON. This conservative maximum does not claim direct Git, database, API-provider, target-repository, remote-repository, or production effects and grants no authority.
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve request and result fields, default dry-run adapter, no-mutation flags, orchestration parity, rollback bundle, policy gate, and audit shapes.
+    interface_compatible_replacement: Preserve request and result fields, default dry-run adapter, guarded subscription-adapter enablement and authorization, fixed argv and minimal environment, finite process limits, structured-result-only output, no-target-mutation flags, orchestration parity, rollback bundle, policy gate, and audit shapes.
     interface_incompatible_change: Requires a new aggregate interface version and revalidation of agent-worker and repository-controller provider boundaries.
   rollback_contract:
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:worker_adapter@1.0.0
     method: Revert through a separately audited pull request and retain adapter request, result, orchestration, policy, audit, and rollback evidence.
   replacement_contract:
-    activation_rule: Replace only after adapter contract, worker conversion, no-mutation, orchestration, nested-policy, audit-write, and rollback tests pass.
+    activation_rule: Replace only after adapter contract, worker conversion, default no-mutation, guarded subscription preflight, fake-process argv/environment/output/timeout/cancellation, structured-result, orchestration, nested-policy, audit-write, and rollback tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -140,8 +146,13 @@ module_compound_contract:
           - audit_path
         constraint: Build a passing or blocked no-mutation record and append it only to the selected audit path.
   external_system_contracts:
-    declaration: explicit-none
-    systems: []
+    declaration: declared
+    systems:
+      - system_id: codex-cli-subscription-worker
+        mode: explicitly-injected-default-disabled-subscription-worker
+        evidence_paths:
+          - src/tool_system/worker_adapter/contract.py
+        boundary: Spawn the owner-configured Codex executable only through a fixed argument vector with shell disabled, a minimal environment that rejects provider-credential variable names, explicit enablement and authorization, an isolated workspace, timeout and output limits, structured terminal JSON validation, and no raw-output retention.
   non_claims:
     provider_execution_authorized: false
     target_repo_mutation_authorized: false
