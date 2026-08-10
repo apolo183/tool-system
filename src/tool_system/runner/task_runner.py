@@ -27,11 +27,11 @@ from tool_system.gate.command_runner import commands_from_change_plan, run_comma
 from tool_system.gate.test_gate import build_gate_decision
 from tool_system.local_git import (
     LocalGitIdentity,
+    create_durable_local_git_store,
     create_isolated_local_workspace,
     run_durable_local_git,
 )
 from tool_system.manifest.task_manifest import load_yaml_file
-from tool_system.orchestrator import DurableOrchestratorStore
 from tool_system.process_authority.contract import (
     validate_explicit_task_pair,
     validate_process_authority,
@@ -757,6 +757,28 @@ def _private_path_identity(raw_path: str | Path, label: str) -> tuple[Path, str]
     return path, hashlib.sha256(str(path).encode("utf-8")).hexdigest()
 
 
+def _normalized_codex_configuration(
+    value: CodexCLIAdapterConfig | Mapping[str, object],
+) -> CodexCLIAdapterConfig:
+    if isinstance(value, CodexCLIAdapterConfig):
+        return value
+    if not isinstance(value, Mapping) or set(value) != {
+        "executable",
+        "enabled",
+        "timeout_seconds",
+        "termination_grace_seconds",
+        "max_prompt_bytes",
+        "max_output_bytes",
+    }:
+        raise ValueError("SUBSCRIPTION_EXECUTION_WORKER_CONFIG_INVALID")
+    try:
+        return CodexCLIAdapterConfig(**dict(value))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            "SUBSCRIPTION_EXECUTION_WORKER_CONFIG_INVALID"
+        ) from exc
+
+
 def _worker_configuration_sha256(config: CodexCLIAdapterConfig) -> str:
     return _canonical_sha256(
         {
@@ -1265,7 +1287,7 @@ def run_subscription_public_entry_execution(
     governance_paths: Sequence[str],
     query_terms: Sequence[str],
     seed_paths: Sequence[str] = (),
-    codex_config: CodexCLIAdapterConfig,
+    codex_config: CodexCLIAdapterConfig | Mapping[str, object],
     repository_read_authorized: bool = False,
     worker_execution_authorized: bool = False,
     validation_execution_authorized: bool = False,
@@ -1327,7 +1349,13 @@ def run_subscription_public_entry_execution(
             field="acceptance_requirements",
             maximum=64,
         )
-        if codex_config.enabled is not True or codex_config.violations():
+        normalized_codex_config = _normalized_codex_configuration(
+            codex_config
+        )
+        if (
+            normalized_codex_config.enabled is not True
+            or normalized_codex_config.violations()
+        ):
             raise ValueError("SUBSCRIPTION_EXECUTION_WORKER_CONFIG_INVALID")
     except (OSError, TypeError, ValueError) as exc:
         return _subscription_execution_boundary(
@@ -1419,7 +1447,7 @@ def run_subscription_public_entry_execution(
             acceptance_set=acceptance_set,
             validation_set=validation_set,
             worker_configuration_sha256=_worker_configuration_sha256(
-                codex_config
+                normalized_codex_config
             ),
             task_pair_sha256=_canonical_sha256(
                 {
@@ -1499,12 +1527,12 @@ def run_subscription_public_entry_execution(
 
     try:
         state_parent = state_path.parent.resolve(strict=True)
-        store = DurableOrchestratorStore(
-            state_path,
+        store = create_durable_local_git_store(
+            database_path=state_path,
             forbidden_roots=(source_path, workspace_path),
         )
         concrete_adapter = adapter or CodexCLISubscriptionWorkerAdapter(
-            codex_config
+            normalized_codex_config
         )
         with tempfile.TemporaryDirectory(
             prefix="tool-system-subscription-context-"
