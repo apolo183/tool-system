@@ -114,7 +114,8 @@ mapping_contract:
       direct_consumer_module_ids:
         - process_authority
         - local_git
-      change_risk: "high: persistent SQLite state, race-safe optional-sidecar validation, recovery, and burn-on-claim authorization boundary"
+        - task_runner
+      change_risk: "high: persistent SQLite state, race-safe optional-sidecar validation, recovery, burn-on-claim authorization, and exact subscription execution state boundary"
       rollback_identity: tool-system@783a1bf16c48e717da281d9fefc134e68bf879c4:durable_orchestrator@1.1.0
     - current_module_id: repository_controller
       canonical_module_id: repository-controller
@@ -166,9 +167,9 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_planner@1.1.0
     - current_module_id: task_runner
       canonical_module_id: task-runner
-      current_module_version: 1.1.0
+      current_module_version: 1.2.0
       aggregate_interface_id: task-runner-api
-      aggregate_interface_version: 1.0.0
+      aggregate_interface_version: 1.1.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: exact, name: tool_system.gate.command_runner}
@@ -178,7 +179,7 @@ mapping_contract:
         - {kind: exact, name: tool_system.runner.task_runner}
       direct_consumer_module_ids:
         - cli_frontend
-      change_risk: "critical: configured command execution, exact manifest-bound read-only context compilation, byte-sealed task-pair authority, and audit boundary"
+      change_risk: "critical: configured command execution, exact manifest-bound read-only context compilation, guarded subscription worker composition, isolated validation, durable state, and one remote-free local commit boundary"
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_runner@1.1.0
     - current_module_id: role_runtime
       canonical_module_id: role-runtime
@@ -201,6 +202,7 @@ mapping_contract:
       python_import_identities:
         - {kind: prefix, name: tool_system.worker_adapter}
       direct_consumer_module_ids:
+        - cli_frontend
         - task_runner
       change_risk: "high: default dry-run plus non-interactive config-isolated stdin, schema-bound read-only Codex, and process-group cancellation boundary"
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:worker_adapter@1.0.0
@@ -230,9 +232,9 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cleanup_planner@1.0.0
     - current_module_id: cli_frontend
       canonical_module_id: cli-frontend
-      current_module_version: 1.1.0
+      current_module_version: 1.2.0
       aggregate_interface_id: cli-frontend-api
-      aggregate_interface_version: 1.0.0
+      aggregate_interface_version: 1.1.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: exact, name: tool_system.cli}
@@ -254,7 +256,7 @@ mapping_contract:
         - {kind: exact, name: tool_system.cli.target_repo_dry_run}
         - {kind: exact, name: tool_system.cli.target_repo_pr_plan_preview}
       direct_consumer_module_ids: []
-      change_risk: "high: public entrypoint delegation and non-authorizing manifest-bound read-request surface"
+      change_risk: "critical: read-only context delegation plus separately exact-bound subscription execution, isolated validation, durable state, and local-Git request surface"
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cli_frontend@1.1.0
     - current_module_id: repository_context
       canonical_module_id: repository-context
@@ -282,7 +284,7 @@ mapping_contract:
       rollback_identity: tool-system@00793ad07bba2e3fe3bd29882e83788d32697da6:blueprint_compiler@absent
     - current_module_id: development_loop
       canonical_module_id: development-loop
-      current_module_version: 1.1.0
+      current_module_version: 1.2.0
       aggregate_interface_id: development-loop-api
       aggregate_interface_version: 1.1.0
       runtime_id_preserved: true
@@ -295,14 +297,15 @@ mapping_contract:
       rollback_identity: tool-system@0b5110a2eea79ebde650e1088b787c781ddab171:development_loop@absent
     - current_module_id: local_git
       canonical_module_id: local-git
-      current_module_version: 1.1.0
+      current_module_version: 1.2.0
       aggregate_interface_id: local-git-api
-      aggregate_interface_version: 1.1.0
+      aggregate_interface_version: 1.2.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.local_git}
-      direct_consumer_module_ids: []
-      change_risk: "high: remote-free add/modify/delete local Git writes coordinated with durable receipts and crash resume"
+      direct_consumer_module_ids:
+        - task_runner
+      change_risk: "high: exact source-to-workspace isolation plus remote-free add/modify/delete local Git writes coordinated with durable receipts, cancellation, and crash resume"
       rollback_identity: tool-system@22dedb0f2a2c0b38a0bd4c67f36c1c2454ca19d5:local_git@absent
     - current_module_id: release_governance
       canonical_module_id: release-governance
@@ -429,6 +432,7 @@ static_import_dag:
     durable_orchestrator:
       - process_authority
       - local_git
+      - task_runner
     repository_controller:
       - cleanup_planner
       - cli_frontend
@@ -449,6 +453,7 @@ static_import_dag:
     role_runtime:
       - cli_frontend
     worker_adapter:
+      - cli_frontend
       - task_runner
     target_repo_adapter:
       - cli_frontend
@@ -462,7 +467,8 @@ static_import_dag:
     development_loop:
       - local_git
       - task_runner
-    local_git: []
+    local_git:
+      - task_runner
     release_governance:
       - operational_observability
       - state_migration
@@ -482,17 +488,8 @@ static_import_dag:
   zero_consumer_modules:
     - architecture_registry
     - adaptive_model_portfolio_and_economics
-    - durable_orchestrator
-    - worker_adapter
     - cli_frontend
-    - repository_context
-    - blueprint_compiler
-    - development_loop
-    - local_git
-    - operational_observability
-    - record_retention
-    - recovery_planning
-    - subscription_capacity
+    - production_readiness
   non_claim: >-
     Static AST import equality does not prove absence of dynamic imports, CLI
     invocation dependencies, data dependencies, configuration dependencies,
