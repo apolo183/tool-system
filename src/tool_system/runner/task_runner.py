@@ -19,15 +19,40 @@ from tool_system.process_authority.contract import (
     validate_process_authority,
 )
 from tool_system.repo_controller.artifact import write_jsonl_record
+from tool_system.runner.active_gate_resolver import (
+    paths_match,
+    resolve_change_plan_from_active_gates,
+)
 from tool_system.worker_adapter import (
     AdapterRequest,
     WorkerAdapter,
     build_subscription_development_worker,
 )
-from tool_system.runner.active_gate_resolver import (
-    paths_match,
-    resolve_change_plan_from_active_gates,
-)
+
+
+_SUBSCRIPTION_WORKER_ADAPTER_KIND = "codex_cli_subscription_worker_adapter"
+
+
+def _subscription_pipeline_boundary_record(
+    *,
+    status: str,
+    adapter_kind: str,
+    terminal_code: str | None = None,
+    reasons: list[str] | None = None,
+) -> dict[str, object]:
+    return {
+        "status": status,
+        "mode": "subscription_worker_development_pipeline",
+        "adapter_kind": adapter_kind,
+        "terminal_code": terminal_code,
+        "reasons": list(reasons or []),
+        "api_mode_enabled": False,
+        "provider_invocations": 0,
+        "provider_credential_value_accesses": 0,
+        "target_repo_mutations": 0,
+        "remote_repository_operations": 0,
+        "local_git_operations": 0,
+    }
 
 
 
@@ -44,7 +69,16 @@ def run_subscription_development_pipeline(
     resume_state: Mapping[str, object] | None = None,
     cancellation_requested: Callable[[], bool] | None = None,
 ) -> dict[str, object]:
-    """Run the bounded development loop through one explicitly injected adapter."""
+    """Run the bounded loop through the guarded subscription-worker adapter."""
+
+    adapter_kind = str(getattr(adapter, "adapter_kind", "unknown"))
+    if adapter_kind != _SUBSCRIPTION_WORKER_ADAPTER_KIND:
+        return _subscription_pipeline_boundary_record(
+            status="BLOCK",
+            adapter_kind=adapter_kind,
+            terminal_code="UNSUPPORTED_SUBSCRIPTION_WORKER_ADAPTER",
+            reasons=["only the guarded Codex CLI subscription adapter is accepted"],
+        )
 
     worker = build_subscription_development_worker(
         adapter=adapter,
@@ -63,14 +97,21 @@ def run_subscription_development_pipeline(
     )
     return {
         **result,
-        "mode": "subscription_worker_development_pipeline",
-        "adapter_kind": getattr(adapter, "adapter_kind", "unknown"),
-        "api_mode_enabled": False,
-        "provider_invocations": 0,
-        "credential_value_accesses": 0,
-        "remote_operations": 0,
-        "local_git_operations": 0,
+        **_subscription_pipeline_boundary_record(
+            status=str(result.get("status", "BLOCK")),
+            adapter_kind=adapter_kind,
+            terminal_code=(
+                str(result["terminal_code"])
+                if result.get("terminal_code") is not None
+                else None
+            ),
+            reasons=[str(reason) for reason in result.get("reasons", [])],
+        ),
+        "subscription_worker_invocations": int(
+            result.get("worker_call_count", 0)
+        ),
     }
+
 
 def _status_from_reasons(reasons: list[str]) -> str:
     return "PASS" if not reasons else "BLOCK"
