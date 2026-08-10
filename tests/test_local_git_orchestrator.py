@@ -127,6 +127,44 @@ def test_creates_exact_remote_free_workspace_and_reuses_identity(
     assert existing["workspace_created"] is False
 
 
+def test_workspace_creation_rejects_source_symlink_and_dirty_resume(
+    tmp_path: Path,
+) -> None:
+    source, _, identity = _fixture(tmp_path)
+    workspace_parent = tmp_path / "workspaces"
+    workspace_parent.mkdir(mode=0o700)
+    source_alias = tmp_path / "source-alias"
+    source_alias.symlink_to(source, target_is_directory=True)
+
+    blocked_alias = create_isolated_local_workspace(
+        source_repository_root=source_alias,
+        workspace_root=workspace_parent / "alias-blocked",
+        expected_head_sha=identity.expected_head_sha,
+        expected_tree_sha=identity.expected_tree_sha,
+    )
+    assert blocked_alias["status"] == "BLOCK"
+    assert blocked_alias["terminal_code"] == "INVALID_SOURCE_REPOSITORY_ROOT"
+
+    workspace = workspace_parent / "dirty-resume"
+    created = create_isolated_local_workspace(
+        source_repository_root=source,
+        workspace_root=workspace,
+        expected_head_sha=identity.expected_head_sha,
+        expected_tree_sha=identity.expected_tree_sha,
+    )
+    assert created["status"] == "PASS"
+    (workspace / "untracked.txt").write_text("drift\n", encoding="utf-8")
+
+    blocked_resume = create_isolated_local_workspace(
+        source_repository_root=source,
+        workspace_root=workspace,
+        expected_head_sha=identity.expected_head_sha,
+        expected_tree_sha=identity.expected_tree_sha,
+    )
+    assert blocked_resume["status"] == "BLOCK"
+    assert blocked_resume["terminal_code"] == "DIRTY_EXISTING_WORKSPACE"
+
+
 def test_local_git_honors_cancellation_before_worker_and_commit(
     tmp_path: Path,
 ) -> None:
