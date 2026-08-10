@@ -1588,7 +1588,7 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: development-loop
-  module_version: 1.2.0
+  module_version: 1.1.0
   role: execute bounded structured patch, validation, diagnosis, repair, and independent review cycles against isolated in-memory repositories while supplying the exact current candidate files to every worker cycle and preserving cancellation, no-progress, and zero-external-effect semantics.
   owner: development-loop
   public_interface_refs:
@@ -1617,12 +1617,12 @@ modules:
   permitted_side_effects: []
   rollback_boundary:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: d32c12fe8037bee9ada7252979a26907ab35bc5ddce10688f5e09dfd892c5784
+    sha256: db7cd207e0f8922a86fc01beea91d0ef9c7bb4e4c079e8b65162f8fba6b99a21
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: d32c12fe8037bee9ada7252979a26907ab35bc5ddce10688f5e09dfd892c5784
+    sha256: db7cd207e0f8922a86fc01beea91d0ef9c7bb4e4c079e8b65162f8fba6b99a21
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: local-git
@@ -2547,32 +2547,32 @@ interfaces:
   - consumer_module_id: task-runner
   input_contract:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: d32c12fe8037bee9ada7252979a26907ab35bc5ddce10688f5e09dfd892c5784
+    sha256: db7cd207e0f8922a86fc01beea91d0ef9c7bb4e4c079e8b65162f8fba6b99a21
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: d32c12fe8037bee9ada7252979a26907ab35bc5ddce10688f5e09dfd892c5784
+    sha256: db7cd207e0f8922a86fc01beea91d0ef9c7bb4e4c079e8b65162f8fba6b99a21
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: d32c12fe8037bee9ada7252979a26907ab35bc5ddce10688f5e09dfd892c5784
+    sha256: db7cd207e0f8922a86fc01beea91d0ef9c7bb4e4c079e8b65162f8fba6b99a21
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: d32c12fe8037bee9ada7252979a26907ab35bc5ddce10688f5e09dfd892c5784
+    sha256: db7cd207e0f8922a86fc01beea91d0ef9c7bb4e4c079e8b65162f8fba6b99a21
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: d32c12fe8037bee9ada7252979a26907ab35bc5ddce10688f5e09dfd892c5784
+    sha256: db7cd207e0f8922a86fc01beea91d0ef9c7bb4e4c079e8b65162f8fba6b99a21
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/development-loop-contract-v1.md
-    sha256: d32c12fe8037bee9ada7252979a26907ab35bc5ddce10688f5e09dfd892c5784
+    sha256: db7cd207e0f8922a86fc01beea91d0ef9c7bb4e4c079e8b65162f8fba6b99a21
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: local-git-api
