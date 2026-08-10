@@ -10,8 +10,9 @@ This package corrects that adapter in place without changing `worker-adapter-api
 
 The guarded path remains default disabled and requires explicit enablement plus request authority. When selected, it uses an exact shell-free vector with:
 
+- global `--ask-for-approval never` so the non-interactive run cannot pause for an unbounded approval;
 - `codex exec --json` for a bounded event stream;
-- `--ephemeral` so no session rollout is persisted;
+- `--ephemeral --ignore-user-config` so no session rollout is persisted and user config cannot re-enable MCP, hooks, a non-subscription provider, or broader tool defaults; authentication still follows `CODEX_HOME`;
 - `--sandbox read-only` so the worker returns a patch instead of editing the workspace;
 - `--output-schema <creator-owned-schema>` and `--output-last-message <creator-owned-result>`;
 - `--skip-git-repo-check -`, with the structured prompt supplied through stdin rather than process arguments.
@@ -26,7 +27,7 @@ The production process runner creates a new process session. On timeout it sends
 
 ## Authority and effects
 
-The minimal environment continues to reject provider-credential variable names. Neither executable presence, subscription authentication state, environment variables, nor temporary file creation grants execution authority. Target-repository writes, target mutation, provider execution, credential-value access, production, remote operations, project cleanup, and rollback remain false.
+The minimal environment continues to reject provider-credential variable names. Ignoring user configuration does not extract or expose authentication state; it prevents repository-external behavioral configuration from expanding the fixed worker surface. Neither executable presence, subscription authentication state, environment variables, nor temporary file creation grants execution authority. Target-repository writes, target mutation, provider execution, credential-value access, production, remote operations, project cleanup, and rollback remain false.
 
 Creator-owned temporary schema/result creation and automatic removal are implementation-lifetime artifacts, not target-repository or project-cleanup authority. The worker adapter contract and module registry declare this conditional boundary without changing the public interface or module version.
 
