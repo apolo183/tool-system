@@ -166,7 +166,7 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_planner@1.1.0
     - current_module_id: task_runner
       canonical_module_id: task-runner
-      current_module_version: 1.2.0
+      current_module_version: 1.1.0
       aggregate_interface_id: task-runner-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
@@ -230,7 +230,7 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cleanup_planner@1.0.0
     - current_module_id: cli_frontend
       canonical_module_id: cli-frontend
-      current_module_version: 1.2.0
+      current_module_version: 1.1.0
       aggregate_interface_id: cli-frontend-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
@@ -258,7 +258,7 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cli_frontend@1.1.0
     - current_module_id: repository_context
       canonical_module_id: repository-context
-      current_module_version: 1.0.1
+      current_module_version: 1.0.0
       aggregate_interface_id: repository-context-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
@@ -270,7 +270,7 @@ mapping_contract:
       rollback_identity: tool-system@7e3a114a25d70c3ebecc952f13ce68b1adbbbc80:repository_context@absent
     - current_module_id: blueprint_compiler
       canonical_module_id: blueprint-compiler
-      current_module_version: 1.0.1
+      current_module_version: 1.0.0
       aggregate_interface_id: blueprint-compiler-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
