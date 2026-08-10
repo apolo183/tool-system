@@ -60,7 +60,7 @@ module_compound_contract:
         name: tool_system.cli.target_repo_pr_plan_preview
   role:
     summary: expose stable command-line entry points that delegate to registered public module interfaces
-    responsibility_boundary: Parse command-line arguments, select one current public module entry point, render its result, and derive a process exit code without changing delegated authority.
+    responsibility_boundary: Parse command-line arguments, including the non-executing subscription-development authority preflight, select one current public module entry point, render its result, and derive a process exit code without changing delegated authority.
   natural_owner_evidence_paths:
     - src/tool_system/cli/__init__.py
     - src/tool_system/cli/cleanup_plan.py
@@ -95,15 +95,18 @@ module_compound_contract:
   input_contract:
     registered_inputs:
       - command_line_arguments_and_versioned_module_inputs
-    boundary: Accept command-line arguments for one selected current entry point, including explicit paths, repository identifiers, PR numbers, flags, and module inputs.
+      - subscription_development_authority_preflight_arguments
+    boundary: Accept command-line arguments for one selected current entry point, including explicit paths, repository identifiers, PR numbers, flags, and module inputs; the develop command requires one explicit current manifest/change-plan pair, an absolute repository-root identity, exact expected commit, and bounded blueprint, module-registry, milestone, acceptance, governance, query, and seed selections.
   output_contract:
     registered_outputs:
       - exit_code_and_structured_or_human_readable_result
-    boundary: Print the delegated structured result and return zero only for the selected entry point's accepted success status.
+      - nonexecuting_subscription_authority_packet_result
+    boundary: Print the delegated structured result and return zero only for the selected entry point's accepted success status; the develop preflight prints a hashed-root packet that explicitly grants no context, compiler, worker, local-Git, API, provider, credential, remote, or production authority.
   error_contract:
     registered_error_semantics:
       - nonzero_exit_on_block_or_failure
-    boundary: Argument errors, delegated BLOCK or failure status, or delegated exceptions do not become success and cannot be hidden by CLI routing.
+      - develop_preflight_invalid_input_or_authority_block
+    boundary: Argument errors, invalid develop preflight input, failed current authority or exact pair binding, delegated BLOCK or failure status, or delegated exceptions do not become success and cannot be hidden by CLI routing.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -140,13 +143,13 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve command names, required and optional argument semantics, module delegation, structured output, and exit-code behavior.
+    interface_compatible_replacement: Preserve command names including develop, required and optional argument semantics, non-executing preflight and root-redaction behavior, module delegation, structured output, and exit-code behavior.
     interface_incompatible_change: Requires a new aggregate interface version, entry-point migration, packaging review, and all delegated CLI tests.
   rollback_contract:
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cli_frontend@1.1.0
     method: Revert through a separately audited pull request and restore the prior entry-point delegation and argument contract.
   replacement_contract:
-    activation_rule: Replace only after root and dedicated CLI tests, packaging entry-point checks, delegated-module tests, output rendering, and exit-code tests pass.
+    activation_rule: Replace only after root and dedicated CLI tests, develop authority-pass and invalid-input tests, packet redaction, packaging entry-point checks, delegated-module tests, output rendering, and exit-code tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -182,7 +185,10 @@ module_compound_contract:
           - change_plan
           - cwd
           - audit_path
-        constraint: Parse explicit path arguments and delegate them unchanged to the selected module; do not infer broader roots or permissions.
+          - repository_root
+          - blueprint_path
+          - module_registry_path
+        constraint: Parse explicit path arguments and delegate them unchanged to the selected module; the develop preflight hashes the repository-root identity in public output and does not open it, and no CLI path may infer broader roots or permissions.
   external_system_contracts:
     declaration: declared
     systems:
