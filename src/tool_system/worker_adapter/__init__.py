@@ -3,6 +3,8 @@
 from tool_system.worker_adapter.contract import (
     AdapterRequest,
     AdapterResult,
+    CodexCLIAdapterConfig,
+    CodexCLISubscriptionWorkerAdapter,
     DryRunWorkerAdapter,
     WorkerAdapter,
     build_adapter_request_from_worker_request,
@@ -22,6 +24,8 @@ from tool_system.worker_adapter.policy_gate import (
 __all__ = [
     "AdapterRequest",
     "AdapterResult",
+    "CodexCLIAdapterConfig",
+    "CodexCLISubscriptionWorkerAdapter",
     "DryRunWorkerAdapter",
     "WorkerAdapter",
     "build_adapter_orchestration_record",

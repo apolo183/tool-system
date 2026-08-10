@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import subprocess
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
@@ -94,6 +97,156 @@ class DryRunWorkerAdapter:
                 "requested_writes_target_repo": request.writes_target_repo,
                 "requested_executes_target_repo_mutation": request.executes_target_repo_mutation,
                 "requested_production_deployment": request.production_deployment,
+            },
+        )
+
+
+
+@dataclass(frozen=True)
+class CodexCLIAdapterConfig:
+    executable: str
+    enabled: bool = False
+    timeout_seconds: int = 120
+    max_output_bytes: int = 1_048_576
+    inherited_environment_names: tuple[str, ...] = ("PATH", "HOME", "LANG", "LC_ALL")
+
+    def violations(self) -> tuple[str, ...]:
+        reasons: list[str] = []
+        if not self.executable or "/" in self.executable or "\\" in self.executable:
+            reasons.append("Codex executable must be one owner-configured command name")
+        if self.timeout_seconds < 1 or self.timeout_seconds > 3600:
+            reasons.append("Codex timeout must be between 1 and 3600 seconds")
+        if self.max_output_bytes < 1 or self.max_output_bytes > 16_777_216:
+            reasons.append("Codex output limit must be between 1 and 16777216 bytes")
+        forbidden = {"OPENAI_API_KEY", "DEEPSEEK_API_KEY", "DASHSCOPE_API_KEY", "ZHIPUAI_API_KEY"}
+        if forbidden.intersection(self.inherited_environment_names):
+            reasons.append("provider credential environment names are forbidden")
+        return tuple(reasons)
+
+
+ProcessRunner = Callable[..., subprocess.CompletedProcess[str]]
+
+
+class CodexCLISubscriptionWorkerAdapter:
+    adapter_kind = "codex_cli_subscription_worker_adapter"
+
+    def __init__(
+        self,
+        config: CodexCLIAdapterConfig,
+        *,
+        process_runner: ProcessRunner = subprocess.run,
+        source_environment: Mapping[str, str] | None = None,
+    ) -> None:
+        self.config = config
+        self._process_runner = process_runner
+        self._source_environment = source_environment if source_environment is not None else os.environ
+
+    def run(self, request: AdapterRequest) -> AdapterResult:
+        reasons = list(self.config.violations())
+        prompt = request.context.get("prompt")
+        workspace = request.context.get("workspace")
+        authorization = request.context.get("subscription_worker_authorized")
+        if not self.config.enabled:
+            reasons.append("subscription worker adapter is disabled")
+        if authorization is not True:
+            reasons.append("subscription worker execution is not explicitly authorized")
+        if request.execute is not True or request.calls_external_worker is not True:
+            reasons.append("subscription worker request must explicitly authorize execution and external worker")
+        if request.writes_target_repo or request.executes_target_repo_mutation or request.production_deployment:
+            reasons.append("subscription worker cannot receive target mutation or production authority")
+        if not isinstance(prompt, str) or not prompt.strip():
+            reasons.append("structured subscription worker prompt is required")
+        if not isinstance(workspace, str) or not workspace:
+            reasons.append("isolated workspace identity is required")
+        if reasons:
+            return AdapterResult(
+                adapter_id=request.adapter_id,
+                role=request.role,
+                action=request.action,
+                status="BLOCK",
+                adapter_kind=self.adapter_kind,
+                execute=False,
+                calls_external_worker=False,
+                writes_target_repo=False,
+                executes_target_repo_mutation=False,
+                production_deployment=False,
+                evidence=["worker_adapter.subscription.preflight.block"],
+                reasons=reasons,
+                output={},
+            )
+
+        argv = [self.config.executable, "exec", "--json", "--skip-git-repo-check", str(prompt)]
+        env = {
+            name: self._source_environment[name]
+            for name in self.config.inherited_environment_names
+            if name in self._source_environment
+        }
+        try:
+            completed = self._process_runner(
+                argv,
+                cwd=str(workspace),
+                env=env,
+                shell=False,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=self.config.timeout_seconds,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return AdapterResult(
+                adapter_id=request.adapter_id,
+                role=request.role,
+                action=request.action,
+                status="BLOCK",
+                adapter_kind=self.adapter_kind,
+                execute=True,
+                calls_external_worker=True,
+                writes_target_repo=False,
+                executes_target_repo_mutation=False,
+                production_deployment=False,
+                evidence=["worker_adapter.subscription.process.block"],
+                reasons=[f"subscription worker process failed closed: {type(exc).__name__}"],
+                output={"raw_output_recorded": False},
+            )
+
+        stdout = completed.stdout or ""
+        stderr = completed.stderr or ""
+        if len(stdout.encode()) + len(stderr.encode()) > self.config.max_output_bytes:
+            return AdapterResult(
+                adapter_id=request.adapter_id,
+                role=request.role,
+                action=request.action,
+                status="BLOCK",
+                adapter_kind=self.adapter_kind,
+                execute=True,
+                calls_external_worker=True,
+                writes_target_repo=False,
+                executes_target_repo_mutation=False,
+                production_deployment=False,
+                evidence=["worker_adapter.subscription.output_limit.block"],
+                reasons=["subscription worker output exceeded the configured byte limit"],
+                output={"raw_output_recorded": False, "returncode": completed.returncode},
+            )
+        status: AdapterStatus = "PASS" if completed.returncode == 0 else "BLOCK"
+        return AdapterResult(
+            adapter_id=request.adapter_id,
+            role=request.role,
+            action=request.action,
+            status=status,
+            adapter_kind=self.adapter_kind,
+            execute=True,
+            calls_external_worker=True,
+            writes_target_repo=False,
+            executes_target_repo_mutation=False,
+            production_deployment=False,
+            evidence=["worker_adapter.subscription.process.complete"],
+            reasons=[] if status == "PASS" else ["subscription worker returned a nonzero status"],
+            output={
+                "returncode": completed.returncode,
+                "stdout_sha256_required": True,
+                "raw_output_recorded": False,
+                "argv_shape": ["<configured-codex>", "exec", "--json", "--skip-git-repo-check", "<structured-prompt>"],
+                "environment_names": sorted(env),
             },
         )
 
