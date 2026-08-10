@@ -1,0 +1,127 @@
+task_id: tool-system-subscription-worker-snapshot-authority-binding-v1
+task_type: implementation
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-snapshot-authority-binding-v1
+phase: POST_P16_PRODUCT_COMPLETION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    section_or_key: authority and effects
+    scope: Bind the exact repository snapshot and bounded public-entry selection to the validated task manifest before repository-context reads.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded blueprint-driven subscription-primary development with API providers default off.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: SUBSCRIPTION-WORKER-SNAPSHOT-AUTHORITY-BINDING-v1
+    baseline_commit: dddf790fa88918419aef76fa362a23c6ef076911
+    baseline_tree: canonical_main_tree_at_dddf790fa88918419aef76fa362a23c6ef076911
+    allowed_scope: exact_15_paths_listed_below
+    acceptance_set:
+      - a passing generic task pair cannot authorize repository-context reads
+      - the exact manifest subscription_public_entry mapping must equal every bounded public-entry selection and hashed root identity
+      - repository_read_authorized must be true while worker and local-Git write authority remain false
+      - manifest and change-plan bytes remain equal across validation and binding
+      - missing duplicate stale mismatched or authority-bearing binding fails closed before repository context
+      - the compiler accepts the new read-authorized envelope while preserving the legacy fixture envelope
+      - the public CLI flag alone grants no authority and the prior fixture spelling remains a compatibility alias
+      - public output contains no repository-root value or selected file contents
+      - Hosted CI uses isolated Git fixtures only and all external write API provider credential production cleanup and rollback counters remain zero
+      - module contracts dependency mapping and registry seals remain exact without incompatible version drift
+    validation_set:
+      - focused root CLI task-runner blueprint-compiler and module-registry tests
+      - isolated local Git fixture and manifest mismatch fixtures only
+      - full Hosted CI and governance validation
+    terminal_predicate: exact manifest-bound read authority and compatible compiler envelope are merged while worker and local-Git write dispatch remain pending
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 3
+      review_cycles: 1
+      provider_invocations: 0
+      credential_value_accesses: 0
+      real_codex_invocations: 0
+      real_downstream_accesses: 0
+      local_git_write_operations: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, validation_results, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, status_text]
+scope:
+  summary: Bind exact snapshot read authority to the validated task manifest and compatibly generalize the pure compiler envelope.
+  in_scope: &files
+    - config/module_registry_v1.yaml
+    - docs/modules/blueprint-compiler-contract-v1.md
+    - docs/modules/cli-frontend-contract-v1.md
+    - docs/modules/task-runner-contract-v1.md
+    - docs/reports/subscription_worker_snapshot_authority_binding_v1.md
+    - docs/tool_system_module_registry_contract_v1.md
+    - examples/change_plans/tool_system_subscription_worker_snapshot_authority_binding_v1.yaml
+    - examples/task_manifests/tool_system_subscription_worker_snapshot_authority_binding_v1.yaml
+    - src/tool_system/blueprint_compiler/compiler.py
+    - src/tool_system/cli/main.py
+    - src/tool_system/runner/task_runner.py
+    - tests/test_blueprint_compiler.py
+    - tests/test_module_registry.py
+    - tests/test_root_cli.py
+    - tests/test_task_runner.py
+  out_of_scope:
+    - worker or real Codex invocation
+    - local Git writes branch or commit creation
+    - real downstream API provider credential remote production cleanup or rollback operations
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    commit_sha: dddf790fa88918419aef76fa362a23c6ef076911
+    why_relevant: The accepted lifecycle requires exact manifest authority before repository context worker or local-Git effects.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_public_entry_context_compiler_v1.md
+    commit_sha: dddf790fa88918419aef76fa362a23c6ef076911
+    why_relevant: The merged preceding package exposes the fixture-only coupling and preserves the next-stage boundary.
+  - repo: apolo183/tool-system
+    path: docs/modules/blueprint-compiler-contract-v1.md
+    commit_sha: dddf790fa88918419aef76fa362a23c6ef076911
+    why_relevant: The current contract records the retained historical isolated-fixture authorization envelope.
+allowed_files: *files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/**
+  - policy/**
+  - .github/**
+  - src/tool_system/ai_worker/**
+  - src/tool_system/worker_adapter/**
+  - src/tool_system/local_git/**
+  - src/tool_system/repo_controller/**
+  - src/tool_system/process_authority/**
+  - docs/tool_system_project_state_v1.yaml
+  - docs/tool_system_global_development_principles_v1.md
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_root_cli.py tests/test_task_runner.py tests/test_blueprint_compiler.py tests/test_module_registry.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  squash_merge_authorized: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+rollback:
+  method: git_revert
+  reference: tool-system@dddf790fa88918419aef76fa362a23c6ef076911
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: authorized_subscription_worker_public_entry_production_closure_lifecycle
+  approved_at: 2026-08-10 UTC+09:00
