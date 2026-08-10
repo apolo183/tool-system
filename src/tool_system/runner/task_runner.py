@@ -270,6 +270,20 @@ def run_subscription_public_entry_preflight(
             reasons=[str(exc)],
         )
 
+    try:
+        captured_manifest, captured_plan, authority_manifest = (
+            _capture_subscription_authority_inputs(
+                task_manifest_path,
+                change_plan_path,
+            )
+        )
+    except (OSError, TypeError, ValueError) as exc:
+        return _subscription_preflight_boundary(
+            status="BLOCK",
+            terminal_code="SUBSCRIPTION_AUTHORITY_INPUT_CAPTURE_BLOCKED",
+            reasons=[str(exc)],
+        )
+
     authority = run_task_pipeline(
         task_manifest_path=task_manifest_path,
         change_plan_path=change_plan_path,
@@ -305,6 +319,33 @@ def run_subscription_public_entry_preflight(
         "worker_execution_authorized": False,
         "local_git_execution_authorized": False,
     }
+    try:
+        if (
+            Path(task_manifest_path).read_bytes() != captured_manifest
+            or Path(change_plan_path).read_bytes() != captured_plan
+        ):
+            raise ValueError("SUBSCRIPTION_AUTHORITY_INPUT_DRIFT")
+        _, binding_sha256 = _subscription_authority_binding(
+            authority_manifest,
+            packet,
+        )
+    except (OSError, TypeError, ValueError) as exc:
+        blocked = _subscription_preflight_boundary(
+            status="BLOCK",
+            terminal_code="SUBSCRIPTION_AUTHORITY_BINDING_BLOCKED",
+            reasons=[str(exc)],
+        )
+        return {**blocked, "authority_result": authority}
+    packet.update(
+        {
+            "repository_read_authorized": True,
+            "repository_read_binding_sha256": binding_sha256,
+            "task_manifest_sha256": hashlib.sha256(
+                captured_manifest
+            ).hexdigest(),
+            "change_plan_sha256": hashlib.sha256(captured_plan).hexdigest(),
+        }
+    )
     packet["packet_sha256"] = hashlib.sha256(
         json.dumps(
             packet,
