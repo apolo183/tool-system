@@ -2,7 +2,7 @@
 
 ## Objective
 
-This package composes the accepted `repository-context-api` and `blueprint-compiler-api` behind the existing root `tool-system develop` command. It consumes the passing authority preflight, opens one caller-selected exact clean local Git snapshot through the hardened read-only repository-context boundary, parses only the selected committed blueprint and module-registry blobs, and produces one deterministic bounded compilation.
+This package composes the accepted `repository-context-api` and `blueprint-compiler-api` behind the existing root `tool-system develop` command. It consumes the passing authority preflight, opens one caller-selected exact clean local Git snapshot through the hardened read-only repository-context boundary, parses only the selected committed blueprint and module-registry blobs, and produces one deterministic bounded compilation. This stage requires an explicit isolated-fixture classification before any repository read; real downstream repositories remain outside this package.
 
 ## Order and fail-closed boundary
 
