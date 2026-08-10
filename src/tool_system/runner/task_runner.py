@@ -1045,7 +1045,15 @@ def _materialize_candidate(
         or baseline_files.get(path) != candidate_files.get(path)
     ]
     for path in changed:
-        target = root.joinpath(*PurePosixPath(path).parts)
+        parts = PurePosixPath(path).parts
+        target = root.joinpath(*parts)
+        parent = root
+        for part in parts[:-1]:
+            parent /= part
+            if parent.is_symlink() or (
+                parent.exists() and not parent.is_dir()
+            ):
+                raise ValueError("SUBSCRIPTION_EXECUTION_CANDIDATE_PATH_UNSAFE")
         if target.is_symlink() or (
             target.exists() and not target.is_file()
         ):
@@ -1115,6 +1123,18 @@ def _build_public_entry_validator(
                 timeout_seconds=timeout_seconds,
                 max_output_bytes=max_output_bytes,
                 cancellation_requested=cancellation_requested,
+                inherited_environment_names=(
+                    "PATH",
+                    "LANG",
+                    "LC_ALL",
+                    "PYTHONPATH",
+                    "VIRTUAL_ENV",
+                    "SYSTEMROOT",
+                    "WINDIR",
+                    "TMPDIR",
+                    "TEMP",
+                    "TMP",
+                ),
             )
             observed_results = {
                 str(record.get("name")): record
@@ -1553,7 +1573,7 @@ def run_subscription_public_entry_execution(
                 limits=limits,
                 cancellation_requested=cancellation_requested,
             )
-    except (OSError, TypeError, ValueError) as exc:
+    except Exception as exc:  # noqa: BLE001 - fail closed at runtime boundary
         return {
             **_subscription_execution_boundary(
                 status="BLOCK",
