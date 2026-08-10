@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from typing import Mapping
+
 from pathlib import Path
 
 from tool_system.agent_worker.interface import WorkerRequest
-from tool_system.worker_adapter.contract import AdapterRequest
+from tool_system.worker_adapter.contract import AdapterRequest, AdapterResult
 from tool_system.worker_adapter.orchestration import (
     build_adapter_orchestration_record,
+    build_subscription_development_worker,
     build_adapter_orchestration_record_from_worker_requests,
     write_adapter_orchestration_record,
 )
@@ -92,3 +95,83 @@ def test_write_adapter_orchestration_record(tmp_path: Path) -> None:
 
     assert result["status"] == "PASS"
     assert Path(result["audit_path"]).exists()
+
+
+class _FixtureSubscriptionAdapter:
+    adapter_kind = "fixture_subscription_adapter"
+
+    def __init__(self, structured_result: Mapping[str, object] | None) -> None:
+        self.structured_result = structured_result
+        self.requests: list[AdapterRequest] = []
+
+    def run(self, request: AdapterRequest) -> AdapterResult:
+        self.requests.append(request)
+        return AdapterResult(
+            adapter_id=request.adapter_id,
+            role=request.role,
+            action=request.action,
+            status="PASS" if self.structured_result is not None else "BLOCK",
+            adapter_kind=self.adapter_kind,
+            execute=request.execute,
+            calls_external_worker=request.calls_external_worker,
+            writes_target_repo=False,
+            executes_target_repo_mutation=False,
+            production_deployment=False,
+            output=(
+                {"structured_result": dict(self.structured_result)}
+                if self.structured_result is not None
+                else {}
+            ),
+        )
+
+
+def test_subscription_development_worker_maps_canonical_loop_request() -> None:
+    patch = {
+        "operations": [{"op": "add", "path": "src/new.py", "content": "pass\n"}],
+        "usage": {"duration_ms": 2, "cost_microunits": 0},
+    }
+    adapter = _FixtureSubscriptionAdapter(patch)
+    worker = build_subscription_development_worker(
+        adapter=adapter,
+        request_template=AdapterRequest(
+            adapter_id="subscription-loop",
+            role="patch_author",
+            action="implement",
+            context={
+                "workspace": "/isolated/workspace",
+                "subscription_worker_authorized": True,
+            },
+        ),
+    )
+
+    result = worker({"task_digest": "a" * 64, "attempt_number": 1})
+
+    assert result == patch
+    assert len(adapter.requests) == 1
+    request = adapter.requests[0]
+    assert request.execute is True
+    assert request.calls_external_worker is True
+    assert request.writes_target_repo is False
+    assert request.executes_target_repo_mutation is False
+    assert request.production_deployment is False
+    assert request.context["prompt"] == (
+        '{"attempt_number":1,"task_digest":"'
+        + "a" * 64
+        + '"}'
+    )
+
+
+def test_subscription_development_worker_fails_closed_on_unusable_adapter_result() -> None:
+    adapter = _FixtureSubscriptionAdapter(None)
+    worker = build_subscription_development_worker(
+        adapter=adapter,
+        request_template=AdapterRequest(
+            adapter_id="subscription-loop",
+            role="patch_author",
+            action="implement",
+        ),
+    )
+
+    assert worker({"attempt_number": 1}) == {
+        "subscription_worker_bridge_blocked": "adapter_result_not_usable"
+    }
