@@ -13,6 +13,7 @@ from tool_system.development_loop import FrozenDevelopmentContract
 import tool_system.gate.command_runner as command_runner
 from tool_system.runner.task_runner import (
     run_subscription_development_pipeline,
+    run_subscription_public_entry_context_compilation,
     run_subscription_public_entry_preflight,
     run_task_pipeline,
 )
@@ -27,6 +28,69 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_audit_bundle.yaml"
 PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_audit_bundle.yaml"
 P6_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_run_entry.yaml"
+
+
+def _fixture_git(repository: Path, *arguments: str) -> str:
+    return subprocess.run(
+        ["git", *arguments],
+        cwd=repository,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+def _subscription_context_fixture(tmp_path: Path) -> tuple[Path, str]:
+    repository = tmp_path / "subscription-context-fixture"
+    repository.mkdir()
+    _fixture_git(repository, "init", "-q", "-b", "main")
+    _fixture_git(repository, "config", "user.email", "fixture@example.invalid")
+    _fixture_git(repository, "config", "user.name", "Fixture")
+    files = {
+        "blueprint.yaml": """product_objective:
+  id: bounded-fixture
+  statement: build a bounded fixture
+agents:
+  evidence_collector: {role: evidence_collector}
+  policy_guard: {role: policy_guard}
+  blueprint_architect: {role: blueprint_architect}
+  change_planner: {role: change_planner}
+  patch_author: {role: patch_author}
+  test_engineer: {role: test_engineer}
+  code_reviewer: {role: code_reviewer}
+  contract_reviewer: {role: contract_reviewer}
+  audit_recorder: {role: audit_recorder}
+milestones:
+  M1_BILLING:
+    objective: add bounded billing
+    module_change:
+      module_id: billing
+      module_version: 1.0.0
+      interface_id: billing-api
+      interface_version: 1.0.0
+      change_kind: add
+      natural_owner_paths: [src/billing]
+      allowed_files: [src/billing/service.py, tests/test_billing.py]
+      test_paths: [tests/test_billing.py]
+      depends_on_module_ids: []
+      acceptance: [billing behavior passes]
+      validations: [pytest tests/test_billing.py]
+""",
+        "module-registry.yaml": """modules:
+  - module_id: existing
+    module_version: 1.0.0
+""",
+        "GOVERNANCE.md": "Owner evidence remains non-authorizing.\n",
+        "src/billing/service.py": "def total(value: int) -> int:\n    return value * 100\n",
+        "tests/test_billing.py": "from src.billing.service import total\n",
+    }
+    for relative, value in files.items():
+        path = repository / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(value, encoding="utf-8")
+    _fixture_git(repository, "add", "--all")
+    _fixture_git(repository, "commit", "-q", "-m", "fixture")
+    return repository, _fixture_git(repository, "rev-parse", "HEAD")
 
 
 def test_task_runner_validates_manifest_and_plan_without_commands(tmp_path: Path) -> None:
@@ -264,3 +328,114 @@ def test_subscription_public_entry_preflight_rejects_input_before_file_reads() -
     assert result["terminal_code"] == "INVALID_SUBSCRIPTION_PREFLIGHT_INPUT"
     assert result["worker_execution_authorized"] is False
     assert result["provider_invocations"] == 0
+
+
+
+def test_subscription_public_entry_context_compiles_isolated_fixture(
+    tmp_path: Path,
+) -> None:
+    repository, head = _subscription_context_fixture(tmp_path)
+
+    result = run_subscription_public_entry_context_compilation(
+        task_manifest_path=MANIFEST_PATH,
+        change_plan_path=PLAN_PATH,
+        repository_root=repository,
+        expected_head=head,
+        blueprint_path="blueprint.yaml",
+        module_registry_path="module-registry.yaml",
+        milestone_ids=["M1_BILLING"],
+        acceptance_requirements=["all milestone acceptance passes"],
+        governance_paths=["GOVERNANCE.md"],
+        query_terms=["billing"],
+        seed_paths=["src/billing/service.py"],
+        isolated_fixture_repository=True,
+        process_authority_path=ROOT / "config/process_authority_v1.yaml",
+        policy_path=ROOT / "policy/repo_write_policy.yaml",
+        autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
+    )
+
+    assert result["status"] == "PASS"
+    assert result["terminal_code"] == "SUBSCRIPTION_CONTEXT_COMPILATION_PASS"
+    assert result["repository_context_built"] is True
+    assert result["blueprint_compiled"] is True
+    assert result["repository_read_mode"] == "isolated_fixture_only"
+    assert result["local_git_read_only_context_authorized"] is True
+    assert result["worker_execution_authorized"] is False
+    assert result["worker_invocations"] == 0
+    assert result["provider_invocations"] == 0
+    assert result["provider_credential_value_accesses"] == 0
+    assert result["repository_writes"] == 0
+    assert result["local_git_write_operations"] == 0
+    assert result["remote_repository_operations"] == 0
+    compilation = result["blueprint_compilation"]
+    assert compilation["status"] == "PASS"
+    assert compilation["task_graph_validation"]["task_count"] == 10
+    packet = result["compilation_packet"]
+    assert packet["isolated_fixture_repository"] is True
+    assert packet["worker_execution_authorized"] is False
+    assert len(packet["packet_sha256"]) == 64
+    rendered = json.dumps(result, sort_keys=True)
+    assert str(repository) not in rendered
+    assert "def total(value: int)" not in rendered
+    assert _fixture_git(
+        repository,
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all",
+    ) == ""
+
+
+def test_subscription_public_entry_context_requires_explicit_fixture_before_reads(
+    tmp_path: Path,
+) -> None:
+    result = run_subscription_public_entry_context_compilation(
+        task_manifest_path="not-read.yaml",
+        change_plan_path="not-read-plan.yaml",
+        repository_root=tmp_path / "not-read",
+        expected_head="a" * 40,
+        blueprint_path="blueprint.yaml",
+        module_registry_path="module-registry.yaml",
+        milestone_ids=["M1"],
+        acceptance_requirements=["bounded"],
+        governance_paths=["GOVERNANCE.md"],
+        query_terms=["billing"],
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == (
+        "SUBSCRIPTION_CONTEXT_REPOSITORY_CLASS_NOT_AUTHORIZED"
+    )
+    assert result["local_git_read_only_context_authorized"] is False
+    assert result["worker_invocations"] == 0
+    assert not (tmp_path / "not-read").exists()
+
+
+def test_subscription_public_entry_context_blocks_stale_fixture(
+    tmp_path: Path,
+) -> None:
+    repository, _ = _subscription_context_fixture(tmp_path)
+
+    result = run_subscription_public_entry_context_compilation(
+        task_manifest_path=MANIFEST_PATH,
+        change_plan_path=PLAN_PATH,
+        repository_root=repository,
+        expected_head="0" * 40,
+        blueprint_path="blueprint.yaml",
+        module_registry_path="module-registry.yaml",
+        milestone_ids=["M1_BILLING"],
+        acceptance_requirements=["all milestone acceptance passes"],
+        governance_paths=["GOVERNANCE.md"],
+        query_terms=["billing"],
+        seed_paths=["src/billing/service.py"],
+        isolated_fixture_repository=True,
+        process_authority_path=ROOT / "config/process_authority_v1.yaml",
+        policy_path=ROOT / "policy/repo_write_policy.yaml",
+        autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_CONTEXT_COMPILATION_BLOCKED"
+    assert result["reasons"] == ["STALE_EXPECTED_HEAD"]
+    assert result["blueprint_compiled"] is False
+    assert result["worker_invocations"] == 0
+    assert result["local_git_write_operations"] == 0
