@@ -26,7 +26,7 @@ module_compound_contract:
       - kind: prefix
         name: tool_system.development_loop
   role:
-    summary: execute bounded structured patch, validation, diagnosis, repair, and independent review cycles against isolated in-memory fixture repositories
+    summary: execute bounded structured patch, validation, diagnosis, repair, and independent review cycles against isolated in-memory repositories while supplying the exact current candidate files to every worker cycle and preserving cancellation, no-progress, and zero-external-effect semantics
     responsibility_boundary: Freeze acceptance and finite budgets, expose the current authorized candidate-file mapping to each worker cycle, enforce atomic exact-scope patch preconditions, honor a caller-owned cancellation signal before worker dispatch and before applying returned patches, classify validation and review blockers, terminate repeated or non-progressing cycles, seal successful candidates, and apply evidence non-reopening semantics without performing external operations.
   natural_owner_evidence_paths:
     - src/tool_system/development_loop/__init__.py
