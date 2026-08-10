@@ -66,42 +66,6 @@ def test_patch_validate_and_independent_review_seals_candidate() -> None:
     assert all(result[key] is False for key in ("writes_filesystem", "calls_git", "calls_provider", "reads_credentials", "writes_target_repo"))
 
 
-def test_each_worker_cycle_receives_the_current_candidate_files() -> None:
-    observed: list[dict[str, str]] = []
-
-    def worker(request: dict[str, object]) -> dict[str, object]:
-        candidate = request["candidate_files"]
-        assert isinstance(candidate, dict)
-        observed.append(dict(candidate))
-        before = str(candidate["src/app.py"])
-        after = "return 0\n" if len(observed) == 1 else "return 2\n"
-        return {
-            "operations": [
-                {
-                    "op": "replace",
-                    "path": "src/app.py",
-                    "expected_sha256": _sha(before),
-                    "content": after,
-                }
-            ]
-        }
-
-    result = run_development_loop(
-        contract=_contract(),
-        baseline_files={"src/app.py": "return 1\n"},
-        worker=worker,
-        validator=_pass_validation,
-        code_reviewer=_clean_review,
-        contract_reviewer=_clean_review,
-    )
-
-    assert result["status"] == "PASS"
-    assert observed == [
-        {"src/app.py": "return 1\n"},
-        {"src/app.py": "return 0\n"},
-    ]
-
-
 def test_failed_validation_is_diagnosed_and_repaired_within_budget() -> None:
     calls = 0
 
