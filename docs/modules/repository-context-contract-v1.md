@@ -34,7 +34,8 @@ module_compound_contract:
     basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids: []
-    direct_consumer_module_ids: []
+    direct_consumer_module_ids:
+      - task_runner
   input_contract:
     registered_inputs:
       - clean_committed_repository_snapshot_blueprint_governance_query_seeds_and_finite_limits
@@ -54,7 +55,7 @@ module_compound_contract:
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve exact-snapshot validation, deterministic content hashes, finite limits, tracked-blob reads, dependency and test maps, evidence sufficiency, freshness checks, non-authorizing owner proposals, and zero write, network, provider, and credential effects.
+    interface_compatible_replacement: Preserve exact-snapshot validation, deterministic content hashes, finite limits, tracked-blob reads, dependency and test maps, evidence sufficiency, freshness checks, non-authorizing owner proposals, task-runner consumer compatibility, and zero write, network, provider, and credential effects.
     interface_incompatible_change: Requires a new aggregate interface version and explicit revalidation of every registered consumer and isolated fixture.
   rollback_contract:
     rollback_identity: tool-system@7e3a114a25d70c3ebecc952f13ce68b1adbbbc80:repository_context@absent

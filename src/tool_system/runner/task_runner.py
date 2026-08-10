@@ -7,6 +7,13 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+import yaml
+
+from tool_system.blueprint_compiler import (
+    BlueprintCompilerError,
+    BlueprintCompilerLimits,
+    compile_blueprint,
+)
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
 from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
 from tool_system.development_loop import (
@@ -22,6 +29,12 @@ from tool_system.process_authority.contract import (
     validate_process_authority,
 )
 from tool_system.repo_controller.artifact import write_jsonl_record
+from tool_system.repository_context import (
+    RepositoryContextError,
+    RepositoryContextLimits,
+    build_repository_context,
+    validate_repository_context_freshness,
+)
 from tool_system.runner.active_gate_resolver import (
     paths_match,
     resolve_change_plan_from_active_gates,
@@ -36,6 +49,9 @@ from tool_system.worker_adapter import (
 _SUBSCRIPTION_WORKER_ADAPTER_KIND = "codex_cli_subscription_worker_adapter"
 _COMMIT_SHA = re.compile(r"^[0-9a-f]{40}$")
 _SUBSCRIPTION_PACKET_VERSION = "subscription_development_authority_packet_v1"
+_SUBSCRIPTION_COMPILATION_PACKET_VERSION = (
+    "subscription_development_context_compilation_packet_v1"
+)
 
 
 def _subscription_preflight_boundary(
@@ -217,6 +233,269 @@ def run_subscription_public_entry_preflight(
         **passed,
         "authority_result": authority,
         "dispatch_packet": packet,
+    }
+
+
+def _subscription_context_compilation_boundary(
+    *,
+    status: str,
+    terminal_code: str,
+    reasons: Sequence[str],
+    repository_context_built: bool = False,
+    blueprint_compiled: bool = False,
+    local_git_read_only_context_authorized: bool = False,
+) -> dict[str, object]:
+    return {
+        "status": status,
+        "mode": "subscription_worker_public_entry_context_compile",
+        "terminal_code": terminal_code,
+        "reasons": [str(reason) for reason in reasons],
+        "repository_context_built": repository_context_built,
+        "blueprint_compiled": blueprint_compiled,
+        "repository_read_mode": "isolated_fixture_only",
+        "local_git_read_only_context_authorized": (
+            local_git_read_only_context_authorized
+        ),
+        "worker_execution_authorized": False,
+        "worker_invocations": 0,
+        "api_mode_enabled": False,
+        "provider_invocations": 0,
+        "provider_credential_value_accesses": 0,
+        "repository_writes": 0,
+        "target_repo_mutations": 0,
+        "remote_repository_operations": 0,
+        "local_git_write_operations": 0,
+        "real_downstream_repository_accesses": 0,
+        "production_operations": 0,
+        "cleanup_operations": 0,
+        "rollback_operations": 0,
+    }
+
+
+def _selected_context_mapping(
+    repository_context: Mapping[str, object],
+    path: str,
+) -> Mapping[str, object]:
+    selected = repository_context.get("selected_context")
+    if not isinstance(selected, list):
+        raise ValueError("SELECTED_CONTEXT_INVALID")
+    matches = [
+        record
+        for record in selected
+        if isinstance(record, Mapping) and record.get("path") == path
+    ]
+    if len(matches) != 1 or not isinstance(matches[0].get("content"), str):
+        raise ValueError("REQUIRED_COMMITTED_MAPPING_NOT_SELECTED")
+    try:
+        parsed = yaml.safe_load(str(matches[0]["content"]))
+    except yaml.YAMLError as exc:
+        raise ValueError("REQUIRED_COMMITTED_MAPPING_INVALID") from exc
+    if not isinstance(parsed, Mapping):
+        raise ValueError("REQUIRED_COMMITTED_MAPPING_INVALID")
+    return parsed
+
+
+def run_subscription_public_entry_context_compilation(
+    *,
+    task_manifest_path: str | Path,
+    change_plan_path: str | Path,
+    repository_root: str | Path,
+    expected_head: str,
+    blueprint_path: str,
+    module_registry_path: str,
+    milestone_ids: Sequence[str],
+    acceptance_requirements: Sequence[str],
+    governance_paths: Sequence[str],
+    query_terms: Sequence[str],
+    seed_paths: Sequence[str] = (),
+    isolated_fixture_repository: bool = False,
+    repository_context_limits: RepositoryContextLimits | None = None,
+    blueprint_compiler_limits: BlueprintCompilerLimits | None = None,
+    policy_path: str | Path = "policy/repo_write_policy.yaml",
+    autonomy_policy_path: str | Path = "policy/autonomy_policy.yaml",
+    process_authority_path: str | Path = "config/process_authority_v1.yaml",
+) -> dict[str, object]:
+    """Compose current authority, read-only context, and pure compilation."""
+
+    if isolated_fixture_repository is not True:
+        return {
+            **_subscription_context_compilation_boundary(
+                status="BLOCK",
+                terminal_code="SUBSCRIPTION_CONTEXT_REPOSITORY_CLASS_NOT_AUTHORIZED",
+                reasons=["only an explicitly selected isolated fixture is accepted"],
+            ),
+            "local_git_read_only_context_authorized": False,
+        }
+
+    preflight = run_subscription_public_entry_preflight(
+        task_manifest_path=task_manifest_path,
+        change_plan_path=change_plan_path,
+        repository_root=repository_root,
+        expected_head=expected_head,
+        blueprint_path=blueprint_path,
+        module_registry_path=module_registry_path,
+        milestone_ids=milestone_ids,
+        acceptance_requirements=acceptance_requirements,
+        governance_paths=governance_paths,
+        query_terms=query_terms,
+        seed_paths=seed_paths,
+        policy_path=policy_path,
+        autonomy_policy_path=autonomy_policy_path,
+        process_authority_path=process_authority_path,
+    )
+    if preflight["status"] != "PASS":
+        return {
+            **_subscription_context_compilation_boundary(
+                status="BLOCK",
+                terminal_code="SUBSCRIPTION_CONTEXT_AUTHORITY_BLOCKED",
+                reasons=[str(reason) for reason in preflight.get("reasons", [])],
+            ),
+            "local_git_read_only_context_authorized": False,
+            "preflight_result": preflight,
+        }
+
+    packet = preflight["dispatch_packet"]
+    if not isinstance(packet, Mapping):
+        return _subscription_context_compilation_boundary(
+            status="BLOCK",
+            terminal_code="SUBSCRIPTION_AUTHORITY_PACKET_INVALID",
+            reasons=["authority packet is missing"],
+        )
+    bounded_context = repository_context_limits or RepositoryContextLimits()
+    context: Mapping[str, object] | None = None
+    try:
+        context_governance = tuple(
+            dict.fromkeys(
+                [
+                    *[str(value) for value in packet["governance_paths"]],
+                    str(packet["module_registry_path"]),
+                ]
+            )
+        )
+        context = build_repository_context(
+            repository_root,
+            expected_head=str(packet["expected_head"]),
+            blueprint_path=str(packet["blueprint_path"]),
+            governance_paths=context_governance,
+            query_terms=[str(value) for value in packet["query_terms"]],
+            seed_paths=[str(value) for value in packet["seed_paths"]],
+            limits=bounded_context,
+        )
+        blueprint = _selected_context_mapping(
+            context,
+            str(packet["blueprint_path"]),
+        )
+        registry = _selected_context_mapping(
+            context,
+            str(packet["module_registry_path"]),
+        )
+        freshness = validate_repository_context_freshness(
+            repository_root,
+            context["snapshot"],
+            max_tracked_files=bounded_context.max_tracked_files,
+        )
+        compilation = compile_blueprint(
+            blueprint,
+            context,
+            registry,
+            {
+                "blueprint_approved": True,
+                "isolated_fixture_repositories_only": True,
+                "target_repo_mutation_authorized": False,
+                "provider_execution_authorized": False,
+                "credential_value_access_authorized": False,
+                "production_operation_authorized": False,
+                "cleanup_execution_authorized": False,
+            },
+            milestone_ids=[str(value) for value in packet["milestone_ids"]],
+            acceptance_requirements=[
+                str(value) for value in packet["acceptance_requirements"]
+            ],
+            limits=blueprint_compiler_limits,
+        )
+    except (
+        BlueprintCompilerError,
+        RepositoryContextError,
+        KeyError,
+        TypeError,
+        ValueError,
+    ) as exc:
+        reason = (
+            exc.code
+            if isinstance(exc, (BlueprintCompilerError, RepositoryContextError))
+            else str(exc)
+        )
+        return _subscription_context_compilation_boundary(
+            status="BLOCK",
+            terminal_code="SUBSCRIPTION_CONTEXT_COMPILATION_BLOCKED",
+            reasons=[reason],
+            repository_context_built=context is not None,
+            local_git_read_only_context_authorized=True,
+        )
+
+    snapshot = context["snapshot"]
+    selected = context["selected_context"]
+    context_evidence = {
+        "repository_root_identity_sha256": packet[
+            "repository_root_identity_sha256"
+        ],
+        "snapshot": {
+            key: snapshot[key]
+            for key in (
+                "head",
+                "tree",
+                "tracked_file_count",
+                "tracked_set_sha256",
+                "context_sha256",
+                "clean_worktree",
+            )
+        },
+        "freshness": freshness,
+        "selected_paths": [
+            str(record["path"])
+            for record in selected
+            if isinstance(record, Mapping)
+        ],
+        "selected_file_count": context["selected_file_count"],
+        "selected_bytes": context["selected_bytes"],
+        "natural_owner_proposal": context["natural_owner_proposal"],
+        "evidence_sufficiency": context["evidence_sufficiency"],
+    }
+    compilation_packet: dict[str, object] = {
+        "packet_version": _SUBSCRIPTION_COMPILATION_PACKET_VERSION,
+        "authority_packet_sha256": packet["packet_sha256"],
+        "repository_root_identity_sha256": packet[
+            "repository_root_identity_sha256"
+        ],
+        "expected_head": packet["expected_head"],
+        "context_sha256": snapshot["context_sha256"],
+        "compilation_sha256": compilation["compilation_sha256"],
+        "milestone_ids": list(packet["milestone_ids"]),
+        "isolated_fixture_repository": True,
+        "worker_execution_authorized": False,
+        "local_git_write_authorized": False,
+    }
+    compilation_packet["packet_sha256"] = hashlib.sha256(
+        json.dumps(
+            compilation_packet,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    return {
+        **_subscription_context_compilation_boundary(
+            status="PASS",
+            terminal_code="SUBSCRIPTION_CONTEXT_COMPILATION_PASS",
+            reasons=[],
+            repository_context_built=True,
+            blueprint_compiled=True,
+            local_git_read_only_context_authorized=True,
+        ),
+        "authority_packet_sha256": packet["packet_sha256"],
+        "context_evidence": context_evidence,
+        "blueprint_compilation": compilation,
+        "compilation_packet": compilation_packet,
     }
 
 

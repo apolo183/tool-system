@@ -8,7 +8,7 @@ from typing import Sequence
 from tool_system.runner.task_graph_runner import run_task_graph_pipeline
 from tool_system.runner.task_runner import (
     run_batch_file,
-    run_subscription_public_entry_preflight,
+    run_subscription_public_entry_context_compilation,
     run_task_pipeline,
 )
 
@@ -49,7 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     develop_parser = subparsers.add_parser(
         "develop",
-        help="Validate one subscription-development authority packet without execution.",
+        help="Validate authority and compile one isolated-fixture repository context without worker execution.",
     )
     develop_parser.add_argument("task_manifest", type=Path)
     develop_parser.add_argument("--change-plan", type=Path, required=True)
@@ -68,6 +68,12 @@ def build_parser() -> argparse.ArgumentParser:
     develop_parser.add_argument("--governance-path", action="append", required=True)
     develop_parser.add_argument("--query-term", action="append", required=True)
     develop_parser.add_argument("--seed-path", action="append", default=[])
+    develop_parser.add_argument(
+        "--isolated-fixture-repository",
+        action="store_true",
+        required=True,
+        help="Acknowledge that this stage accepts only an isolated fixture repository.",
+    )
     develop_parser.add_argument(
         "--process-authority",
         type=Path,
@@ -114,7 +120,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             execute_commands=not args.skip_commands,
         )
     elif args.command == "develop":
-        output = run_subscription_public_entry_preflight(
+        output = run_subscription_public_entry_context_compilation(
             task_manifest_path=args.task_manifest,
             change_plan_path=args.change_plan,
             repository_root=args.repository_root,
@@ -126,6 +132,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             governance_paths=args.governance_path,
             query_terms=args.query_term,
             seed_paths=args.seed_path,
+            isolated_fixture_repository=args.isolated_fixture_repository,
             process_authority_path=args.process_authority,
             policy_path=args.policy,
             autonomy_policy_path=args.autonomy_policy,

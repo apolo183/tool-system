@@ -34,7 +34,8 @@ module_compound_contract:
     basis: tool-system-static-python-import-dag
     direction: provider-to-direct-consumer
     direct_provider_module_ids: []
-    direct_consumer_module_ids: []
+    direct_consumer_module_ids:
+      - task_runner
   input_contract:
     registered_inputs:
       - approved_blueprint_repository_context_module_registry_authorization_and_acceptance_v1
@@ -54,7 +55,7 @@ module_compound_contract:
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve exact module-change binding, finite limits, deterministic ordering and hashes, task-planner graph compatibility, non-authorizing outputs, fail-closed errors, and zero side effects.
+    interface_compatible_replacement: Preserve exact module-change binding, finite limits, deterministic ordering and hashes, task-planner graph and task-runner consumer compatibility, non-authorizing outputs, fail-closed errors, and zero side effects.
     interface_incompatible_change: Requires a new aggregate interface version and explicit revalidation of repository-context and future development-loop consumers.
   rollback_contract:
     rollback_identity: tool-system@00793ad07bba2e3fe3bd29882e83788d32697da6:blueprint_compiler@absent
