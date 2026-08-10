@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
 from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
@@ -58,6 +59,36 @@ CONTEXT_COMPILER_FILES = {
     "tests/test_root_cli.py",
     "tests/test_task_runner.py",
 }
+SNAPSHOT_BINDING_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_subscription_worker_snapshot_authority_binding_v1.yaml"
+)
+SNAPSHOT_BINDING_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_subscription_worker_snapshot_authority_binding_v1.yaml"
+)
+SNAPSHOT_BINDING_FILES = {
+    "config/module_registry_v1.yaml",
+    "docs/modules/blueprint-compiler-contract-v1.md",
+    "docs/modules/cli-frontend-contract-v1.md",
+    "docs/modules/task-runner-contract-v1.md",
+    "docs/reports/subscription_worker_snapshot_authority_binding_v1.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "examples/change_plans/tool_system_subscription_worker_snapshot_authority_binding_v1.yaml",
+    "examples/task_manifests/tool_system_subscription_worker_snapshot_authority_binding_v1.yaml",
+    "src/tool_system/blueprint_compiler/compiler.py",
+    "src/tool_system/cli/main.py",
+    "src/tool_system/runner/task_runner.py",
+    "tests/test_blueprint_compiler.py",
+    "tests/test_module_registry.py",
+    "tests/test_root_cli.py",
+    "tests/test_task_runner.py",
+}
+
 
 
 def _fixture_git(repository: Path, *arguments: str) -> str:
@@ -121,6 +152,54 @@ milestones:
     _fixture_git(repository, "add", "--all")
     _fixture_git(repository, "commit", "-q", "-m", "fixture")
     return repository, _fixture_git(repository, "rev-parse", "HEAD")
+
+
+def _bound_subscription_task_pair(
+    tmp_path: Path,
+    *,
+    repository_root: Path,
+    expected_head: str,
+    blueprint_path: str,
+    module_registry_path: str,
+    milestone_ids: list[str],
+    acceptance_requirements: list[str],
+    governance_paths: list[str],
+    query_terms: list[str],
+    seed_paths: list[str],
+) -> tuple[Path, Path]:
+    manifest = load_yaml_file(MANIFEST_PATH)
+    manifest["subscription_public_entry"] = {
+        "binding_version": "subscription_public_entry_authority_binding_v1",
+        "enabled": True,
+        "repository_root_identity_sha256": hashlib.sha256(
+            str(repository_root).encode("utf-8")
+        ).hexdigest(),
+        "expected_head": expected_head,
+        "blueprint_path": blueprint_path,
+        "module_registry_path": module_registry_path,
+        "milestone_ids": milestone_ids,
+        "acceptance_requirements": acceptance_requirements,
+        "governance_paths": governance_paths,
+        "query_terms": query_terms,
+        "seed_paths": seed_paths,
+        "repository_read_authorized": True,
+        "worker_execution_authorized": False,
+        "local_git_write_authorized": False,
+    }
+    manifest_path = tmp_path / "bound-task-manifest.yaml"
+    manifest_path.write_text(
+        yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+
+    plan = load_yaml_file(PLAN_PATH)
+    plan["task_manifest"] = manifest_path.as_posix()
+    plan_path = tmp_path / "bound-change-plan.yaml"
+    plan_path.write_text(
+        yaml.safe_dump(plan, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    return manifest_path, plan_path
 
 
 def test_task_runner_validates_manifest_and_plan_without_commands(tmp_path: Path) -> None:
