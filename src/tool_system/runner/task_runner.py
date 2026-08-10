@@ -382,7 +382,7 @@ def _subscription_context_compilation_boundary(
         "reasons": [str(reason) for reason in reasons],
         "repository_context_built": repository_context_built,
         "blueprint_compiled": blueprint_compiled,
-        "repository_read_mode": "isolated_fixture_only",
+        "repository_read_mode": "exact_manifest_bound_snapshot",
         "local_git_read_only_context_authorized": (
             local_git_read_only_context_authorized
         ),
@@ -395,7 +395,7 @@ def _subscription_context_compilation_boundary(
         "target_repo_mutations": 0,
         "remote_repository_operations": 0,
         "local_git_write_operations": 0,
-        "real_downstream_repository_accesses": 0,
+        "repository_context_builds": 1 if repository_context_built else 0,
         "production_operations": 0,
         "cleanup_operations": 0,
         "rollback_operations": 0,
@@ -438,7 +438,8 @@ def run_subscription_public_entry_context_compilation(
     governance_paths: Sequence[str],
     query_terms: Sequence[str],
     seed_paths: Sequence[str] = (),
-    isolated_fixture_repository: bool = False,
+    repository_read_authorized: bool = False,
+    isolated_fixture_repository: bool | None = None,
     repository_context_limits: RepositoryContextLimits | None = None,
     blueprint_compiler_limits: BlueprintCompilerLimits | None = None,
     policy_path: str | Path = "policy/repo_write_policy.yaml",
@@ -447,12 +448,18 @@ def run_subscription_public_entry_context_compilation(
 ) -> dict[str, object]:
     """Compose current authority, read-only context, and pure compilation."""
 
-    if isolated_fixture_repository is not True:
+    read_requested = (
+        repository_read_authorized is True
+        or isolated_fixture_repository is True
+    )
+    if not read_requested:
         return {
             **_subscription_context_compilation_boundary(
                 status="BLOCK",
-                terminal_code="SUBSCRIPTION_CONTEXT_REPOSITORY_CLASS_NOT_AUTHORIZED",
-                reasons=["only an explicitly selected isolated fixture is accepted"],
+                terminal_code="SUBSCRIPTION_CONTEXT_READ_NOT_REQUESTED",
+                reasons=[
+                    "repository read must be requested and exactly manifest-bound"
+                ],
             ),
             "local_git_read_only_context_authorized": False,
         }
@@ -530,7 +537,7 @@ def run_subscription_public_entry_context_compilation(
             registry,
             {
                 "blueprint_approved": True,
-                "isolated_fixture_repositories_only": True,
+                "repository_context_read_authorized": True,
                 "target_repo_mutation_authorized": False,
                 "provider_execution_authorized": False,
                 "credential_value_access_authorized": False,
@@ -601,7 +608,14 @@ def run_subscription_public_entry_context_compilation(
         "context_sha256": snapshot["context_sha256"],
         "compilation_sha256": compilation["compilation_sha256"],
         "milestone_ids": list(packet["milestone_ids"]),
-        "isolated_fixture_repository": True,
+        "repository_read_authorized": packet["repository_read_authorized"],
+        "repository_read_binding_sha256": packet[
+            "repository_read_binding_sha256"
+        ],
+        "legacy_isolated_fixture_alias_used": (
+            isolated_fixture_repository is True
+            and repository_read_authorized is not True
+        ),
         "worker_execution_authorized": False,
         "local_git_write_authorized": False,
     }
