@@ -207,6 +207,10 @@ PopenFactory = Callable[..., subprocess.Popen[str]]
 GroupKiller = Callable[[int, int], None]
 
 
+def _kill_process_group(group_id: int, sig: int) -> None:
+    os.killpg(group_id, sig)
+
+
 def _wait_for_process(process: subprocess.Popen[str], timeout: int) -> bool:
     try:
         process.wait(timeout=timeout)
@@ -262,7 +266,7 @@ def _run_codex_process(
     termination_grace_seconds: int,
     popen_factory: PopenFactory = subprocess.Popen,
     platform_name: str = os.name,
-    group_killer: GroupKiller = os.killpg,
+    group_killer: GroupKiller = _kill_process_group,
 ) -> subprocess.CompletedProcess[str]:
     if shell or check or not capture_output or not text:
         raise ValueError("unsupported Codex process boundary")
