@@ -805,6 +805,7 @@ def _execution_binding(
     acceptance_set: tuple[str, ...],
     validation_set: tuple[str, ...],
     worker_configuration_sha256: str,
+    task_pair_sha256: str,
     authority_flags: Mapping[str, bool],
 ) -> tuple[dict[str, object], FrozenDevelopmentContract, DevelopmentLoopLimits]:
     observed = manifest.get("subscription_public_entry_execution")
@@ -960,7 +961,12 @@ def _execution_binding(
     }
     if dict(observed) != expected:
         raise ValueError("SUBSCRIPTION_EXECUTION_BINDING_MISMATCH")
-    task_digest = _canonical_sha256(expected)
+    task_digest = _canonical_sha256(
+        {
+            "execution_binding": expected,
+            "task_pair_sha256": task_pair_sha256,
+        }
+    )
     contract = FrozenDevelopmentContract(
         task_digest=task_digest,
         baseline_tree=expected_tree,
@@ -1394,6 +1400,16 @@ def run_subscription_public_entry_execution(
             validation_set=validation_set,
             worker_configuration_sha256=_worker_configuration_sha256(
                 codex_config
+            ),
+            task_pair_sha256=_canonical_sha256(
+                {
+                    "task_manifest_sha256": hashlib.sha256(
+                        captured_manifest
+                    ).hexdigest(),
+                    "change_plan_sha256": hashlib.sha256(
+                        captured_plan
+                    ).hexdigest(),
+                }
             ),
             authority_flags=authority_flags,
         )
