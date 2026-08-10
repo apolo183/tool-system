@@ -49,7 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     develop_parser = subparsers.add_parser(
         "develop",
-        help="Validate authority and compile one isolated-fixture repository context without worker execution.",
+        help="Validate exact manifest-bound read authority and compile one repository context without worker execution.",
     )
     develop_parser.add_argument("task_manifest", type=Path)
     develop_parser.add_argument("--change-plan", type=Path, required=True)
@@ -69,10 +69,15 @@ def build_parser() -> argparse.ArgumentParser:
     develop_parser.add_argument("--query-term", action="append", required=True)
     develop_parser.add_argument("--seed-path", action="append", default=[])
     develop_parser.add_argument(
+        "--repository-read-authorized",
         "--isolated-fixture-repository",
+        dest="repository_read_authorized",
         action="store_true",
         required=True,
-        help="Acknowledge that this stage accepts only an isolated fixture repository.",
+        help=(
+            "Request the exact manifest-bound read-only repository context; "
+            "the flag alone grants no authority."
+        ),
     )
     develop_parser.add_argument(
         "--process-authority",
@@ -132,7 +137,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             governance_paths=args.governance_path,
             query_terms=args.query_term,
             seed_paths=args.seed_path,
-            isolated_fixture_repository=args.isolated_fixture_repository,
+            repository_read_authorized=args.repository_read_authorized,
             process_authority_path=args.process_authority,
             policy_path=args.policy,
             autonomy_policy_path=args.autonomy_policy,

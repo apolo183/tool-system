@@ -1,0 +1,42 @@
+plan_id: tool-system-subscription-worker-snapshot-authority-binding-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_snapshot_authority_binding_v1.yaml
+changed_files:
+  - config/module_registry_v1.yaml
+  - docs/modules/blueprint-compiler-contract-v1.md
+  - docs/modules/cli-frontend-contract-v1.md
+  - docs/modules/task-runner-contract-v1.md
+  - docs/reports/subscription_worker_snapshot_authority_binding_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - examples/change_plans/tool_system_subscription_worker_snapshot_authority_binding_v1.yaml
+  - examples/task_manifests/tool_system_subscription_worker_snapshot_authority_binding_v1.yaml
+  - src/tool_system/blueprint_compiler/compiler.py
+  - src/tool_system/cli/main.py
+  - src/tool_system/runner/task_runner.py
+  - tests/test_blueprint_compiler.py
+  - tests/test_module_registry.py
+  - tests/test_root_cli.py
+  - tests/test_task_runner.py
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    section_or_key: authority and effects
+    scope: Require one exact manifest-bound snapshot read authorization without reaching worker or local-Git writes.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded blueprint-driven subscription-primary development and default-off API providers.
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_root_cli.py tests/test_task_runner.py tests/test_blueprint_compiler.py tests/test_module_registry.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  method: github_app_connector_only_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-snapshot-authority-binding-v1
+  retain_feature_branch: true
+  exact_base: dddf790fa88918419aef76fa362a23c6ef076911
+rollback:
+  method: git_revert
+  reference: tool-system@dddf790fa88918419aef76fa362a23c6ef076911
+  execution_authorized: false

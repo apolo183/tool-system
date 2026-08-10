@@ -60,7 +60,7 @@ module_compound_contract:
         name: tool_system.cli.target_repo_pr_plan_preview
   role:
     summary: expose stable command-line entry points that delegate to registered public module interfaces
-    responsibility_boundary: Parse command-line arguments, including the subscription-development authority and explicit isolated-fixture context-compilation selection, select one current public module entry point, render its redacted result, and derive a process exit code without changing delegated authority.
+    responsibility_boundary: Parse command-line arguments, including the subscription-development authority and explicit manifest-bound repository-read request, select one current public module entry point, render its redacted result, and derive a process exit code without changing delegated authority.
   natural_owner_evidence_paths:
     - src/tool_system/cli/__init__.py
     - src/tool_system/cli/cleanup_plan.py
@@ -96,20 +96,20 @@ module_compound_contract:
     registered_inputs:
       - command_line_arguments_and_versioned_module_inputs
       - subscription_development_authority_preflight_arguments
-      - explicit_isolated_fixture_context_compilation_selection
-    boundary: Accept command-line arguments for one selected current entry point, including explicit paths, repository identifiers, PR numbers, flags, and module inputs; the develop command requires one explicit current manifest/change-plan pair, an absolute repository-root identity, exact expected commit, bounded blueprint, module-registry, milestone, acceptance, governance, query, and seed selections, plus an explicit isolated-fixture repository acknowledgement.
+      - explicit_manifest_bound_repository_read_request
+    boundary: Accept command-line arguments for one selected current entry point, including explicit paths, repository identifiers, PR numbers, flags, and module inputs; the develop command requires one explicit current manifest/change-plan pair, an absolute repository-root identity, exact expected commit, bounded blueprint, module-registry, milestone, acceptance, governance, query, and seed selections, plus an explicit repository-read request that grants no authority by itself; the prior isolated-fixture spelling remains a compatibility alias.
   output_contract:
     registered_outputs:
       - exit_code_and_structured_or_human_readable_result
       - nonexecuting_subscription_authority_packet_result
-      - redacted_isolated_fixture_context_compilation_result
-    boundary: Print the delegated structured result and return zero only for the selected entry point's accepted success status; develop prints hashed-root exact-snapshot evidence and deterministic compilation output without the repository-root value or selected file contents and explicitly grants no worker, local-Git write, API, provider, credential, remote, or production authority.
+      - redacted_manifest_bound_context_compilation_result
+    boundary: Print the delegated structured result and return zero only for the selected entry point's accepted success status; develop prints hashed-root, task-pair, authority-binding, exact-snapshot, and deterministic compilation evidence without the repository-root value or selected file contents and explicitly grants no worker, local-Git write, API, provider, credential, remote, or production authority.
   error_contract:
     registered_error_semantics:
       - nonzero_exit_on_block_or_failure
       - develop_preflight_invalid_input_or_authority_block
       - develop_context_compilation_or_repository_class_block
-    boundary: Argument errors, missing explicit isolated-fixture classification, invalid develop input, failed current authority or exact pair binding, stale or rejected repository context, invalid compilation, delegated BLOCK or failure status, or delegated exceptions do not become success and cannot be hidden by CLI routing.
+    boundary: Argument errors, missing explicit repository-read request, invalid develop input, failed current authority, exact pair, byte-seal, or manifest-selection binding, stale or rejected repository context, invalid compilation, delegated BLOCK or failure status, or delegated exceptions do not become success and cannot be hidden by CLI routing.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -146,13 +146,13 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve command names including develop, required and optional argument semantics, explicit fixture classification, authority/context/compiler ordering, repository-root and selected-content redaction, module delegation, structured output, and exit-code behavior.
+    interface_compatible_replacement: Preserve command names including develop, required and optional argument semantics, the primary manifest-bound read-request flag and legacy fixture alias, authority/context/compiler ordering, repository-root and selected-content redaction, module delegation, structured output, and exit-code behavior.
     interface_incompatible_change: Requires a new aggregate interface version, entry-point migration, packaging review, and all delegated CLI tests.
   rollback_contract:
     rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:cli_frontend@1.1.0
     method: Revert through a separately audited pull request and restore the prior entry-point delegation and argument contract.
   replacement_contract:
-    activation_rule: Replace only after root and dedicated CLI tests, develop authority-pass, explicit-fixture and invalid-input tests, context/compiler delegation, root and selected-content redaction, packaging entry-point checks, delegated-module tests, output rendering, and exit-code tests pass.
+    activation_rule: Replace only after root and dedicated CLI tests, exact develop authority-binding pass, missing-read and invalid-input tests, compatibility-alias routing, context/compiler delegation, root and selected-content redaction, packaging entry-point checks, delegated-module tests, output rendering, and exit-code tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -191,7 +191,7 @@ module_compound_contract:
           - repository_root
           - blueprint_path
           - module_registry_path
-        constraint: Parse explicit path arguments and delegate them unchanged to the selected module; develop requires explicit isolated-fixture selection, the task runner opens only the exact read-only snapshot through repository-context, public output hashes the repository-root identity and omits selected contents, and no CLI path may infer broader roots or permissions.
+        constraint: Parse explicit path arguments and delegate them unchanged to the selected module; develop requires an explicit repository-read request while the validated manifest grants and exactly binds that read, the task runner opens only the exact read-only snapshot through repository-context, public output hashes the repository-root identity and omits selected contents, and no CLI path may infer broader roots or permissions.
   external_system_contracts:
     declaration: declared
     systems:

@@ -155,6 +155,9 @@ def test_compiler_is_deterministic_bounded_and_task_graph_compatible() -> None:
     assert first == second
     assert first["status"] == "PASS"
     assert first["authority_effect"] == "none"
+    assert first["repository_context_authorization_mode"] == (
+        "legacy_isolated_fixture"
+    )
     assert first["milestone_order"] == ["M1_BILLING"]
     assert first["module_order"] == ["billing"]
     assert first["task_graph_validation"]["status"] == "PASS"
@@ -176,6 +179,31 @@ def test_compiler_is_deterministic_bounded_and_task_graph_compatible() -> None:
         "provider_invocations": 0,
         "credential_accesses": 0,
     }
+
+
+def test_compiler_accepts_manifest_bound_repository_read_authority() -> None:
+    authorization = _authorization()
+    authorization.pop("isolated_fixture_repositories_only")
+    authorization["repository_context_read_authorized"] = True
+
+    result = _compile(authorization_envelope=authorization)
+
+    assert result["status"] == "PASS"
+    assert result["repository_context_authorization_mode"] == (
+        "manifest_bound_repository_context_read"
+    )
+    assert result["authority_effect"] == "none"
+    assert result["side_effects"]["repository_writes"] == 0
+    assert result["side_effects"]["provider_invocations"] == 0
+
+
+def test_compiler_blocks_without_fixture_or_manifest_bound_read_authority() -> None:
+    authorization = _authorization()
+    authorization["isolated_fixture_repositories_only"] = False
+    authorization["repository_context_read_authorized"] = False
+
+    with pytest.raises(BlueprintCompilerError, match="AUTHORIZATION_ENVELOPE_BLOCKED"):
+        _compile(authorization_envelope=authorization)
 
 
 def test_compiler_orders_selected_module_changes_by_dependency() -> None:

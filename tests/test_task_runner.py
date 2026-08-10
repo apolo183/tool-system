@@ -7,11 +7,13 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
 from tool_system.cli.validate_task_manifest import validate as validate_task_manifest
 from tool_system.development_loop import FrozenDevelopmentContract
 import tool_system.gate.command_runner as command_runner
+import tool_system.runner.task_runner as task_runner_module
 from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.runner.task_runner import (
     run_subscription_development_pipeline,
@@ -58,6 +60,36 @@ CONTEXT_COMPILER_FILES = {
     "tests/test_root_cli.py",
     "tests/test_task_runner.py",
 }
+SNAPSHOT_BINDING_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_subscription_worker_snapshot_authority_binding_v1.yaml"
+)
+SNAPSHOT_BINDING_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_subscription_worker_snapshot_authority_binding_v1.yaml"
+)
+SNAPSHOT_BINDING_FILES = {
+    "config/module_registry_v1.yaml",
+    "docs/modules/blueprint-compiler-contract-v1.md",
+    "docs/modules/cli-frontend-contract-v1.md",
+    "docs/modules/task-runner-contract-v1.md",
+    "docs/reports/subscription_worker_snapshot_authority_binding_v1.md",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "examples/change_plans/tool_system_subscription_worker_snapshot_authority_binding_v1.yaml",
+    "examples/task_manifests/tool_system_subscription_worker_snapshot_authority_binding_v1.yaml",
+    "src/tool_system/blueprint_compiler/compiler.py",
+    "src/tool_system/cli/main.py",
+    "src/tool_system/runner/task_runner.py",
+    "tests/test_blueprint_compiler.py",
+    "tests/test_module_registry.py",
+    "tests/test_root_cli.py",
+    "tests/test_task_runner.py",
+}
+
 
 
 def _fixture_git(repository: Path, *arguments: str) -> str:
@@ -121,6 +153,54 @@ milestones:
     _fixture_git(repository, "add", "--all")
     _fixture_git(repository, "commit", "-q", "-m", "fixture")
     return repository, _fixture_git(repository, "rev-parse", "HEAD")
+
+
+def _bound_subscription_task_pair(
+    tmp_path: Path,
+    *,
+    repository_root: Path,
+    expected_head: str,
+    blueprint_path: str,
+    module_registry_path: str,
+    milestone_ids: list[str],
+    acceptance_requirements: list[str],
+    governance_paths: list[str],
+    query_terms: list[str],
+    seed_paths: list[str],
+) -> tuple[Path, Path]:
+    manifest = load_yaml_file(MANIFEST_PATH)
+    manifest["subscription_public_entry"] = {
+        "binding_version": "subscription_public_entry_authority_binding_v1",
+        "enabled": True,
+        "repository_root_identity_sha256": hashlib.sha256(
+            str(repository_root).encode("utf-8")
+        ).hexdigest(),
+        "expected_head": expected_head,
+        "blueprint_path": blueprint_path,
+        "module_registry_path": module_registry_path,
+        "milestone_ids": milestone_ids,
+        "acceptance_requirements": acceptance_requirements,
+        "governance_paths": governance_paths,
+        "query_terms": query_terms,
+        "seed_paths": seed_paths,
+        "repository_read_authorized": True,
+        "worker_execution_authorized": False,
+        "local_git_write_authorized": False,
+    }
+    manifest_path = tmp_path / "bound-task-manifest.yaml"
+    manifest_path.write_text(
+        yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+
+    plan = load_yaml_file(PLAN_PATH)
+    plan["task_manifest"] = manifest_path.as_posix()
+    plan_path = tmp_path / "bound-change-plan.yaml"
+    plan_path.write_text(
+        yaml.safe_dump(plan, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    return manifest_path, plan_path
 
 
 def test_task_runner_validates_manifest_and_plan_without_commands(tmp_path: Path) -> None:
@@ -307,7 +387,57 @@ def test_subscription_pipeline_rejects_unknown_adapter_before_invocation() -> No
     assert result["local_git_operations"] == 0
 
 
-def test_subscription_public_entry_preflight_freezes_nonexecuting_packet() -> None:
+def test_subscription_public_entry_preflight_freezes_manifest_bound_packet(
+    tmp_path: Path,
+) -> None:
+    expected_head = "a" * 40
+    selections = {
+        "blueprint_path": "blueprint/tool_system_v0.yaml",
+        "module_registry_path": "config/module_registry_v1.yaml",
+        "milestone_ids": ["P16"],
+        "acceptance_requirements": ["subscription-core-remains-bounded"],
+        "governance_paths": ["AGENTS.md"],
+        "query_terms": ["task-runner"],
+        "seed_paths": ["src/tool_system/runner/task_runner.py"],
+    }
+    manifest_path, plan_path = _bound_subscription_task_pair(
+        tmp_path,
+        repository_root=ROOT,
+        expected_head=expected_head,
+        **selections,
+    )
+
+    result = run_subscription_public_entry_preflight(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=ROOT,
+        expected_head=expected_head,
+        **selections,
+        process_authority_path=ROOT / "config/process_authority_v1.yaml",
+        policy_path=ROOT / "policy/repo_write_policy.yaml",
+        autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
+    )
+
+    assert result["status"] == "PASS"
+    assert result["worker_execution_authorized"] is False
+    assert result["repository_context_built"] is False
+    assert result["blueprint_compiled"] is False
+    assert result["provider_invocations"] == 0
+    packet = result["dispatch_packet"]
+    assert packet["packet_version"] == (
+        "subscription_development_authority_packet_v1"
+    )
+    assert packet["expected_head"] == expected_head
+    assert packet["repository_read_authorized"] is True
+    assert len(packet["repository_read_binding_sha256"]) == 64
+    assert len(packet["task_manifest_sha256"]) == 64
+    assert len(packet["change_plan_sha256"]) == 64
+    assert len(packet["repository_root_identity_sha256"]) == 64
+    assert "repository_root" not in packet
+    assert len(packet["packet_sha256"]) == 64
+
+
+def test_subscription_public_entry_preflight_rejects_unbound_generic_pair() -> None:
     result = run_subscription_public_entry_preflight(
         task_manifest_path=MANIFEST_PATH,
         change_plan_path=PLAN_PATH,
@@ -325,19 +455,103 @@ def test_subscription_public_entry_preflight_freezes_nonexecuting_packet() -> No
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
     )
 
-    assert result["status"] == "PASS"
-    assert result["worker_execution_authorized"] is False
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_AUTHORITY_BINDING_BLOCKED"
+    assert result["reasons"] == ["SUBSCRIPTION_AUTHORITY_BINDING_MISMATCH"]
     assert result["repository_context_built"] is False
-    assert result["blueprint_compiled"] is False
-    assert result["provider_invocations"] == 0
-    packet = result["dispatch_packet"]
-    assert packet["packet_version"] == (
-        "subscription_development_authority_packet_v1"
+    assert result["worker_execution_authorized"] is False
+
+
+def test_subscription_public_entry_preflight_rejects_duplicate_binding(
+    tmp_path: Path,
+) -> None:
+    manifest_path, plan_path = _bound_subscription_task_pair(
+        tmp_path,
+        repository_root=ROOT,
+        expected_head="a" * 40,
+        blueprint_path="blueprint/tool_system_v0.yaml",
+        module_registry_path="config/module_registry_v1.yaml",
+        milestone_ids=["P16"],
+        acceptance_requirements=["subscription-core-remains-bounded"],
+        governance_paths=["AGENTS.md"],
+        query_terms=["task-runner"],
+        seed_paths=["src/tool_system/runner/task_runner.py"],
     )
-    assert packet["expected_head"] == "a" * 40
-    assert len(packet["repository_root_identity_sha256"]) == 64
-    assert "repository_root" not in packet
-    assert len(packet["packet_sha256"]) == 64
+    manifest_path.write_text(
+        manifest_path.read_text(encoding="utf-8")
+        + "\nsubscription_public_entry: {}\n",
+        encoding="utf-8",
+    )
+
+    result = run_subscription_public_entry_preflight(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=ROOT,
+        expected_head="a" * 40,
+        blueprint_path="blueprint/tool_system_v0.yaml",
+        module_registry_path="config/module_registry_v1.yaml",
+        milestone_ids=["P16"],
+        acceptance_requirements=["subscription-core-remains-bounded"],
+        governance_paths=["AGENTS.md"],
+        query_terms=["task-runner"],
+        seed_paths=["src/tool_system/runner/task_runner.py"],
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_AUTHORITY_INPUT_CAPTURE_BLOCKED"
+    assert result["reasons"] == ["SUBSCRIPTION_AUTHORITY_MANIFEST_AMBIGUOUS"]
+    assert result["repository_context_built"] is False
+
+
+def test_subscription_public_entry_preflight_detects_pair_byte_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    selections = {
+        "blueprint_path": "blueprint/tool_system_v0.yaml",
+        "module_registry_path": "config/module_registry_v1.yaml",
+        "milestone_ids": ["P16"],
+        "acceptance_requirements": ["subscription-core-remains-bounded"],
+        "governance_paths": ["AGENTS.md"],
+        "query_terms": ["task-runner"],
+        "seed_paths": ["src/tool_system/runner/task_runner.py"],
+    }
+    manifest_path, plan_path = _bound_subscription_task_pair(
+        tmp_path,
+        repository_root=ROOT,
+        expected_head="a" * 40,
+        **selections,
+    )
+    real_pipeline = task_runner_module.run_task_pipeline
+
+    def mutate_after_validation(**arguments: object) -> dict[str, object]:
+        result = real_pipeline(**arguments)
+        plan_path.write_text(
+            plan_path.read_text(encoding="utf-8") + "\n# drift\n",
+            encoding="utf-8",
+        )
+        return result
+
+    monkeypatch.setattr(
+        task_runner_module,
+        "run_task_pipeline",
+        mutate_after_validation,
+    )
+    result = run_subscription_public_entry_preflight(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=ROOT,
+        expected_head="a" * 40,
+        **selections,
+        process_authority_path=ROOT / "config/process_authority_v1.yaml",
+        policy_path=ROOT / "policy/repo_write_policy.yaml",
+        autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_AUTHORITY_BINDING_BLOCKED"
+    assert result["reasons"] == ["SUBSCRIPTION_AUTHORITY_INPUT_DRIFT"]
+    assert result["repository_context_built"] is False
 
 
 def test_subscription_public_entry_preflight_rejects_input_before_file_reads() -> None:
@@ -361,24 +575,33 @@ def test_subscription_public_entry_preflight_rejects_input_before_file_reads() -
 
 
 
-def test_subscription_public_entry_context_compiles_isolated_fixture(
+def test_subscription_public_entry_context_compiles_manifest_bound_snapshot(
     tmp_path: Path,
 ) -> None:
     repository, head = _subscription_context_fixture(tmp_path)
-
-    result = run_subscription_public_entry_context_compilation(
-        task_manifest_path=MANIFEST_PATH,
-        change_plan_path=PLAN_PATH,
+    selections = {
+        "blueprint_path": "blueprint.yaml",
+        "module_registry_path": "module-registry.yaml",
+        "milestone_ids": ["M1_BILLING"],
+        "acceptance_requirements": ["all milestone acceptance passes"],
+        "governance_paths": ["GOVERNANCE.md"],
+        "query_terms": ["billing"],
+        "seed_paths": ["src/billing/service.py"],
+    }
+    manifest_path, plan_path = _bound_subscription_task_pair(
+        tmp_path,
         repository_root=repository,
         expected_head=head,
-        blueprint_path="blueprint.yaml",
-        module_registry_path="module-registry.yaml",
-        milestone_ids=["M1_BILLING"],
-        acceptance_requirements=["all milestone acceptance passes"],
-        governance_paths=["GOVERNANCE.md"],
-        query_terms=["billing"],
-        seed_paths=["src/billing/service.py"],
-        isolated_fixture_repository=True,
+        **selections,
+    )
+
+    result = run_subscription_public_entry_context_compilation(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=repository,
+        expected_head=head,
+        **selections,
+        repository_read_authorized=True,
         process_authority_path=ROOT / "config/process_authority_v1.yaml",
         policy_path=ROOT / "policy/repo_write_policy.yaml",
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
@@ -387,8 +610,9 @@ def test_subscription_public_entry_context_compiles_isolated_fixture(
     assert result["status"] == "PASS"
     assert result["terminal_code"] == "SUBSCRIPTION_CONTEXT_COMPILATION_PASS"
     assert result["repository_context_built"] is True
+    assert result["repository_context_builds"] == 1
     assert result["blueprint_compiled"] is True
-    assert result["repository_read_mode"] == "isolated_fixture_only"
+    assert result["repository_read_mode"] == "exact_manifest_bound_snapshot"
     assert result["local_git_read_only_context_authorized"] is True
     assert result["worker_execution_authorized"] is False
     assert result["worker_invocations"] == 0
@@ -399,10 +623,15 @@ def test_subscription_public_entry_context_compiles_isolated_fixture(
     assert result["remote_repository_operations"] == 0
     compilation = result["blueprint_compilation"]
     assert compilation["status"] == "PASS"
+    assert compilation["repository_context_authorization_mode"] == (
+        "manifest_bound_repository_context_read"
+    )
     assert compilation["task_graph_validation"]["task_count"] == 10
     packet = result["compilation_packet"]
-    assert packet["isolated_fixture_repository"] is True
+    assert packet["repository_read_authorized"] is True
+    assert packet["legacy_isolated_fixture_alias_used"] is False
     assert packet["worker_execution_authorized"] is False
+    assert len(packet["repository_read_binding_sha256"]) == 64
     assert len(packet["packet_sha256"]) == 64
     rendered = json.dumps(result, sort_keys=True)
     assert str(repository) not in rendered
@@ -415,7 +644,7 @@ def test_subscription_public_entry_context_compiles_isolated_fixture(
     ) == ""
 
 
-def test_subscription_public_entry_context_requires_explicit_fixture_before_reads(
+def test_subscription_public_entry_context_requires_read_request_before_files(
     tmp_path: Path,
 ) -> None:
     result = run_subscription_public_entry_context_compilation(
@@ -432,32 +661,40 @@ def test_subscription_public_entry_context_requires_explicit_fixture_before_read
     )
 
     assert result["status"] == "BLOCK"
-    assert result["terminal_code"] == (
-        "SUBSCRIPTION_CONTEXT_REPOSITORY_CLASS_NOT_AUTHORIZED"
-    )
+    assert result["terminal_code"] == "SUBSCRIPTION_CONTEXT_READ_NOT_REQUESTED"
     assert result["local_git_read_only_context_authorized"] is False
     assert result["worker_invocations"] == 0
     assert not (tmp_path / "not-read").exists()
 
 
-def test_subscription_public_entry_context_blocks_stale_fixture(
+def test_subscription_public_entry_context_blocks_stale_bound_snapshot(
     tmp_path: Path,
 ) -> None:
     repository, _ = _subscription_context_fixture(tmp_path)
+    expected_head = "0" * 40
+    selections = {
+        "blueprint_path": "blueprint.yaml",
+        "module_registry_path": "module-registry.yaml",
+        "milestone_ids": ["M1_BILLING"],
+        "acceptance_requirements": ["all milestone acceptance passes"],
+        "governance_paths": ["GOVERNANCE.md"],
+        "query_terms": ["billing"],
+        "seed_paths": ["src/billing/service.py"],
+    }
+    manifest_path, plan_path = _bound_subscription_task_pair(
+        tmp_path,
+        repository_root=repository,
+        expected_head=expected_head,
+        **selections,
+    )
 
     result = run_subscription_public_entry_context_compilation(
-        task_manifest_path=MANIFEST_PATH,
-        change_plan_path=PLAN_PATH,
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
         repository_root=repository,
-        expected_head="0" * 40,
-        blueprint_path="blueprint.yaml",
-        module_registry_path="module-registry.yaml",
-        milestone_ids=["M1_BILLING"],
-        acceptance_requirements=["all milestone acceptance passes"],
-        governance_paths=["GOVERNANCE.md"],
-        query_terms=["billing"],
-        seed_paths=["src/billing/service.py"],
-        isolated_fixture_repository=True,
+        expected_head=expected_head,
+        **selections,
+        repository_read_authorized=True,
         process_authority_path=ROOT / "config/process_authority_v1.yaml",
         policy_path=ROOT / "policy/repo_write_policy.yaml",
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
@@ -469,7 +706,6 @@ def test_subscription_public_entry_context_blocks_stale_fixture(
     assert result["blueprint_compiled"] is False
     assert result["worker_invocations"] == 0
     assert result["local_git_write_operations"] == 0
-
 
 
 def test_subscription_context_compiler_package_freezes_exact_scope() -> None:
@@ -490,6 +726,31 @@ def test_subscription_context_compiler_package_freezes_exact_scope() -> None:
     assert set(manifest["scope"]["in_scope"]) == CONTEXT_COMPILER_FILES
     assert set(plan["changed_files"]) == CONTEXT_COMPILER_FILES
     assert len(CONTEXT_COMPILER_FILES) == 14
+    assert manifest["publication"]["retain_feature_branch"] is True
+    assert manifest["bounded_closure"]["frozen_before_execution"][
+        "finite_budgets"
+    ]["real_downstream_accesses"] == 0
+
+
+
+def test_snapshot_authority_binding_package_freezes_exact_scope() -> None:
+    manifest_result = validate_task_manifest(
+        SNAPSHOT_BINDING_MANIFEST,
+        ROOT / "policy/repo_write_policy.yaml",
+        ROOT / "policy/autonomy_policy.yaml",
+    )
+    plan_result = validate_change_plan(SNAPSHOT_BINDING_PLAN)
+    manifest = load_yaml_file(SNAPSHOT_BINDING_MANIFEST)
+    plan = load_yaml_file(SNAPSHOT_BINDING_PLAN)
+
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == SNAPSHOT_BINDING_FILES
+    assert set(manifest["scope"]["in_scope"]) == SNAPSHOT_BINDING_FILES
+    assert set(plan["changed_files"]) == SNAPSHOT_BINDING_FILES
+    assert len(SNAPSHOT_BINDING_FILES) == 15
     assert manifest["publication"]["retain_feature_branch"] is True
     assert manifest["bounded_closure"]["frozen_before_execution"][
         "finite_budgets"
