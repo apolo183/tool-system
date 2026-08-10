@@ -251,6 +251,7 @@ def run_commands(
         )
 
     command_results: list[dict[str, Any]] = []
+    subprocess_call_count = 0
     dispatch_reasons: list[str] = []
     environment = {
         name: os.environ[name]
@@ -273,6 +274,7 @@ def run_commands(
                 dispatch_reasons.append("command execution cancelled by caller")
                 break
         try:
+            subprocess_call_count += 1
             completed = subprocess.run(
                 shlex.split(command),
                 cwd=working_dir,
@@ -308,6 +310,6 @@ def run_commands(
         "input_sha256_before": _input_sha256(before),
         "input_sha256_after": _input_sha256(after),
         "command_results": command_results,
-        "subprocess_call_count": len(command_results),
+        "subprocess_call_count": subprocess_call_count,
         "reasons": dispatch_reasons,
     }
