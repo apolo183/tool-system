@@ -204,7 +204,7 @@ module_compound_contract:
           - audit_path
         constraint: Resolve the exact current pair, use only the selected working directory, and append only to the selected audit path.
       - root_id: manifest-bound-caller-selected-repository
-        access: read-write
+        access: read-only
         evidence_paths:
           - src/tool_system/runner/task_runner.py
         evidence_symbols:
@@ -215,7 +215,17 @@ module_compound_contract:
           - expected_head
           - blueprint_path
           - module_registry_path
-        constraint: The read-only route performs no write. The separate execution route requires its own exact binding before reading the same source and writes only caller-bound creator-owned context/validation workspaces, hardened state, and the distinct remote-free local Git workspace; the source remains unchanged and all private roots and contents are redacted.
+        constraint: Both public routes inspect one exact clean committed source snapshot without changing it; all source identity and selected-content evidence is redacted.
+      - root_id: manifest-bound-subscription-execution-workspace-and-state
+        access: read-write
+        evidence_paths:
+          - src/tool_system/runner/task_runner.py
+        evidence_symbols:
+          - run_subscription_public_entry_execution
+        boundary_parameters:
+          - workspace_root
+          - durable_state_path
+        constraint: Only the separately exact-bound execution route may create or resume the creator-owned remote-free workspace and hardened durable state outside the source; candidate validation uses private ephemeral clones and all private roots and contents remain redacted.
   external_system_contracts:
     declaration: declared
     systems:
