@@ -260,6 +260,19 @@ def _validated_local_repository(root: Path) -> tuple[str, str]:
     return _git(root, "rev-parse", "HEAD"), _git(root, "rev-parse", "HEAD^{tree}")
 
 
+def create_durable_local_git_store(
+    *,
+    database_path: str | Path,
+    forbidden_roots: tuple[str | Path, ...],
+) -> DurableOrchestratorStore:
+    """Construct the local-Git-owned hardened durable state boundary."""
+
+    return DurableOrchestratorStore(
+        database_path,
+        forbidden_roots=forbidden_roots,
+    )
+
+
 def create_isolated_local_workspace(
     *,
     source_repository_root: str | Path,
