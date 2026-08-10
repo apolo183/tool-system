@@ -386,7 +386,57 @@ def test_subscription_pipeline_rejects_unknown_adapter_before_invocation() -> No
     assert result["local_git_operations"] == 0
 
 
-def test_subscription_public_entry_preflight_freezes_nonexecuting_packet() -> None:
+def test_subscription_public_entry_preflight_freezes_manifest_bound_packet(
+    tmp_path: Path,
+) -> None:
+    expected_head = "a" * 40
+    selections = {
+        "blueprint_path": "blueprint/tool_system_v0.yaml",
+        "module_registry_path": "config/module_registry_v1.yaml",
+        "milestone_ids": ["P16"],
+        "acceptance_requirements": ["subscription-core-remains-bounded"],
+        "governance_paths": ["AGENTS.md"],
+        "query_terms": ["task-runner"],
+        "seed_paths": ["src/tool_system/runner/task_runner.py"],
+    }
+    manifest_path, plan_path = _bound_subscription_task_pair(
+        tmp_path,
+        repository_root=ROOT,
+        expected_head=expected_head,
+        **selections,
+    )
+
+    result = run_subscription_public_entry_preflight(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=ROOT,
+        expected_head=expected_head,
+        **selections,
+        process_authority_path=ROOT / "config/process_authority_v1.yaml",
+        policy_path=ROOT / "policy/repo_write_policy.yaml",
+        autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
+    )
+
+    assert result["status"] == "PASS"
+    assert result["worker_execution_authorized"] is False
+    assert result["repository_context_built"] is False
+    assert result["blueprint_compiled"] is False
+    assert result["provider_invocations"] == 0
+    packet = result["dispatch_packet"]
+    assert packet["packet_version"] == (
+        "subscription_development_authority_packet_v1"
+    )
+    assert packet["expected_head"] == expected_head
+    assert packet["repository_read_authorized"] is True
+    assert len(packet["repository_read_binding_sha256"]) == 64
+    assert len(packet["task_manifest_sha256"]) == 64
+    assert len(packet["change_plan_sha256"]) == 64
+    assert len(packet["repository_root_identity_sha256"]) == 64
+    assert "repository_root" not in packet
+    assert len(packet["packet_sha256"]) == 64
+
+
+def test_subscription_public_entry_preflight_rejects_unbound_generic_pair() -> None:
     result = run_subscription_public_entry_preflight(
         task_manifest_path=MANIFEST_PATH,
         change_plan_path=PLAN_PATH,
@@ -404,19 +454,11 @@ def test_subscription_public_entry_preflight_freezes_nonexecuting_packet() -> No
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
     )
 
-    assert result["status"] == "PASS"
-    assert result["worker_execution_authorized"] is False
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_AUTHORITY_BINDING_BLOCKED"
+    assert result["reasons"] == ["SUBSCRIPTION_AUTHORITY_BINDING_MISMATCH"]
     assert result["repository_context_built"] is False
-    assert result["blueprint_compiled"] is False
-    assert result["provider_invocations"] == 0
-    packet = result["dispatch_packet"]
-    assert packet["packet_version"] == (
-        "subscription_development_authority_packet_v1"
-    )
-    assert packet["expected_head"] == "a" * 40
-    assert len(packet["repository_root_identity_sha256"]) == 64
-    assert "repository_root" not in packet
-    assert len(packet["packet_sha256"]) == 64
+    assert result["worker_execution_authorized"] is False
 
 
 def test_subscription_public_entry_preflight_rejects_input_before_file_reads() -> None:
