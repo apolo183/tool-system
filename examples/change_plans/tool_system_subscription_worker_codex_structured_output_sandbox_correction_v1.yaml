@@ -10,6 +10,7 @@ changed_files:
   - examples/task_manifests/tool_system_subscription_worker_codex_structured_output_sandbox_correction_v1.yaml
   - src/tool_system/worker_adapter/contract.py
   - tests/test_module_registry.py
+  - tests/test_task_runner.py
   - tests/test_worker_adapter_contract.py
 alignment:
   parent:
@@ -23,7 +24,7 @@ alignment:
 verification:
   commands:
     - git diff --check
-    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_worker_adapter_contract.py tests/test_module_registry.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_worker_adapter_contract.py tests/test_task_runner.py tests/test_module_registry.py
     - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
 publication:
   method: github_app_connector_only_draft_pr_then_guarded_ready_and_squash_merge
