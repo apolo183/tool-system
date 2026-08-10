@@ -226,17 +226,20 @@ def test_codex_subscription_adapter_uses_schema_final_message_stdin_and_minimal_
     assert result.status == "PASS"
     argv = observed["argv"]
     assert isinstance(argv, list)
-    assert argv[:7] == [
+    assert argv[:10] == [
         "codex",
+        "--ask-for-approval",
+        "never",
         "exec",
         "--json",
         "--ephemeral",
+        "--ignore-user-config",
         "--sandbox",
         "read-only",
         "--output-schema",
     ]
-    assert argv[8] == "--output-last-message"
-    assert argv[10:] == ["--skip-git-repo-check", "-"]
+    assert argv[11] == "--output-last-message"
+    assert argv[13:] == ["--skip-git-repo-check", "-"]
     assert '{"task_id":"fixture-task"}' not in argv
     assert observed["input"] == '{"task_id":"fixture-task"}'
     assert observed["cwd"] == "/isolated/workspace"
