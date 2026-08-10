@@ -200,8 +200,9 @@ mapping_contract:
       runtime_id_preserved: true
       python_import_identities:
         - {kind: prefix, name: tool_system.worker_adapter}
-      direct_consumer_module_ids: []
-      change_risk: "medium: no-mutation orchestration adapter boundary"
+      direct_consumer_module_ids:
+        - task_runner
+      change_risk: "high: default dry-run and explicitly guarded subscription-worker adapter boundary"
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:worker_adapter@1.0.0
     - current_module_id: target_repo_adapter
       canonical_module_id: target-repo-adapter
@@ -287,7 +288,8 @@ mapping_contract:
         - {kind: prefix, name: tool_system.development_loop}
       direct_consumer_module_ids:
         - local_git
-      change_risk: "medium: bounded in-memory fixture patch, validation, repair, review, and no-progress termination boundary"
+        - task_runner
+      change_risk: "medium: bounded in-memory patch, validation, repair, review, no-progress termination, and task-runner composition boundary"
       rollback_identity: tool-system@0b5110a2eea79ebde650e1088b787c781ddab171:development_loop@absent
     - current_module_id: local_git
       canonical_module_id: local-git
@@ -444,7 +446,8 @@ static_import_dag:
       - cli_frontend
     role_runtime:
       - cli_frontend
-    worker_adapter: []
+    worker_adapter:
+      - task_runner
     target_repo_adapter:
       - cli_frontend
     cleanup_planner:
@@ -454,6 +457,7 @@ static_import_dag:
     blueprint_compiler: []
     development_loop:
       - local_git
+      - task_runner
     local_git: []
     release_governance:
       - operational_observability
