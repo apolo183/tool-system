@@ -24,7 +24,7 @@ bounded_closure:
     allowed_scope: exact_9_paths_listed_below
     acceptance_set:
       - the prompt is supplied through stdin and never appears in the process argument vector
-      - the exact Codex exec vector explicitly selects ephemeral read-only execution and a schema-bound final-message file
+      - the exact Codex vector denies interactive approval ignores user behavioral configuration and explicitly selects ephemeral read-only execution with a schema-bound final-message file
       - JSONL event output is never mistaken for the terminal structured patch
       - the terminal patch is loaded only from a creator-owned bounded temporary file and passes a strict compatible patch-shape validator
       - stdout stderr and terminal result bytes are independently bounded and raw output is never retained
@@ -35,7 +35,7 @@ bounded_closure:
       - the worker-adapter contract mapping and module registry seals remain exact without interface-version drift
     validation_set:
       - focused worker-adapter and module-registry tests
-      - fake process exact argv stdin schema final-message limit timeout and process-group cancellation tests
+      - fake process exact argv approval config-isolation stdin schema final-message limit timeout and process-group cancellation tests
       - full Hosted CI and governance validation
     terminal_predicate: the corrected guarded adapter is contract-tested and merged while public dispatch remains a separate pending package
     finite_budgets:
