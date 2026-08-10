@@ -12,7 +12,6 @@ from tool_system.runner.task_runner import (
     run_subscription_public_entry_execution,
     run_task_pipeline,
 )
-from tool_system.worker_adapter import CodexCLIAdapterConfig
 
 
 def _add_common_options(parser: argparse.ArgumentParser) -> None:
@@ -251,16 +250,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             governance_paths=args.governance_path,
             query_terms=args.query_term,
             seed_paths=args.seed_path,
-            codex_config=CodexCLIAdapterConfig(
-                executable=args.codex_executable,
-                enabled=True,
-                timeout_seconds=args.codex_timeout_seconds,
-                termination_grace_seconds=(
+            codex_config={
+                "executable": args.codex_executable,
+                "enabled": True,
+                "timeout_seconds": args.codex_timeout_seconds,
+                "termination_grace_seconds": (
                     args.codex_termination_grace_seconds
                 ),
-                max_prompt_bytes=args.codex_max_prompt_bytes,
-                max_output_bytes=args.codex_max_output_bytes,
-            ),
+                "max_prompt_bytes": args.codex_max_prompt_bytes,
+                "max_output_bytes": args.codex_max_output_bytes,
+            },
             repository_read_authorized=(
                 args.repository_read_authorized
             ),
