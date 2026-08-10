@@ -144,20 +144,6 @@ module_compound_contract:
         activation_condition: A caller explicitly injects the guarded Codex CLI subscription adapter with its own enabled configuration, subscription-worker authorization, isolated workspace, finite limits, and cancellation boundary.
         boundary: The task runner rejects every other adapter kind before invocation. This conservative classification grants no API, provider, provider-credential, target-repository, local-Git, remote-repository, production, cleanup, or rollback authority.
         classification_grants_authority: false
-      - capability_id: manifest-bound-subscription-local-development-workflow
-        capability_state: conditional-delegated-maximum
-        effect_classes:
-          - repository_write
-          - data_write
-          - git_write
-          - database_write
-          - network_write
-          - external_system_write
-        evidence_paths:
-          - src/tool_system/runner/task_runner.py
-        activation_condition: The exact current pair, read binding, separate execution binding, source snapshot, worker configuration, validation set, data-transfer request, workspace, state, finite budgets, branch, and one-commit limit all match and every explicit request flag is true.
-        boundary: Delegate only creator-owned temporary context and validation writes, the guarded subscription worker, hardened durable state, and one remote-free isolated local commit. Source/target mutation, API/provider execution, credential values, remote publication, production, cleanup, and rollback remain false.
-        classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
     interface_compatible_replacement: Preserve explicit-pair resolution, separate execution-binding closure, input byte sealing, exact manifest-bound repository-read authorization, gate order, stop behavior, command-result fields, batch and graph aggregation, non-executing public-entry packet fields and digests, the legacy fixture compiler envelope, exact-snapshot context and freshness checks, deterministic compiler output, repository-root and selected-content redaction, guarded subscription-adapter selection, structured in-memory candidate results, hard-zero downstream write and external effect fields, no-target flags, and audit result shapes.
