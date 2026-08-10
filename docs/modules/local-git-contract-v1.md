@@ -26,7 +26,7 @@ module_compound_contract:
       - kind: prefix
         name: tool_system.local_git
   role:
-    summary: create or resume one exact remote-free workspace and durably record one bounded local Git change
+    summary: create or resume one exact hook-disabled remote-free workspace from a clean local source snapshot and durably record at most one bounded branch and commit with cancellation, receipt reconciliation, zero network effects, and non-executing disposition plans
     responsibility_boundary: Validate one clean exact local source commit/tree, create or identify a hook-disabled configuration-isolated local clone with every remote removed, freeze Git identity, scope, and exact baseline presence/content topology, pass cancellation into the development loop, bind the sealed candidate to durable leases/checkpoints/side-effect receipts, stage the exact add/modify/delete delta, create at most one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
   natural_owner_evidence_paths:
     - src/tool_system/local_git/__init__.py
@@ -45,7 +45,7 @@ module_compound_contract:
       - isolated_local_git_identity_v1
       - durable_orchestrator_store_v1
       - exact_local_source_and_workspace_identity_v1
-    boundary: Accept an absolute clean local source root, an exact absent-or-receipted isolated workspace path under a protected parent, exact base commit/tree, one agent branch, an allowed scope whose baseline mapping exactly represents the paths present at base, frozen development callbacks and budgets, optional cancellation, and one caller-selected hardened durable store. Allowed paths absent from the baseline may be added; present paths may be modified or deleted.
+    boundary: Accept an absolute clean local source root, an exact absent-or-receipted isolated workspace path under a protected parent, exact base commit/tree, one agent branch, an allowed scope whose baseline mapping exactly represents the paths present at base, frozen development callbacks and budgets, optional cancellation, and one local-Git-owned hardened durable store created from separately bound state inputs or supplied by an existing internal caller. Allowed paths absent from the baseline may be added; present paths may be modified or deleted.
   output_contract:
     registered_outputs:
       - durable_local_git_change_receipt_v1
