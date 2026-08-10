@@ -206,7 +206,6 @@ module_compound_contract:
         boundary: Select one current module interface and preserve its authorization, side-effect, error, and stop boundaries.
   non_claims:
     provider_execution_authorized: false
-    subscription_execution_requires_exact_manifest_binding: true
     target_repo_mutation_authorized: false
     cleanup_execution_authorized: false
     production_operation_authorized: false
