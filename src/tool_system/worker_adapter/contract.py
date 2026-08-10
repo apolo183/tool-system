@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 from collections.abc import Callable, Mapping
@@ -227,23 +228,59 @@ class CodexCLISubscriptionWorkerAdapter:
                 reasons=["subscription worker output exceeded the configured byte limit"],
                 output={"raw_output_recorded": False, "returncode": completed.returncode},
             )
-        status: AdapterStatus = "PASS" if completed.returncode == 0 else "BLOCK"
+        if completed.returncode != 0:
+            return AdapterResult(
+                adapter_id=request.adapter_id,
+                role=request.role,
+                action=request.action,
+                status="BLOCK",
+                adapter_kind=self.adapter_kind,
+                execute=True,
+                calls_external_worker=True,
+                writes_target_repo=False,
+                executes_target_repo_mutation=False,
+                production_deployment=False,
+                evidence=["worker_adapter.subscription.process.block"],
+                reasons=["subscription worker returned a nonzero status"],
+                output={"returncode": completed.returncode, "raw_output_recorded": False},
+            )
+        try:
+            records = [json.loads(line) for line in stdout.splitlines() if line.strip()]
+            structured_result = records[-1]
+            if not isinstance(structured_result, dict):
+                raise ValueError("terminal record must be an object")
+        except (json.JSONDecodeError, ValueError):
+            return AdapterResult(
+                adapter_id=request.adapter_id,
+                role=request.role,
+                action=request.action,
+                status="BLOCK",
+                adapter_kind=self.adapter_kind,
+                execute=True,
+                calls_external_worker=True,
+                writes_target_repo=False,
+                executes_target_repo_mutation=False,
+                production_deployment=False,
+                evidence=["worker_adapter.subscription.structured_output.block"],
+                reasons=["subscription worker did not return valid JSON object records"],
+                output={"returncode": completed.returncode, "raw_output_recorded": False},
+            )
         return AdapterResult(
             adapter_id=request.adapter_id,
             role=request.role,
             action=request.action,
-            status=status,
+            status="PASS",
             adapter_kind=self.adapter_kind,
             execute=True,
             calls_external_worker=True,
             writes_target_repo=False,
             executes_target_repo_mutation=False,
             production_deployment=False,
-            evidence=["worker_adapter.subscription.process.complete"],
-            reasons=[] if status == "PASS" else ["subscription worker returned a nonzero status"],
+            evidence=["worker_adapter.subscription.structured_output.complete"],
+            reasons=[],
             output={
                 "returncode": completed.returncode,
-                "stdout_sha256_required": True,
+                "structured_result": structured_result,
                 "raw_output_recorded": False,
                 "argv_shape": ["<configured-codex>", "exec", "--json", "--skip-git-repo-check", "<structured-prompt>"],
                 "environment_names": sorted(env),
