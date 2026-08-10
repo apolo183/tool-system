@@ -19,6 +19,14 @@ The read-only `develop` command remains unchanged. A separate `develop-execute` 
 
 The task-runner composes existing module APIs. The local-Git owner creates or resumes one remote-free isolated workspace from a local exact snapshot; the development loop supplies the current candidate files on each worker cycle; validation commands are extracted only from captured validated change-plan bytes; the terminal result contains no prompt, file content, private path, raw worker output, or credential value.
 
+## Implemented evidence
+
+- The root CLI now exposes a separate `develop-execute` route whose five request flags remain inert unless the exact second manifest binding matches.
+- The task-runner byte-seals the manifest and change plan, rebuilds and freshness-checks the exact source context, binds topology, commands, limits, worker configuration, workspace, state, branch, and one-commit ceiling, then composes only the accepted subscription adapter.
+- Every worker cycle receives the current candidate mapping. Candidate validation uses a fresh remote-free clone, no shell, a safe environment allowlist without `HOME` or provider credential variables, finite timeout, retained-output limits, and caller cancellation.
+- Workspace construction rejects symlinked sources, unsafe parents, remotes, dirty or drifting resumes, hooks, interactive Git, signing, and global/system configuration. Candidate materialization rejects symlinked parents.
+- Only the separate workspace and hardened durable state are writable; the exact source remains read-only. Results contain hashes, counts, local commit identity, and non-executing plans only.
+
 ## Current status
 
-Implementation is in progress. This report is evidence only and grants no runtime or publication authority.
+The exact 21-path implementation closure is complete and pending Hosted CI fake-I/O plus governance seals. This report is evidence only and grants no worker execution, runtime, remote publication, production, cleanup, or rollback authority.
