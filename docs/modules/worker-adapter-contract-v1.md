@@ -154,7 +154,7 @@ module_compound_contract:
         evidence_paths:
           - src/tool_system/worker_adapter/contract.py
         evidence_symbols:
-          - CodexCLISubscriptionWorkerAdapter.run
+          - CodexCLISubscriptionWorkerAdapter
           - _write_private_file
           - _read_private_result
         boundary_parameters:
