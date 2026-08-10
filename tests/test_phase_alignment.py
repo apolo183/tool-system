@@ -1205,3 +1205,13 @@ def test_p16i_accepts_only_core_and_preserves_every_external_stop() -> None:
     ):
         assert marker in report
 
+
+
+def test_readme_matches_accepted_core_and_current_registry_inventory() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+    assert "It registers 26 current tool-system modules" in readme_text
+    assert "It registers 14 current tool-system modules" not in readme_text
+    assert "P15 Core is accepted" in readme_text
+    assert "P16 Core is accepted for subscription-primary sustainable operations" in readme_text
+    assert "Build the missing blueprint-to-code autonomous implementation" not in readme_text
+    assert "Production deployment and real-environment validation remain separately authorized" in readme_text
