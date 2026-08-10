@@ -50,7 +50,7 @@ def test_root_cli_change_plan_validates() -> None:
     assert result["reasons"] == []
 
 
-def test_root_cli_develop_routes_isolated_context_compilation(
+def test_root_cli_develop_routes_manifest_bound_context_compilation(
     tmp_path: Path,
     capsys,
     monkeypatch,
