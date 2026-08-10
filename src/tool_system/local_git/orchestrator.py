@@ -275,9 +275,12 @@ def create_isolated_local_workspace(
     durable-local-Git receipt reconciliation remains authoritative for resume.
     """
 
-    source = Path(source_repository_root).resolve(strict=True)
+    raw_source = Path(source_repository_root)
     raw_workspace = Path(workspace_root)
     try:
+        if not raw_source.is_absolute() or raw_source.is_symlink():
+            raise DurableLocalGitError("INVALID_SOURCE_REPOSITORY_ROOT")
+        source = raw_source.resolve(strict=True)
         if _SHA.fullmatch(expected_head_sha) is None:
             raise DurableLocalGitError("INVALID_EXPECTED_HEAD")
         if _SHA.fullmatch(expected_tree_sha) is None:
@@ -293,7 +296,10 @@ def create_isolated_local_workspace(
         if raw_workspace.parent.is_symlink() or not parent.is_dir():
             raise DurableLocalGitError("INVALID_WORKSPACE_PARENT")
         parent_stat = parent.lstat()
-        if parent_stat.st_mode & (stat.S_IWGRP | stat.S_IWOTH):
+        if (
+            parent_stat.st_uid != os.geteuid()
+            or parent_stat.st_mode & (stat.S_IWGRP | stat.S_IWOTH)
+        ):
             raise DurableLocalGitError("UNSAFE_WORKSPACE_PARENT")
         target = parent / raw_workspace.name
         if target.exists() or target.is_symlink():
@@ -302,8 +308,16 @@ def create_isolated_local_workspace(
             git_dir = target / ".git"
             if git_dir.is_symlink() or not git_dir.is_dir():
                 raise DurableLocalGitError("UNSAFE_EXISTING_WORKSPACE")
+            if target.lstat().st_uid != os.geteuid():
+                raise DurableLocalGitError("UNSAFE_EXISTING_WORKSPACE")
             if _git(target, "remote"):
                 raise DurableLocalGitError("REMOTE_REPOSITORY_FORBIDDEN")
+            if _git(target, "rev-parse", "HEAD") != expected_head_sha:
+                raise DurableLocalGitError("WORKSPACE_HEAD_PRECONDITION_DRIFT")
+            if _git(target, "rev-parse", "HEAD^{tree}") != expected_tree_sha:
+                raise DurableLocalGitError("WORKSPACE_TREE_PRECONDITION_DRIFT")
+            if _git(target, "status", "--porcelain=v1", "--untracked-files=all"):
+                raise DurableLocalGitError("DIRTY_EXISTING_WORKSPACE")
             return {
                 "status": "PASS",
                 "workspace_state": "EXISTING",
