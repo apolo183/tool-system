@@ -325,21 +325,52 @@ def create_isolated_local_workspace(
                 raise DurableLocalGitError("UNSAFE_EXISTING_WORKSPACE")
             if _git(target, "remote"):
                 raise DurableLocalGitError("REMOTE_REPOSITORY_FORBIDDEN")
-            if _git(target, "rev-parse", "HEAD") != expected_head_sha:
-                raise DurableLocalGitError("WORKSPACE_HEAD_PRECONDITION_DRIFT")
-            if _git(target, "rev-parse", "HEAD^{tree}") != expected_tree_sha:
-                raise DurableLocalGitError("WORKSPACE_TREE_PRECONDITION_DRIFT")
             if _git(target, "status", "--porcelain=v1", "--untracked-files=all"):
                 raise DurableLocalGitError("DIRTY_EXISTING_WORKSPACE")
+            workspace_head = _git(target, "rev-parse", "HEAD")
+            workspace_tree = _git(target, "rev-parse", "HEAD^{tree}")
+            receipt_reconciliation_required = False
+            workspace_state = "EXISTING_BASE"
+            if workspace_head == expected_head_sha:
+                if workspace_tree != expected_tree_sha:
+                    raise DurableLocalGitError(
+                        "WORKSPACE_TREE_PRECONDITION_DRIFT"
+                    )
+            else:
+                parent_head = _git(
+                    target,
+                    "rev-parse",
+                    f"{workspace_head}^",
+                    check=False,
+                )
+                commit_count = _git(
+                    target,
+                    "rev-list",
+                    "--count",
+                    f"{expected_head_sha}..{workspace_head}",
+                    check=False,
+                )
+                if parent_head != expected_head_sha or commit_count != "1":
+                    raise DurableLocalGitError(
+                        "WORKSPACE_HEAD_PRECONDITION_DRIFT"
+                    )
+                workspace_state = (
+                    "EXISTING_CANDIDATE_PENDING_RECEIPT"
+                )
+                receipt_reconciliation_required = True
             return {
                 "status": "PASS",
-                "workspace_state": "EXISTING",
+                "workspace_state": workspace_state,
                 "workspace_created": False,
                 "workspace_identity_sha256": hashlib.sha256(
                     str(target).encode("utf-8")
                 ).hexdigest(),
                 "source_head": source_head,
                 "source_tree": source_tree,
+                "receipt_reconciliation_required": (
+                    receipt_reconciliation_required
+                ),
+                "workspace_candidate_grants_authority": False,
                 "remote_count": 0,
                 "network_operations": 0,
             }
@@ -382,6 +413,8 @@ def create_isolated_local_workspace(
             ).hexdigest(),
             "source_head": source_head,
             "source_tree": source_tree,
+            "receipt_reconciliation_required": False,
+            "workspace_candidate_grants_authority": False,
             "remote_count": 0,
             "network_operations": 0,
         }
