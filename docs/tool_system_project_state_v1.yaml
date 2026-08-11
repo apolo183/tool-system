@@ -1950,3 +1950,62 @@ p16i_production_operations_acceptance_decision:
     cleanup_operations: 0
     rollback_operations: 0
   stop_boundary: accepted_p16_core_stop_before_deployment_real_environment_validation_or_optional_api_plugin_implementation
+
+subscription_worker_public_entry_acceptance:
+  authorization_packet: SUBSCRIPTION-WORKER-PUBLIC-ENTRY-ACCEPTANCE-v1
+  baseline_commit: 8be8950937407bbca0c562b77348c67aba6b5685
+  baseline_tree: 331d5496ea2aee610c17bd522850b959015ecb9f
+  status: accepted_subscription_worker_public_entry_core
+  authority_effect: none
+  specification: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+  decision_record: docs/reports/subscription_worker_public_entry_acceptance_v1.md
+  acceptance_mapping: docs/reports/subscription_worker_public_entry_acceptance_mapping_v1.yaml
+  evidence_closure:
+    specification_merge: ab40eb743cadb88111a7e7fd9c6dd96adfeb5cf4
+    adapter_merge: 55416af567317c9c08095fe3e081baeb9b7aace6
+    structured_result_merge: ed41d7ab96cea1d6d14d129532140c1d926230ad
+    development_loop_bridge_merge: 205637aa9453cd16972c08909d91f16f251414d5
+    task_runner_pipeline_merge: 6d570cedbd0a119d1221ced2e4aae2cff1bc3113
+    root_cli_preflight_merge: 7cc77c189e579e36a38ba246baa08e01d350fbd3
+    context_compiler_merge: dddf790fa88918419aef76fa362a23c6ef076911
+    snapshot_authority_binding_merge: a6fdc2969ae163b8cbdcb6e5f9f74c2279dfaba5
+    structured_output_sandbox_correction_merge: 9c596282dbc784d8a5afdc1f4d283f4828adbf6b
+    public_entry_execution_integration_merge: dcf01353a4b86f7f472649a2b2c352d44393f748
+    stopped_unmerged_attempt_pull_request: 216
+    receipt_gated_replay_correction_merge: 983e225377fdef23a18368c9e662f8231d6aaec8
+    corrected_multi_stack_acceptance_merge: 8be8950937407bbca0c562b77348c67aba6b5685
+    corrected_multi_stack_hosted_ci_runs: [1301, 1302]
+  accepted_public_entry:
+    root_cli_subcommand: develop-execute
+    exact_manifest_change_plan_binding_required: true
+    exact_repository_snapshot_binding_required: true
+    validation_boundary: injected_fake_codex_process_isolated_python_and_typescript_remote_free_local_git
+    bounded_repair_and_review: true
+    maximum_remote_free_local_commits: 1
+    durable_completed_receipt_replay: true
+    real_codex_execution_observed_in_this_acceptance: false
+  remaining_authority:
+    real_codex_execution_authorized: false
+    chatgpt_web_automation_authorized: false
+    api_provider_execution_authorized: false
+    credential_access_authorized: false
+    real_downstream_access_authorized: false
+    real_downstream_mutation_authorized: false
+    remote_publication_authorized: false
+    production_operation_authorized: false
+    deployment_authorized: false
+    cleanup_authorized: false
+    rollback_authorized: false
+  zero_operation_boundary:
+    real_codex_invocations: 0
+    chatgpt_web_automation_operations: 0
+    provider_invocations: 0
+    credential_value_accesses: 0
+    real_downstream_repository_accesses: 0
+    real_downstream_repository_mutations: 0
+    remote_repository_operations: 0
+    production_operations: 0
+    deployment_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  stop_boundary: accepted_public_entry_stop_before_real_worker_downstream_remote_production_cleanup_or_rollback
