@@ -1,0 +1,35 @@
+plan_id: tool-system-subscription-worker-multi-stack-acceptance-v2
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_multi_stack_acceptance_v2.yaml
+changed_files:
+  - docs/reports/subscription_worker_multi_stack_acceptance_v2.md
+  - examples/change_plans/tool_system_subscription_worker_multi_stack_acceptance_v2.yaml
+  - examples/task_manifests/tool_system_subscription_worker_multi_stack_acceptance_v2.yaml
+  - tests/test_task_runner.py
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    section_or_key: Implementation packages
+    scope: Execute the frozen package 3 Python and TypeScript fake-I-O acceptance matrix from the replay-corrected canonical runtime.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Validate bounded subscription-primary local development while every API and external effect remains disabled.
+implementation:
+  - add no runtime behavior and use only the canonical public entry with injected fake process I-O
+  - exercise Python and TypeScript implementation repair denial cancellation replay and one-commit scenarios
+  - retain temporary repository temporary SQLite local Node and no-network boundaries
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_task_runner.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  method: github_app_connector_only_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-multi-stack-acceptance-v2
+  retain_feature_branch: true
+  exact_base: 983e225377fdef23a18368c9e662f8231d6aaec8
+rollback:
+  method: git_revert
+  reference: tool-system@983e225377fdef23a18368c9e662f8231d6aaec8
+  execution_authorized: false
