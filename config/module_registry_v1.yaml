@@ -1627,7 +1627,7 @@ modules:
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: local-git
   module_version: 1.2.0
-  role: create or resume one exact hook-disabled remote-free workspace from a clean local source snapshot and durably record at most one bounded branch and commit with cancellation, receipt reconciliation, zero network effects, and non-executing disposition plans. Validate one clean exact local source commit/tree, create or identify a hook-disabled configuration-isolated local clone with every remote removed, freeze Git identity, scope, and exact baseline presence/content topology, pass cancellation into the development loop, bind the sealed candidate to durable leases/checkpoints/side-effect receipts, stage the exact add/modify/delete delta, create at most one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
+  role: create or resume one exact hook-disabled remote-free workspace from a clean local source snapshot and durably record at most one bounded branch and commit with cancellation, receipt reconciliation, zero network effects, and non-executing disposition plans. Validate one clean exact local source commit/tree, create or identify a hook-disabled configuration-isolated local clone with every remote removed, admit an existing one-direct-child clean candidate only as pending receipt reconciliation, freeze Git identity, scope, and exact baseline presence/content topology, pass cancellation into the development loop, bind the sealed candidate to durable leases/checkpoints/side-effect receipts, stage the exact add/modify/delete delta, create at most one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
   owner: local-git
   public_interface_refs:
   - interface_id: local-git-api
@@ -1662,7 +1662,7 @@ modules:
     target_boundary_id: code-002
     effect_contract: &local_git_contract
       repo_relative_path: docs/modules/local-git-contract-v1.md
-      sha256: 9bf70a40e3f0fc1a4900d0bf64e4af3455cbbdd2ca11b1c403922fe0a6cd618f
+      sha256: adf65c350cdb4dd58d52b6ad7a7b6027c2c498fc98c7775346259321d63f70cf
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-002
@@ -2582,7 +2582,7 @@ interfaces:
   - consumer_module_id: task-runner
   input_contract: &local_git_interface_contract
     repo_relative_path: docs/modules/local-git-contract-v1.md
-    sha256: 9bf70a40e3f0fc1a4900d0bf64e4af3455cbbdd2ca11b1c403922fe0a6cd618f
+    sha256: adf65c350cdb4dd58d52b6ad7a7b6027c2c498fc98c7775346259321d63f70cf
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *local_git_interface_contract

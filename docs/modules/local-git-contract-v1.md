@@ -27,7 +27,7 @@ module_compound_contract:
         name: tool_system.local_git
   role:
     summary: create or resume one exact hook-disabled remote-free workspace from a clean local source snapshot and durably record at most one bounded branch and commit with cancellation, receipt reconciliation, zero network effects, and non-executing disposition plans
-    responsibility_boundary: Validate one clean exact local source commit/tree, create or identify a hook-disabled configuration-isolated local clone with every remote removed, freeze Git identity, scope, and exact baseline presence/content topology, pass cancellation into the development loop, bind the sealed candidate to durable leases/checkpoints/side-effect receipts, stage the exact add/modify/delete delta, create at most one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
+    responsibility_boundary: Validate one clean exact local source commit/tree, create or identify a hook-disabled configuration-isolated local clone with every remote removed, admit an existing one-direct-child clean candidate only as pending receipt reconciliation, freeze Git identity, scope, and exact baseline presence/content topology, pass cancellation into the development loop, bind the sealed candidate to durable leases/checkpoints/side-effect receipts, stage the exact add/modify/delete delta, create at most one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
   natural_owner_evidence_paths:
     - src/tool_system/local_git/__init__.py
     - src/tool_system/local_git/orchestrator.py
@@ -45,17 +45,17 @@ module_compound_contract:
       - isolated_local_git_identity_v1
       - durable_orchestrator_store_v1
       - exact_local_source_and_workspace_identity_v1
-    boundary: Accept an absolute clean local source root, an exact absent-or-receipted isolated workspace path under a protected parent, exact base commit/tree, one agent branch, an allowed scope whose baseline mapping exactly represents the paths present at base, frozen development callbacks and budgets, optional cancellation, and one local-Git-owned hardened durable store created from separately bound state inputs or supplied by an existing internal caller. Allowed paths absent from the baseline may be added; present paths may be modified or deleted.
+    boundary: Accept an absolute clean local source root, an exact absent, base, or one-direct-child candidate workspace path under a protected parent, exact base commit/tree, one agent branch, an allowed scope whose baseline mapping exactly represents the paths present at base, frozen development callbacks and budgets, optional cancellation, and one local-Git-owned hardened durable store created from separately bound state inputs or supplied by an existing internal caller. A candidate workspace grants no authority and must match one exact completed receipt before resume; allowed paths absent from the baseline may be added and present paths may be modified or deleted.
   output_contract:
     registered_outputs:
       - durable_local_git_change_receipt_v1
       - unauthorized_local_disposition_plans_v1
-    boundary: Return hashed workspace/source evidence, the sealed candidate identity and finite worker usage, one local branch/commit/tree, durable completion or idempotent completed-effect resume, zero network/remote/provider/credential counts, and rollback, creator-cleanup, and draft-PR plans whose execution remains false.
+    boundary: Return hashed workspace/source evidence, the sealed candidate identity and finite worker usage, one local branch/commit/tree, durable completion or idempotent completed-effect resume without recreating or reclaiming completed run state, zero network/remote/provider/credential counts, and rollback, creator-cleanup, and draft-PR plans whose execution remains false.
   error_contract:
     registered_error_semantics:
       - precondition_scope_lease_and_receipt_conflicts_fail_closed
       - ambiguous_side_effect_never_replays
-    boundary: Unsafe source or workspace parent, source head/tree drift, clone or hook/config isolation failure, remote configuration, dirty state, symlink or root drift, head/tree mismatch, baseline presence/content mismatch, unreceipted branch, ambiguous in-progress effect, lease conflict, candidate scope expansion, empty candidate delta, staged-delta mismatch, or Git failure blocks without remote fallback.
+    boundary: Unsafe source or workspace parent, source head/tree drift, clone or hook/config isolation failure, remote configuration, dirty state, symlink or root drift, a candidate not exactly one direct child of base, missing or mismatched completed receipt, baseline presence/content mismatch, unreceipted branch, ambiguous in-progress effect, lease conflict, candidate scope expansion, empty candidate delta, staged-delta mismatch, or Git failure blocks without remote fallback.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -94,13 +94,13 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve exact source-to-workspace construction, hook/global-config isolation, remote removal, cancellation, remote-free preflight, exact base/scope and baseline-topology binding, exact add/modify/delete staging, durable effect ordering, no-duplicate completed-effect resume, and non-executing disposition plans.
+    interface_compatible_replacement: Preserve exact source-to-workspace construction, hook/global-config isolation, remote removal, cancellation, remote-free preflight, exact base or one-direct-child pending-receipt workspace classification, exact scope and baseline-topology binding, exact add/modify/delete staging, durable effect ordering, no-duplicate completed-effect resume without completed-run state mutation, and non-executing disposition plans.
     interface_incompatible_change: Network clone or remote support, automatic rollback/cleanup, a new persistence schema, or weaker receipt reconciliation requires a new interface version and separate authorization.
   rollback_contract:
     rollback_identity: tool-system@22dedb0f2a2c0b38a0bd4c67f36c1c2454ca19d5:local_git@absent
     method: Revert the module through a separately audited pull request; runtime rollback plans remain non-executing.
   replacement_contract:
-    activation_rule: Replace only after isolated add/modify/delete branch/commit, baseline presence/content drift, scope, durable receipts, crash-after-completion resume, conflict, and zero-remote tests pass.
+    activation_rule: Replace only after isolated add/modify/delete branch/commit, base and one-direct-child workspace classification, unknown candidate denial, baseline presence/content drift, scope, durable receipts, completed-run replay without state recreation, crash-after-completion resume, conflict, and zero-remote tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -111,7 +111,7 @@ module_compound_contract:
   local_boundaries:
     repository:
       mode: isolated-local-git-read-write
-      contract: The source root is absolute, clean, non-symlink, and exact; the separate workspace root is created locally or reconciled through receipts, has no configured remote, and matches exact base commit/tree before the first effect.
+      contract: The source root is absolute, clean, non-symlink, and exact; the separate workspace is remote-free and either matches the exact base or is one direct child marked pending receipt reconciliation. Only an exact completed receipt may authorize the latter to resume, and no new effect begins from an unknown candidate.
     data:
       mode: durable-single-host
       contract: State is recorded through the hardened caller-selected SQLite store outside the fixture root.

@@ -994,6 +994,139 @@ def test_subscription_public_entry_executes_one_fake_worker_local_commit(
     assert validation_command not in json.dumps(result, sort_keys=True)
 
 
+    replay = run_subscription_public_entry_execution(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=repository,
+        workspace_root=workspace,
+        durable_state_path=state,
+        expected_head=expected_head,
+        expected_tree=expected_tree,
+        blueprint_path="blueprint.yaml",
+        module_registry_path="module-registry.yaml",
+        milestone_ids=["M1_BILLING"],
+        acceptance_requirements=["billing behavior passes"],
+        governance_paths=["GOVERNANCE.md"],
+        query_terms=["billing", "total"],
+        seed_paths=[
+            "src/billing/service.py",
+            "tests/test_billing.py",
+        ],
+        codex_config=config,
+        repository_read_authorized=True,
+        worker_execution_authorized=True,
+        validation_execution_authorized=True,
+        subscription_data_transfer_authorized=True,
+        local_git_write_authorized=True,
+        adapter=adapter,
+    )
+
+    assert replay["status"] == "PASS", replay
+    assert replay["terminal_code"] == "RESUMED_COMPLETED_LOCAL_COMMIT"
+    assert replay["commit"] == result["commit"]
+    assert len(calls) == 1
+    assert _fixture_git(
+        workspace,
+        "rev-list",
+        "--count",
+        f"{expected_head}..HEAD",
+    ) == "1"
+
+
+
+def test_subscription_public_entry_unknown_local_commit_has_no_replay_authority(
+    tmp_path: Path,
+) -> None:
+    repository, expected_head = _subscription_context_fixture(tmp_path)
+    expected_tree = _fixture_git(repository, "rev-parse", "HEAD^{tree}")
+    workspace_parent = tmp_path / "unknown-workspaces"
+    workspace_parent.mkdir(mode=0o700)
+    workspace = workspace_parent / "billing"
+    state_parent = tmp_path / "unknown-state"
+    state_parent.mkdir(mode=0o700)
+    state = state_parent / "subscription.sqlite3"
+    config = CodexCLIAdapterConfig(executable="codex", enabled=True)
+    manifest_path, plan_path, _ = _bound_subscription_execution_pair(
+        tmp_path,
+        repository_root=repository,
+        workspace_root=workspace,
+        durable_state_path=state,
+        expected_head=expected_head,
+        expected_tree=expected_tree,
+        config=config,
+    )
+    created = task_runner_module.create_isolated_local_workspace(
+        source_repository_root=repository,
+        workspace_root=workspace,
+        expected_head_sha=expected_head,
+        expected_tree_sha=expected_tree,
+    )
+    assert created["status"] == "PASS"
+    _fixture_git(workspace, "config", "user.email", "fixture@example.invalid")
+    _fixture_git(workspace, "config", "user.name", "Fixture")
+    _fixture_git(workspace, "switch", "-q", "-c", "agent/bounded-billing-v1")
+    (workspace / "src/billing/service.py").write_text(
+        "def total(value: int) -> int:\n    return value\n",
+        encoding="utf-8",
+    )
+    _fixture_git(workspace, "add", "--all")
+    _fixture_git(workspace, "commit", "-q", "-m", "unknown candidate")
+
+    calls = 0
+
+    def forbidden_run(
+        argv: list[str],
+        **kwargs: Any,
+    ) -> subprocess.CompletedProcess[str]:
+        del argv, kwargs
+        nonlocal calls
+        calls += 1
+        raise AssertionError("unknown commit must not reach the worker")
+
+    adapter = CodexCLISubscriptionWorkerAdapter(
+        config,
+        process_runner=forbidden_run,
+        source_environment={"PATH": "/usr/bin", "HOME": "/isolated/home"},
+    )
+    result = run_subscription_public_entry_execution(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=repository,
+        workspace_root=workspace,
+        durable_state_path=state,
+        expected_head=expected_head,
+        expected_tree=expected_tree,
+        blueprint_path="blueprint.yaml",
+        module_registry_path="module-registry.yaml",
+        milestone_ids=["M1_BILLING"],
+        acceptance_requirements=["billing behavior passes"],
+        governance_paths=["GOVERNANCE.md"],
+        query_terms=["billing", "total"],
+        seed_paths=[
+            "src/billing/service.py",
+            "tests/test_billing.py",
+        ],
+        codex_config=config,
+        repository_read_authorized=True,
+        worker_execution_authorized=True,
+        validation_execution_authorized=True,
+        subscription_data_transfer_authorized=True,
+        local_git_write_authorized=True,
+        adapter=adapter,
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == (
+        "BRANCH_ALREADY_EXISTS_WITHOUT_RECEIPT"
+    )
+    assert calls == 0
+    assert _fixture_git(
+        workspace,
+        "rev-list",
+        "--count",
+        f"{expected_head}..HEAD",
+    ) == "1"
+
 def test_subscription_public_entry_missing_flag_blocks_before_workspace(
     tmp_path: Path,
 ) -> None:

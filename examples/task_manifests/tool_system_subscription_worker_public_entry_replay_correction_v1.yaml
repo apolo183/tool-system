@@ -1,0 +1,118 @@
+task_id: tool-system-subscription-worker-public-entry-replay-correction-v1
+task_type: correction
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-public-entry-replay-correction-v1
+phase: POST_P16_PRODUCT_COMPLETION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    section_or_key: Acceptance matrix
+    scope: Preserve deterministic replay and exactly one bounded local commit behind the public subscription-primary entry.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Keep the bounded local workflow auditable resumable fail-closed and remote-free while APIs remain default disabled.
+bounded_closure:
+  frozen_before_execution:
+    task_identity: SUBSCRIPTION-WORKER-PUBLIC-ENTRY-REPLAY-CORRECTION-v1
+    baseline_commit: dcf01353a4b86f7f472649a2b2c352d44393f748
+    baseline_tree: canonical_main_tree_at_dcf01353a4b86f7f472649a2b2c352d44393f748
+    allowed_scope: exact_8_paths_listed_below
+    acceptance_set:
+      - an exact clean base workspace continues to pass the preliminary local workspace gate
+      - a clean remote-free workspace at exactly one direct child commit of the exact base may proceed only as pending durable receipt reconciliation
+      - the preliminary workspace result does not grant commit branch resume or execution authority
+      - an exact completed durable commit receipt resumes without another worker validation branch or commit effect
+      - a one-commit candidate without the exact completed receipt fails closed before worker or Git effects
+      - dirty remote-bearing wrong-parent multi-commit symlinked stale or otherwise drifting workspaces fail closed
+      - source repository head tree and clean status remain exact and read-only
+      - public-entry replay returns the same local commit with zero duplicate worker and local-Git effects
+      - Hosted CI uses fake Codex I/O temporary remote-free repositories and temporary SQLite only
+      - no real Codex API provider credential downstream remote production cleanup or rollback operation occurs
+    validation_set:
+      - focused task-runner local-Git module-registry and governance tests
+      - exact completed-receipt replay and unknown-candidate denial fixtures
+      - full Hosted CI and current authority validators
+    terminal_predicate: exact public-entry replay reaches only durable receipt reconciliation and completed work resumes once while unknown candidates fail closed
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 3
+      review_cycles: 1
+      hosted_ci_runs: 4
+      fake_codex_invocations: 8
+      real_codex_invocations: 0
+      provider_invocations: 0
+      credential_value_accesses: 0
+      real_downstream_accesses: 0
+      remote_repository_operations: 0
+      production_operations: 0
+      project_cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, validation_results, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, status_text]
+scope:
+  summary: Correct the public-entry preliminary workspace gate so the existing durable completed-receipt replay path is reachable without accepting unknown commits.
+  in_scope: &files
+    - config/module_registry_v1.yaml
+    - docs/modules/local-git-contract-v1.md
+    - docs/reports/subscription_worker_public_entry_replay_correction_v1.md
+    - examples/change_plans/tool_system_subscription_worker_public_entry_replay_correction_v1.yaml
+    - examples/task_manifests/tool_system_subscription_worker_public_entry_replay_correction_v1.yaml
+    - src/tool_system/local_git/orchestrator.py
+    - tests/test_module_registry.py
+    - tests/test_task_runner.py
+  out_of_scope:
+    - worker adapter provider adapter task-runner CLI blueprint project-state workflow policy or configuration changes
+    - real Codex ChatGPT Web browser API provider credential or proxy access
+    - remote publication by the runtime target-repository mutation production deployment cleanup or rollback
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/local_git/orchestrator.py
+    commit_sha: dcf01353a4b86f7f472649a2b2c352d44393f748
+    why_relevant: The preliminary existing-workspace gate requires the base HEAD before the durable receipt owner is reached.
+  - repo: apolo183/tool-system
+    path: src/tool_system/runner/task_runner.py
+    commit_sha: dcf01353a4b86f7f472649a2b2c352d44393f748
+    why_relevant: The public execution route invokes workspace construction before the accepted durable local-Git replay path.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    commit_sha: dcf01353a4b86f7f472649a2b2c352d44393f748
+    why_relevant: Its acceptance matrix requires replay and exactly one bounded local commit.
+allowed_files: *files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/**
+  - policy/**
+  - .github/**
+  - docs/tool_system_project_state_v1.yaml
+  - src/tool_system/ai_worker/**
+  - src/tool_system/provider_portfolio/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_task_runner.py tests/test_module_registry.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  squash_merge_authorized: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+rollback:
+  method: git_revert
+  reference: tool-system@dcf01353a4b86f7f472649a2b2c352d44393f748
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: standing_user_instruction_continue_automatically_until_major_milestone
+  approved_at: 2026-08-11 UTC+09:00
