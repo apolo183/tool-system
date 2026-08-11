@@ -2079,3 +2079,104 @@ subscription_worker_durable_call_lease_correction:
     cleanup_operations: 0
     rollback_operations: 0
   stop_boundary: correction_merge_then_stop_before_new_real_isolated_acceptance
+
+subscription_worker_real_isolated_acceptance_v2_descriptive_closeout:
+  authorization_packet: P14G-SUBSCRIPTION-WORKER-REAL-ISOLATED-ACCEPTANCE-v2-DESCRIPTIVE-CLOSEOUT-v1
+  baseline_commit: 027dbb3fb83c38def70e81d58712f80dbe613483
+  baseline_tree: 0480170128bb0c88a57eb91ff752a0ad954c6e08
+  status: BLOCK
+  terminal_code: SUBSCRIPTION_WORKER_TIMEOUT
+  authority_effect: none
+  decision_record: docs/reports/subscription_worker_real_isolated_acceptance_v2_descriptive_closeout.md
+  evidence_source:
+    classification: operator_supplied_read_only_terminal_observation
+    package_external_evidence_root_reads: 0
+    package_external_evidence_root_reuses: 0
+    package_external_evidence_root_writes: 0
+    package_external_evidence_root_movements: 0
+    package_external_evidence_root_deletions: 0
+  frozen_identity:
+    frozen_input_sha256_checks_passed: true
+    canonical_main_clean: true
+    canonical_main_commit: 027dbb3fb83c38def70e81d58712f80dbe613483
+    canonical_main_tree: 0480170128bb0c88a57eb91ff752a0ad954c6e08
+    synthetic_fixture_clean: true
+    synthetic_fixture_commit: 3912cee5591f9808715bcf2d4665642306aaad02
+    synthetic_fixture_tree: ab9f7cd41810e5e4e899767db7107ff08012ad51
+    synthetic_fixture_remote_count: 0
+    workspace_detached: true
+    workspace_remote_count: 0
+    workspace_delta_commits: 0
+    read_only_terminal_observation_passed: true
+  durable_dispatch:
+    ordinal: 1
+    task_attempt: 1
+    pre_dispatch_state: STARTED
+    persisted_before_real_codex_process_start: true
+    evidence_fsynced_before_real_codex_process_start: true
+    durable_lease_seconds: 1980.0
+    pre_dispatch_lease_remaining_seconds: 1979.9671194553375
+    started_at_epoch: 1786462915.7681437
+    completed_at_epoch: 1786463515.8701015
+    elapsed_seconds_approx: 600.10
+    terminal_state: BLOCKED
+    terminal_code: SUBSCRIPTION_WORKER_TIMEOUT
+  public_result:
+    driver_exit: DRIVER_RC=1
+    status: BLOCK
+    terminal_code: SUBSCRIPTION_WORKER_TIMEOUT
+    worker_invocations: 1
+    durable_worker_call_count: 1
+    durable_state_conflict_masked_result: false
+    local_git_operations: 0
+    branch_created: false
+    local_commit_created: false
+    candidate_tree_created: false
+    completed_receipt_replay_performed: false
+    replay_result_exists: false
+    acceptance_summary_exists: false
+  validation_observation:
+    actual_validation_commands_executed: 0
+    published_validation_command_invocations: 1
+    counter_is_inaccurate: true
+  durable_terminal_observation:
+    task_status: FAILED
+    run_status: ACTIVE
+    terminal_state_mismatch_unresolved: true
+    sqlite_integrity_check: ok
+    foreign_key_violations: 0
+    outbox_rows: 0
+    side_effect_rows: 0
+  residual_gaps:
+    validation_invocation_overcount: unresolved
+    failed_task_active_run_mismatch: unresolved
+  evidence_limit:
+    timeout_root_cause_established: false
+    network_cause_inferred: false
+    proxy_cause_inferred: false
+    model_cause_inferred: false
+    structured_output_cause_inferred: false
+  acceptance_status:
+    v2_passed: false
+    p14g_successful_real_subscription_worker_acceptance_complete: false
+  remaining_authority:
+    residual_gap_correction_authorized: false
+    v3_real_isolated_acceptance_authorized: false
+    real_codex_execution_authorized: false
+    api_provider_execution_authorized: false
+    real_downstream_access_authorized: false
+    real_downstream_mutation_authorized: false
+    runtime_remote_publication_authorized: false
+    production_operation_authorized: false
+    cleanup_authorized: false
+    rollback_authorized: false
+  zero_operation_boundary:
+    closeout_real_codex_invocations: 0
+    v2_provider_invocations: 0
+    v2_real_downstream_repository_accesses: 0
+    v2_real_downstream_repository_mutations: 0
+    v2_runtime_remote_repository_operations: 0
+    v2_production_operations: 0
+    v2_cleanup_operations: 0
+    v2_rollback_operations: 0
+  stop_boundary: descriptive_closeout_merge_then_stop_before_residual_gap_correction_or_v3_real_acceptance

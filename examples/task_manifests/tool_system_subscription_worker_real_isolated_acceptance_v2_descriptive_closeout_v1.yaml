@@ -1,0 +1,129 @@
+task_id: tool-system-subscription-worker-real-isolated-acceptance-v2-descriptive-closeout-v1
+task_type: descriptive_closeout
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-real-isolated-acceptance-v2-descriptive-closeout-v1
+phase: POST_P16_PRODUCT_COMPLETION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: roadmap.phases.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stages.P14G_DURABLE_LOCAL_GIT_ORCHESTRATION
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_durable_call_lease_correction_v1.md
+    section_or_key: Frozen correction design
+    scope: Record only the operator-supplied read-only terminal facts from the separately authorized v2 real isolated acceptance without changing the corrected runtime boundary.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve truthful bounded evidence for one crash-resumable subscription-primary worker attempt without converting a timeout into successful end-to-end acceptance.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P14G-SUBSCRIPTION-WORKER-REAL-ISOLATED-ACCEPTANCE-v2-DESCRIPTIVE-CLOSEOUT-v1
+    baseline_commit: 027dbb3fb83c38def70e81d58712f80dbe613483
+    baseline_tree: 0480170128bb0c88a57eb91ff752a0ad954c6e08
+    allowed_scope: exact_four_paths_listed_below
+    acceptance_set:
+      - record that the frozen inputs canonical main synthetic fixture remote-free workspace and read-only terminal verification showed no drift
+      - record that durable ordinal worker call one was STARTED and fsynced before the real Codex process started
+      - record the 1980-second covering lease and approximately 600.10-second SUBSCRIPTION_WORKER_TIMEOUT result
+      - preserve durable and public worker invocation count one and the safe terminal code without DURABLE_STATE_CONFLICT masking
+      - classify the overall v2 result as BLOCK and never PASS
+      - record zero actual validation commands branches local commits and completed-receipt replays
+      - record zero v2 provider real-downstream runtime-remote production cleanup and rollback operations
+      - register the validation invocation overcount and FAILED-task ACTIVE-run mismatch as two uncorrected residual gaps
+      - make no unsupported network proxy model structured-output or other timeout-root-cause inference
+      - preserve incomplete successful P14G real Subscription Worker acceptance and require separate authority for correction or v3
+      - do not read reuse modify move or delete either external v1 or v2 evidence root
+    validation_set:
+      - exact four-path descriptive scope and clean whitespace
+      - YAML parsing plus task-manifest change-plan process-authority module-registry and repository-manifest validation
+      - full deterministic test suite with no real Codex API provider downstream production cleanup or rollback path
+      - Hosted CI plus unchanged base head four-path scope comments and reviews before Ready and squash merge
+    terminal_predicate: One exact four-path descriptive commit is published through one Draft PR, Hosted CI passes without drift, the PR becomes Ready and squash-merges with its branch retained, and work stops before residual correction or v3 acceptance.
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 1
+      review_cycles: 1
+      hosted_ci_runs: 4
+      real_codex_invocations: 0
+      chatgpt_web_automation_operations: 0
+      api_provider_invocations: 0
+      credential_value_accesses: 0
+      real_downstream_repository_accesses: 0
+      runtime_remote_repository_operations: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Close out only the blocked v2 real isolated acceptance with truthful descriptive evidence.
+  in_scope: &closeout_files
+    - docs/reports/subscription_worker_real_isolated_acceptance_v2_descriptive_closeout.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_subscription_worker_real_isolated_acceptance_v2_descriptive_closeout_v1.yaml
+    - examples/task_manifests/tool_system_subscription_worker_real_isolated_acceptance_v2_descriptive_closeout_v1.yaml
+  out_of_scope:
+    - runtime code tests blueprint module contracts policy workflows AGENTS README and repository manifest
+    - any real Codex API provider credential real downstream production cleanup or rollback operation
+    - any read reuse modification movement deletion or permission change of the external v1 or v2 evidence roots
+    - residual-gap correction or v3 real isolated acceptance
+allowed_files: *closeout_files
+evidence:
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_durable_call_lease_correction_v1.md
+    commit_sha: 027dbb3fb83c38def70e81d58712f80dbe613483
+    why_relevant: The accepted parent correction defines durable pre-dispatch call consumption covering lease derivation and safe terminal preservation that the separately authorized v2 run exercised.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: current_main_consumed_at_task_start
+    why_relevant: Current central governance requires exact bounded closure evidence-based claims and a stop when the terminal predicate is not satisfied.
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - blueprint/**
+  - .github/**
+  - config/**
+  - docs/modules/**
+  - docs/tool_system_global_development_principles_v1.md
+  - policy/**
+  - src/**
+  - tests/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_real_isolated_acceptance_v2_descriptive_closeout_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_real_isolated_acceptance_v2_descriptive_closeout_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - exact four-file diff and zero forbidden-path change
+    - report project state task manifest and change plan agree that v2 is BLOCK with one timed-out worker call and two named residual gaps
+    - no validation or test invokes an actual Codex executable API provider downstream production cleanup or rollback path
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@027dbb3fb83c38def70e81d58712f80dbe613483
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-12-P14G-subscription-worker-real-isolated-acceptance-v2-descriptive-closeout-v1
+  approved_at: 2026-08-12 UTC+09:00
