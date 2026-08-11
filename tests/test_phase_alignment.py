@@ -198,6 +198,52 @@ SUBSCRIPTION_PUBLIC_ENTRY_ACCEPTANCE_FILES = {
     "examples/task_manifests/tool_system_subscription_worker_public_entry_acceptance_v1.yaml",
     "tests/test_phase_alignment.py",
 }
+SUBSCRIPTION_DURABLE_CORRECTION_REPORT = (
+    ROOT
+    / "docs"
+    / "reports"
+    / "subscription_worker_durable_call_lease_correction_v1.md"
+)
+SUBSCRIPTION_DURABLE_CORRECTION_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_subscription_worker_durable_call_lease_correction_v1.yaml"
+)
+SUBSCRIPTION_DURABLE_CORRECTION_CHANGE_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_subscription_worker_durable_call_lease_correction_v1.yaml"
+)
+SUBSCRIPTION_DURABLE_CORRECTION_FILES = {
+    "REPO_MANIFEST.md",
+    "config/module_registry_v1.yaml",
+    "docs/modules/development-loop-contract-v1.md",
+    "docs/modules/durable-orchestrator-contract-v1.md",
+    "docs/modules/local-git-contract-v1.md",
+    "docs/modules/task-runner-contract-v1.md",
+    "docs/modules/worker-adapter-contract-v1.md",
+    "docs/reports/subscription_worker_durable_call_lease_correction_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_subscription_worker_durable_call_lease_correction_v1.yaml",
+    "examples/task_manifests/tool_system_subscription_worker_durable_call_lease_correction_v1.yaml",
+    "src/tool_system/development_loop/loop.py",
+    "src/tool_system/local_git/orchestrator.py",
+    "src/tool_system/orchestrator/durable.py",
+    "src/tool_system/runner/task_runner.py",
+    "src/tool_system/worker_adapter/contract.py",
+    "src/tool_system/worker_adapter/orchestration.py",
+    "tests/test_durable_orchestrator_side_effects.py",
+    "tests/test_durable_orchestrator_recovery.py",
+    "tests/test_durable_orchestrator_reliability.py",
+    "tests/test_durable_orchestrator_state.py",
+    "tests/test_module_registry.py",
+    "tests/test_phase_alignment.py",
+    "tests/test_task_runner.py",
+    "tests/test_worker_adapter_contract.py",
+    "tests/test_worker_adapter_orchestration.py",
+}
 PRINCIPLES = ROOT / "docs" / "tool_system_global_development_principles_v1.md"
 REPO_WRITE_POLICY = ROOT / "policy" / "repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy" / "autonomy_policy.yaml"
@@ -1365,6 +1411,73 @@ def test_subscription_public_entry_acceptance_preserves_external_stops() -> None
         "grants no real Codex execution",
         "No such operation occurs",
         "separately authorized future lifecycle",
+    ):
+        assert marker in report
+
+
+def test_subscription_durable_call_lease_correction_is_exact_and_non_authorizing() -> None:
+    manifest_result = validate_task_manifest(
+        SUBSCRIPTION_DURABLE_CORRECTION_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(
+        SUBSCRIPTION_DURABLE_CORRECTION_CHANGE_PLAN
+    )
+    manifest = load_yaml_file(SUBSCRIPTION_DURABLE_CORRECTION_MANIFEST)
+    plan = load_yaml_file(SUBSCRIPTION_DURABLE_CORRECTION_CHANGE_PLAN)
+    state = load_yaml_file(PROJECT_STATE)
+    correction = state["subscription_worker_durable_call_lease_correction"]
+    report = SUBSCRIPTION_DURABLE_CORRECTION_REPORT.read_text(encoding="utf-8")
+
+    assert manifest_result["status"] == "PASS"
+    assert plan_result["status"] == "PASS"
+    assert set(manifest["allowed_files"]) == SUBSCRIPTION_DURABLE_CORRECTION_FILES
+    assert set(manifest["scope"]["in_scope"]) == SUBSCRIPTION_DURABLE_CORRECTION_FILES
+    assert set(plan["changed_files"]) == SUBSCRIPTION_DURABLE_CORRECTION_FILES
+    assert len(SUBSCRIPTION_DURABLE_CORRECTION_FILES) == 26
+    closure = manifest["bounded_closure"]["frozen_before_execution"]
+    assert closure["task_identity"] == (
+        "P14G-SUBSCRIPTION-WORKER-DURABLE-CALL-LEASE-CORRECTION-v1"
+    )
+    assert closure["baseline_commit"] == (
+        "0c710929e292b340538845a5e9e87c03c36f5794"
+    )
+    assert closure["baseline_tree"] == (
+        "77232d4cc53217726c651572c4b8d277aa05ee28"
+    )
+    assert closure["allowed_scope"] == "exact_26_paths_listed_below"
+    assert closure["finite_budgets"]["real_codex_invocations"] == 0
+    assert closure["finite_budgets"]["api_provider_invocations"] == 0
+    assert manifest["publication"]["retain_feature_branch"] is True
+    assert manifest["publication"]["branch_deletion_authorized"] is False
+
+    assert state["current_phase"]["status"] == "accepted"
+    assert state["current_phase"]["id"] == EXPECTED_PHASE
+    assert correction["authority_effect"] == "none"
+    assert correction["corrected_boundary"]["sqlite_schema_version"] == 4
+    assert correction["corrected_boundary"]["timeout_terminal_code"] == (
+        "SUBSCRIPTION_WORKER_TIMEOUT"
+    )
+    assert correction["deterministic_evidence"]["fake_process_only"] is True
+    assert correction["deterministic_evidence"]["real_codex_invocations"] == 0
+    assert set(correction["remaining_authority"].values()) == {False}
+    assert set(correction["zero_operation_boundary"].values()) == {0}
+    retained = correction["retained_failure_evidence"]
+    assert retained["path"] == "/tmp/tool-system-real-subscription-acceptance-v1"
+    assert retained["repository_managed"] is False
+    assert set(retained) - {"path", "repository_managed"}
+    assert all(
+        retained[key] == 0
+        for key in set(retained) - {"path", "repository_managed"}
+    )
+    for marker in (
+        "schema v4",
+        "SUBSCRIPTION_WORKER_TIMEOUT",
+        "before process start",
+        "/tmp/tool-system-real-subscription-acceptance-v1",
+        "No actual Codex",
+        "stops before any new real isolated acceptance",
     ):
         assert marker in report
 

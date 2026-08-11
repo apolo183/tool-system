@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import signal
 import stat
 import subprocess
@@ -14,6 +15,7 @@ from typing import Literal, Protocol
 from tool_system.agent_worker.interface import WorkerRequest
 
 AdapterStatus = Literal["PASS", "BLOCK"]
+_TERMINAL_CODE = re.compile(r"^[A-Z][A-Z0-9_]{2,127}$")
 
 
 @dataclass(frozen=True)
@@ -43,12 +45,20 @@ class AdapterResult:
     writes_target_repo: bool
     executes_target_repo_mutation: bool
     production_deployment: bool
+    terminal_code: str | None = None
     evidence: list[str] = field(default_factory=list)
     reasons: list[str] = field(default_factory=list)
     output: dict[str, object] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        if self.terminal_code is not None and (
+            not isinstance(self.terminal_code, str)
+            or _TERMINAL_CODE.fullmatch(self.terminal_code) is None
+        ):
+            raise ValueError("terminal_code must be a stable safe code")
+
     def to_record(self) -> dict[str, object]:
-        return {
+        record: dict[str, object] = {
             "adapter_id": self.adapter_id,
             "role": self.role,
             "action": self.action,
@@ -63,6 +73,9 @@ class AdapterResult:
             "reasons": list(self.reasons),
             "output": dict(self.output),
         }
+        if self.terminal_code is not None:
+            record["terminal_code"] = self.terminal_code
+        return record
 
 
 class WorkerAdapter(Protocol):
@@ -413,6 +426,7 @@ class CodexCLISubscriptionWorkerAdapter:
         *,
         status: AdapterStatus,
         execute: bool,
+        terminal_code: str,
         evidence: list[str],
         reasons: list[str],
         output: dict[str, object],
@@ -428,6 +442,7 @@ class CodexCLISubscriptionWorkerAdapter:
             writes_target_repo=False,
             executes_target_repo_mutation=False,
             production_deployment=False,
+            terminal_code=terminal_code,
             evidence=evidence,
             reasons=reasons,
             output=output,
@@ -457,6 +472,7 @@ class CodexCLISubscriptionWorkerAdapter:
                 request,
                 status="BLOCK",
                 execute=False,
+                terminal_code="SUBSCRIPTION_WORKER_PREFLIGHT_BLOCKED",
                 evidence=["worker_adapter.subscription.preflight.block"],
                 reasons=reasons,
                 output={},
@@ -513,10 +529,17 @@ class CodexCLISubscriptionWorkerAdapter:
                     termination_grace_seconds=self.config.termination_grace_seconds,
                 )
             except (OSError, subprocess.TimeoutExpired, ValueError) as exc:
+                if isinstance(exc, subprocess.TimeoutExpired):
+                    terminal_code = "SUBSCRIPTION_WORKER_TIMEOUT"
+                elif isinstance(exc, OSError):
+                    terminal_code = "SUBSCRIPTION_WORKER_PROCESS_START_FAILED"
+                else:
+                    terminal_code = "SUBSCRIPTION_WORKER_PROCESS_BOUNDARY_BLOCKED"
                 return self._result(
                     request,
                     status="BLOCK",
                     execute=True,
+                    terminal_code=terminal_code,
                     evidence=["worker_adapter.subscription.process.block"],
                     reasons=[f"subscription worker process failed closed: {type(exc).__name__}"],
                     output={"raw_output_recorded": False},
@@ -532,6 +555,7 @@ class CodexCLISubscriptionWorkerAdapter:
                     request,
                     status="BLOCK",
                     execute=True,
+                    terminal_code="SUBSCRIPTION_WORKER_OUTPUT_LIMIT",
                     evidence=["worker_adapter.subscription.output_limit.block"],
                     reasons=["subscription worker output exceeded the configured byte limit"],
                     output={
@@ -544,6 +568,7 @@ class CodexCLISubscriptionWorkerAdapter:
                     request,
                     status="BLOCK",
                     execute=True,
+                    terminal_code="SUBSCRIPTION_WORKER_NONZERO_EXIT",
                     evidence=["worker_adapter.subscription.process.block"],
                     reasons=["subscription worker returned a nonzero status"],
                     output={
@@ -556,6 +581,7 @@ class CodexCLISubscriptionWorkerAdapter:
                     request,
                     status="BLOCK",
                     execute=True,
+                    terminal_code="SUBSCRIPTION_WORKER_EVENT_STREAM_INVALID",
                     evidence=["worker_adapter.subscription.event_stream.block"],
                     reasons=["subscription worker event stream was not valid JSONL objects"],
                     output={
@@ -572,6 +598,7 @@ class CodexCLISubscriptionWorkerAdapter:
                     request,
                     status="BLOCK",
                     execute=True,
+                    terminal_code="SUBSCRIPTION_WORKER_OUTPUT_LIMIT",
                     evidence=["worker_adapter.subscription.output_limit.block"],
                     reasons=["subscription worker output exceeded the configured byte limit"],
                     output={
@@ -584,6 +611,7 @@ class CodexCLISubscriptionWorkerAdapter:
                     request,
                     status="BLOCK",
                     execute=True,
+                    terminal_code="SUBSCRIPTION_WORKER_STRUCTURED_OUTPUT_INVALID",
                     evidence=["worker_adapter.subscription.structured_output.block"],
                     reasons=["subscription worker did not return a valid schema-bound structured patch"],
                     output={
@@ -596,6 +624,7 @@ class CodexCLISubscriptionWorkerAdapter:
             request,
             status="PASS",
             execute=True,
+            terminal_code="SUBSCRIPTION_WORKER_COMPLETED",
             evidence=["worker_adapter.subscription.structured_output.complete"],
             reasons=[],
             output={

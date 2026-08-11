@@ -10,6 +10,7 @@ import pytest
 from tool_system.agent_worker.interface import WorkerRequest
 from tool_system.worker_adapter.contract import (
     AdapterRequest,
+    AdapterResult,
     CodexCLIAdapterConfig,
     CodexCLISubscriptionWorkerAdapter,
     DryRunWorkerAdapter,
@@ -17,6 +18,23 @@ from tool_system.worker_adapter.contract import (
     build_adapter_request_from_worker_request,
     run_adapter_requests,
 )
+
+
+def test_adapter_result_rejects_unsafe_terminal_detail() -> None:
+    with pytest.raises(ValueError, match="stable safe code"):
+        AdapterResult(
+            adapter_id="unsafe-terminal",
+            role="implementation",
+            action="bounded_public_entry_development",
+            status="BLOCK",
+            adapter_kind="fixture",
+            execute=True,
+            calls_external_worker=True,
+            writes_target_repo=False,
+            executes_target_repo_mutation=False,
+            production_deployment=False,
+            terminal_code="raw timeout detail",
+        )
 
 
 def test_dry_run_worker_adapter_records_pass_without_execution() -> None:
@@ -293,6 +311,7 @@ def test_codex_subscription_adapter_fails_closed_on_timeout_and_event_output_lim
     )
     timeout = timeout_adapter.run(_subscription_request())
     assert timeout.status == "BLOCK"
+    assert timeout.terminal_code == "SUBSCRIPTION_WORKER_TIMEOUT"
     assert timeout.reasons == ["subscription worker process failed closed: TimeoutExpired"]
 
     output_adapter = CodexCLISubscriptionWorkerAdapter(
@@ -303,6 +322,7 @@ def test_codex_subscription_adapter_fails_closed_on_timeout_and_event_output_lim
     )
     output = output_adapter.run(_subscription_request())
     assert output.status == "BLOCK"
+    assert output.terminal_code == "SUBSCRIPTION_WORKER_OUTPUT_LIMIT"
     assert output.reasons == ["subscription worker output exceeded the configured byte limit"]
 
 

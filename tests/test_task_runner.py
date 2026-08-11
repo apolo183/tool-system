@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -1034,6 +1035,108 @@ def test_subscription_public_entry_executes_one_fake_worker_local_commit(
 
 
 
+def test_subscription_timeout_is_consumed_before_fake_process_and_preserved(
+    tmp_path: Path,
+) -> None:
+    repository, expected_head = _subscription_context_fixture(tmp_path)
+    expected_tree = _fixture_git(repository, "rev-parse", "HEAD^{tree}")
+    workspace_parent = tmp_path / "timeout-workspaces"
+    workspace_parent.mkdir(mode=0o700)
+    workspace = workspace_parent / "billing"
+    state_parent = tmp_path / "timeout-state"
+    state_parent.mkdir(mode=0o700)
+    state = state_parent / "subscription.sqlite3"
+    config = CodexCLIAdapterConfig(
+        executable="codex",
+        enabled=True,
+        timeout_seconds=17,
+        termination_grace_seconds=3,
+    )
+    manifest_path, plan_path, _ = _bound_subscription_execution_pair(
+        tmp_path,
+        repository_root=repository,
+        workspace_root=workspace,
+        durable_state_path=state,
+        expected_head=expected_head,
+        expected_tree=expected_tree,
+        config=config,
+    )
+    observed_rows: list[tuple[int, str]] = []
+
+    def fake_timeout(
+        argv: list[str],
+        **kwargs: Any,
+    ) -> subprocess.CompletedProcess[str]:
+        connection = sqlite3.connect(state)
+        try:
+            observed_rows.extend(
+                (int(row[0]), str(row[1]))
+                for row in connection.execute(
+                    "SELECT ordinal, state FROM worker_calls ORDER BY ordinal"
+                ).fetchall()
+            )
+        finally:
+            connection.close()
+        raise subprocess.TimeoutExpired(cmd=argv, timeout=kwargs["timeout"])
+
+    adapter = CodexCLISubscriptionWorkerAdapter(
+        config,
+        process_runner=fake_timeout,
+        source_environment={"PATH": "/usr/bin", "HOME": "/isolated/home"},
+    )
+    result = run_subscription_public_entry_execution(
+        task_manifest_path=manifest_path,
+        change_plan_path=plan_path,
+        repository_root=repository,
+        workspace_root=workspace,
+        durable_state_path=state,
+        expected_head=expected_head,
+        expected_tree=expected_tree,
+        blueprint_path="blueprint.yaml",
+        module_registry_path="module-registry.yaml",
+        milestone_ids=["M1_BILLING"],
+        acceptance_requirements=["billing behavior passes"],
+        governance_paths=["GOVERNANCE.md"],
+        query_terms=["billing", "total"],
+        seed_paths=[
+            "src/billing/service.py",
+            "tests/test_billing.py",
+        ],
+        codex_config=config,
+        repository_read_authorized=True,
+        worker_execution_authorized=True,
+        validation_execution_authorized=True,
+        subscription_data_transfer_authorized=True,
+        local_git_write_authorized=True,
+        adapter=adapter,
+    )
+
+    connection = sqlite3.connect(state)
+    try:
+        durable_call = connection.execute(
+            """
+            SELECT ordinal, state, terminal_code, task_attempt
+            FROM worker_calls
+            """
+        ).fetchone()
+    finally:
+        connection.close()
+    assert observed_rows == [(1, "STARTED")]
+    assert durable_call == (
+        1,
+        "BLOCKED",
+        "SUBSCRIPTION_WORKER_TIMEOUT",
+        1,
+    )
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_WORKER_TIMEOUT"
+    assert result["worker_invocations"] == 1
+    assert result["durable_lease_seconds"] >= 17 + (2 * 3)
+    assert result["local_git_operations"] == 0
+    assert result["branch"] is None
+    assert result["commit"] is None
+
+
 def test_subscription_public_entry_unknown_local_commit_has_no_replay_authority(
     tmp_path: Path,
 ) -> None:
@@ -1662,4 +1765,3 @@ def test_subscription_public_entry_multi_stack_unreceipted_advance_blocks(
         workspace, "rev-list", "--count", f"{context['head']}..HEAD"
     ) == "1"
     _assert_zero_external_effects(result)
-

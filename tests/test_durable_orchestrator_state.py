@@ -54,7 +54,7 @@ def test_store_enables_required_sqlite_controls(tmp_path: Path) -> None:
     assert str(pragmas["journal_mode"]).lower() == "wal"
     assert pragmas["synchronous"] == 2
     assert pragmas["busy_timeout"] == 5_000
-    assert pragmas["schema_version"] == 3
+    assert pragmas["schema_version"] == 4
     assert len(str(pragmas["authorization_ledger_instance_id"])) == 64
 
 
@@ -208,6 +208,94 @@ def test_expired_lease_recovers_and_next_claim_increments_attempt(
     assert recovered[0]["attempt"] == 1
     assert claimed["attempt"] == 2
     assert claimed["lease_owner"] == "worker-b"
+
+
+def test_active_lease_renews_at_controlled_fake_clock_boundary(
+    tmp_path: Path,
+) -> None:
+    clock = Clock()
+    store = _store(tmp_path, clock)
+    _task(store)
+    claimed = store.claim_task(
+        "run-1", "task-1", lease_owner="worker-a", lease_seconds=10
+    )
+    clock.advance(6)
+
+    renewed = store.renew_task_lease(
+        "run-1",
+        "task-1",
+        lease_owner="worker-a",
+        attempt=1,
+        lease_seconds=10,
+    )
+    clock.advance(5)
+    checkpoint = store.checkpoint_task(
+        "run-1",
+        "task-1",
+        lease_owner="worker-a",
+        attempt=1,
+        checkpoint={"renewed": True},
+    )
+
+    assert claimed["lease_expires_at"] == 1_010.0
+    assert renewed["lease_expires_at"] == 1_016.0
+    assert checkpoint["checkpoint"] == {"renewed": True}
+
+
+def test_worker_call_consumption_survives_expiry_reopen_and_total_budget(
+    tmp_path: Path,
+) -> None:
+    clock = Clock()
+    store = _store(tmp_path, clock)
+    _task(store, max_attempts=2)
+    store.claim_task(
+        "run-1", "task-1", lease_owner="worker-a", lease_seconds=10
+    )
+
+    first = store.begin_worker_call(
+        "run-1",
+        "task-1",
+        request_sha256="b" * 64,
+        max_calls=2,
+        lease_owner="worker-a",
+        task_attempt=1,
+    )
+    clock.advance(11)
+    reopened = _store(tmp_path, clock)
+    reopened.recover_expired_leases()
+    reopened.claim_task(
+        "run-1", "task-1", lease_owner="worker-b", lease_seconds=10
+    )
+    second = reopened.begin_worker_call(
+        "run-1",
+        "task-1",
+        request_sha256="c" * 64,
+        max_calls=2,
+        lease_owner="worker-b",
+        task_attempt=2,
+    )
+
+    assert first["state"] == "STARTED"
+    assert first["ordinal"] == 1
+    assert second["ordinal"] == 2
+    assert reopened.worker_call_count("run-1", "task-1") == 2
+    with pytest.raises(ValueError, match="stable safe code"):
+        reopened.complete_worker_call(
+            str(second["call_id"]),
+            lease_owner="worker-b",
+            task_attempt=2,
+            status="BLOCK",
+            terminal_code="raw timeout detail",
+        )
+    with pytest.raises(StateConflict, match="budget"):
+        reopened.begin_worker_call(
+            "run-1",
+            "task-1",
+            request_sha256="d" * 64,
+            max_calls=2,
+            lease_owner="worker-b",
+            task_attempt=2,
+        )
 
 
 def test_expired_last_attempt_becomes_terminal_failed(tmp_path: Path) -> None:

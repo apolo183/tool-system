@@ -29,7 +29,11 @@ def build_subscription_development_worker(
 
     def worker(loop_request: Mapping[str, object]) -> Mapping[str, object]:
         if not isinstance(loop_request, Mapping):
-            return {"subscription_worker_bridge_blocked": "invalid_loop_request"}
+            return {
+                "subscription_worker_bridge_blocked": {
+                    "terminal_code": "SUBSCRIPTION_WORKER_LOOP_REQUEST_INVALID"
+                }
+            }
         prompt = json.dumps(
             dict(loop_request),
             ensure_ascii=False,
@@ -48,7 +52,12 @@ def build_subscription_development_worker(
         result = adapter.run(cycle_request)
         structured = result.output.get("structured_result")
         if result.status != "PASS" or not isinstance(structured, Mapping):
-            return {"subscription_worker_bridge_blocked": "adapter_result_not_usable"}
+            return {
+                "subscription_worker_bridge_blocked": {
+                    "terminal_code": result.terminal_code
+                    or "SUBSCRIPTION_WORKER_RESULT_BLOCKED"
+                }
+            }
         return dict(structured)
 
     return worker

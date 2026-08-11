@@ -1,0 +1,168 @@
+task_id: tool-system-subscription-worker-durable-call-lease-correction-v1
+task_type: correction
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-durable-call-lease-correction-v1
+phase: POST_P16_PRODUCT_COMPLETION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: roadmap.phases.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stages.P14G_DURABLE_LOCAL_GIT_ORCHESTRATION
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_acceptance_v1.md
+    section_or_key: Accepted boundary
+    scope: Correct only the durable lease, pre-dispatch call consumption, retry-wide call budget, and terminal-result preservation defect exposed by the separately authorized isolated real-worker acceptance attempt.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded crash-resumable subscription-primary development so interrupted runs cannot duplicate or erase external-worker consumption and remain finite before local commit.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: P14G-SUBSCRIPTION-WORKER-DURABLE-CALL-LEASE-CORRECTION-v1
+    baseline_commit: 0c710929e292b340538845a5e9e87c03c36f5794
+    baseline_tree: 77232d4cc53217726c651572c4b8d277aa05ee28
+    allowed_scope: exact_26_paths_listed_below
+    acceptance_set:
+      - the public subscription task lease is deterministically derived from frozen worker timeout termination grace validation and bounded local-Git subprocess envelopes and is renewed only at controlled durable stage boundaries
+      - every subscription worker dispatch durably consumes one ordinal call record before the injected process runner can start and records only bounded redacted completion metadata afterward
+      - started calls remain consumed across process crash lease expiry store reopen and durable task retry and the total frozen max_worker_calls budget is never reset
+      - adapter timeout returns SUBSCRIPTION_WORKER_TIMEOUT with one consumed worker invocation and is not replaced by DURABLE_STATE_CONFLICT or zero calls
+      - any later durable conflict preserves the previously observed safe worker terminal code and the durable total call count
+      - deterministic fake-process fake-clock timeout lease-expiry crash-recovery and total-call-budget tests cover the corrected dependency closure
+      - SQLite schema v3 stores migrate non-destructively to v4 with the new worker-call ledger and all prior task side-effect outbox authorization and integrity behavior preserved
+      - corresponding module contracts registry project state correction report and repository manifest describe the same non-authorizing boundary
+      - no real Codex ChatGPT Web API provider credential downstream remote production cleanup or rollback operation occurs
+      - the retained /tmp/tool-system-real-subscription-acceptance-v1 failure evidence is not read written deleted moved or otherwise mutated by this package
+    validation_set:
+      - focused durable local-Git development-loop worker-adapter task-runner module-registry repository-manifest and phase-alignment tests
+      - Python compilation full pytest Ruff task-pair validators current module authority and exact-scope checks
+      - Hosted CI and unchanged canonical base head scope comments and reviews before Ready and squash merge
+    terminal_predicate: one exact correction commit is published through one Draft PR, Hosted CI passes without drift, the PR becomes Ready and squash-merges with the branch retained, then work stops before any new real isolated acceptance
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 3
+      review_cycles: 1
+      hosted_ci_runs: 4
+      fake_process_invocations: 32
+      real_codex_invocations: 0
+      chatgpt_web_automation_operations: 0
+      api_provider_invocations: 0
+      credential_value_accesses: 0
+      real_downstream_repository_accesses: 0
+      runtime_remote_repository_operations: 0
+      production_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Correct only subscription-worker durable call accounting, lease coverage, retry-wide budget enforcement, and terminal evidence preservation.
+  in_scope: &files
+    - REPO_MANIFEST.md
+    - config/module_registry_v1.yaml
+    - docs/modules/development-loop-contract-v1.md
+    - docs/modules/durable-orchestrator-contract-v1.md
+    - docs/modules/local-git-contract-v1.md
+    - docs/modules/task-runner-contract-v1.md
+    - docs/modules/worker-adapter-contract-v1.md
+    - docs/reports/subscription_worker_durable_call_lease_correction_v1.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_subscription_worker_durable_call_lease_correction_v1.yaml
+    - examples/task_manifests/tool_system_subscription_worker_durable_call_lease_correction_v1.yaml
+    - src/tool_system/development_loop/loop.py
+    - src/tool_system/local_git/orchestrator.py
+    - src/tool_system/orchestrator/durable.py
+    - src/tool_system/runner/task_runner.py
+    - src/tool_system/worker_adapter/contract.py
+    - src/tool_system/worker_adapter/orchestration.py
+    - tests/test_durable_orchestrator_side_effects.py
+    - tests/test_durable_orchestrator_recovery.py
+    - tests/test_durable_orchestrator_reliability.py
+    - tests/test_durable_orchestrator_state.py
+    - tests/test_module_registry.py
+    - tests/test_phase_alignment.py
+    - tests/test_task_runner.py
+    - tests/test_worker_adapter_contract.py
+    - tests/test_worker_adapter_orchestration.py
+  out_of_scope:
+    - runtime features other than the frozen durable lease call-accounting budget and terminal-preservation correction
+    - blueprint workflow process-authority policy provider-portfolio operator configuration or GitHub Actions changes
+    - real Codex ChatGPT Web browser API provider credential or proxy access
+    - real downstream repository access or mutation runtime remote publication production deployment cleanup or rollback
+    - reading writing deleting moving chmod or otherwise mutating /tmp/tool-system-real-subscription-acceptance-v1
+    - a new real isolated acceptance after this correction merges
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/local_git/orchestrator.py
+    commit_sha: 0c710929e292b340538845a5e9e87c03c36f5794
+    why_relevant: The P14G owner currently claims a fixed sixty-second lease around the full development-loop and local-commit path and collapses state conflicts to a generic zero-count result.
+  - repo: apolo183/tool-system
+    path: src/tool_system/orchestrator/durable.py
+    commit_sha: 0c710929e292b340538845a5e9e87c03c36f5794
+    why_relevant: The durable owner persists task leases and retry state but has no pre-dispatch external-worker consumption ledger at schema v3.
+  - repo: apolo183/tool-system
+    path: src/tool_system/worker_adapter/contract.py
+    commit_sha: 0c710929e292b340538845a5e9e87c03c36f5794
+    why_relevant: The guarded subscription adapter owns the fixed process timeout and finite process-group termination grace boundary.
+  - repo: apolo183/tool-system
+    path: src/tool_system/runner/task_runner.py
+    commit_sha: 0c710929e292b340538845a5e9e87c03c36f5794
+    why_relevant: The public composition freezes worker and validation budgets but does not derive or pass a covering durable lease.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: current_main_consumed_at_task_start
+    why_relevant: Central bounded closure requires finite budgets, durable recovery without duplicate effects, and one exact authorized change lifecycle.
+allowed_files: *files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/**
+  - .github/**
+  - config/process_authority_v1.yaml
+  - config/replay_snapshot_v1.yaml
+  - docs/model_provider_portfolio_and_economics_contract_v1.md
+  - docs/tool_system_global_development_principles_v1.md
+  - examples/operator_config/**
+  - policy/**
+  - src/tool_system/ai_worker/**
+  - src/tool_system/provider_portfolio/**
+  - tests/fixtures/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_durable_orchestrator_state.py tests/test_durable_orchestrator_side_effects.py tests/test_durable_orchestrator_recovery.py tests/test_durable_orchestrator_reliability.py tests/test_development_loop.py tests/test_local_git_orchestrator.py tests/test_worker_adapter_contract.py tests/test_worker_adapter_orchestration.py tests/test_task_runner.py tests/test_root_cli.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_repo_manifest.py tests/test_phase_alignment.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_durable_call_lease_correction_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_durable_call_lease_correction_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - exact twenty-six-file diff and zero forbidden-path change
+    - no test invokes an actual Codex executable network provider credential downstream remote production cleanup or rollback path
+    - timeout and crash fixtures retain stable terminal evidence and durable total call consumption across retry
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@0c710929e292b340538845a5e9e87c03c36f5794
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-11-P14G-subscription-worker-durable-call-lease-correction-v1
+  approved_at: 2026-08-11 UTC+09:00

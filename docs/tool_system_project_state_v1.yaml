@@ -2009,3 +2009,73 @@ subscription_worker_public_entry_acceptance:
     cleanup_operations: 0
     rollback_operations: 0
   stop_boundary: accepted_public_entry_stop_before_real_worker_downstream_remote_production_cleanup_or_rollback
+
+subscription_worker_durable_call_lease_correction:
+  authorization_packet: P14G-SUBSCRIPTION-WORKER-DURABLE-CALL-LEASE-CORRECTION-v1
+  baseline_commit: 0c710929e292b340538845a5e9e87c03c36f5794
+  baseline_tree: 77232d4cc53217726c651572c4b8d277aa05ee28
+  status: implemented_deterministic_fake_evidence_pending_hosted_ci_and_merge
+  authority_effect: none
+  correction_record: docs/reports/subscription_worker_durable_call_lease_correction_v1.md
+  observed_failure:
+    source: separately_authorized_isolated_real_worker_acceptance_attempt
+    terminal_code_reported: DURABLE_STATE_CONFLICT
+    durable_task_checkpoint: FROZEN
+    durable_task_attempt: 1
+    configured_task_lease_seconds: 60
+    configured_worker_timeout_seconds: 120
+    reported_worker_invocations: 0
+    interpretation: one_external_dispatch_conservatively_consumed_but_not_durably_recorded
+    useful_model_completion_claimed: false
+  corrected_boundary:
+    sqlite_schema_version: 4
+    prior_schema_versions_migrated: [1, 2, 3]
+    pre_dispatch_worker_call_consumption: true
+    retry_wide_total_call_budget: true
+    controlled_active_lease_renewal: true
+    lease_derivation_inputs:
+      - worker_timeout
+      - two_termination_grace_waits
+      - validation_command_count_and_timeout
+      - bounded_validation_git_commands
+      - bounded_local_commit_git_commands
+    timeout_terminal_code: SUBSCRIPTION_WORKER_TIMEOUT
+    safe_terminal_and_durable_count_preserved_across_later_state_conflict: true
+  deterministic_evidence:
+    fake_process_only: true
+    fake_clock_renewal_and_expiry: true
+    crash_before_worker_return: true
+    durable_retry_budget_exhaustion: true
+    pre_process_started_record_observed: true
+    real_codex_invocations: 0
+    provider_invocations: 0
+  retained_failure_evidence:
+    path: /tmp/tool-system-real-subscription-acceptance-v1
+    repository_managed: false
+    package_reads: 0
+    package_writes: 0
+    deletion_operations: 0
+    movement_operations: 0
+    permission_operations: 0
+  remaining_authority:
+    new_real_isolated_acceptance_authorized: false
+    real_codex_execution_authorized: false
+    api_provider_execution_authorized: false
+    real_downstream_access_authorized: false
+    real_downstream_mutation_authorized: false
+    runtime_remote_publication_authorized: false
+    production_operation_authorized: false
+    cleanup_authorized: false
+    rollback_authorized: false
+  zero_operation_boundary:
+    real_codex_invocations: 0
+    chatgpt_web_automation_operations: 0
+    api_provider_invocations: 0
+    credential_value_accesses: 0
+    real_downstream_repository_accesses: 0
+    real_downstream_repository_mutations: 0
+    runtime_remote_repository_operations: 0
+    production_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  stop_boundary: correction_merge_then_stop_before_new_real_isolated_acceptance

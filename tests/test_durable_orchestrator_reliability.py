@@ -10,6 +10,11 @@ from threading import Barrier
 
 import pytest
 
+from tool_system.development_loop import (
+    DevelopmentLoopLimits,
+    FrozenDevelopmentContract,
+    run_development_loop,
+)
 from tool_system.orchestrator import (
     AuthorizationReplay,
     DurableOrchestratorStore,
@@ -17,9 +22,22 @@ from tool_system.orchestrator import (
     StateConflict,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SHA = "a" * 40
+
+
+def _development_contract() -> FrozenDevelopmentContract:
+    return FrozenDevelopmentContract(
+        task_digest="a" * 64,
+        baseline_tree="b" * 40,
+        allowed_scope=("src/app.py",),
+        acceptance_set=("implementation-correct",),
+        validation_set=("pytest",),
+    )
+
+
+def _clean_review(_: dict[str, object]) -> dict[str, object]:
+    return {"violated_acceptance_items": [], "suggestions": []}
 
 
 def _consume_authorization_in_process(
@@ -416,3 +434,50 @@ def test_database_corruption_is_not_silently_recovered(tmp_path: Path) -> None:
 
     with pytest.raises(sqlite3.DatabaseError):
         store.integrity_check()
+
+
+def test_worker_terminal_preserves_safe_code_and_consumed_call_count() -> None:
+    result = run_development_loop(
+        contract=_development_contract(),
+        baseline_files={"src/app.py": "return 1\n"},
+        worker=lambda _: {
+            "subscription_worker_bridge_blocked": {
+                "terminal_code": "SUBSCRIPTION_WORKER_TIMEOUT"
+            }
+        },
+        validator=lambda _: (_ for _ in ()).throw(
+            AssertionError("blocked worker must not enter validation")
+        ),
+        code_reviewer=_clean_review,
+        contract_reviewer=_clean_review,
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_WORKER_TIMEOUT"
+    assert result["worker_call_count"] == 1
+    assert result["cycles"] == []
+
+
+def test_durable_call_floor_exhausts_total_budget_without_dispatch() -> None:
+    calls = 0
+
+    def worker(_: dict[str, object]) -> dict[str, object]:
+        nonlocal calls
+        calls += 1
+        raise AssertionError("durably consumed budget must block dispatch")
+
+    result = run_development_loop(
+        contract=_development_contract(),
+        baseline_files={"src/app.py": "return 1\n"},
+        worker=worker,
+        validator=lambda _: {},
+        code_reviewer=_clean_review,
+        contract_reviewer=_clean_review,
+        limits=DevelopmentLoopLimits(max_cycles=1, max_worker_calls=1),
+        initial_worker_call_count=1,
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "WORKER_CALL_BUDGET_EXHAUSTED"
+    assert result["worker_call_count"] == 1
+    assert calls == 0

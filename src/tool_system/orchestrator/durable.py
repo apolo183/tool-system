@@ -13,9 +13,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+_TERMINAL_CODE_RE = re.compile(r"^[A-Z][A-Z0-9_]{2,127}$")
 _RUN_STATUSES = {"ACTIVE", "COMPLETED", "FAILED"}
 _TASK_STATUSES = {"READY", "RUNNING", "COMPLETED", "FAILED"}
 
@@ -34,6 +35,10 @@ class RetryExhausted(StateConflict):
 
 class AuthorizationReplay(StateConflict):
     """An external authorization record was already durably consumed."""
+
+
+class WorkerCallBudgetExhausted(StateConflict):
+    """A task has consumed its frozen total worker-call budget."""
 
 
 def _is_relative_to(path: Path, root: Path) -> bool:
@@ -340,6 +345,25 @@ class DurableOrchestratorStore:
                 );
                 CREATE INDEX IF NOT EXISTS idx_tasks_resume
                     ON tasks(status, lease_expires_at, run_id, task_id);
+                CREATE TABLE IF NOT EXISTS worker_calls (
+                    call_id TEXT PRIMARY KEY,
+                    run_id TEXT NOT NULL,
+                    task_id TEXT NOT NULL,
+                    ordinal INTEGER NOT NULL CHECK (ordinal > 0),
+                    idempotency_key TEXT NOT NULL UNIQUE,
+                    request_sha256 TEXT NOT NULL,
+                    task_attempt INTEGER NOT NULL CHECK (task_attempt > 0),
+                    state TEXT NOT NULL CHECK (state IN ('STARTED','COMPLETED','BLOCKED')),
+                    terminal_code TEXT,
+                    result_json TEXT,
+                    started_at REAL NOT NULL,
+                    completed_at REAL,
+                    updated_at REAL NOT NULL,
+                    UNIQUE (run_id, task_id, ordinal),
+                    FOREIGN KEY (run_id, task_id) REFERENCES tasks(run_id, task_id) ON DELETE CASCADE
+                );
+                CREATE INDEX IF NOT EXISTS idx_worker_calls_task
+                    ON worker_calls(run_id, task_id, ordinal);
                 CREATE TABLE IF NOT EXISTS side_effects (
                     effect_id TEXT PRIMARY KEY,
                     run_id TEXT NOT NULL,
@@ -403,7 +427,7 @@ class DurableOrchestratorStore:
                     "INSERT INTO metadata(key, value) VALUES('schema_version', ?)",
                     (str(SCHEMA_VERSION),),
                 )
-            elif int(row["value"]) in {1, 2}:
+            elif int(row["value"]) in {1, 2, 3}:
                 connection.execute(
                     "UPDATE metadata SET value=? WHERE key='schema_version'",
                     (str(SCHEMA_VERSION),),
@@ -775,6 +799,204 @@ class DurableOrchestratorStore:
                 (lease_owner, now + lease_seconds, now, run_id, task_id),
             )
             return self._task_record(self._task_row(connection, run_id, task_id))
+
+    def renew_task_lease(
+        self,
+        run_id: str,
+        task_id: str,
+        *,
+        lease_owner: str,
+        attempt: int,
+        lease_seconds: float,
+    ) -> dict[str, object]:
+        """Extend one active task lease without changing its attempt identity."""
+
+        run_id = self._text(run_id, "run_id")
+        task_id = self._text(task_id, "task_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        attempt = self._positive_integer(attempt, "attempt")
+        lease_seconds = self._positive_seconds(lease_seconds, "lease_seconds")
+        now = self._now()
+        with self._transaction() as connection:
+            row = self._require_active_lease(
+                connection, run_id, task_id, lease_owner, attempt, now
+            )
+            current_expiry = float(row["lease_expires_at"])
+            renewed_expiry = max(current_expiry, now + lease_seconds)
+            connection.execute(
+                """
+                UPDATE tasks SET lease_expires_at=?, updated_at=?
+                WHERE run_id=? AND task_id=?
+                """,
+                (renewed_expiry, now, run_id, task_id),
+            )
+            return self._task_record(
+                self._task_row(connection, run_id, task_id)
+            )
+
+    def begin_worker_call(
+        self,
+        run_id: str,
+        task_id: str,
+        *,
+        request_sha256: str,
+        max_calls: int,
+        lease_owner: str,
+        task_attempt: int,
+    ) -> dict[str, object]:
+        """Consume one retry-wide worker call before external dispatch."""
+
+        run_id = self._text(run_id, "run_id")
+        task_id = self._text(task_id, "task_id")
+        request_sha256 = _require_sha256(request_sha256, "request_sha256")
+        max_calls = self._positive_integer(max_calls, "max_calls")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        task_attempt = self._positive_integer(task_attempt, "task_attempt")
+        now = self._now()
+        with self._transaction() as connection:
+            self._require_active_lease(
+                connection,
+                run_id,
+                task_id,
+                lease_owner,
+                task_attempt,
+                now,
+            )
+            consumed = int(
+                connection.execute(
+                    """
+                    SELECT COUNT(*) FROM worker_calls
+                    WHERE run_id=? AND task_id=?
+                    """,
+                    (run_id, task_id),
+                ).fetchone()[0]
+            )
+            if consumed >= max_calls:
+                raise WorkerCallBudgetExhausted(
+                    "worker call budget is already consumed"
+                )
+            ordinal = consumed + 1
+            call_id = self._text(
+                f"{run_id}:{task_id}:worker:{ordinal}", "call_id"
+            )
+            idempotency_key = self._text(
+                f"{run_id}:{task_id}:worker-call:{ordinal}",
+                "idempotency_key",
+            )
+            try:
+                connection.execute(
+                    """
+                    INSERT INTO worker_calls(
+                        call_id, run_id, task_id, ordinal, idempotency_key,
+                        request_sha256, task_attempt, state, terminal_code,
+                        result_json, started_at, completed_at, updated_at
+                    ) VALUES(?, ?, ?, ?, ?, ?, ?, 'STARTED', NULL, NULL, ?, NULL, ?)
+                    """,
+                    (
+                        call_id,
+                        run_id,
+                        task_id,
+                        ordinal,
+                        idempotency_key,
+                        request_sha256,
+                        task_attempt,
+                        now,
+                        now,
+                    ),
+                )
+            except sqlite3.IntegrityError as exc:
+                raise StateConflict(
+                    "worker call ordinal or idempotency identity already exists"
+                ) from exc
+            return self._worker_call_record(
+                self._worker_call_row(connection, call_id)
+            )
+
+    def complete_worker_call(
+        self,
+        call_id: str,
+        *,
+        lease_owner: str,
+        task_attempt: int,
+        status: str,
+        terminal_code: str,
+        result: Mapping[str, object] | None = None,
+    ) -> dict[str, object]:
+        """Record bounded redacted completion for a consumed worker call."""
+
+        call_id = self._text(call_id, "call_id")
+        lease_owner = self._text(lease_owner, "lease_owner")
+        task_attempt = self._positive_integer(task_attempt, "task_attempt")
+        if status not in {"PASS", "BLOCK"}:
+            raise ValueError("status must be PASS or BLOCK")
+        terminal_code = self._text(terminal_code, "terminal_code")
+        if _TERMINAL_CODE_RE.fullmatch(terminal_code) is None:
+            raise ValueError("terminal_code must be a stable safe code")
+        result_json = self._json(result, "worker_call_result")
+        desired_state = "COMPLETED" if status == "PASS" else "BLOCKED"
+        now = self._now()
+        with self._transaction() as connection:
+            row = self._worker_call_row(connection, call_id)
+            if int(row["task_attempt"]) != task_attempt:
+                raise StateConflict("worker call task attempt changed")
+            self._require_active_lease(
+                connection,
+                row["run_id"],
+                row["task_id"],
+                lease_owner,
+                task_attempt,
+                now,
+            )
+            if row["state"] != "STARTED":
+                if (
+                    row["state"] == desired_state
+                    and row["terminal_code"] == terminal_code
+                    and row["result_json"] == result_json
+                ):
+                    return self._worker_call_record(row)
+                raise StateConflict("completed worker call cannot change")
+            connection.execute(
+                """
+                UPDATE worker_calls
+                SET state=?, terminal_code=?, result_json=?, completed_at=?, updated_at=?
+                WHERE call_id=?
+                """,
+                (
+                    desired_state,
+                    terminal_code,
+                    result_json,
+                    now,
+                    now,
+                    call_id,
+                ),
+            )
+            return self._worker_call_record(
+                self._worker_call_row(connection, call_id)
+            )
+
+    def worker_calls(self, run_id: str, task_id: str) -> list[dict[str, object]]:
+        """Return every consumed worker call in durable ordinal order."""
+
+        run_id = self._text(run_id, "run_id")
+        task_id = self._text(task_id, "task_id")
+        connection = self._connect()
+        try:
+            rows = connection.execute(
+                """
+                SELECT * FROM worker_calls
+                WHERE run_id=? AND task_id=?
+                ORDER BY ordinal
+                """,
+                (run_id, task_id),
+            ).fetchall()
+            return [self._worker_call_record(row) for row in rows]
+        finally:
+            connection.close()
+
+    def worker_call_count(self, run_id: str, task_id: str) -> int:
+        """Return the retry-wide number of durably consumed calls."""
+
+        return len(self.worker_calls(run_id, task_id))
 
     def checkpoint_task(
         self,
@@ -1367,6 +1589,15 @@ class DurableOrchestratorStore:
         return record
 
     @staticmethod
+    def _worker_call_record(row: sqlite3.Row) -> dict[str, object]:
+        record = dict(row)
+        result_json = record.pop("result_json")
+        record["result"] = (
+            json.loads(result_json) if result_json is not None else None
+        )
+        return record
+
+    @staticmethod
     def _effect_record(row: sqlite3.Row) -> dict[str, object]:
         record = dict(row)
         record["payload"] = json.loads(record.pop("payload_json"))
@@ -1391,6 +1622,17 @@ class DurableOrchestratorStore:
         ).fetchone()
         if row is None:
             raise StateConflict("task does not exist")
+        return row
+
+    @staticmethod
+    def _worker_call_row(
+        connection: sqlite3.Connection, call_id: str
+    ) -> sqlite3.Row:
+        row = connection.execute(
+            "SELECT * FROM worker_calls WHERE call_id=?", (call_id,)
+        ).fetchone()
+        if row is None:
+            raise StateConflict("worker call does not exist")
         return row
 
     def _require_active_lease(

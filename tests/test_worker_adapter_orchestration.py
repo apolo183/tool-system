@@ -173,5 +173,7 @@ def test_subscription_development_worker_fails_closed_on_unusable_adapter_result
     )
 
     assert worker({"attempt_number": 1}) == {
-        "subscription_worker_bridge_blocked": "adapter_result_not_usable"
+        "subscription_worker_bridge_blocked": {
+            "terminal_code": "SUBSCRIPTION_WORKER_RESULT_BLOCKED"
+        }
     }
