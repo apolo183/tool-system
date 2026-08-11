@@ -1241,3 +1241,425 @@ def test_public_execution_workspace_dependency_blocks_symlink_and_dirty_resume(
     assert blocked_resume["status"] == "BLOCK"
     assert blocked_resume["terminal_code"] == "DIRTY_EXISTING_WORKSPACE"
 
+def _multi_stack_spec(stack: str) -> dict[str, str]:
+    if stack == "python":
+        return {
+            "source": "src/calculator.py",
+            "test": "tests/test_calculator.py",
+            "baseline": "def total(value: int) -> int:\n    return value * 100\n",
+            "intermediate": "def total(value: int) -> int:\n    return value * 2\n",
+            "target": "def total(value: int) -> int:\n    return value\n",
+            "test_content": (
+                "from src.calculator import total\n\n"
+                "def test_total() -> None:\n    assert total(2) == 2\n"
+            ),
+            "command": (
+                'python -c "from src.calculator import total; '
+                'assert total(2) == 2"'
+            ),
+        }
+    return {
+        "source": "src/calculator.ts",
+        "test": "tests/calculator.test.ts",
+        "baseline": (
+            "export function total(value) {\n  return value * 100;\n}\n"
+        ),
+        "intermediate": (
+            "export function total(value) {\n  return value * 2;\n}\n"
+        ),
+        "target": "export function total(value) {\n  return value;\n}\n",
+        "test_content": (
+            "import { total } from '../src/calculator.ts';\n"
+            "if (total(2) !== 2) throw new Error('unexpected total');\n"
+        ),
+        "command": (
+            'node -e "const fs=require(\'fs\');'
+            "const s=fs.readFileSync('src/calculator.ts','utf8');"
+            "if(!s.includes('return value;'))process.exit(1)"
+            '"'
+        ),
+    }
+
+
+def _multi_stack_context(tmp_path: Path, stack: str) -> dict[str, Any]:
+    spec = _multi_stack_spec(stack)
+    repository = tmp_path / f"{stack}-subscription-fixture"
+    repository.mkdir()
+    _fixture_git(repository, "init", "-q", "-b", "main")
+    _fixture_git(repository, "config", "user.email", "fixture@example.invalid")
+    _fixture_git(repository, "config", "user.name", "Fixture")
+    files = {
+        "blueprint.yaml": f"""product_objective:
+  id: bounded-{stack}-fixture
+  statement: build one bounded {stack} fixture
+agents:
+  evidence_collector: {{role: evidence_collector}}
+  policy_guard: {{role: policy_guard}}
+  blueprint_architect: {{role: blueprint_architect}}
+  change_planner: {{role: change_planner}}
+  patch_author: {{role: patch_author}}
+  test_engineer: {{role: test_engineer}}
+  code_reviewer: {{role: code_reviewer}}
+  contract_reviewer: {{role: contract_reviewer}}
+  audit_recorder: {{role: audit_recorder}}
+milestones:
+  M1_CALCULATOR:
+    objective: repair bounded {stack} calculator
+    module_change:
+      module_id: calculator-{stack}
+      module_version: 1.0.0
+      interface_id: calculator-{stack}-api
+      interface_version: 1.0.0
+      change_kind: add
+      natural_owner_paths: [src]
+      allowed_files: [{spec["source"]}, {spec["test"]}]
+      test_paths: [{spec["test"]}]
+      depends_on_module_ids: []
+      acceptance: [{stack} fixture passes]
+      validations: [local isolated validation]
+""",
+        "module-registry.yaml": (
+            "modules:\n  - module_id: existing\n    module_version: 1.0.0\n"
+        ),
+        "GOVERNANCE.md": "Owner evidence remains non-authorizing.\n",
+        spec["source"]: spec["baseline"],
+        spec["test"]: spec["test_content"],
+    }
+    for relative, content in files.items():
+        target = repository / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+    _fixture_git(repository, "add", "--all")
+    _fixture_git(repository, "commit", "-q", "-m", "fixture")
+    head = _fixture_git(repository, "rev-parse", "HEAD")
+    tree = _fixture_git(repository, "rev-parse", "HEAD^{tree}")
+    workspace_parent = tmp_path / "workspaces"
+    workspace_parent.mkdir(mode=0o700)
+    state_parent = tmp_path / "state"
+    state_parent.mkdir(mode=0o700)
+    workspace = workspace_parent / stack
+    state = state_parent / f"{stack}.sqlite3"
+    config = CodexCLIAdapterConfig(executable="codex", enabled=True)
+    acceptance = [f"{stack} fixture passes"]
+    scope = [spec["source"], spec["test"]]
+    manifest_path, plan_path = _bound_subscription_task_pair(
+        tmp_path,
+        repository_root=repository,
+        expected_head=head,
+        blueprint_path="blueprint.yaml",
+        module_registry_path="module-registry.yaml",
+        milestone_ids=["M1_CALCULATOR"],
+        acceptance_requirements=acceptance,
+        governance_paths=["GOVERNANCE.md"],
+        query_terms=["calculator", stack],
+        seed_paths=scope,
+    )
+    plan = load_yaml_file(plan_path)
+    plan["verification"]["commands"] = [spec["command"]]
+    plan_path.write_text(
+        yaml.safe_dump(plan, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    manifest = load_yaml_file(manifest_path)
+    manifest["verification"]["commands"] = [spec["command"]]
+    manifest["subscription_public_entry_execution"] = {
+        "binding_version": "subscription_public_entry_execution_binding_v1",
+        "enabled": True,
+        "repository_root_identity_sha256": hashlib.sha256(
+            str(repository).encode()
+        ).hexdigest(),
+        "workspace_root_identity_sha256": hashlib.sha256(
+            str(workspace).encode()
+        ).hexdigest(),
+        "durable_state_identity_sha256": hashlib.sha256(
+            str(state).encode()
+        ).hexdigest(),
+        "expected_head": head,
+        "expected_tree": tree,
+        "existing_scope_paths": scope,
+        "addable_scope_paths": [],
+        "allowed_scope": scope,
+        "acceptance_set": acceptance,
+        "validation_set": [spec["command"]],
+        "worker_configuration_sha256": (
+            task_runner_module._worker_configuration_sha256(config)
+        ),
+        "branch_name": f"agent/{stack}-fixture-v1",
+        "commit_message": f"Repair bounded {stack} fixture",
+        "finite_budgets": {
+            "max_cycles": 2,
+            "max_worker_calls": 2,
+            "max_patch_operations_per_cycle": 8,
+            "max_total_duration_ms": 30_000,
+            "max_total_cost_microunits": 1,
+        },
+        "validation_timeout_seconds": 30,
+        "max_validation_output_bytes": 65_536,
+        "repository_read_authorized": True,
+        "worker_execution_authorized": True,
+        "validation_execution_authorized": True,
+        "subscription_data_transfer_authorized": True,
+        "local_git_write_authorized": True,
+        "api_mode_enabled": False,
+        "provider_execution_authorized": False,
+        "credential_value_access_authorized": False,
+        "remote_repository_operations_authorized": False,
+        "target_repo_mutation_authorized": False,
+        "production_operation_authorized": False,
+        "cleanup_execution_authorized": False,
+        "rollback_execution_authorized": False,
+        "max_local_commits": 1,
+    }
+    manifest_path.write_text(
+        yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    return {
+        "stack": stack, "spec": spec, "repository": repository,
+        "head": head, "tree": tree, "workspace": workspace, "state": state,
+        "config": config, "manifest": manifest_path, "plan": plan_path,
+    }
+
+
+def _multi_stack_adapter(
+    context: dict[str, Any], mode: str, calls: list[dict[str, object]]
+) -> CodexCLISubscriptionWorkerAdapter:
+    spec = context["spec"]
+
+    def fake_run(
+        argv: list[str], **kwargs: Any
+    ) -> subprocess.CompletedProcess[str]:
+        prompt = json.loads(str(kwargs["input"]))
+        calls.append(prompt)
+        if mode == "repair" and len(calls) == 1:
+            before, after = spec["baseline"], spec["intermediate"]
+        elif mode == "repair":
+            before, after = spec["intermediate"], spec["target"]
+        else:
+            before, after = spec["baseline"], spec["target"]
+        assert prompt["candidate_files"][spec["source"]] == before
+        operations = (
+            [{"op": "add", "path": "outside-scope.txt", "content": "x\n"}]
+            if mode == "scope_denial"
+            else [{
+                "op": "replace",
+                "path": spec["source"],
+                "expected_sha256": hashlib.sha256(before.encode()).hexdigest(),
+                "content": after,
+            }]
+        )
+        output = {"operations": operations, "usage": {
+            "duration_ms": 1, "cost_microunits": 0
+        }}
+        Path(argv[argv.index("--output-last-message") + 1]).write_text(
+            json.dumps(output), encoding="utf-8"
+        )
+        return subprocess.CompletedProcess(
+            argv, 0, stdout='{"type":"turn.completed"}\n', stderr=""
+        )
+
+    return CodexCLISubscriptionWorkerAdapter(
+        context["config"],
+        process_runner=fake_run,
+        source_environment={"PATH": "/usr/bin", "HOME": "/isolated/home"},
+    )
+
+
+def _run_multi_stack(
+    context: dict[str, Any],
+    adapter: CodexCLISubscriptionWorkerAdapter,
+    cancellation_requested: Any = None,
+) -> dict[str, object]:
+    spec = context["spec"]
+    return run_subscription_public_entry_execution(
+        task_manifest_path=context["manifest"],
+        change_plan_path=context["plan"],
+        repository_root=context["repository"],
+        workspace_root=context["workspace"],
+        durable_state_path=context["state"],
+        expected_head=context["head"],
+        expected_tree=context["tree"],
+        blueprint_path="blueprint.yaml",
+        module_registry_path="module-registry.yaml",
+        milestone_ids=["M1_CALCULATOR"],
+        acceptance_requirements=[f"{context['stack']} fixture passes"],
+        governance_paths=["GOVERNANCE.md"],
+        query_terms=["calculator", context["stack"]],
+        seed_paths=[spec["source"], spec["test"]],
+        codex_config=context["config"],
+        repository_read_authorized=True,
+        worker_execution_authorized=True,
+        validation_execution_authorized=True,
+        subscription_data_transfer_authorized=True,
+        local_git_write_authorized=True,
+        cancellation_requested=cancellation_requested,
+        adapter=adapter,
+    )
+
+
+def _assert_zero_external_effects(result: dict[str, object]) -> None:
+    for key in (
+        "provider_invocations", "provider_credential_value_accesses",
+        "target_repo_mutations", "remote_repository_operations",
+        "production_operations", "cleanup_operations", "rollback_operations",
+    ):
+        assert result[key] == 0
+    assert result["api_mode_enabled"] is False
+
+
+@pytest.mark.parametrize("stack", ["python", "typescript"])
+def test_subscription_public_entry_multi_stack_implementation(
+    tmp_path: Path, stack: str
+) -> None:
+    context = _multi_stack_context(tmp_path, stack)
+    calls: list[dict[str, object]] = []
+    result = _run_multi_stack(
+        context, _multi_stack_adapter(context, "implementation", calls)
+    )
+    assert result["status"] == "PASS", result
+    assert result["terminal_code"] == "LOCAL_COMMIT_RECORDED"
+    assert result["worker_invocations"] == 1
+    assert len(calls) == 1
+    assert _fixture_git(context["workspace"], "remote") == ""
+    assert _fixture_git(
+        context["workspace"], "rev-list", "--count",
+        f"{context['head']}..HEAD"
+    ) == "1"
+    assert _fixture_git(
+        context["workspace"], "show",
+        f"HEAD:{context['spec']['source']}"
+    ) == context["spec"]["target"].rstrip("\n")
+    assert result["draft_pr_plan"]["authorized"] is False
+    _assert_zero_external_effects(result)
+
+
+@pytest.mark.parametrize("stack", ["python", "typescript"])
+def test_subscription_public_entry_multi_stack_repair(
+    tmp_path: Path, stack: str
+) -> None:
+    context = _multi_stack_context(tmp_path, stack)
+    calls: list[dict[str, object]] = []
+    result = _run_multi_stack(
+        context, _multi_stack_adapter(context, "repair", calls)
+    )
+    assert result["status"] == "PASS", result
+    assert result["worker_invocations"] == 2
+    assert result["validation_command_invocations"] == 2
+    assert calls[1]["candidate_files"][context["spec"]["source"]] == (
+        context["spec"]["intermediate"]
+    )
+    assert _fixture_git(
+        context["workspace"], "rev-list", "--count",
+        f"{context['head']}..HEAD"
+    ) == "1"
+    _assert_zero_external_effects(result)
+
+
+@pytest.mark.parametrize("stack", ["python", "typescript"])
+def test_subscription_public_entry_multi_stack_scope_denial(
+    tmp_path: Path, stack: str
+) -> None:
+    context = _multi_stack_context(tmp_path, stack)
+    calls: list[dict[str, object]] = []
+    result = _run_multi_stack(
+        context, _multi_stack_adapter(context, "scope_denial", calls)
+    )
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "PATCH_OUTSIDE_FROZEN_SCOPE"
+    assert len(calls) == 1
+    assert _fixture_git(
+        context["workspace"], "rev-list", "--count",
+        f"{context['head']}..HEAD"
+    ) == "0"
+    _assert_zero_external_effects(result)
+
+
+@pytest.mark.parametrize("stack", ["python", "typescript"])
+def test_subscription_public_entry_multi_stack_cancellation(
+    tmp_path: Path, stack: str
+) -> None:
+    context = _multi_stack_context(tmp_path, stack)
+    calls: list[dict[str, object]] = []
+    checks = 0
+
+    def cancelled() -> bool:
+        nonlocal checks
+        checks += 1
+        return checks >= 2
+
+    result = _run_multi_stack(
+        context,
+        _multi_stack_adapter(context, "implementation", calls),
+        cancelled,
+    )
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "CANCELLED_BY_CALLER"
+    assert len(calls) == 1
+    assert (context["workspace"] / context["spec"]["source"]).read_text(
+        encoding="utf-8"
+    ) == context["spec"]["baseline"]
+    assert _fixture_git(
+        context["workspace"], "rev-list", "--count",
+        f"{context['head']}..HEAD"
+    ) == "0"
+    _assert_zero_external_effects(result)
+
+
+@pytest.mark.parametrize("stack", ["python", "typescript"])
+def test_subscription_public_entry_multi_stack_completed_replay(
+    tmp_path: Path, stack: str
+) -> None:
+    context = _multi_stack_context(tmp_path, stack)
+    calls: list[dict[str, object]] = []
+    adapter = _multi_stack_adapter(context, "implementation", calls)
+    first = _run_multi_stack(context, adapter)
+    second = _run_multi_stack(context, adapter)
+    assert first["status"] == "PASS", first
+    assert second["status"] == "PASS", second
+    assert second["terminal_code"] == "RESUMED_COMPLETED_LOCAL_COMMIT"
+    assert second["commit"] == first["commit"]
+    assert len(calls) == 1
+    assert _fixture_git(
+        context["workspace"], "rev-list", "--count",
+        f"{context['head']}..HEAD"
+    ) == "1"
+    _assert_zero_external_effects(second)
+
+
+@pytest.mark.parametrize("stack", ["python", "typescript"])
+def test_subscription_public_entry_multi_stack_unreceipted_advance_blocks(
+    tmp_path: Path, stack: str
+) -> None:
+    context = _multi_stack_context(tmp_path, stack)
+    workspace = context["workspace"]
+    created = task_runner_module.create_isolated_local_workspace(
+        source_repository_root=context["repository"],
+        workspace_root=workspace,
+        expected_head_sha=context["head"],
+        expected_tree_sha=context["tree"],
+    )
+    assert created["status"] == "PASS"
+    (workspace / context["spec"]["source"]).write_text(
+        context["spec"]["target"], encoding="utf-8"
+    )
+    _fixture_git(
+        workspace, "switch", "-c", f"agent/unreceipted-{stack}-fixture-v1"
+    )
+    _fixture_git(workspace, "add", "--all")
+    _fixture_git(
+        workspace, "-c", "user.name=Fixture", "-c",
+        "user.email=fixture@example.invalid", "commit", "-q", "-m",
+        "unreceipted fixture advance"
+    )
+    calls: list[dict[str, object]] = []
+    result = _run_multi_stack(
+        context, _multi_stack_adapter(context, "implementation", calls)
+    )
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "HEAD_PRECONDITION_DRIFT"
+    assert calls == []
+    assert _fixture_git(
+        workspace, "rev-list", "--count", f"{context['head']}..HEAD"
+    ) == "1"
+    _assert_zero_external_effects(result)
+
