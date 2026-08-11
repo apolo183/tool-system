@@ -1,0 +1,42 @@
+plan_id: tool-system-subscription-worker-public-entry-acceptance-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_public_entry_acceptance_v1.yaml
+changed_files:
+  - docs/reports/subscription_worker_public_entry_acceptance_mapping_v1.yaml
+  - docs/reports/subscription_worker_public_entry_acceptance_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_subscription_worker_public_entry_acceptance_v1.yaml
+  - examples/task_manifests/tool_system_subscription_worker_public_entry_acceptance_v1.yaml
+  - tests/test_phase_alignment.py
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+    section_or_key: Implementation packages
+    scope: Decide package 4 only after package 3 and its replay correction are canonical.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Record bounded public-entry acceptance without granting a real worker or any external effect.
+implementation:
+  - add one decision report and one machine-readable requirement-to-evidence mapping
+  - append one non-authorizing descriptive project-state section without changing the accepted P16 phase
+  - extend the existing phase-alignment suite to verify exact scope evidence closure and all stop boundaries
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_phase_alignment.py tests/test_task_runner.py tests/test_worker_adapter_contract.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_public_entry_acceptance_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_public_entry_acceptance_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_connector_only_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-public-entry-acceptance-v1
+  retain_feature_branch: true
+  exact_base: 8be8950937407bbca0c562b77348c67aba6b5685
+  exact_base_tree: 331d5496ea2aee610c17bd522850b959015ecb9f
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@8be8950937407bbca0c562b77348c67aba6b5685
+  execution_authorized: false

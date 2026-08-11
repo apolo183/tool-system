@@ -1,0 +1,128 @@
+schema_version: 1
+mapping_id: subscription-worker-public-entry-acceptance-v1
+authority_effect: none
+baseline_commit: 8be8950937407bbca0c562b77348c67aba6b5685
+baseline_tree: 331d5496ea2aee610c17bd522850b959015ecb9f
+decision: accepted_subscription_worker_public_entry_core
+direct_parent:
+  document: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
+  implementation_package: SUBSCRIPTION-WORKER-PUBLIC-ENTRY-ACCEPTANCE-v1
+  package_number: 4
+global_alignment:
+  document: blueprint/tool_system_v0.yaml
+  section_or_key: product_objective
+  accepted_scope: bounded_subscription_primary_public_entry_with_fake_io_isolated_multi_stack_and_remote_free_local_git_evidence
+canonical_evidence_chain:
+  - pull_request: 206
+    role: closure_specification
+    merge_commit: ab40eb743cadb88111a7e7fd9c6dd96adfeb5cf4
+  - pull_request: 207
+    role: guarded_codex_cli_subscription_worker_adapter
+    merge_commit: 55416af567317c9c08095fe3e081baeb9b7aace6
+  - pull_request: 208
+    role: structured_worker_result_correction
+    merge_commit: ed41d7ab96cea1d6d14d129532140c1d926230ad
+  - pull_request: 209
+    role: development_loop_bridge
+    merge_commit: 205637aa9453cd16972c08909d91f16f251414d5
+  - pull_request: 210
+    role: task_runner_pipeline_core
+    merge_commit: 6d570cedbd0a119d1221ced2e4aae2cff1bc3113
+  - pull_request: 211
+    role: root_cli_authority_preflight
+    merge_commit: 7cc77c189e579e36a38ba246baa08e01d350fbd3
+  - pull_request: 212
+    role: repository_context_and_blueprint_compiler_composition
+    merge_commit: dddf790fa88918419aef76fa362a23c6ef076911
+  - pull_request: 213
+    role: exact_snapshot_authority_binding
+    merge_commit: a6fdc2969ae163b8cbdcb6e5f9f74c2279dfaba5
+  - pull_request: 214
+    role: structured_output_and_read_only_sandbox_correction
+    merge_commit: 9c596282dbc784d8a5afdc1f4d283f4828adbf6b
+  - pull_request: 215
+    role: public_entry_execution_integration
+    merge_commit: dcf01353a4b86f7f472649a2b2c352d44393f748
+  - pull_request: 217
+    role: receipt_gated_replay_correction
+    merge_commit: 983e225377fdef23a18368c9e662f8231d6aaec8
+  - pull_request: 218
+    role: corrected_multi_stack_acceptance
+    merge_commit: 8be8950937407bbca0c562b77348c67aba6b5685
+discarded_attempt:
+  pull_request: 216
+  merged: false
+  accepted_evidence: false
+  reason: unsealed_runtime_change_and_completed_receipt_replay_ordering_failure
+acceptance_matrix:
+  - requirement: default_invocation_has_no_external_worker_call_or_mutation
+    disposition: accepted
+    evidence:
+      - docs/reports/subscription_worker_public_cli_authority_preflight_v1.md
+      - tests/test_task_runner.py
+  - requirement: fake_codex_process_proves_argv_environment_output_timeout_and_cancellation
+    disposition: accepted
+    evidence:
+      - docs/reports/subscription_worker_codex_structured_output_sandbox_correction_v1.md
+      - tests/test_worker_adapter_contract.py
+  - requirement: public_cli_reaches_adapter_only_after_current_authority_and_snapshot_gates
+    disposition: accepted
+    evidence:
+      - docs/reports/subscription_worker_snapshot_authority_binding_v1.md
+      - docs/reports/subscription_worker_public_entry_execution_integration_v1.md
+      - tests/test_task_runner.py
+  - requirement: invalid_scope_snapshot_progress_or_candidate_fails_before_local_commit
+    disposition: accepted
+    evidence:
+      - docs/reports/subscription_worker_public_entry_replay_correction_v1.md
+      - docs/reports/subscription_worker_multi_stack_acceptance_v2.md
+      - tests/test_task_runner.py
+  - requirement: isolated_success_creates_exactly_one_local_commit_and_no_remote_effect
+    disposition: accepted
+    evidence:
+      - docs/reports/subscription_worker_public_entry_execution_integration_v1.md
+      - docs/reports/subscription_worker_multi_stack_acceptance_v2.md
+      - tests/test_task_runner.py
+  - requirement: hosted_ci_uses_fake_process_and_fake_repositories_only
+    disposition: accepted
+    evidence:
+      - pull_request_218_hosted_ci_runs_1301_and_1302
+  - requirement: api_mode_remains_disabled_and_provider_invocations_remain_zero
+    disposition: accepted
+    evidence:
+      - docs/reports/subscription_worker_multi_stack_acceptance_v2.md
+      - tests/test_task_runner.py
+accepted_public_entry:
+  root_cli_subcommand: develop-execute
+  exact_manifest_change_plan_binding_required: true
+  exact_repository_snapshot_binding_required: true
+  guarded_subscription_worker_adapter: codex_cli
+  isolated_workspace_required: true
+  bounded_validation_and_review_required: true
+  maximum_remote_free_local_commits: 1
+  durable_completed_receipt_replay: true
+  real_codex_execution_observed_in_this_acceptance: false
+remaining_authority:
+  real_codex_execution_authorized: false
+  chatgpt_web_automation_authorized: false
+  api_provider_execution_authorized: false
+  credential_access_authorized: false
+  real_downstream_access_authorized: false
+  real_downstream_mutation_authorized: false
+  remote_publication_authorized: false
+  production_operation_authorized: false
+  deployment_authorized: false
+  cleanup_authorized: false
+  rollback_authorized: false
+zero_operation_boundary:
+  real_codex_invocations: 0
+  chatgpt_web_automation_operations: 0
+  provider_invocations: 0
+  credential_value_accesses: 0
+  real_downstream_repository_accesses: 0
+  real_downstream_repository_mutations: 0
+  remote_repository_operations: 0
+  production_operations: 0
+  deployment_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
