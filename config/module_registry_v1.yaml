@@ -1662,7 +1662,7 @@ modules:
     target_boundary_id: code-002
     effect_contract: &local_git_contract
       repo_relative_path: docs/modules/local-git-contract-v1.md
-      sha256: d307bfee9738233b33f8e84986986260ebc49def4e15e8d1c1910f8a3a09a430
+      sha256: adf65c350cdb4dd58d52b6ad7a7b6027c2c498fc98c7775346259321d63f70cf
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-002
@@ -2582,7 +2582,7 @@ interfaces:
   - consumer_module_id: task-runner
   input_contract: &local_git_interface_contract
     repo_relative_path: docs/modules/local-git-contract-v1.md
-    sha256: d307bfee9738233b33f8e84986986260ebc49def4e15e8d1c1910f8a3a09a430
+    sha256: adf65c350cdb4dd58d52b6ad7a7b6027c2c498fc98c7775346259321d63f70cf
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract: *local_git_interface_contract
