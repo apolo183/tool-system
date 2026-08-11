@@ -44,4 +44,4 @@ Every success must retain `api_mode_enabled=false`, zero provider invocations, z
 
 ## Current status
 
-The exact four-path acceptance package is frozen and pending fake-I/O test publication, Hosted CI, and no-drift merge. This report is descriptive evidence only. It does not accept the final public-entry milestone or authorize real Codex execution, ChatGPT Web automation, API/provider calls, credential access, downstream access, remote publication, production, cleanup, or rollback.
+The exact four-path acceptance package passed Hosted CI run 1301 (job 93646242827): 844 tests passed, followed by active-gate, process-authority, current-registry-authority, and repository-manifest validation. It remains pending final no-drift Ready and squash merge. This report is descriptive evidence only. It does not accept the final public-entry milestone or authorize real Codex execution, ChatGPT Web automation, API/provider calls, credential access, downstream access, remote publication, production, cleanup, or rollback.
