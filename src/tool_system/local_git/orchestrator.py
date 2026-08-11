@@ -18,9 +18,11 @@ from tool_system.development_loop import (
     run_development_loop,
 )
 from tool_system.orchestrator import DurableOrchestratorStore, StateConflict
+from tool_system.orchestrator.durable import WorkerCallBudgetExhausted
 
 _SHA = re.compile(r"^[0-9a-f]{40}$")
 _BRANCH = re.compile(r"^agent/[a-z0-9][a-z0-9._/-]{0,119}$")
+_TERMINAL_CODE = re.compile(r"^[A-Z][A-Z0-9_]{2,127}$")
 
 
 class DurableLocalGitError(RuntimeError):
@@ -106,6 +108,25 @@ def _canonical(value: object) -> str:
 
 def _digest(value: object) -> str:
     return hashlib.sha256(_canonical(value).encode()).hexdigest()
+
+
+def _subscription_worker_terminal_code(result: object) -> str | None:
+    if not isinstance(result, Mapping):
+        return None
+    key = "subscription_worker_bridge_blocked"
+    if key not in result:
+        return None
+    if set(result) != {key}:
+        return "INVALID_WORKER_TERMINAL_RESULT"
+    terminal = result[key]
+    if not isinstance(terminal, Mapping) or set(terminal) != {"terminal_code"}:
+        return "INVALID_WORKER_TERMINAL_RESULT"
+    code = terminal.get("terminal_code")
+    return (
+        code
+        if isinstance(code, str) and _TERMINAL_CODE.fullmatch(code) is not None
+        else "INVALID_WORKER_TERMINAL_RESULT"
+    )
 
 
 def _validate_repository(
@@ -459,6 +480,8 @@ def run_durable_local_git(
     """
 
     root = Path(repository_root).resolve(strict=True)
+    loop_result: Mapping[str, object] | None = None
+    observed_worker_terminal: str | None = None
     try:
         branch_receipt = store.get_side_effect(f"{run_id}:branch")
         commit_receipt = store.get_side_effect(f"{run_id}:commit")
@@ -479,9 +502,12 @@ def run_durable_local_git(
             completed_commit=completed_commit,
         )
         contract.validate()
+        active_limits = limits or DevelopmentLoopLimits()
+        active_limits.validate()
         if completed_commit is not None:
             result = completed_commit["result"]
             assert isinstance(result, Mapping)
+            durable_worker_calls = store.worker_call_count(run_id, task_id)
             return {
                 "status": "PASS",
                 "terminal_code": "RESUMED_COMPLETED_LOCAL_COMMIT",
@@ -489,7 +515,10 @@ def run_durable_local_git(
                 "commit": result["commit"],
                 "tree": result["tree"],
                 "candidate_tree": result.get("candidate_tree"),
-                "worker_call_count": int(result.get("worker_call_count", 0)),
+                "worker_call_count": max(
+                    durable_worker_calls,
+                    int(result.get("worker_call_count", 0)),
+                ),
                 "total_duration_ms": int(result.get("total_duration_ms", 0)),
                 "total_cost_microunits": int(
                     result.get("total_cost_microunits", 0)
@@ -531,17 +560,92 @@ def run_durable_local_git(
             run_id, task_id, lease_owner=lease_owner, lease_seconds=lease_seconds
         )
         attempt = int(task["attempt"])
+        durable_worker_calls = store.worker_call_count(run_id, task_id)
+
+        def renew_lease() -> None:
+            store.renew_task_lease(
+                run_id,
+                task_id,
+                lease_owner=lease_owner,
+                attempt=attempt,
+                lease_seconds=lease_seconds,
+            )
+
+        def leased_git(*args: str) -> str:
+            renew_lease()
+            result = _git(root, *args)
+            renew_lease()
+            return result
+
+        def durable_worker(
+            request: Mapping[str, object],
+        ) -> Mapping[str, object]:
+            nonlocal durable_worker_calls, observed_worker_terminal
+            renew_lease()
+            try:
+                call = store.begin_worker_call(
+                    run_id,
+                    task_id,
+                    request_sha256=_digest(request),
+                    max_calls=active_limits.max_worker_calls,
+                    lease_owner=lease_owner,
+                    task_attempt=attempt,
+                )
+            except WorkerCallBudgetExhausted as exc:
+                raise DevelopmentLoopError(
+                    "WORKER_CALL_BUDGET_EXHAUSTED"
+                ) from exc
+            durable_worker_calls = int(call["ordinal"])
+            result = worker(request)
+            worker_terminal = _subscription_worker_terminal_code(result)
+            if worker_terminal is not None:
+                observed_worker_terminal = worker_terminal
+            renew_lease()
+            store.complete_worker_call(
+                str(call["call_id"]),
+                lease_owner=lease_owner,
+                task_attempt=attempt,
+                status="BLOCK" if worker_terminal is not None else "PASS",
+                terminal_code=worker_terminal or "WORKER_CALL_RETURNED",
+                result={
+                    "status": "BLOCK" if worker_terminal is not None else "PASS",
+                    "terminal_code": worker_terminal or "WORKER_CALL_RETURNED",
+                },
+            )
+            return result
+
+        def durable_validator(
+            candidate: Mapping[str, str],
+        ) -> Mapping[str, object]:
+            renew_lease()
+            result = validator(candidate)
+            renew_lease()
+            return result
+
+        def durable_reviewer(
+            reviewer: Callable[[Mapping[str, object]], Mapping[str, object]],
+        ) -> Callable[[Mapping[str, object]], Mapping[str, object]]:
+            def invoke(review_input: Mapping[str, object]) -> Mapping[str, object]:
+                renew_lease()
+                result = reviewer(review_input)
+                renew_lease()
+                return result
+
+            return invoke
+
         loop_result = run_development_loop(
             contract=contract,
             baseline_files=baseline_files,
-            worker=worker,
-            validator=validator,
-            code_reviewer=code_reviewer,
-            contract_reviewer=contract_reviewer,
-            limits=limits,
+            worker=durable_worker,
+            validator=durable_validator,
+            code_reviewer=durable_reviewer(code_reviewer),
+            contract_reviewer=durable_reviewer(contract_reviewer),
+            limits=active_limits,
             resume_state=task["checkpoint"].get("loop_result"),
+            initial_worker_call_count=durable_worker_calls,
             cancellation_requested=cancellation_requested,
         )
+        renew_lease()
         store.checkpoint_task(
             run_id,
             task_id,
@@ -558,8 +662,26 @@ def run_durable_local_git(
                 retryable=False,
                 checkpoint={"phase": "LOOP_BLOCKED", "loop_result": loop_result},
             )
-            return {"status": "BLOCK", "terminal_code": loop_result["terminal_code"]}
+            return {
+                "status": "BLOCK",
+                "terminal_code": loop_result["terminal_code"],
+                "candidate_tree": loop_result.get("candidate_tree"),
+                "worker_call_count": max(
+                    durable_worker_calls,
+                    int(loop_result.get("worker_call_count", 0)),
+                ),
+                "total_duration_ms": int(
+                    loop_result.get("total_duration_ms", 0)
+                ),
+                "total_cost_microunits": int(
+                    loop_result.get("total_cost_microunits", 0)
+                ),
+                "provider_calls": 0,
+                "credential_reads": 0,
+                "remote_operations": 0,
+            }
 
+        renew_lease()
         branch_effect = store.plan_side_effect(
             run_id,
             task_id,
@@ -575,7 +697,9 @@ def run_durable_local_git(
         )
         if completed_branch is None:
             store.begin_side_effect(branch_effect["effect_id"], lease_owner=lease_owner, task_attempt=attempt)
-            _git(root, "switch", "-c", identity.branch_name, identity.expected_head_sha)
+            leased_git(
+                "switch", "-c", identity.branch_name, identity.expected_head_sha
+            )
             store.complete_side_effect(
                 branch_effect["effect_id"],
                 lease_owner=lease_owner,
@@ -588,6 +712,7 @@ def run_durable_local_git(
             if after_effect is not None:
                 after_effect("branch")
 
+        renew_lease()
         candidate_files = loop_result["candidate_files"]
         assert isinstance(candidate_files, Mapping)
         changed_paths = _changed_paths(
@@ -596,11 +721,17 @@ def run_durable_local_git(
             contract.allowed_scope,
         )
         _write_candidate(root, candidate_files, changed_paths)
-        _git(root, "add", "-A", "--", *changed_paths)
-        staged = tuple(filter(None, _git(root, "diff", "--cached", "--name-only").splitlines()))
+        leased_git("add", "-A", "--", *changed_paths)
+        staged = tuple(
+            filter(
+                None,
+                leased_git("diff", "--cached", "--name-only").splitlines(),
+            )
+        )
         if set(staged) != set(changed_paths):
             raise DurableLocalGitError("STAGED_SCOPE_MISMATCH")
 
+        renew_lease()
         commit_effect = store.plan_side_effect(
             run_id,
             task_id,
@@ -619,14 +750,14 @@ def run_durable_local_git(
             task_attempt=attempt,
         )
         store.begin_side_effect(commit_effect["effect_id"], lease_owner=lease_owner, task_attempt=attempt)
-        _git(
-            root,
+        leased_git(
             "-c", "user.name=tool-system fixture",
             "-c", "user.email=fixture@tool-system.invalid",
             "commit", "-m", identity.commit_message,
         )
-        commit_sha = _git(root, "rev-parse", "HEAD")
-        commit_tree = _git(root, "rev-parse", "HEAD^{tree}")
+        commit_sha = leased_git("rev-parse", "HEAD")
+        commit_tree = leased_git("rev-parse", "HEAD^{tree}")
+        renew_lease()
         store.complete_side_effect(
             commit_effect["effect_id"],
             lease_owner=lease_owner,
@@ -645,6 +776,7 @@ def run_durable_local_git(
         )
         if after_effect is not None:
             after_effect("commit")
+        renew_lease()
         store.checkpoint_task(
             run_id,
             task_id,
@@ -661,7 +793,10 @@ def run_durable_local_git(
             "commit": commit_sha,
             "tree": commit_tree,
             "candidate_tree": loop_result["candidate_tree"],
-            "worker_call_count": int(loop_result["worker_call_count"]),
+            "worker_call_count": max(
+                durable_worker_calls,
+                int(loop_result["worker_call_count"]),
+            ),
             "total_duration_ms": int(loop_result["total_duration_ms"]),
             "total_cost_microunits": int(
                 loop_result["total_cost_microunits"]
@@ -674,12 +809,52 @@ def run_durable_local_git(
             "remote_operations": 0,
         }
     except (DevelopmentLoopError, DurableLocalGitError, StateConflict) as exc:
-        return {
-            "status": "BLOCK",
-            "terminal_code": (
+        try:
+            durable_worker_calls = store.worker_call_count(run_id, task_id)
+        except (StateConflict, ValueError):
+            durable_worker_calls = 0
+        loop_worker_calls = (
+            int(loop_result.get("worker_call_count", 0))
+            if isinstance(loop_result, Mapping)
+            else 0
+        )
+        safe_loop_terminal = (
+            str(loop_result.get("terminal_code"))
+            if isinstance(loop_result, Mapping)
+            and loop_result.get("status") == "BLOCK"
+            and isinstance(loop_result.get("terminal_code"), str)
+            else None
+        )
+        terminal_code = (
+            observed_worker_terminal
+            or safe_loop_terminal
+            or (
                 exc.code
                 if isinstance(exc, (DevelopmentLoopError, DurableLocalGitError))
                 else "DURABLE_STATE_CONFLICT"
+            )
+        )
+        return {
+            "status": "BLOCK",
+            "terminal_code": terminal_code,
+            "candidate_tree": (
+                loop_result.get("candidate_tree")
+                if isinstance(loop_result, Mapping)
+                else None
+            ),
+            "worker_call_count": max(
+                durable_worker_calls,
+                loop_worker_calls,
+            ),
+            "total_duration_ms": (
+                int(loop_result.get("total_duration_ms", 0))
+                if isinstance(loop_result, Mapping)
+                else 0
+            ),
+            "total_cost_microunits": (
+                int(loop_result.get("total_cost_microunits", 0))
+                if isinstance(loop_result, Mapping)
+                else 0
             ),
             "provider_calls": 0,
             "credential_reads": 0,

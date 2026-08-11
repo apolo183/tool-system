@@ -69,6 +69,10 @@ _SUBSCRIPTION_AUTHORITY_INPUT_MAX_BYTES = 1_048_576
 _SUBSCRIPTION_EXECUTION_BINDING_VERSION = (
     "subscription_public_entry_execution_binding_v1"
 )
+_SUBSCRIPTION_GIT_COMMAND_TIMEOUT_SECONDS = 120
+_SUBSCRIPTION_VALIDATION_GIT_COMMAND_LIMIT = 16
+_SUBSCRIPTION_LOCAL_COMMIT_GIT_COMMAND_LIMIT = 8
+_SUBSCRIPTION_LEASE_RENEWAL_MARGIN_SECONDS = 30
 
 
 class _SubscriptionUniqueKeyLoader(yaml.SafeLoader):
@@ -795,6 +799,37 @@ def _worker_configuration_sha256(config: CodexCLIAdapterConfig) -> str:
     )
 
 
+def _subscription_durable_lease_seconds(
+    *,
+    binding: Mapping[str, object],
+    config: CodexCLIAdapterConfig,
+) -> float:
+    """Derive one renewable stage lease from the frozen execution envelope."""
+
+    validation_set = binding["validation_set"]
+    if not isinstance(validation_set, list):
+        raise TypeError("SUBSCRIPTION_EXECUTION_VALIDATION_SET_INVALID")
+    validation_timeout = binding["validation_timeout_seconds"]
+    if type(validation_timeout) is not int:
+        raise TypeError("SUBSCRIPTION_EXECUTION_VALIDATION_BUDGET_INVALID")
+    worker_stage = (
+        config.timeout_seconds + (2 * config.termination_grace_seconds)
+    )
+    validation_stage = (
+        _SUBSCRIPTION_VALIDATION_GIT_COMMAND_LIMIT
+        * _SUBSCRIPTION_GIT_COMMAND_TIMEOUT_SECONDS
+        + len(validation_set) * validation_timeout
+    )
+    local_commit_stage = (
+        _SUBSCRIPTION_LOCAL_COMMIT_GIT_COMMAND_LIMIT
+        * _SUBSCRIPTION_GIT_COMMAND_TIMEOUT_SECONDS
+    )
+    return float(
+        max(worker_stage, validation_stage, local_commit_stage)
+        + _SUBSCRIPTION_LEASE_RENEWAL_MARGIN_SECONDS
+    )
+
+
 def _captured_plan_commands(plan_bytes: bytes) -> tuple[str, ...]:
     try:
         plan = yaml.load(
@@ -1258,6 +1293,7 @@ def _subscription_execution_boundary(
         "worker_execution_authorized": False,
         "worker_invocations": 0,
         "validation_command_invocations": 0,
+        "durable_lease_seconds": 0,
         "local_workspace_created": False,
         "local_git_operations": 0,
         "api_mode_enabled": False,
@@ -1461,6 +1497,10 @@ def run_subscription_public_entry_execution(
             ),
             authority_flags=authority_flags,
         )
+        durable_lease_seconds = _subscription_durable_lease_seconds(
+            binding=binding,
+            config=normalized_codex_config,
+        )
         existing_scope = tuple(binding["existing_scope_paths"])
         addable_scope = tuple(binding["addable_scope_paths"])
         if (
@@ -1599,6 +1639,7 @@ def run_subscription_public_entry_execution(
                 code_reviewer=_public_entry_code_reviewer(contract),
                 contract_reviewer=_public_entry_contract_reviewer(contract),
                 limits=limits,
+                lease_seconds=durable_lease_seconds,
                 cancellation_requested=cancellation_requested,
             )
     except Exception as exc:  # noqa: BLE001 - fail closed at runtime boundary
@@ -1634,6 +1675,7 @@ def run_subscription_public_entry_execution(
         "validation_command_invocations": (
             len(validation_set) * worker_calls
         ),
+        "durable_lease_seconds": durable_lease_seconds,
         "local_workspace_created": bool(
             workspace_result.get("workspace_created")
         ),

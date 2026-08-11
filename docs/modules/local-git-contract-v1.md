@@ -26,8 +26,8 @@ module_compound_contract:
       - kind: prefix
         name: tool_system.local_git
   role:
-    summary: create or resume one exact hook-disabled remote-free workspace from a clean local source snapshot and durably record at most one bounded branch and commit with cancellation, receipt reconciliation, zero network effects, and non-executing disposition plans
-    responsibility_boundary: Validate one clean exact local source commit/tree, create or identify a hook-disabled configuration-isolated local clone with every remote removed, admit an existing one-direct-child clean candidate only as pending receipt reconciliation, freeze Git identity, scope, and exact baseline presence/content topology, pass cancellation into the development loop, bind the sealed candidate to durable leases/checkpoints/side-effect receipts, stage the exact add/modify/delete delta, create at most one local branch and commit, resume completed effects without duplication, and return non-executing rollback, cleanup, and draft-PR plans.
+    summary: create or resume one exact hook-disabled remote-free workspace and durably bind retry-wide worker-call consumption, renewable leases, and at most one bounded branch and commit
+    responsibility_boundary: Validate one clean exact local source commit/tree, create or identify a hook-disabled configuration-isolated local clone with every remote removed, admit an existing one-direct-child clean candidate only as pending receipt reconciliation, freeze Git identity, scope, baseline topology and total worker-call budget, persist each call before callback dispatch, reconcile the durable call floor across retry, renew the active lease at controlled callback and commit boundaries, preserve an observed safe worker terminal through later state conflict, stage the exact add/modify/delete delta, create at most one local branch and commit, resume completed effects without duplication, and return non-executing disposition plans.
   natural_owner_evidence_paths:
     - src/tool_system/local_git/__init__.py
     - src/tool_system/local_git/orchestrator.py
@@ -45,17 +45,18 @@ module_compound_contract:
       - isolated_local_git_identity_v1
       - durable_orchestrator_store_v1
       - exact_local_source_and_workspace_identity_v1
-    boundary: Accept an absolute clean local source root, an exact absent, base, or one-direct-child candidate workspace path under a protected parent, exact base commit/tree, one agent branch, an allowed scope whose baseline mapping exactly represents the paths present at base, frozen development callbacks and budgets, optional cancellation, and one local-Git-owned hardened durable store created from separately bound state inputs or supplied by an existing internal caller. A candidate workspace grants no authority and must match one exact completed receipt before resume; allowed paths absent from the baseline may be added and present paths may be modified or deleted.
+      - retry_wide_worker_call_and_renewable_lease_binding_v1
+    boundary: Accept an absolute clean local source root, an exact absent, base, or one-direct-child candidate workspace path under a protected parent, exact base commit/tree, one agent branch, an allowed scope whose baseline mapping exactly represents the paths present at base, frozen development callbacks and total call budgets, one finite stage-covering lease interval, optional cancellation, and one hardened durable store. A candidate workspace grants no authority and must match one exact completed receipt before resume; allowed paths absent from the baseline may be added and present paths may be modified or deleted.
   output_contract:
     registered_outputs:
       - durable_local_git_change_receipt_v1
       - unauthorized_local_disposition_plans_v1
-    boundary: Return hashed workspace/source evidence, the sealed candidate identity and finite worker usage, one local branch/commit/tree, durable completion or idempotent completed-effect resume without recreating or reclaiming completed run state, zero network/remote/provider/credential counts, and rollback, creator-cleanup, and draft-PR plans whose execution remains false.
+    boundary: Return hashed workspace/source evidence, the sealed candidate identity, retry-wide durable worker-call count and finite usage, exact safe worker terminal when blocked, one local branch/commit/tree, durable completion or idempotent completed-effect resume without recreating or reclaiming completed run state, zero network/remote/provider/credential counts, and disposition plans whose execution remains false.
   error_contract:
     registered_error_semantics:
       - precondition_scope_lease_and_receipt_conflicts_fail_closed
       - ambiguous_side_effect_never_replays
-    boundary: Unsafe source or workspace parent, source head/tree drift, clone or hook/config isolation failure, remote configuration, dirty state, symlink or root drift, a candidate not exactly one direct child of base, missing or mismatched completed receipt, baseline presence/content mismatch, unreceipted branch, ambiguous in-progress effect, lease conflict, candidate scope expansion, empty candidate delta, staged-delta mismatch, or Git failure blocks without remote fallback.
+    boundary: Unsafe source or workspace parent, source head/tree drift, clone or hook/config isolation failure, remote configuration, dirty state, symlink or root drift, a candidate not exactly one direct child of base, missing or mismatched completed receipt, baseline presence/content mismatch, exhausted total worker-call budget, changed or ambiguous worker-call record, unreceipted branch, ambiguous in-progress effect, expired renewal, candidate scope expansion, empty candidate delta, staged-delta mismatch, or Git failure blocks without remote fallback. A later durable conflict cannot replace an already observed safe worker terminal or reduce its durable call count.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -73,7 +74,7 @@ module_compound_contract:
         boundary: Create one isolated local workspace from the exact local source, then add, modify, or delete only the exact changed subset of frozen paths inside that workspace; the source remains read-only.
       - effect_class: data_write
         evidence_paths: [src/tool_system/local_git/orchestrator.py]
-        boundary: Persist task checkpoints and side-effect receipts through durable-orchestrator-api and write exact fixture content.
+        boundary: Persist task checkpoints, pre-dispatch ordinal worker-call consumption, lease renewals, and side-effect receipts through durable-orchestrator-api and write exact fixture content.
       - effect_class: git_write
         evidence_paths: [src/tool_system/local_git/orchestrator.py]
         boundary: Perform a local clone with no checkout hooks or remote retention, then create one local agent branch and one commit in a repository with no configured remotes.
@@ -83,7 +84,7 @@ module_compound_contract:
         effect_classes: [database_write]
         evidence_paths: [src/tool_system/local_git/orchestrator.py]
         activation_condition: A caller supplies a DurableOrchestratorStore and invokes the local workflow.
-        boundary: The provider module owns the SQLite write; this consumer supplies bounded lease, checkpoint, and receipt records only.
+        boundary: The provider module owns the SQLite write; this consumer supplies bounded renewable lease, retry-wide worker-call, checkpoint, and receipt records only.
         classification_grants_authority: false
       - capability_id: injected-development-loop-callbacks
         capability_state: conditional-delegated-maximum
@@ -94,13 +95,13 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve exact source-to-workspace construction, hook/global-config isolation, remote removal, cancellation, remote-free preflight, exact base or one-direct-child pending-receipt workspace classification, exact scope and baseline-topology binding, exact add/modify/delete staging, durable effect ordering, no-duplicate completed-effect resume without completed-run state mutation, and non-executing disposition plans.
+    interface_compatible_replacement: Preserve exact source-to-workspace construction, hook/global-config isolation, remote removal, cancellation, remote-free preflight, exact base or one-direct-child pending-receipt workspace classification, retry-wide pre-dispatch worker-call consumption and total budget, controlled lease renewal, safe terminal/count preservation, exact scope and baseline-topology binding, exact add/modify/delete staging, durable effect ordering, no-duplicate completed-effect resume without completed-run state mutation, and non-executing disposition plans.
     interface_incompatible_change: Network clone or remote support, automatic rollback/cleanup, a new persistence schema, or weaker receipt reconciliation requires a new interface version and separate authorization.
   rollback_contract:
     rollback_identity: tool-system@22dedb0f2a2c0b38a0bd4c67f36c1c2454ca19d5:local_git@absent
     method: Revert the module through a separately audited pull request; runtime rollback plans remain non-executing.
   replacement_contract:
-    activation_rule: Replace only after isolated add/modify/delete branch/commit, base and one-direct-child workspace classification, unknown candidate denial, baseline presence/content drift, scope, durable receipts, completed-run replay without state recreation, crash-after-completion resume, conflict, and zero-remote tests pass.
+    activation_rule: Replace only after isolated add/modify/delete branch/commit, fake-clock stage renewal and expiry, pre-callback worker-call observation, crash-before-return retry-wide budget exhaustion, safe timeout/count preservation, base and one-direct-child workspace classification, unknown candidate denial, baseline drift, durable receipts, completed-run replay, crash-after-completion resume, conflict, and zero-remote tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -114,13 +115,13 @@ module_compound_contract:
       contract: The source root is absolute, clean, non-symlink, and exact; the separate workspace is remote-free and either matches the exact base or is one direct child marked pending receipt reconciliation. Only an exact completed receipt may authorize the latter to resume, and no new effect begins from an unknown candidate.
     data:
       mode: durable-single-host
-      contract: State is recorded through the hardened caller-selected SQLite store outside the fixture root.
+      contract: Task, renewable lease, retry-wide worker-call consumption, checkpoint, and side-effect state is recorded through the hardened caller-selected SQLite store outside the fixture root.
     artifact:
       mode: local-git-commit
       contract: One local branch and commit are the only executable artifacts; remote, rollback, cleanup, and draft-PR outputs are plans only.
     database:
       mode: delegated-durable-orchestrator
-      contract: This module owns no schema and accesses SQLite only through durable-orchestrator-api.
+      contract: This module owns no schema and accesses SQLite schema v4 only through durable-orchestrator-api, including begin/complete worker-call and renew-lease transitions.
   external_root_contracts:
     declaration: declared
     roots:

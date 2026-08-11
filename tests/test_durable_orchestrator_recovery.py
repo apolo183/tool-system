@@ -4,9 +4,25 @@ import json
 from pathlib import Path
 
 import pytest
+from test_local_git_orchestrator import (
+    _contract as _local_contract,
+)
+from test_local_git_orchestrator import (
+    _git,
+)
+from test_local_git_orchestrator import (
+    _review as _local_review,
+)
+from test_local_git_orchestrator import (
+    _validator as _local_validator,
+)
+from test_local_git_orchestrator import (
+    _worker as _local_worker,
+)
 
+from tool_system.development_loop import DevelopmentLoopLimits
+from tool_system.local_git import LocalGitIdentity, run_durable_local_git
 from tool_system.orchestrator import DurableOrchestratorStore, StateConflict
-
 
 ROOT = Path(__file__).resolve().parents[1]
 SHA = "a" * 40
@@ -52,6 +68,42 @@ class LocalIdempotentSink:
 
     def applied(self) -> list[str]:
         return json.loads(self.receipt_path.read_text(encoding="utf-8"))
+
+
+def _local_fixture(
+    tmp_path: Path,
+    *,
+    clock: Clock,
+) -> tuple[Path, DurableOrchestratorStore, LocalGitIdentity]:
+    root = tmp_path / "fixture"
+    root.mkdir()
+    _git(root, "init", "-b", "main")
+    (root / "app.txt").write_text("old\n", encoding="utf-8")
+    _git(root, "add", "app.txt")
+    _git(
+        root,
+        "-c",
+        "user.name=fixture",
+        "-c",
+        "user.email=f@x.invalid",
+        "commit",
+        "-m",
+        "base",
+    )
+    database_parent = tmp_path / "local-state"
+    database_parent.mkdir(mode=0o700)
+    store = DurableOrchestratorStore(
+        database_parent / "p14g.sqlite3",
+        forbidden_roots=(root,),
+        clock=clock,
+    )
+    identity = LocalGitIdentity(
+        expected_head_sha=_git(root, "rev-parse", "HEAD"),
+        expected_tree_sha=_git(root, "rev-parse", "HEAD^{tree}"),
+        branch_name="agent/p14g-fixture-v1",
+        commit_message="P14G fixture change",
+    )
+    return root, store, identity
 
 
 def _store(database: Path, clock: Clock) -> DurableOrchestratorStore:
@@ -318,3 +370,189 @@ def test_ambiguous_in_progress_effect_remains_fail_closed_after_reopen(
         reopened.begin_side_effect(
             "effect-1", lease_owner="worker-1", task_attempt=1
         )
+
+
+def test_controlled_fake_clock_renewal_covers_all_local_stages(
+    tmp_path: Path,
+) -> None:
+    clock = Clock()
+    root, store, identity = _local_fixture(tmp_path, clock=clock)
+
+    def advancing_worker(request: object) -> dict[str, object]:
+        clock.advance(6)
+        return _local_worker(request)
+
+    def advancing_validator(files: object) -> dict[str, object]:
+        clock.advance(6)
+        return _local_validator(files)
+
+    def advancing_review(review: object) -> dict[str, object]:
+        clock.advance(6)
+        return _local_review(review)
+
+    result = run_durable_local_git(
+        repository_root=root,
+        store=store,
+        run_id="renewed-run",
+        task_id="local-change",
+        lease_owner="fixture-worker",
+        identity=identity,
+        contract=_local_contract(),
+        baseline_files={"app.txt": "old\n"},
+        worker=advancing_worker,
+        validator=advancing_validator,
+        code_reviewer=advancing_review,
+        contract_reviewer=advancing_review,
+        lease_seconds=10,
+    )
+
+    assert result["status"] == "PASS"
+    assert result["worker_call_count"] == 1
+    assert store.worker_calls("renewed-run", "local-change")[0]["state"] == (
+        "COMPLETED"
+    )
+
+
+def test_crash_before_worker_return_consumes_total_budget_across_retry(
+    tmp_path: Path,
+) -> None:
+    clock = Clock()
+    root, store, identity = _local_fixture(tmp_path, clock=clock)
+
+    class Crash(RuntimeError):
+        pass
+
+    def crashing_worker(_: object) -> dict[str, object]:
+        calls = store.worker_calls("crash-run", "local-change")
+        assert [(call["ordinal"], call["state"]) for call in calls] == [
+            (1, "STARTED")
+        ]
+        raise Crash("simulated worker-process crash")
+
+    try:
+        run_durable_local_git(
+            repository_root=root,
+            store=store,
+            run_id="crash-run",
+            task_id="local-change",
+            lease_owner="worker-before-crash",
+            identity=identity,
+            contract=_local_contract(),
+            baseline_files={"app.txt": "old\n"},
+            worker=crashing_worker,
+            validator=_local_validator,
+            code_reviewer=_local_review,
+            contract_reviewer=_local_review,
+            limits=DevelopmentLoopLimits(max_cycles=1, max_worker_calls=1),
+            lease_seconds=10,
+        )
+    except Crash:
+        pass
+    else:
+        raise AssertionError("simulated crash did not escape the process boundary")
+
+    clock.advance(11)
+    resumed_worker_calls = 0
+
+    def forbidden_retry_worker(_: object) -> dict[str, object]:
+        nonlocal resumed_worker_calls
+        resumed_worker_calls += 1
+        raise AssertionError("consumed total call budget must block retry dispatch")
+
+    resumed = run_durable_local_git(
+        repository_root=root,
+        store=store,
+        run_id="crash-run",
+        task_id="local-change",
+        lease_owner="worker-after-crash",
+        identity=identity,
+        contract=_local_contract(),
+        baseline_files={"app.txt": "old\n"},
+        worker=forbidden_retry_worker,
+        validator=_local_validator,
+        code_reviewer=_local_review,
+        contract_reviewer=_local_review,
+        limits=DevelopmentLoopLimits(max_cycles=1, max_worker_calls=1),
+        lease_seconds=10,
+    )
+
+    assert resumed["status"] == "BLOCK"
+    assert resumed["terminal_code"] == "WORKER_CALL_BUDGET_EXHAUSTED"
+    assert resumed["worker_call_count"] == 1
+    assert resumed_worker_calls == 0
+    assert store.worker_call_count("crash-run", "local-change") == 1
+
+
+def test_expired_lease_preserves_observed_worker_timeout_and_call_count(
+    tmp_path: Path,
+) -> None:
+    clock = Clock()
+    root, store, identity = _local_fixture(tmp_path, clock=clock)
+
+    def timed_out_worker(_: object) -> dict[str, object]:
+        clock.advance(11)
+        return {
+            "subscription_worker_bridge_blocked": {
+                "terminal_code": "SUBSCRIPTION_WORKER_TIMEOUT"
+            }
+        }
+
+    result = run_durable_local_git(
+        repository_root=root,
+        store=store,
+        run_id="timeout-run",
+        task_id="local-change",
+        lease_owner="fixture-worker",
+        identity=identity,
+        contract=_local_contract(),
+        baseline_files={"app.txt": "old\n"},
+        worker=timed_out_worker,
+        validator=_local_validator,
+        code_reviewer=_local_review,
+        contract_reviewer=_local_review,
+        lease_seconds=10,
+    )
+
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_WORKER_TIMEOUT"
+    assert result["worker_call_count"] == 1
+    assert store.worker_calls("timeout-run", "local-change")[0]["state"] == (
+        "STARTED"
+    )
+
+
+def test_unsafe_worker_terminal_detail_is_never_persisted_or_propagated(
+    tmp_path: Path,
+) -> None:
+    clock = Clock()
+    root, store, identity = _local_fixture(tmp_path, clock=clock)
+
+    result = run_durable_local_git(
+        repository_root=root,
+        store=store,
+        run_id="unsafe-terminal-run",
+        task_id="local-change",
+        lease_owner="fixture-worker",
+        identity=identity,
+        contract=_local_contract(),
+        baseline_files={"app.txt": "old\n"},
+        worker=lambda _: {
+            "subscription_worker_bridge_blocked": {
+                "terminal_code": "raw timeout detail"
+            }
+        },
+        validator=lambda _: (_ for _ in ()).throw(
+            AssertionError("invalid worker result must not enter validation")
+        ),
+        code_reviewer=_local_review,
+        contract_reviewer=_local_review,
+        lease_seconds=10,
+    )
+
+    durable_call = store.worker_calls("unsafe-terminal-run", "local-change")[0]
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "INVALID_WORKER_TERMINAL_RESULT"
+    assert result["worker_call_count"] == 1
+    assert durable_call["state"] == "BLOCKED"
+    assert durable_call["terminal_code"] == "INVALID_WORKER_TERMINAL_RESULT"
+    assert "raw timeout detail" not in str(durable_call)

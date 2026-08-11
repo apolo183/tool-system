@@ -235,8 +235,8 @@ def test_reconciliation_publishes_once_and_failed_delivery_requeues(
     assert failures == 1
 
 
-@pytest.mark.parametrize("previous_version", [1, 2])
-def test_prior_schema_versions_are_migrated_to_three(
+@pytest.mark.parametrize("previous_version", [1, 2, 3])
+def test_prior_schema_versions_are_migrated_to_four(
     tmp_path: Path, previous_version: int
 ) -> None:
     database = tmp_path / "migration.sqlite3"
@@ -251,5 +251,5 @@ def test_prior_schema_versions_are_migrated_to_three(
 
     store = DurableOrchestratorStore(database, forbidden_roots=(ROOT,))
 
-    assert store.pragmas()["schema_version"] == 3
+    assert store.pragmas()["schema_version"] == 4
     assert len(store.authorization_ledger_instance_id) == 64

@@ -19,6 +19,8 @@ _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _TREE_ID = re.compile(r"^[0-9a-f]{40,64}$")
 _STATUSES = {"PASS", "BLOCK"}
 _TERMINAL_PREDICATE = "all_frozen_acceptance_validation_and_reviews_pass"
+_WORKER_TERMINAL_KEY = "subscription_worker_bridge_blocked"
+_TERMINAL_CODE = re.compile(r"^[A-Z][A-Z0-9_]{2,127}$")
 
 
 class DevelopmentLoopError(ValueError):
@@ -189,6 +191,22 @@ def _apply_patch(
     return dict(sorted(result.items())), {"duration_ms": duration, "cost_microunits": cost}
 
 
+def _worker_terminal_code(patch: object) -> str | None:
+    if not isinstance(patch, Mapping):
+        raise DevelopmentLoopError("INVALID_WORKER_OUTPUT")
+    if _WORKER_TERMINAL_KEY not in patch:
+        return None
+    if set(patch) != {_WORKER_TERMINAL_KEY}:
+        raise DevelopmentLoopError("INVALID_WORKER_TERMINAL_RESULT")
+    terminal = patch[_WORKER_TERMINAL_KEY]
+    if not isinstance(terminal, Mapping) or set(terminal) != {"terminal_code"}:
+        raise DevelopmentLoopError("INVALID_WORKER_TERMINAL_RESULT")
+    code = terminal["terminal_code"]
+    if not isinstance(code, str) or _TERMINAL_CODE.fullmatch(code) is None:
+        raise DevelopmentLoopError("INVALID_WORKER_TERMINAL_RESULT")
+    return code
+
+
 def _validation(
     result: Mapping[str, object], contract: FrozenDevelopmentContract
 ) -> tuple[dict[str, dict[str, object]], list[str], list[str]]:
@@ -304,6 +322,7 @@ def run_development_loop(
     contract_reviewer: Reviewer,
     limits: DevelopmentLoopLimits | None = None,
     resume_state: Mapping[str, object] | None = None,
+    initial_worker_call_count: int = 0,
     cancellation_requested: CancellationRequested | None = None,
 ) -> dict[str, object]:
     """Run a finite, deterministic fixture development loop."""
@@ -313,6 +332,11 @@ def run_development_loop(
         contract.validate()
         limits.validate()
         files = _files(baseline_files)
+        if (
+            type(initial_worker_call_count) is not int
+            or initial_worker_call_count < 0
+        ):
+            raise DevelopmentLoopError("INVALID_INITIAL_WORKER_CALL_COUNT")
         if cancellation_requested is not None and not callable(
             cancellation_requested
         ):
@@ -358,6 +382,7 @@ def run_development_loop(
                 )
         except (TypeError, ValueError, DevelopmentLoopError):
             return _blocked("INVALID_RESUME_STATE", contract)
+    worker_calls = max(worker_calls, initial_worker_call_count)
     for attempt in range(len(cycles) + 1, limits.max_cycles + 1):
         try:
             if _is_cancelled(cancellation_requested):
@@ -383,8 +408,11 @@ def run_development_loop(
             "blockers": cycles[-1]["blocker_set"] if cycles else [],
         }
         try:
-            patch = worker(request)
             worker_calls += 1
+            patch = worker(request)
+            terminal_code = _worker_terminal_code(patch)
+            if terminal_code is not None:
+                raise DevelopmentLoopError(terminal_code)
             if _is_cancelled(cancellation_requested):
                 terminal_code = "CANCELLED_BY_CALLER"
                 break
