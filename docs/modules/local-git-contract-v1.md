@@ -50,7 +50,7 @@ module_compound_contract:
     registered_outputs:
       - durable_local_git_change_receipt_v1
       - unauthorized_local_disposition_plans_v1
-    boundary: Return hashed workspace/source evidence, the sealed candidate identity and finite worker usage, one local branch/commit/tree, durable completion or idempotent completed-effect resume, zero network/remote/provider/credential counts, and rollback, creator-cleanup, and draft-PR plans whose execution remains false.
+    boundary: Return hashed workspace/source evidence, the sealed candidate identity and finite worker usage, one local branch/commit/tree, durable completion or idempotent completed-effect resume without recreating or reclaiming completed run state, zero network/remote/provider/credential counts, and rollback, creator-cleanup, and draft-PR plans whose execution remains false.
   error_contract:
     registered_error_semantics:
       - precondition_scope_lease_and_receipt_conflicts_fail_closed
@@ -94,13 +94,13 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve exact source-to-workspace construction, hook/global-config isolation, remote removal, cancellation, remote-free preflight, exact base or one-direct-child pending-receipt workspace classification, exact scope and baseline-topology binding, exact add/modify/delete staging, durable effect ordering, no-duplicate completed-effect resume, and non-executing disposition plans.
+    interface_compatible_replacement: Preserve exact source-to-workspace construction, hook/global-config isolation, remote removal, cancellation, remote-free preflight, exact base or one-direct-child pending-receipt workspace classification, exact scope and baseline-topology binding, exact add/modify/delete staging, durable effect ordering, no-duplicate completed-effect resume without completed-run state mutation, and non-executing disposition plans.
     interface_incompatible_change: Network clone or remote support, automatic rollback/cleanup, a new persistence schema, or weaker receipt reconciliation requires a new interface version and separate authorization.
   rollback_contract:
     rollback_identity: tool-system@22dedb0f2a2c0b38a0bd4c67f36c1c2454ca19d5:local_git@absent
     method: Revert the module through a separately audited pull request; runtime rollback plans remain non-executing.
   replacement_contract:
-    activation_rule: Replace only after isolated add/modify/delete branch/commit, base and one-direct-child workspace classification, unknown candidate denial, baseline presence/content drift, scope, durable receipts, crash-after-completion resume, conflict, and zero-remote tests pass.
+    activation_rule: Replace only after isolated add/modify/delete branch/commit, base and one-direct-child workspace classification, unknown candidate denial, baseline presence/content drift, scope, durable receipts, completed-run replay without state recreation, crash-after-completion resume, conflict, and zero-remote tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
