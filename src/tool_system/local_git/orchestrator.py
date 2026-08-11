@@ -479,6 +479,37 @@ def run_durable_local_git(
             completed_commit=completed_commit,
         )
         contract.validate()
+        if completed_commit is not None:
+            result = completed_commit["result"]
+            assert isinstance(result, Mapping)
+            return {
+                "status": "PASS",
+                "terminal_code": "RESUMED_COMPLETED_LOCAL_COMMIT",
+                "branch": identity.branch_name,
+                "commit": result["commit"],
+                "tree": result["tree"],
+                "candidate_tree": result.get("candidate_tree"),
+                "worker_call_count": int(result.get("worker_call_count", 0)),
+                "total_duration_ms": int(result.get("total_duration_ms", 0)),
+                "total_cost_microunits": int(
+                    result.get("total_cost_microunits", 0)
+                ),
+                "rollback_plan": {
+                    "authorized": False,
+                    "base": identity.expected_head_sha,
+                },
+                "cleanup_plan": {
+                    "authorized": False,
+                    "branch": identity.branch_name,
+                },
+                "draft_pr_plan": {
+                    "authorized": False,
+                    "remote_operations": 0,
+                },
+                "provider_calls": 0,
+                "credential_reads": 0,
+                "remote_operations": 0,
+            }
         if completed_commit is None:
             _validate_baseline_topology(
                 root,
@@ -500,30 +531,6 @@ def run_durable_local_git(
             run_id, task_id, lease_owner=lease_owner, lease_seconds=lease_seconds
         )
         attempt = int(task["attempt"])
-        if completed_commit is not None:
-            store.complete_task(run_id, task_id, lease_owner=lease_owner, attempt=attempt)
-            store.complete_run(run_id)
-            result = completed_commit["result"]
-            assert isinstance(result, Mapping)
-            return {
-                "status": "PASS",
-                "terminal_code": "RESUMED_COMPLETED_LOCAL_COMMIT",
-                "branch": identity.branch_name,
-                "commit": result["commit"],
-                "tree": result["tree"],
-                "candidate_tree": result.get("candidate_tree"),
-                "worker_call_count": int(result.get("worker_call_count", 0)),
-                "total_duration_ms": int(result.get("total_duration_ms", 0)),
-                "total_cost_microunits": int(
-                    result.get("total_cost_microunits", 0)
-                ),
-                "rollback_plan": {"authorized": False, "base": identity.expected_head_sha},
-                "cleanup_plan": {"authorized": False, "branch": identity.branch_name},
-                "draft_pr_plan": {"authorized": False, "remote_operations": 0},
-                "provider_calls": 0,
-                "credential_reads": 0,
-                "remote_operations": 0,
-            }
         loop_result = run_development_loop(
             contract=contract,
             baseline_files=baseline_files,
