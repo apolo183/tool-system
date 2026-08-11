@@ -28,4 +28,4 @@ The preliminary result never declares the candidate authoritative. `run_durable_
 
 ## Current status
 
-The correction is proposed and non-authorizing pending exact implementation, Hosted CI, and no-drift publication.
+The exact runtime correction and frozen-scope tests passed Hosted CI run 1298 (job 93644254672): 832 tests passed, followed by active-gate, process-authority, current-registry-authority, and repository-manifest validation. The package remains non-authorizing and is pending final no-drift Ready and squash merge with the feature branch retained.
