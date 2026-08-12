@@ -198,6 +198,39 @@ SUBSCRIPTION_PUBLIC_ENTRY_ACCEPTANCE_FILES = {
     "examples/task_manifests/tool_system_subscription_worker_public_entry_acceptance_v1.yaml",
     "tests/test_phase_alignment.py",
 }
+INDEPENDENT_AUDIT_REOPEN_REPORT = (
+    ROOT
+    / "docs"
+    / "reports"
+    / "independent_audit_acceptance_reopen_v1.md"
+)
+INDEPENDENT_AUDIT_REOPEN_MAPPING = (
+    ROOT
+    / "docs"
+    / "reports"
+    / "independent_audit_acceptance_reopen_mapping_v1.yaml"
+)
+INDEPENDENT_AUDIT_REOPEN_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_independent_audit_acceptance_reopen_v1.yaml"
+)
+INDEPENDENT_AUDIT_REOPEN_CHANGE_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_independent_audit_acceptance_reopen_v1.yaml"
+)
+INDEPENDENT_AUDIT_REOPEN_FILES = {
+    "REPO_MANIFEST.md",
+    "docs/reports/independent_audit_acceptance_reopen_mapping_v1.yaml",
+    "docs/reports/independent_audit_acceptance_reopen_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_independent_audit_acceptance_reopen_v1.yaml",
+    "examples/task_manifests/tool_system_independent_audit_acceptance_reopen_v1.yaml",
+    "tests/test_phase_alignment.py",
+}
 SUBSCRIPTION_DURABLE_CORRECTION_REPORT = (
     ROOT
     / "docs"
@@ -296,19 +329,22 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
 
     assert project_state["current_phase"] == {
         "id": EXPECTED_PHASE,
-        "status": "accepted",
+        "status": "acceptance_reopened_pending_affected_closure_revalidation",
         "entry_record": "docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md",
         "entry_authorized": True,
-        "last_accepted_stage": EXPECTED_PHASE,
-        "last_accepted_stage_record": (
+        "last_accepted_stage": None,
+        "last_accepted_stage_record": None,
+        "historical_acceptance_stage": EXPECTED_PHASE,
+        "historical_acceptance_record": (
             "docs/reports/p16i_production_operations_acceptance_decision.md"
+        ),
+        "current_disposition_record": (
+            "docs/reports/independent_audit_acceptance_reopen_v1.md"
         ),
         "next_stage": None,
         "next_stage_authorized": False,
-        "active_stage": None,
-        "active_stage_status": (
-            "accepted_subscription_primary_sustainable_operations_core"
-        ),
+        "active_stage": EXPECTED_PHASE,
+        "active_stage_status": "affected_dependency_closure_revalidation_required",
         "next_phase": None,
         "next_phase_entry_authorized": False,
     }
@@ -1205,7 +1241,7 @@ def test_p16i_manifest_and_change_plan_freeze_exact_acceptance_scope() -> None:
     assert "REPO_MANIFEST.md" not in P16I_FILES
 
 
-def test_p16i_maps_all_blueprint_outputs_without_api_gating() -> None:
+def test_p16i_historical_mapping_is_retained_without_current_acceptance_effect() -> None:
     blueprint = load_yaml_file(BLUEPRINT)
     mapping = load_yaml_file(P16_FINAL_ACCEPTANCE_MAPPING)
     outputs = blueprint["milestones"][EXPECTED_PHASE]["outputs"]
@@ -1235,15 +1271,19 @@ def test_p16i_maps_all_blueprint_outputs_without_api_gating() -> None:
     assert set(mapping["zero_operation_boundary"].values()) == {0}
 
 
-def test_p16i_accepts_only_core_and_preserves_every_external_stop() -> None:
+def test_p16i_historical_acceptance_is_retained_but_current_closure_reopened() -> None:
     state = load_yaml_file(PROJECT_STATE)
     p16h = state["p16h_operator_runbook_and_production_readiness"]
     p16i = state["p16i_production_operations_acceptance_decision"]
     report = P16I_ACCEPTANCE_REPORT.read_text(encoding="utf-8")
 
-    assert p16h["status"] == (
+    assert p16h["historical_status"] == (
         "merged_hosted_ci_passed_ready_for_p16_acceptance_review"
     )
+    assert p16h["status"] == (
+        "historical_publication_retained_affected_dependency_closure_revalidation_required"
+    )
+    assert p16h["available_for_p16_acceptance"] is False
     assert p16h["publication_receipt"] == {
         "pull_request": 203,
         "final_pr_head": "e48d7c2cda714c5fe578333eb5110b5c084f8c8c",
@@ -1258,14 +1298,21 @@ def test_p16i_accepts_only_core_and_preserves_every_external_stop() -> None:
         ),
         "feature_branch_retained": True,
     }
-    assert p16i["status"] == (
+    assert p16i["historical_status"] == (
         "accepted_subscription_primary_sustainable_operations_core"
     )
+    assert p16i["status"] == (
+        "affected_dependency_closure_revalidation_required"
+    )
     assert p16i["p16_core"] == {
-        "accepted": True,
+        "accepted": False,
+        "historical_acceptance_evidence_retained": True,
         "route": "subscription_primary",
         "daily_mainline": ["chatgpt_web", "codex_cli"],
-        "acceptance_scope": "sustainable_operations_non_live_core",
+        "prior_acceptance_scope": "sustainable_operations_non_live_core",
+        "current_disposition": (
+            "affected_dependency_closure_revalidation_required"
+        ),
     }
     assert set(p16i["remaining_authority"].values()) == {False}
     assert set(p16i["zero_operation_boundary"].values()) == {0}
@@ -1334,7 +1381,7 @@ def test_subscription_public_entry_acceptance_freezes_exact_scope() -> None:
     assert "REPO_MANIFEST.md" not in SUBSCRIPTION_PUBLIC_ENTRY_ACCEPTANCE_FILES
 
 
-def test_subscription_public_entry_acceptance_maps_parent_matrix() -> None:
+def test_subscription_public_entry_historical_mapping_remains_intact() -> None:
     mapping = load_yaml_file(SUBSCRIPTION_PUBLIC_ENTRY_ACCEPTANCE_MAPPING)
     rows = {row["requirement"]: row for row in mapping["acceptance_matrix"]}
     expected_requirements = {
@@ -1383,18 +1430,33 @@ def test_subscription_public_entry_acceptance_preserves_external_stops() -> None
         encoding="utf-8"
     )
 
-    assert state["current_phase"]["status"] == "accepted"
+    assert state["current_phase"]["status"] == (
+        "acceptance_reopened_pending_affected_closure_revalidation"
+    )
     assert state["current_phase"]["id"] == EXPECTED_PHASE
     assert acceptance["status"] == (
+        "reopened_confirmed_blockers_pending_correction_and_reacceptance"
+    )
+    assert acceptance["historical_status"] == (
         "accepted_subscription_worker_public_entry_core"
     )
     assert acceptance["authority_effect"] == "none"
-    assert acceptance["accepted_public_entry"]["root_cli_subcommand"] == (
+    assert acceptance["historical_accepted_public_entry"][
+        "root_cli_subcommand"
+    ] == (
         "develop-execute"
     )
-    assert acceptance["accepted_public_entry"][
+    assert acceptance["historical_accepted_public_entry"][
         "real_codex_execution_observed_in_this_acceptance"
     ] is False
+    assert acceptance["current_disposition"] == {
+        "accepted": False,
+        "real_repository_execution_blocked": True,
+        "blocking_findings": ["TS-B01", "TS-B02"],
+        "historical_fixes_retained": [217, 218, 219, 220],
+        "git_rollback_performed": False,
+        "correction_authorized": False,
+    }
     assert acceptance["evidence_closure"][
         "stopped_unmerged_attempt_pull_request"
     ] == 216
@@ -1452,7 +1514,9 @@ def test_subscription_durable_call_lease_correction_is_exact_and_non_authorizing
     assert manifest["publication"]["retain_feature_branch"] is True
     assert manifest["publication"]["branch_deletion_authorized"] is False
 
-    assert state["current_phase"]["status"] == "accepted"
+    assert state["current_phase"]["status"] == (
+        "acceptance_reopened_pending_affected_closure_revalidation"
+    )
     assert state["current_phase"]["id"] == EXPECTED_PHASE
     assert correction["authority_effect"] == "none"
     assert correction["corrected_boundary"]["sqlite_schema_version"] == 4
@@ -1482,8 +1546,200 @@ def test_subscription_durable_call_lease_correction_is_exact_and_non_authorizing
         assert marker in report
 
 
+def test_independent_audit_reopen_freezes_exact_scope() -> None:
+    manifest_result = validate_task_manifest(
+        INDEPENDENT_AUDIT_REOPEN_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(INDEPENDENT_AUDIT_REOPEN_CHANGE_PLAN)
+    manifest = load_yaml_file(INDEPENDENT_AUDIT_REOPEN_MANIFEST)
+    plan = load_yaml_file(INDEPENDENT_AUDIT_REOPEN_CHANGE_PLAN)
+    closure = manifest["bounded_closure"]["frozen_before_execution"]
 
-def test_readme_matches_accepted_core_and_current_registry_inventory() -> None:
+    assert manifest_result["status"] == "PASS"
+    assert manifest_result["reasons"] == []
+    assert plan_result["status"] == "PASS"
+    assert plan_result["reasons"] == []
+    assert set(manifest["allowed_files"]) == INDEPENDENT_AUDIT_REOPEN_FILES
+    assert set(manifest["scope"]["in_scope"]) == INDEPENDENT_AUDIT_REOPEN_FILES
+    assert set(plan["changed_files"]) == INDEPENDENT_AUDIT_REOPEN_FILES
+    assert len(INDEPENDENT_AUDIT_REOPEN_FILES) == 7
+    assert closure["task_identity"] == (
+        "TOOL-SYSTEM-INDEPENDENT-AUDIT-ACCEPTANCE-REOPEN-v1"
+    )
+    assert closure["baseline_commit"] == (
+        "eab919368a1a35d6dc73f329f320700ca4df6c13"
+    )
+    assert closure["baseline_tree"] == (
+        "955d64dfc85720377e6382c3bf7bae6708834134"
+    )
+    assert closure["allowed_scope"] == "exact_seven_paths_listed_below"
+    assert closure["finite_budgets"]["real_codex_worker_invocations"] == 0
+    assert closure["finite_budgets"]["api_provider_invocations"] == 0
+    assert closure["finite_budgets"]["real_downstream_repository_accesses"] == 0
+    assert closure["finite_budgets"]["production_operations"] == 0
+    assert closure["finite_budgets"]["cleanup_operations"] == 0
+    assert closure["finite_budgets"]["rollback_operations"] == 0
+    assert manifest["authority_effect"] == "none"
+    assert manifest["publication"]["retain_feature_branch"] is True
+    assert manifest["publication"]["branch_deletion_authorized"] is False
+    assert all(not path.startswith("src/") for path in INDEPENDENT_AUDIT_REOPEN_FILES)
+    assert "blueprint/tool_system_v0.yaml" not in INDEPENDENT_AUDIT_REOPEN_FILES
+    assert not any(
+        path.startswith(".github/") for path in INDEPENDENT_AUDIT_REOPEN_FILES
+    )
+
+
+def test_independent_audit_reopen_maps_all_findings_and_retained_fixes() -> None:
+    mapping = load_yaml_file(INDEPENDENT_AUDIT_REOPEN_MAPPING)
+    findings = {finding["id"]: finding for finding in mapping["findings"]}
+
+    assert mapping["decision"] == (
+        "acceptance_reopened_pending_separately_authorized_corrections_and_revalidation"
+    )
+    assert mapping["baseline_commit"] == (
+        "eab919368a1a35d6dc73f329f320700ca4df6c13"
+    )
+    assert mapping["baseline_tree"] == (
+        "955d64dfc85720377e6382c3bf7bae6708834134"
+    )
+    assert set(findings) == {
+        "TS-B01",
+        "TS-B02",
+        "TS-H01",
+        "TS-H02",
+        "TS-H03",
+        "TS-M01",
+        "TS-M02",
+    }
+    assert {
+        finding_id
+        for finding_id, finding in findings.items()
+        if finding["severity"] == "blocker"
+    } == {"TS-B01", "TS-B02"}
+    assert {
+        finding_id
+        for finding_id, finding in findings.items()
+        if finding["severity"] == "high"
+    } == {"TS-H01", "TS-H02", "TS-H03"}
+    assert {
+        finding_id
+        for finding_id, finding in findings.items()
+        if finding["severity"] == "medium"
+    } == {"TS-M01", "TS-M02"}
+    assert all(finding["correction_authorized"] is False for finding in findings.values())
+    assert findings["TS-H01"]["timeout_root_cause_established"] is False
+
+    dispositions = mapping["acceptance_dispositions"]
+    public_entry = dispositions["subscription_worker_public_entry_core"]
+    assert public_entry["current_disposition"] == "reopened"
+    assert public_entry["real_repository_execution_blocked"] is True
+    assert public_entry["blocking_findings"] == ["TS-B01", "TS-B02"]
+    assert dispositions["p16d_recovery_planning"]["current_disposition"] == (
+        "reopened"
+    )
+    p16g = dispositions["p16g_subscription_capacity"]
+    assert p16g["accepted_narrow_boundary"] == [
+        "caller_supplied_integer_ppm_capacity_decision",
+        "pre_renewal_review_without_purchase_or_renewal_authority",
+        "deterministic_owner_reviewed_channel_choice",
+    ]
+    assert p16g["unaccepted_outputs"] == [
+        "subscription_completion_forecast",
+        "total_economic_cost",
+        "quota_controls",
+        "concentration_risk_controls",
+        "provider_outage_controls",
+    ]
+    assert dispositions["p16h_production_readiness"]["current_disposition"] == (
+        "affected_dependency_closure_revalidation_required"
+    )
+    assert dispositions["p16i_production_operations_acceptance"][
+        "currently_accepted"
+    ] is False
+
+    retained = mapping["retained_fix_evidence"]
+    assert [item["pull_request"] for item in retained] == [217, 218, 219, 220]
+    assert mapping["governance_method"] == {
+        "git_rollback_performed": False,
+        "runtime_lifecycle_enums_added": False,
+        "implementation_files_changed": False,
+        "historical_evidence_deleted": False,
+    }
+    assert set(mapping["remaining_authority"].values()) == {False}
+    assert set(mapping["zero_operation_boundary"].values()) == {0}
+
+
+def test_independent_audit_reopen_updates_current_descriptive_state() -> None:
+    state = load_yaml_file(PROJECT_STATE)
+    package = state["independent_audit_acceptance_reopen"]
+    public_entry = state["subscription_worker_public_entry_acceptance"]
+    p16d = state["p16d_backup_restore_and_disaster_recovery"]
+    p16g = state["p16g_subscription_capacity_and_renewal_review"]
+    p16h = state["p16h_operator_runbook_and_production_readiness"]
+    p16i = state["p16i_production_operations_acceptance_decision"]
+    report = INDEPENDENT_AUDIT_REOPEN_REPORT.read_text(encoding="utf-8")
+
+    assert state["current_phase"]["status"] == (
+        "acceptance_reopened_pending_affected_closure_revalidation"
+    )
+    assert public_entry["current_disposition"]["accepted"] is False
+    assert public_entry["current_disposition"][
+        "real_repository_execution_blocked"
+    ] is True
+    assert p16d["current_acceptance"] == {
+        "accepted": False,
+        "available_for_dependent_acceptance": False,
+        "confirmed_gap": (
+            "backup_verification_not_bound_to_restore_manifest_identity"
+        ),
+        "finding": "TS-H02",
+        "correction_authorized": False,
+    }
+    assert p16g["current_acceptance"]["broad_acceptance_reopened"] is True
+    assert p16g["current_acceptance"]["accepted_narrow_boundary"] == [
+        "caller_supplied_integer_ppm_capacity_decision",
+        "pre_renewal_review_without_purchase_or_renewal_authority",
+        "deterministic_owner_reviewed_channel_choice",
+    ]
+    assert p16h["available_for_p16_acceptance"] is False
+    assert p16h["current_readiness_result"] == (
+        "AFFECTED_DEPENDENCY_CLOSURE_REVALIDATION_REQUIRED"
+    )
+    assert p16i["p16_core"]["accepted"] is False
+    assert p16i["status"] == (
+        "affected_dependency_closure_revalidation_required"
+    )
+    assert package["confirmed_blockers"] == ["TS-B01", "TS-B02"]
+    assert package["unresolved_high_risk_findings"] == [
+        "TS-H01",
+        "TS-H02",
+        "TS-H03",
+    ]
+    assert package["pending_risks"] == ["TS-M01", "TS-M02"]
+    assert package["governance_method"]["runtime_lifecycle_enums_added"] is False
+    assert package["governance_method"]["git_rollback_performed"] is False
+    assert set(package["remaining_authority"].values()) == {False}
+    assert set(package["zero_operation_boundary"].values()) == {0}
+    for marker in (
+        "TS-B01",
+        "TS-B02",
+        "TS-H01",
+        "TS-H02",
+        "TS-H03",
+        "TS-M01",
+        "TS-M02",
+        "prohibit real-repository public-entry",
+        "Historical evidence retained without rollback",
+        "runtime lifecycle enum",
+        "v3 isolated acceptance",
+    ):
+        assert marker in report
+
+
+
+def test_readme_retains_historical_core_claim_and_current_registry_inventory() -> None:
     readme_text = README.read_text(encoding="utf-8")
     assert "It registers 26 current tool-system modules" in readme_text
     assert "It registers 14 current tool-system modules" not in readme_text
