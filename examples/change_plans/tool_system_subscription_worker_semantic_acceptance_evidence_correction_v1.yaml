@@ -1,0 +1,56 @@
+plan_id: tool-system-subscription-worker-semantic-acceptance-evidence-correction-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml
+changed_files:
+  - REPO_MANIFEST.md
+  - config/module_registry_v1.yaml
+  - docs/modules/task-runner-contract-v1.md
+  - docs/reports/subscription_worker_semantic_acceptance_evidence_correction_v1.md
+  - docs/reports/subscription_worker_semantic_acceptance_evidence_correction_mapping_v1.yaml
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - examples/change_plans/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml
+  - examples/task_manifests/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml
+  - src/tool_system/runner/task_runner.py
+  - tests/test_module_registry.py
+  - tests/test_phase_alignment.py
+  - tests/test_task_runner.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Correct only TS-B01 through exact per-item machine-verifiable evidence obligations and independently verified runner receipts.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve a bounded auditable blueprint-to-code loop that seals a candidate only after actual acceptance evidence passes.
+implementation:
+  - replace execution-binding v1 with a fail-closed v2 mapping that requires one content-addressed evidence obligation per acceptance item and one exact command per obligation
+  - bind every obligation to supported behavior or contract evidence exact command and output digests expected diff paths and candidate file presence or content assertions
+  - issue canonical runner receipts bound to the actual candidate tree actual baseline diff frozen contract digest and obligation digest
+  - make the code reviewer independently validate actual diff candidate assertions and receipt integrity and make the contract reviewer independently validate exact complete receipt coverage and contract identity
+  - add adversarial wrong-code unrelated-PASS wrong-acceptance-test-PASS wrong-item stale-tree missing duplicate empty-diff and receipt-tampering tests while retaining correct remote-free Python and TypeScript fake-process success
+  - record TS-B01 only as corrected_pending_reacceptance and retain TS-B02 as the real-repository blocker without changing any other audit finding
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_task_runner.py tests/test_root_cli.py tests/test_development_loop.py tests/test_local_git_orchestrator.py tests/test_phase_alignment.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - python -m ruff check src/tool_system/runner/task_runner.py tests/test_module_registry.py tests/test_task_runner.py tests/test_phase_alignment.py
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-semantic-acceptance-evidence-correction-v1
+  retain_feature_branch: true
+  exact_base: f9dd68909ed0ffba9dc1a40197482d908c9cc2db
+  exact_base_tree: aa12da08d6707beca83fe164339dbda9a3260d0a
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@f9dd68909ed0ffba9dc1a40197482d908c9cc2db
+  execution_authorized: false

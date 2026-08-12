@@ -1,0 +1,139 @@
+schema_version: 1
+mapping_id: tool-system-subscription-worker-semantic-acceptance-evidence-correction-v1
+authority_effect: none
+baseline_commit: f9dd68909ed0ffba9dc1a40197482d908c9cc2db
+baseline_tree: aa12da08d6707beca83fe164339dbda9a3260d0a
+finding_id: TS-B01
+decision: corrected_pending_reacceptance
+decision_record: docs/reports/subscription_worker_semantic_acceptance_evidence_correction_v1.md
+authorized_path_count: 13
+registry_seal_sync:
+  path: tests/test_module_registry.py
+  raw_byte_length: 126424
+  raw_sha256: eef4b374eaa25ecaac5a40b8f16b0f1a697a316f8bc70c6dff9f85f38151cddb
+  semantic_sha256: d3843c1b3d0fc4c71f5c43db5b8cd27adae2c823ee0452a65cec1250b5937120
+
+corrected_runtime_boundary:
+  task_runner_module_version: 2.0.0
+  task_runner_interface_version: 2.0.0
+  execution_binding_version: subscription_public_entry_execution_binding_v2
+  obligation_version: subscription_acceptance_evidence_obligation_v1
+  receipt_version: subscription_acceptance_evidence_receipt_v1
+  supported_evidence_types: [behavior, contract]
+  exact_coverage_required: true
+  ordered_item_command_pairing_required: true
+  command_pass_alone_satisfies_acceptance: false
+  natural_language_without_machine_evidence_fails_closed: true
+  v1_execution_binding_accepted: false
+  obligation_fields:
+    - acceptance_item
+    - acceptance_item_sha256
+    - evidence_type
+    - validation_command
+    - validation_command_sha256
+    - expected_stdout_sha256
+    - expected_stderr_sha256
+    - expected_diff_paths
+    - candidate_assertions
+    - obligation_sha256
+  receipt_bindings:
+    - acceptance_item_sha256
+    - evidence_obligation_sha256
+    - evidence_type
+    - contract_digest
+    - candidate_tree
+    - actual_diff_paths
+    - validation_command_sha256
+    - exit_code
+    - stdout_sha256
+    - stderr_sha256
+    - candidate_assertions_sha256
+    - status
+    - receipt_sha256
+  code_reviewer_checks:
+    - baseline_to_candidate_actual_diff
+    - nonempty_exact_diff_path_binding
+    - candidate_tree
+    - candidate_file_presence_absence_and_content_sha256
+    - exact_runner_receipt
+  contract_reviewer_checks:
+    - exact_complete_acceptance_and_validation_coverage
+    - no_missing_duplicate_or_extra_mapping
+    - obligation_identity
+    - validation_receipt
+    - candidate_tree
+    - frozen_contract_digest
+    - receipt_digest
+
+deterministic_adversarial_evidence:
+  - case: wrong_code_with_unrelated_pass
+    expected: blocks_before_local_branch_or_commit
+  - case: wrong_acceptance_test_pass
+    expected: binding_rejected
+  - case: wrong_acceptance_receipt
+    expected: reviewer_violation
+  - case: stale_candidate_tree
+    expected: reviewer_violation
+  - case: missing_obligation_mapping
+    expected: binding_rejected
+  - case: duplicate_obligation_mapping
+    expected: binding_rejected
+  - case: empty_diff
+    expected: reviewer_violation
+  - case: tampered_receipt_with_recomputed_digest
+    expected: reviewer_violation
+
+retained_positive_evidence:
+  stacks: [python, typescript]
+  worker_process_mode: injected_fake_process_only
+  remote_free_workspace: true
+  exact_local_commits: 1
+  provider_invocations: 0
+  remote_repository_operations: 0
+
+acceptance_disposition:
+  ts_b01: corrected_pending_reacceptance
+  subscription_worker_public_entry_core: reopened
+  public_entry_reaccepted: false
+  real_repository_execution_blocked: true
+  blocking_findings: [TS-B02]
+
+unmodified_findings:
+  TS-B02: confirmed_blocker
+  TS-H01: unresolved_high_risk
+  TS-H02: unresolved_high_risk
+  TS-H03: unresolved_high_risk
+  TS-M01: pending_risk
+  TS-M02: pending_risk
+
+remaining_authority:
+  public_entry_reacceptance_authorized: false
+  real_codex_worker_authorized: false
+  chatgpt_web_automation_authorized: false
+  api_provider_execution_authorized: false
+  credential_value_access_authorized: false
+  real_downstream_access_authorized: false
+  real_downstream_mutation_authorized: false
+  v3_real_isolated_acceptance_authorized: false
+  runtime_remote_publication_authorized: false
+  production_operation_authorized: false
+  deployment_authorized: false
+  cleanup_authorized: false
+  rollback_authorized: false
+
+zero_operation_boundary:
+  real_codex_worker_invocations: 0
+  chatgpt_web_automation_operations: 0
+  api_provider_invocations: 0
+  credential_value_accesses: 0
+  real_downstream_repository_accesses: 0
+  real_downstream_repository_mutations: 0
+  runtime_remote_repository_operations: 0
+  production_operations: 0
+  deployment_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+
+rollback_identity: tool-system@f9dd68909ed0ffba9dc1a40197482d908c9cc2db:task_runner@1.2.0
+rollback_execution_authorized: false
+stop_boundary: merge_ts_b01_correction_then_stop_before_reacceptance_ts_b02_or_any_other_finding_correction_or_v3_acceptance

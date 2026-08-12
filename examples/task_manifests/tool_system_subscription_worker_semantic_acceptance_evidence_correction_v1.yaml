@@ -1,0 +1,158 @@
+task_id: tool-system-subscription-worker-semantic-acceptance-evidence-correction-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-semantic-acceptance-evidence-correction-v1
+phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: roadmap.phases.P14_BLUEPRINT_TO_CODE_AUTONOMOUS_DEVELOPMENT.stages.P14G_DURABLE_LOCAL_GIT_ORCHESTRATION
+alignment:
+  parent:
+    document: docs/reports/independent_audit_acceptance_reopen_v1.md
+    section_or_key: Finding register.TS-B01
+    scope: Correct only the confirmed acceptance-semantic evidence defect while preserving the audit-reopened public-entry boundary and every unrelated finding disposition.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Require bounded development to prove each frozen acceptance item against the actual candidate before a local commit can be sealed.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: TOOL-SYSTEM-TS-B01-SEMANTIC-ACCEPTANCE-EVIDENCE-CORRECTION-v1
+    baseline_commit: f9dd68909ed0ffba9dc1a40197482d908c9cc2db
+    baseline_tree: aa12da08d6707beca83fe164339dbda9a3260d0a
+    allowed_scope: exact_13_paths_listed_below
+    acceptance_set:
+      - every frozen acceptance item has exactly one canonical content-addressed machine-verifiable evidence obligation bound to its item digest evidence type exact validation command expected command output actual candidate diff paths and candidate file assertions
+      - the public validator never satisfies all acceptance items solely because configured commands exit successfully
+      - the code reviewer independently checks the baseline-to-candidate diff candidate tree candidate assertions and runner-issued evidence receipt for every acceptance item
+      - the contract reviewer independently checks exact complete acceptance coverage with no missing duplicate or extra mappings plus command receipts candidate tree obligation digest and frozen contract digest
+      - natural-language acceptance without a complete supported machine-verifiable evidence obligation fails closed and command self-report or string equality alone is not accepted as semantic evidence
+      - adversarial wrong-code unrelated-PASS wrong-acceptance-test-PASS wrong-acceptance-receipt stale-tree missing duplicate empty-diff and tampered-receipt cases block before local commit
+      - the correct remote-free Python and TypeScript fake-process fixtures continue to pass with exactly one local commit and zero remote or provider effects
+      - TS-B01 is recorded only as corrected_pending_reacceptance while accepted_subscription_worker_public_entry_core remains reopened and real-repository execution remains blocked by TS-B02
+      - TS-B02 TS-H01 TS-H02 TS-H03 TS-M01 and TS-M02 receive no implementation change weakening or acceptance upgrade
+      - no real Codex ChatGPT Web API provider credential downstream remote production cleanup rollback or v3 acceptance operation occurs
+    validation_set:
+      - exact thirteen-path scope clean whitespace Python compilation and Ruff
+      - focused semantic-evidence adversarial task-runner phase-alignment module-contract module-registry repository-manifest and CLI tests
+      - complete deterministic pytest suite and current task-pair process-authority module-registry and repository-manifest validators
+      - Hosted CI plus unchanged canonical base head thirteen-path scope comments and reviews before Ready and squash merge
+    terminal_predicate: One exact thirteen-path correction commit is published through one Draft PR, Hosted CI passes without drift, the PR becomes Ready and squash-merges with its branch retained, and work stops before public-entry reacceptance TS-B02 correction or v3 acceptance.
+    finite_budgets:
+      implementation_cycles: 2
+      repair_cycles: 3
+      review_cycles: 1
+      hosted_ci_runs: 4
+      fake_process_invocations: 64
+      real_codex_worker_invocations: 0
+      chatgpt_web_automation_operations: 0
+      api_provider_invocations: 0
+      credential_value_accesses: 0
+      real_downstream_repository_accesses: 0
+      runtime_remote_repository_operations: 0
+      production_operations: 0
+      deployment_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Correct only TS-B01 by replacing command-PASS acceptance copying with exact per-item semantic evidence obligations and independently verified receipts.
+  in_scope: &files
+    - REPO_MANIFEST.md
+    - config/module_registry_v1.yaml
+    - docs/modules/task-runner-contract-v1.md
+    - docs/reports/subscription_worker_semantic_acceptance_evidence_correction_v1.md
+    - docs/reports/subscription_worker_semantic_acceptance_evidence_correction_mapping_v1.yaml
+    - docs/tool_system_module_registry_contract_v1.md
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml
+    - examples/task_manifests/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml
+    - src/tool_system/runner/task_runner.py
+    - tests/test_module_registry.py
+    - tests/test_phase_alignment.py
+    - tests/test_task_runner.py
+  out_of_scope:
+    - TS-B02 host command isolation binary identity OS audit or zero-side-effect observation correction
+    - TS-H01 validation invocation counting or durable run terminal lifecycle correction
+    - TS-H02 recovery-manifest binding TS-H03 subscription-capacity expansion TS-M01 streaming output or TS-M02 CI and supply-chain correction
+    - public-entry reacceptance real-repository execution or v3 isolated acceptance
+    - blueprint policy process-authority workflow or unrelated module changes
+    - any real Codex ChatGPT Web API provider credential real-downstream remote production deployment cleanup or rollback operation
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/runner/task_runner.py
+    commit_sha: f9dd68909ed0ffba9dc1a40197482d908c9cc2db
+    why_relevant: The frozen validator copies every acceptance item after command PASS and both reviewers omit per-item diff and semantic-evidence verification.
+  - repo: apolo183/tool-system
+    path: docs/reports/independent_audit_acceptance_reopen_v1.md
+    commit_sha: f9dd68909ed0ffba9dc1a40197482d908c9cc2db
+    why_relevant: The active governance disposition confirms TS-B01 and keeps the public entry reopened with TS-B02 as an independent blocker.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: current_main_consumed_at_task_start
+    why_relevant: Current central bounded closure requires frozen acceptance evidence and fail-closed review against the actual candidate tree.
+allowed_files: *files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/**
+  - .github/**
+  - config/process_authority_v1.yaml
+  - config/replay_snapshot_v1.yaml
+  - docs/modules/development-loop-contract-v1.md
+  - docs/modules/durable-orchestrator-contract-v1.md
+  - docs/modules/local-git-contract-v1.md
+  - docs/modules/worker-adapter-contract-v1.md
+  - docs/tool_system_global_development_principles_v1.md
+  - policy/**
+  - src/tool_system/development_loop/**
+  - src/tool_system/gate/**
+  - src/tool_system/local_git/**
+  - src/tool_system/orchestrator/**
+  - src/tool_system/recovery_planning/**
+  - src/tool_system/subscription_capacity/**
+  - src/tool_system/worker_adapter/**
+  - tests/fixtures/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m compileall -q src/tool_system tests
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_task_runner.py tests/test_root_cli.py tests/test_development_loop.py tests/test_local_git_orchestrator.py tests/test_phase_alignment.py tests/test_module_registry.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - python -m ruff check src/tool_system/runner/task_runner.py tests/test_module_registry.py tests/test_task_runner.py tests/test_phase_alignment.py
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - exact thirteen-file diff and zero forbidden-path change
+    - each adversarial case blocks before a branch or local commit while correct Python and TypeScript fake-process cases pass
+    - no validation invokes an actual Codex executable API provider credential downstream remote production cleanup or rollback path
+    - project state keeps the public entry reopened and real-repository execution blocked by TS-B02 after TS-B01 becomes corrected_pending_reacceptance
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@f9dd68909ed0ffba9dc1a40197482d908c9cc2db
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-12-TOOL-SYSTEM-TS-B01-SEMANTIC-ACCEPTANCE-EVIDENCE-CORRECTION-v1
+  approved_at: 2026-08-12 UTC+09:00
