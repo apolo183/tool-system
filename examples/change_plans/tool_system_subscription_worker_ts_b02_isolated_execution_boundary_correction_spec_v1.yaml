@@ -1,0 +1,67 @@
+plan_id: tool-system-subscription-worker-ts-b02-isolated-execution-boundary-correction-spec-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml
+changed_files:
+  - docs/reports/subscription_worker_ts_b02_isolated_execution_boundary_correction_specification_v1.md
+  - examples/task_manifests/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml
+  - examples/change_plans/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Add only the three-path non-executing specification that freezes TS-B02 ownership interface evidence and package order.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestone_module_invariant
+    scope: Keep each later correction package within one durable module or versioned public interface and require explicit affected-closure revalidation.
+authority_effect: none
+implementation:
+  - cite the complete canonical fresh-state governance registry contracts source and corresponding tests at commit 3a37fdb28140c73471fb96000a95e37f076792bf and tree 6f2d784a4bb35ca6be5f72cab2df73079cf9e3e0
+  - record that shell false Python audit hooks and Codex read-only self-report are not standalone OS filesystem process or network isolation evidence
+  - preserve agent-worker-runtime as fixture-only and record worker-adapter and task-runner as the two existing natural owners crossed by TS-B02
+  - require the new isolated-execution durable module and versioned interface after documenting why every existing-module placement would drift responsibility or dependency direction
+  - specify independent filesystem process-tree and default-deny network enforcement backend capability preflight and fail-closed backend or audit unavailability
+  - specify absolute non-symlink regular executable identity SHA-256 file and interpreter identity exec-point recheck and blocking of PATH symlink binary replacement TOCTOU and configuration drift
+  - specify one trusted OS-derived content-addressed authenticated fresh anti-replay effect receipt that binds the exact execution identity configuration policy process descendants filesystem and network observations
+  - require public hard-zero fields to be derived only from matched verified receipts and block missing fabricated replayed tampered expired incomplete or mismatched receipts
+  - separate future independently authorized subscription-only transport from default-denied API provider downstream remote production deployment cleanup and rollback effects
+  - freeze real-backend Hosted CI adversarial coverage without skip xfail mock backend or fake receipts
+  - freeze the strict sequence TS-B02A isolated-execution TS-B02B worker-adapter only TS-B02C task-runner only TS-B02D affected-closure revalidation only and a later separately authorized public-entry reacceptance package
+  - preserve TS-B01 execution-binding v2 and semantic evidence all unrelated audit findings existing CI and supply-chain configuration and the no-new-lifecycle-enum boundary
+  - publish only the three new paths with authority effect none and stop before every runtime implementation real execution or public-entry reacceptance action
+verification:
+  commands:
+    - git diff --check
+    - python -c "from pathlib import Path; import yaml; paths=['docs/reports/subscription_worker_ts_b02_isolated_execution_boundary_correction_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml']; assert all(Path(p).is_file() for p in paths); assert all(yaml.safe_load(Path(p).read_text(encoding='utf-8')) for p in paths[1:])"
+    - python -c "import subprocess; expected=sorted(['docs/reports/subscription_worker_ts_b02_isolated_execution_boundary_correction_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml']); actual=sorted(subprocess.check_output(['git','diff','--name-only','3a37fdb28140c73471fb96000a95e37f076792bf...HEAD'],text=True).splitlines()); assert actual == expected, (actual, expected)"
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_agent_worker_interface.py tests/test_process_worker_runtime_preflight.py tests/test_process_worker_runtime_execution.py tests/test_process_worker_runtime_adversarial.py tests/test_command_runner.py tests/test_worker_adapter_contract.py tests/test_worker_adapter_orchestration.py tests/test_task_runner.py tests/test_milestone_module_invariant.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_module_registry.py tests/test_phase_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-ts-b02-isolated-execution-boundary-correction-spec-v1
+  exact_commit_message: Specify TS-B02 isolated execution correction
+  exact_base: 3a37fdb28140c73471fb96000a95e37f076792bf
+  exact_base_tree: 6f2d784a4bb35ca6be5f72cab2df73079cf9e3e0
+  exact_path_count: 3
+  exact_commit_count: 1
+  draft_pr_required: true
+  ready_requires_hosted_ci_success: true
+  ready_requires_unchanged_base_head_scope_comments_reviews_and_threads: true
+  squash_merge_authorized: true
+  retain_feature_branch: true
+  restore_exact_branch_after_automatic_deletion: true
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@3a37fdb28140c73471fb96000a95e37f076792bf
+  execution_authorized: false
+stop:
+  after_guarded_merge: true
+  start_ts_b02a: false
+  modify_runtime: false
+  reaccept_public_entry: false
