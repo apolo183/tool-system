@@ -1,0 +1,225 @@
+task_id: tool-system-subscription-worker-ts-b02-isolated-execution-boundary-correction-spec-v1
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-ts-b02-isolated-execution-boundary-correction-spec-v1
+phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestone_module_invariant
+alignment:
+  parent:
+    document: docs/reports/independent_audit_acceptance_reopen_v1.md
+    section_or_key: Finding register.TS-B02
+    scope: Specify only the confirmed isolated-execution blocker while retaining TS-B01 corrected-pending-reacceptance and every unrelated finding disposition.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestone_module_invariant
+    scope: Freeze a single-responsibility versioned isolation provider and order each natural-owner correction as a separate durable-module or interface milestone.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: TOOL-SYSTEM-TS-B02-ISOLATED-EXECUTION-BOUNDARY-CORRECTION-SPEC-v1
+    baseline_commit: 3a37fdb28140c73471fb96000a95e37f076792bf
+    baseline_tree: 6f2d784a4bb35ca6be5f72cab2df73079cf9e3e0
+    allowed_scope: exact_3_new_paths_listed_below
+    acceptance_set:
+      - shell false Python audit hooks and Codex self-reported read-only sandbox mode are explicitly rejected as standalone proof of OS filesystem process or network isolation
+      - agent-worker-runtime remains a fixture-only application guard and is not silently converted into a general hostile-process sandbox
+      - fresh-state natural-owner analysis records worker-adapter ownership of absolute worker binary identity content SHA-256 exec-point recheck and worker observation receipts
+      - fresh-state natural-owner analysis records task-runner ownership of isolated validation OS-derived effect evidence receipt verification and public result aggregation
+      - a new narrow isolated-execution durable module and isolated-execution-api version 1.0.0 are required because no existing module can own the shared provider without responsibility or dependency drift
+      - every later package obeys one milestone one durable module or versioned public interface
+      - OS-kernel-enforced or equivalently independently enforced filesystem process-tree and default-deny network boundaries are specified and unavailable or incomplete enforcement fails closed
+      - absolute non-symlink regular executable identity content SHA-256 file identity interpreter identity and exec-critical-point recheck are required
+      - PATH substitution symlink substitution binary or interpreter replacement TOCTOU policy backend environment source and caller-configuration drift all block
+      - children grandchildren detached descendants and timeout survivors remain in the same boundary and completion requires proof of no survivor
+      - deny-all network is the default and any future subscription-only transport is separately authorized versioned and distinct from API provider downstream remote production deployment cleanup or rollback effects
+      - OS-derived content-addressed authenticated fresh anti-replay receipts bind exact request execution configuration policy executable process filesystem and network observations
+      - missing fabricated replayed tampered expired incomplete or identity-mismatched receipts block and unavailable receipt trust or replay state fails closed
+      - public hard-zero fields are derived only from verified receipts matching every current execution identity and configuration and are never directly constructed
+      - Hosted CI uses a real supported isolation backend for non-live adversarial verification and cannot substitute skip xfail mock backend or fake receipt
+      - the adversarial matrix includes filesystem escape network escape child-process escape PATH substitution binary replacement backend unavailable receipt tamper or replay false-zero fabrication TOCTOU configuration drift and audit incompleteness
+      - the strict order is TS-B02A isolated-execution then TS-B02B worker-adapter only then TS-B02C task-runner only then TS-B02D affected-closure revalidation only
+      - TS-B02D may conclude only corrected_pending_reacceptance and public-entry reacceptance remains a later separately authorized package
+      - TS-B01 execution-binding v2 and semantic evidence remain unchanged and TS-H01 TS-H02 TS-H03 TS-M01 and TS-M02 receive no correction or acceptance upgrade
+      - this package changes no runtime registry module contract project state existing test workflow CI supply-chain policy blueprint or orientation path and adds no lifecycle or status enum
+      - no real Codex ChatGPT Web automation API provider credential downstream remote production deployment cleanup rollback or transport operation occurs
+      - authority_effect remains none and work stops after guarded publication without starting TS-B02A or public-entry reacceptance
+    validation_set:
+      - exact canonical base commit and tree verified through GitHub App before any write and again before publication
+      - exact three-new-path scope with no modification deletion rename mode change or fourth path
+      - report manifest and change plan parse and agree on identity base tree branch commit message authority effect package order and stop boundary
+      - current task-manifest change-plan process-authority module-registry and repository-manifest validators
+      - focused existing command-runner worker-adapter task-runner agent-worker module-contract import-graph module-registry milestone-invariant and phase-alignment tests
+      - complete deterministic pytest suite and existing Hosted CI verify check
+      - unchanged base exact single PR head commit exact three paths and no added comments reviews or unresolved review threads before Ready and squash merge
+    terminal_predicate: One exact three-new-path specification commit is published from the canonical base through one Draft PR, Hosted CI passes without drift, the PR becomes Ready and squash-merges with the original branch retained at the original PR head, and work stops before TS-B02A runtime correction or public-entry reacceptance.
+    finite_budgets:
+      specification_cycles: 1
+      repair_cycles: 2
+      review_cycles: 1
+      hosted_ci_runs: 4
+      changed_paths: 3
+      runtime_source_changes: 0
+      module_registry_changes: 0
+      module_contract_changes: 0
+      project_state_changes: 0
+      existing_test_changes: 0
+      workflow_or_supply_chain_changes: 0
+      real_codex_worker_invocations: 0
+      chatgpt_web_automation_operations: 0
+      subscription_transport_operations: 0
+      api_provider_invocations: 0
+      credential_value_accesses: 0
+      real_downstream_repository_accesses: 0
+      runtime_remote_repository_operations: 0
+      production_operations: 0
+      deployment_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, specification_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, specification_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Add only the non-executing TS-B02 isolated-execution correction specification and its exact task pair.
+  in_scope: &ts_b02_spec_files
+    - docs/reports/subscription_worker_ts_b02_isolated_execution_boundary_correction_specification_v1.md
+    - examples/task_manifests/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml
+    - examples/change_plans/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml
+  out_of_scope:
+    - any fourth path or modification deletion rename permission or mode change to an existing path
+    - TS-B02A TS-B02B TS-B02C TS-B02D implementation or affected-closure execution
+    - module registry module contract runtime source existing test project state blueprint policy process-authority CI workflow supply-chain README AGENTS or repository-manifest changes
+    - TS-B01 execution-binding v2 or semantic evidence modification
+    - TS-H01 TS-H02 TS-H03 TS-M01 or TS-M02 correction
+    - public-entry reacceptance or real-repository execution
+    - any real Codex ChatGPT Web API provider credential subscription transport real downstream remote production deployment cleanup or rollback operation
+evidence:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Requires direct current governance consumption exact bounded authority natural ownership and one durable module or versioned interface per milestone.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Owns the durable-module invariant isolated-workspace objective and arbitrary-untrusted-code containment non-claim.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Requires frozen bounded closure fail-closed effects natural ownership and affected dependency closure revalidation.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_project_state_v1.yaml
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Freezes TS-B01 corrected-pending-reacceptance public acceptance false and TS-B02 as the real-repository blocker.
+  - repo: apolo183/tool-system
+    path: docs/reports/independent_audit_acceptance_reopen_v1.md
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Confirms TS-B02 ordinary-host validation unresolved worker binary identity and constructed zero-effect evidence defects.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_semantic_acceptance_evidence_correction_v1.md
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Preserves TS-B01 execution-binding v2 and explicitly leaves OS isolation binary identity and OS audit observation to TS-B02.
+  - repo: apolo183/tool-system
+    path: config/module_registry_v1.yaml
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Proves there is no current isolation provider and identifies agent-worker-runtime worker-adapter and task-runner ownership and DAG boundaries.
+  - repo: apolo183/tool-system
+    path: docs/modules/agent-worker-runtime-contract-v1.md
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Proves the current module is fixture-only and application-guarded.
+  - repo: apolo183/tool-system
+    path: docs/modules/worker-adapter-contract-v1.md
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Proves current worker process boundaries do not seal absolute executable identity or return OS-derived effect receipts.
+  - repo: apolo183/tool-system
+    path: docs/modules/task-runner-contract-v1.md
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Establishes validation and public aggregation as task-runner responsibilities.
+  - repo: apolo183/tool-system
+    path: src/tool_system/gate/command_runner.py
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Shows current validation uses ordinary host subprocess execution with shell false but no OS isolation backend.
+  - repo: apolo183/tool-system
+    path: src/tool_system/worker_adapter/contract.py
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Shows command-name worker selection configured sandbox self-report and no binary digest or exec observation receipt.
+  - repo: apolo183/tool-system
+    path: src/tool_system/runner/task_runner.py
+    commit_sha: 3a37fdb28140c73471fb96000a95e37f076792bf
+    why_relevant: Shows ordinary validation launch and direct construction of public hard-zero effect fields.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: current_main_consumed_at_task_start
+    why_relevant: Current central governance requires explicit bounded authority fail-closed evidence and finite correction closure.
+allowed_files: *ts_b02_spec_files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - pyproject.toml
+  - .gitignore
+  - .github/**
+  - blueprint/**
+  - config/**
+  - docs/modules/**
+  - docs/tool_system_global_development_principles_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - harness/**
+  - policy/**
+  - src/**
+  - tests/**
+  - examples/active_gates.yaml
+  - examples/batches/**
+  - examples/cleanup/**
+  - examples/fixtures/**
+  - examples/github_states/**
+  - examples/operator_config/**
+  - examples/repo_write_decisions/**
+  - examples/requirements/**
+  - examples/target_repo_dry_runs/**
+  - examples/target_repo_pr_previews/**
+  - examples/task_graphs/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - python -c "from pathlib import Path; import yaml; paths=['docs/reports/subscription_worker_ts_b02_isolated_execution_boundary_correction_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml']; assert all(Path(p).is_file() for p in paths); assert all(yaml.safe_load(Path(p).read_text(encoding='utf-8')) for p in paths[1:])"
+    - python -c "import subprocess; expected=sorted(['docs/reports/subscription_worker_ts_b02_isolated_execution_boundary_correction_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml']); actual=sorted(subprocess.check_output(['git','diff','--name-only','3a37fdb28140c73471fb96000a95e37f076792bf...HEAD'],text=True).splitlines()); assert actual == expected, (actual, expected)"
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02_isolated_execution_boundary_correction_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_agent_worker_interface.py tests/test_process_worker_runtime_preflight.py tests/test_process_worker_runtime_execution.py tests/test_process_worker_runtime_adversarial.py tests/test_command_runner.py tests/test_worker_adapter_contract.py tests/test_worker_adapter_orchestration.py tests/test_task_runner.py tests/test_milestone_module_invariant.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_module_registry.py tests/test_phase_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+  pass_conditions:
+    - exact three new regular files and zero existing-path modification deletion rename mode change or fourth path
+    - specification report manifest and change plan agree on canonical base tree branch commit message package order authority effect and terminal stop
+    - no validator or test invokes real Codex ChatGPT Web API provider credentials subscription transport downstream remote production deployment cleanup or rollback
+    - TS-B01 remains corrected_pending_reacceptance the public entry remains not reaccepted and real-repository execution remains blocked by TS-B02
+    - Hosted CI verify succeeds on the exact single PR head commit with no base scope comment review or thread drift
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_reviews_and_threads: true
+  exact_commit_message: Specify TS-B02 isolated execution correction
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  restore_exact_branch_after_automatic_deletion: true
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@3a37fdb28140c73471fb96000a95e37f076792bf
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-13-TOOL-SYSTEM-TS-B02-ISOLATED-EXECUTION-BOUNDARY-CORRECTION-SPEC-v1
+  approved_at: 2026-08-13 UTC+09:00
