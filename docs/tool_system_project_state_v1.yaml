@@ -8,15 +8,18 @@ blueprint:
   process_state_allowed_in_blueprint: false
 current_phase:
   id: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
-  status: accepted
+  status: acceptance_reopened_pending_affected_closure_revalidation
   entry_record: docs/reports/default_subscription_mainline_optional_api_plugin_realignment.md
   entry_authorized: true
-  last_accepted_stage: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
-  last_accepted_stage_record: docs/reports/p16i_production_operations_acceptance_decision.md
+  last_accepted_stage: null
+  last_accepted_stage_record: null
+  historical_acceptance_stage: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+  historical_acceptance_record: docs/reports/p16i_production_operations_acceptance_decision.md
+  current_disposition_record: docs/reports/independent_audit_acceptance_reopen_v1.md
   next_stage: null
   next_stage_authorized: false
-  active_stage: null
-  active_stage_status: accepted_subscription_primary_sustainable_operations_core
+  active_stage: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+  active_stage_status: affected_dependency_closure_revalidation_required
   next_phase: null
   next_phase_entry_authorized: false
 prior_acceptance:
@@ -1771,7 +1774,8 @@ p16c_state_migration_and_compatibility:
     rollback_operations: 0
 
 p16d_backup_restore_and_disaster_recovery:
-  status: core_non_live_recovery_contract_implemented_non_executing
+  status: acceptance_reopened_pending_manifest_bound_verification_correction
+  historical_status: core_non_live_recovery_contract_implemented_non_executing
   canonical_base: a4042551e5c2b77e07db30ecdbdb5ae28f618ec7
   package: P16D-BACKUP-RESTORE-AND-DISASTER-RECOVERY
   implementation:
@@ -1779,6 +1783,12 @@ p16d_backup_restore_and_disaster_recovery:
     backup_inventory_verification: exact_set_sha256_and_byte_length
     restore_planning: migration_gated_non_authorizing
     disaster_recovery_evaluation: deterministic_non_live_rpo_rto
+  current_acceptance:
+    accepted: false
+    available_for_dependent_acceptance: false
+    confirmed_gap: backup_verification_not_bound_to_restore_manifest_identity
+    finding: TS-H02
+    correction_authorized: false
   authority:
     backup_operations: 0
     restore_operations: 0
@@ -1837,7 +1847,8 @@ p16f_audit_run_retention_and_archival:
   optional_api_provider_plugin_v2: default_off_independent_deferred_not_p16_core_gate
 
 p16g_subscription_capacity_and_renewal_review:
-  status: core_non_live_subscription_contract_implemented_non_executing
+  status: narrow_non_live_evidence_retained_broad_acceptance_reopened
+  historical_status: core_non_live_subscription_contract_implemented_non_executing
   canonical_base: e6aaa4b0af3b16d48dd5e151b8374810bc29d5fa
   package: P16G-SUBSCRIPTION-CAPACITY-AND-RENEWAL-REVIEW
   implementation:
@@ -1846,6 +1857,20 @@ p16g_subscription_capacity_and_renewal_review:
     capacity: caller_supplied_integer_ppm_decisions
     renewal: review_only_no_purchase_or_renewal_authority
     channel_choice: deterministic_owner_review_required
+  current_acceptance:
+    broad_acceptance_reopened: true
+    finding: TS-H03
+    accepted_narrow_boundary:
+      - caller_supplied_integer_ppm_capacity_decision
+      - pre_renewal_review_without_purchase_or_renewal_authority
+      - deterministic_owner_reviewed_channel_choice
+    unaccepted_outputs:
+      - subscription_completion_forecast
+      - total_economic_cost
+      - quota_controls
+      - concentration_risk_controls
+      - provider_outage_controls
+    correction_authorized: false
   authority:
     account_reads: 0
     purchase_operations: 0
@@ -1860,7 +1885,8 @@ p16g_subscription_capacity_and_renewal_review:
   optional_api_provider_plugin_v2: default_off_independent_deferred_not_p16_core_gate
 
 p16h_operator_runbook_and_production_readiness:
-  status: merged_hosted_ci_passed_ready_for_p16_acceptance_review
+  status: historical_publication_retained_affected_dependency_closure_revalidation_required
+  historical_status: merged_hosted_ci_passed_ready_for_p16_acceptance_review
   publication_receipt:
     pull_request: 203
     final_pr_head: e48d7c2cda714c5fe578333eb5110b5c084f8c8c
@@ -1873,12 +1899,14 @@ p16h_operator_runbook_and_production_readiness:
   baseline_commit: 8499b38ac796a80a815eb765363085c006d44e95
   package: P16H-OPERATOR-RUNBOOK-AND-PRODUCTION-READINESS
   dependencies:
-    p16d_recovery_planning: inherited_non_live
+    p16d_recovery_planning: reopened_unavailable_for_dependent_acceptance
     p16e_operational_observability: inherited_non_live
     p16f_record_retention: inherited_non_live
-    p16g_subscription_capacity: inherited_non_live
+    p16g_subscription_capacity: narrow_evidence_only_broad_outputs_reopened
   versioned_operator_runbook: docs/operator_runbook_and_deprecation_policy_v1.md
-  readiness_result_ceiling: READY_FOR_P16_ACCEPTANCE_REVIEW
+  historical_readiness_result_ceiling: READY_FOR_P16_ACCEPTANCE_REVIEW
+  current_readiness_result: AFFECTED_DEPENDENCY_CLOSURE_REVALIDATION_REQUIRED
+  available_for_p16_acceptance: false
   deprecation_lifecycle: [SUPPORTED, DEPRECATED, REMOVED]
   optional_api_provider_plugin_v2:
     default_enabled: false
@@ -1903,25 +1931,29 @@ p16h_operator_runbook_and_production_readiness:
 p16i_production_operations_acceptance_decision:
   authorization_packet: P16I-PRODUCTION-OPERATIONS-ACCEPTANCE-DECISION-LIFECYCLE-v1
   baseline_commit: 02699469bf96024bb481980712d47494a4ef08ff
-  status: accepted_subscription_primary_sustainable_operations_core
+  status: affected_dependency_closure_revalidation_required
+  historical_status: accepted_subscription_primary_sustainable_operations_core
   decision_record: docs/reports/p16i_production_operations_acceptance_decision.md
   final_acceptance_mapping: docs/reports/p16_final_acceptance_mapping_v1.yaml
+  current_disposition_record: docs/reports/independent_audit_acceptance_reopen_v1.md
   evidence_closure:
     p16b_release_governance: accepted_core_non_executing
     p16c_state_migration: accepted_core_non_executing
-    p16d_recovery_planning: accepted_core_non_executing
+    p16d_recovery_planning: reopened_pending_manifest_bound_verification_correction
     p16e_operational_observability: accepted_core_non_executing
     p16f_record_retention: accepted_core_non_executing
-    p16g_subscription_capacity: accepted_core_non_executing
-    p16h_production_readiness: ready_for_separate_acceptance_review
+    p16g_subscription_capacity: narrow_evidence_retained_broad_outputs_reopened
+    p16h_production_readiness: affected_dependency_closure_revalidation_required
     public_interface_dag: validated
     hosted_ci_run: 1199
     hosted_ci_conclusion: success
   p16_core:
-    accepted: true
+    accepted: false
+    historical_acceptance_evidence_retained: true
     route: subscription_primary
     daily_mainline: [chatgpt_web, codex_cli]
-    acceptance_scope: sustainable_operations_non_live_core
+    prior_acceptance_scope: sustainable_operations_non_live_core
+    current_disposition: affected_dependency_closure_revalidation_required
   optional_api_provider_plugin_v2:
     status: default_disabled_independent_deferred
     p16_core_hard_gate: false
@@ -1949,13 +1981,14 @@ p16i_production_operations_acceptance_decision:
     disaster_recovery_drills: 0
     cleanup_operations: 0
     rollback_operations: 0
-  stop_boundary: accepted_p16_core_stop_before_deployment_real_environment_validation_or_optional_api_plugin_implementation
+  stop_boundary: reopened_p16_closure_stop_before_correction_revalidation_deployment_real_environment_validation_or_optional_api_plugin_implementation
 
 subscription_worker_public_entry_acceptance:
   authorization_packet: SUBSCRIPTION-WORKER-PUBLIC-ENTRY-ACCEPTANCE-v1
   baseline_commit: 8be8950937407bbca0c562b77348c67aba6b5685
   baseline_tree: 331d5496ea2aee610c17bd522850b959015ecb9f
-  status: accepted_subscription_worker_public_entry_core
+  status: reopened_confirmed_blockers_pending_correction_and_reacceptance
+  historical_status: accepted_subscription_worker_public_entry_core
   authority_effect: none
   specification: docs/reports/subscription_worker_public_entry_closure_specification_v1.md
   decision_record: docs/reports/subscription_worker_public_entry_acceptance_v1.md
@@ -1975,7 +2008,9 @@ subscription_worker_public_entry_acceptance:
     receipt_gated_replay_correction_merge: 983e225377fdef23a18368c9e662f8231d6aaec8
     corrected_multi_stack_acceptance_merge: 8be8950937407bbca0c562b77348c67aba6b5685
     corrected_multi_stack_hosted_ci_runs: [1301, 1302]
-  accepted_public_entry:
+    historical_public_entry_acceptance_merge: 0c710929e292b340538845a5e9e87c03c36f5794
+    durable_call_lease_correction_merge: 027dbb3fb83c38def70e81d58712f80dbe613483
+  historical_accepted_public_entry:
     root_cli_subcommand: develop-execute
     exact_manifest_change_plan_binding_required: true
     exact_repository_snapshot_binding_required: true
@@ -1984,6 +2019,13 @@ subscription_worker_public_entry_acceptance:
     maximum_remote_free_local_commits: 1
     durable_completed_receipt_replay: true
     real_codex_execution_observed_in_this_acceptance: false
+  current_disposition:
+    accepted: false
+    real_repository_execution_blocked: true
+    blocking_findings: [TS-B01, TS-B02]
+    historical_fixes_retained: [217, 218, 219, 220]
+    git_rollback_performed: false
+    correction_authorized: false
   remaining_authority:
     real_codex_execution_authorized: false
     chatgpt_web_automation_authorized: false
@@ -2008,7 +2050,7 @@ subscription_worker_public_entry_acceptance:
     deployment_operations: 0
     cleanup_operations: 0
     rollback_operations: 0
-  stop_boundary: accepted_public_entry_stop_before_real_worker_downstream_remote_production_cleanup_or_rollback
+  stop_boundary: reopened_public_entry_stop_before_any_real_repository_worker_downstream_remote_production_cleanup_or_rollback
 
 subscription_worker_durable_call_lease_correction:
   authorization_packet: P14G-SUBSCRIPTION-WORKER-DURABLE-CALL-LEASE-CORRECTION-v1
@@ -2180,3 +2222,65 @@ subscription_worker_real_isolated_acceptance_v2_descriptive_closeout:
     v2_cleanup_operations: 0
     v2_rollback_operations: 0
   stop_boundary: descriptive_closeout_merge_then_stop_before_residual_gap_correction_or_v3_real_acceptance
+
+independent_audit_acceptance_reopen:
+  authorization_packet: TOOL-SYSTEM-INDEPENDENT-AUDIT-ACCEPTANCE-REOPEN-v1
+  baseline_commit: eab919368a1a35d6dc73f329f320700ca4df6c13
+  baseline_tree: 955d64dfc85720377e6382c3bf7bae6708834134
+  status: governance_stop_active_pending_separately_authorized_corrections_and_revalidation
+  authority_effect: none
+  decision_record: docs/reports/independent_audit_acceptance_reopen_v1.md
+  acceptance_mapping: docs/reports/independent_audit_acceptance_reopen_mapping_v1.yaml
+  confirmed_blockers:
+    - TS-B01
+    - TS-B02
+  unresolved_high_risk_findings:
+    - TS-H01
+    - TS-H02
+    - TS-H03
+  pending_risks:
+    - TS-M01
+    - TS-M02
+  acceptance_dispositions:
+    subscription_worker_public_entry_core: reopened
+    p16d_recovery_planning: reopened
+    p16g_subscription_capacity: narrow_evidence_retained_broad_outputs_reopened
+    p16h_production_readiness: affected_dependency_closure_revalidation_required
+    p16i_production_operations_acceptance: affected_dependency_closure_revalidation_required
+  retained_fix_evidence:
+    pull_request_217: 983e225377fdef23a18368c9e662f8231d6aaec8
+    pull_request_218: 8be8950937407bbca0c562b77348c67aba6b5685
+    pull_request_219: 0c710929e292b340538845a5e9e87c03c36f5794
+    pull_request_220: 027dbb3fb83c38def70e81d58712f80dbe613483
+  governance_method:
+    git_rollback_performed: false
+    runtime_lifecycle_enums_added: false
+    implementation_files_changed: false
+    historical_evidence_deleted: false
+  remaining_authority:
+    finding_correction_authorized: false
+    real_codex_worker_authorized: false
+    chatgpt_web_automation_authorized: false
+    api_provider_execution_authorized: false
+    credential_value_access_authorized: false
+    real_downstream_access_authorized: false
+    real_downstream_mutation_authorized: false
+    v3_real_isolated_acceptance_authorized: false
+    runtime_remote_publication_authorized: false
+    production_operation_authorized: false
+    deployment_authorized: false
+    cleanup_authorized: false
+    rollback_authorized: false
+  zero_operation_boundary:
+    real_codex_worker_invocations: 0
+    chatgpt_web_automation_operations: 0
+    api_provider_invocations: 0
+    credential_value_accesses: 0
+    real_downstream_repository_accesses: 0
+    real_downstream_repository_mutations: 0
+    runtime_remote_repository_operations: 0
+    production_operations: 0
+    deployment_operations: 0
+    cleanup_operations: 0
+    rollback_operations: 0
+  stop_boundary: merge_governance_reopen_then_stop_before_any_finding_correction_or_v3_acceptance

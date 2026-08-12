@@ -1,0 +1,145 @@
+task_id: tool-system-independent-audit-acceptance-reopen-v1
+task_type: governance_acceptance_reopen
+target_repo: apolo183/tool-system
+target_branch: agent/independent-audit-acceptance-reopen-v1
+phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestones.P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+alignment:
+  parent:
+    document: docs/tool_system_global_development_principles_v1.md
+    section_or_key: failure isolation and affected-closure revalidation
+    scope: Reopen only acceptance conclusions invalidated by confirmed audit findings while retaining unaffected implementation evidence and Git history.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Prevent unproven public-entry and P16 capabilities from being consumed as completed product evidence.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: TOOL-SYSTEM-INDEPENDENT-AUDIT-ACCEPTANCE-REOPEN-v1
+    baseline_commit: eab919368a1a35d6dc73f329f320700ca4df6c13
+    baseline_tree: 955d64dfc85720377e6382c3bf7bae6708834134
+    allowed_scope: exact_seven_paths_listed_below
+    acceptance_set:
+      - register TS-B01 and TS-B02 as confirmed blockers that prohibit real-repository public-entry execution
+      - register TS-H01 TS-H02 and TS-H03 as unresolved high-risk defects
+      - register TS-M01 and TS-M02 as pending risks
+      - reopen accepted_subscription_worker_public_entry_core while retaining pull requests 217 through 220 as historical evidence and performing no Git rollback
+      - reopen the P16D recovery-planning acceptance contribution because verification is not bound to the manifest consumed by restore planning
+      - retain only P16G capacity renewal-review and owner-reviewed channel-choice evidence while returning completion forecast total economic cost quota concentration risk and provider outage outputs to unaccepted status
+      - mark P16H and P16I as requiring affected downstream closure revalidation
+      - use descriptive project-state fields only and add no runtime lifecycle enum
+      - keep real Codex Worker real downstream and v3 isolated acceptance unauthorized
+      - authorize no implementation correction for any registered finding
+    validation_set:
+      - exact seven-path scope and clean whitespace
+      - YAML parsing plus task-manifest change-plan process-authority module-registry and repository-manifest validation
+      - focused phase-alignment tests and the complete deterministic test suite
+      - Hosted CI plus unchanged base head seven-path scope comments and reviews before Ready and squash merge
+    terminal_predicate: One exact seven-path governance commit is published through one Draft PR, Hosted CI passes without drift, the PR becomes Ready and squash-merges with its feature branch retained, and work stops before any finding correction or v3 acceptance.
+    finite_budgets:
+      implementation_cycles: 1
+      repair_cycles: 1
+      review_cycles: 1
+      hosted_ci_runs: 4
+      real_codex_worker_invocations: 0
+      chatgpt_web_automation_operations: 0
+      api_provider_invocations: 0
+      credential_value_accesses: 0
+      real_downstream_repository_accesses: 0
+      runtime_remote_repository_operations: 0
+      production_operations: 0
+      deployment_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, acceptance_digest, blocker_set, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, acceptance_digest, blocker_set, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Reopen only the audit-invalidated acceptance conclusions and freeze the resulting real-repository stop boundary.
+  in_scope: &reopen_files
+    - docs/reports/independent_audit_acceptance_reopen_v1.md
+    - docs/reports/independent_audit_acceptance_reopen_mapping_v1.yaml
+    - docs/tool_system_project_state_v1.yaml
+    - examples/change_plans/tool_system_independent_audit_acceptance_reopen_v1.yaml
+    - examples/task_manifests/tool_system_independent_audit_acceptance_reopen_v1.yaml
+    - tests/test_phase_alignment.py
+    - REPO_MANIFEST.md
+  out_of_scope:
+    - runtime source module contracts blueprint policy workflow CI and repository orientation files
+    - any implementation correction for TS-B01 TS-B02 TS-H01 TS-H02 TS-H03 TS-M01 or TS-M02
+    - any real Codex API provider credential real downstream production deployment cleanup or rollback operation
+    - any read reuse modification movement deletion or permission change of external v1 or v2 acceptance evidence roots
+allowed_files: *reopen_files
+evidence:
+  - repo: apolo183/tool-system
+    path: src/tool_system/runner/task_runner.py
+    commit_sha: eab919368a1a35d6dc73f329f320700ca4df6c13
+    why_relevant: Frozen implementation inspected by the audit for reviewer semantics validation counting and terminal durable-run behavior.
+  - repo: apolo183/tool-system
+    path: src/tool_system/gate/command_runner.py
+    commit_sha: eab919368a1a35d6dc73f329f320700ca4df6c13
+    why_relevant: Frozen host subprocess boundary and full-output buffering implementation underlying TS-B02 and TS-M01.
+  - repo: apolo183/tool-system
+    path: src/tool_system/recovery_planning/planner.py
+    commit_sha: eab919368a1a35d6dc73f329f320700ca4df6c13
+    why_relevant: Frozen verification and restore-planning types underlying TS-H02.
+  - repo: apolo183/tool-system
+    path: src/tool_system/subscription_capacity/policy.py
+    commit_sha: eab919368a1a35d6dc73f329f320700ca4df6c13
+    why_relevant: Frozen narrow capacity renewal and channel-choice implementation underlying TS-H03.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: current_main_consumed_at_task_start
+    why_relevant: Current central governance requires failed acceptance isolation preservation of unaffected evidence and affected downstream closure revalidation.
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - blueprint/**
+  - .github/**
+  - config/**
+  - docs/modules/**
+  - docs/tool_system_global_development_principles_v1.md
+  - policy/**
+  - src/**
+  - tests/fixtures/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_phase_alignment.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_independent_audit_acceptance_reopen_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_independent_audit_acceptance_reopen_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+    - exact seven-file diff and zero forbidden-path change
+    - report mapping state manifest plan phase-alignment assertions and repository manifest agree on every current disposition and stop
+    - prior pull request 217 through 220 evidence remains present without Git rollback
+    - no validation or test invokes an actual Codex executable API provider downstream production deployment cleanup or rollback path
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_and_reviews: true
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@eab919368a1a35d6dc73f329f320700ca4df6c13
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-12-TOOL-SYSTEM-INDEPENDENT-AUDIT-ACCEPTANCE-REOPEN-v1
+  approved_at: 2026-08-12 UTC+09:00

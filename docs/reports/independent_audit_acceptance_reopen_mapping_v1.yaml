@@ -1,0 +1,154 @@
+schema_version: 1
+mapping_id: tool-system-independent-audit-acceptance-reopen-v1
+authority_effect: none
+baseline_commit: eab919368a1a35d6dc73f329f320700ca4df6c13
+baseline_tree: 955d64dfc85720377e6382c3bf7bae6708834134
+decision: acceptance_reopened_pending_separately_authorized_corrections_and_revalidation
+decision_record: docs/reports/independent_audit_acceptance_reopen_v1.md
+
+findings:
+  - id: TS-B01
+    classification: confirmed_defect
+    severity: blocker
+    disposition: blocks_real_repository_execution
+    affected_acceptance:
+      - accepted_subscription_worker_public_entry_core
+    evidence:
+      - src/tool_system/runner/task_runner.py
+      - independent_audit_wrong_candidate_with_unrelated_pass_validation_reproduction
+    correction_authorized: false
+  - id: TS-B02
+    classification: confirmed_execution_boundary_defect
+    severity: blocker
+    disposition: blocks_real_repository_execution
+    affected_acceptance:
+      - accepted_subscription_worker_public_entry_core
+    evidence:
+      - src/tool_system/gate/command_runner.py
+      - src/tool_system/runner/task_runner.py
+      - src/tool_system/worker_adapter/contract.py
+    correction_authorized: false
+  - id: TS-H01
+    classification: confirmed_count_and_lifecycle_defects
+    severity: high
+    disposition: unresolved
+    evidence:
+      - docs/reports/subscription_worker_real_isolated_acceptance_v2_descriptive_closeout.md
+      - src/tool_system/runner/task_runner.py
+    timeout_root_cause_established: false
+    correction_authorized: false
+  - id: TS-H02
+    classification: confirmed_logic_defect
+    severity: high
+    disposition: p16d_acceptance_contribution_reopened
+    evidence:
+      - src/tool_system/recovery_planning/planner.py
+      - tests/test_recovery_planning.py
+    correction_authorized: false
+  - id: TS-H03
+    classification: confirmed_requirement_implementation_mismatch
+    severity: high
+    disposition: broad_p16g_outputs_reopened
+    evidence:
+      - blueprint/tool_system_v0.yaml
+      - docs/reports/p16_final_acceptance_mapping_v1.yaml
+      - src/tool_system/subscription_capacity/policy.py
+    correction_authorized: false
+  - id: TS-M01
+    classification: reliability_risk
+    severity: medium
+    disposition: pending
+    evidence:
+      - src/tool_system/gate/command_runner.py
+      - src/tool_system/worker_adapter/contract.py
+    correction_authorized: false
+  - id: TS-M02
+    classification: ci_and_supply_chain_risk
+    severity: medium
+    disposition: pending
+    evidence:
+      - .github/workflows/tool-system-ci.yml
+      - pyproject.toml
+    correction_authorized: false
+
+acceptance_dispositions:
+  subscription_worker_public_entry_core:
+    historical_decision: accepted_subscription_worker_public_entry_core
+    current_disposition: reopened
+    real_repository_execution_blocked: true
+    blocking_findings: [TS-B01, TS-B02]
+  p16d_recovery_planning:
+    historical_narrow_evidence_retained: true
+    current_disposition: reopened
+    reason: verification_not_bound_to_the_manifest_consumed_by_restore_planning
+    available_for_dependent_acceptance: false
+  p16g_subscription_capacity:
+    current_disposition: narrow_evidence_retained_broad_outputs_reopened
+    accepted_narrow_boundary:
+      - caller_supplied_integer_ppm_capacity_decision
+      - pre_renewal_review_without_purchase_or_renewal_authority
+      - deterministic_owner_reviewed_channel_choice
+    unaccepted_outputs:
+      - subscription_completion_forecast
+      - total_economic_cost
+      - quota_controls
+      - concentration_risk_controls
+      - provider_outage_controls
+  p16h_production_readiness:
+    historical_publication_evidence_retained: true
+    current_disposition: affected_dependency_closure_revalidation_required
+  p16i_production_operations_acceptance:
+    historical_decision: accepted_subscription_primary_sustainable_operations_core
+    historical_decision_evidence_retained: true
+    current_disposition: affected_dependency_closure_revalidation_required
+    currently_accepted: false
+
+retained_fix_evidence:
+  - pull_request: 217
+    canonical_commit: 983e225377fdef23a18368c9e662f8231d6aaec8
+    role: completed_receipt_replay_ordering_correction
+  - pull_request: 218
+    canonical_commit: 8be8950937407bbca0c562b77348c67aba6b5685
+    role: deterministic_python_typescript_fake_io_acceptance
+  - pull_request: 219
+    canonical_commit: 0c710929e292b340538845a5e9e87c03c36f5794
+    role: historical_public_entry_acceptance_now_reopened
+  - pull_request: 220
+    canonical_commit: 027dbb3fb83c38def70e81d58712f80dbe613483
+    role: durable_call_accounting_and_covering_lease_correction
+
+governance_method:
+  git_rollback_performed: false
+  runtime_lifecycle_enums_added: false
+  implementation_files_changed: false
+  historical_evidence_deleted: false
+
+remaining_authority:
+  finding_correction_authorized: false
+  real_codex_worker_authorized: false
+  chatgpt_web_automation_authorized: false
+  api_provider_execution_authorized: false
+  credential_value_access_authorized: false
+  real_downstream_access_authorized: false
+  real_downstream_mutation_authorized: false
+  v3_real_isolated_acceptance_authorized: false
+  runtime_remote_publication_authorized: false
+  production_operation_authorized: false
+  deployment_authorized: false
+  cleanup_authorized: false
+  rollback_authorized: false
+
+zero_operation_boundary:
+  real_codex_worker_invocations: 0
+  chatgpt_web_automation_operations: 0
+  api_provider_invocations: 0
+  credential_value_accesses: 0
+  real_downstream_repository_accesses: 0
+  real_downstream_repository_mutations: 0
+  runtime_remote_repository_operations: 0
+  production_operations: 0
+  deployment_operations: 0
+  cleanup_operations: 0
+  rollback_operations: 0
+
+stop_boundary: merge_governance_reopen_then_stop_before_any_finding_correction_or_v3_acceptance
