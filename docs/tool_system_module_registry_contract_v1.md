@@ -166,9 +166,9 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_planner@1.1.0
     - current_module_id: task_runner
       canonical_module_id: task-runner
-      current_module_version: 1.2.0
+      current_module_version: 2.0.0
       aggregate_interface_id: task-runner-api
-      aggregate_interface_version: 1.1.0
+      aggregate_interface_version: 2.0.0
       runtime_id_preserved: true
       python_import_identities:
         - {kind: exact, name: tool_system.gate.command_runner}
@@ -178,8 +178,8 @@ mapping_contract:
         - {kind: exact, name: tool_system.runner.task_runner}
       direct_consumer_module_ids:
         - cli_frontend
-      change_risk: "critical: configured command execution, exact manifest-bound read-only context compilation, guarded subscription worker composition, isolated validation, durable state, and one remote-free local commit boundary"
-      rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_runner@1.1.0
+      change_risk: "critical: configured command execution, exact manifest-bound read-only context compilation, per-acceptance semantic evidence and receipt review, guarded subscription worker composition, isolated validation, durable state, and one remote-free local commit boundary"
+      rollback_identity: tool-system@f9dd68909ed0ffba9dc1a40197482d908c9cc2db:task_runner@1.2.0
     - current_module_id: role_runtime
       canonical_module_id: role-runtime
       current_module_version: 1.1.0

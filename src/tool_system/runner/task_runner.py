@@ -58,6 +58,7 @@ from tool_system.worker_adapter import (
 
 _SUBSCRIPTION_WORKER_ADAPTER_KIND = "codex_cli_subscription_worker_adapter"
 _COMMIT_SHA = re.compile(r"^[0-9a-f]{40}$")
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _SUBSCRIPTION_PACKET_VERSION = "subscription_development_authority_packet_v1"
 _SUBSCRIPTION_COMPILATION_PACKET_VERSION = (
     "subscription_development_context_compilation_packet_v1"
@@ -67,8 +68,31 @@ _SUBSCRIPTION_AUTHORITY_BINDING_VERSION = (
 )
 _SUBSCRIPTION_AUTHORITY_INPUT_MAX_BYTES = 1_048_576
 _SUBSCRIPTION_EXECUTION_BINDING_VERSION = (
-    "subscription_public_entry_execution_binding_v1"
+    "subscription_public_entry_execution_binding_v2"
 )
+_SUBSCRIPTION_ACCEPTANCE_OBLIGATION_VERSION = (
+    "subscription_acceptance_evidence_obligation_v1"
+)
+_SUBSCRIPTION_ACCEPTANCE_RECEIPT_VERSION = (
+    "subscription_acceptance_evidence_receipt_v1"
+)
+_SUBSCRIPTION_ACCEPTANCE_EVIDENCE_TYPES = {"behavior", "contract"}
+_SUBSCRIPTION_ACCEPTANCE_RECEIPT_KEYS = {
+    "receipt_version",
+    "acceptance_item_sha256",
+    "evidence_obligation_sha256",
+    "evidence_type",
+    "contract_digest",
+    "candidate_tree",
+    "actual_diff_paths",
+    "validation_command_sha256",
+    "exit_code",
+    "stdout_sha256",
+    "stderr_sha256",
+    "candidate_assertions_sha256",
+    "status",
+    "receipt_sha256",
+}
 _SUBSCRIPTION_GIT_COMMAND_TIMEOUT_SECONDS = 120
 _SUBSCRIPTION_VALIDATION_GIT_COMMAND_LIMIT = 16
 _SUBSCRIPTION_LOCAL_COMMIT_GIT_COMMAND_LIMIT = 8
@@ -851,6 +875,253 @@ def _captured_plan_commands(plan_bytes: bytes) -> tuple[str, ...]:
     return tuple(commands)
 
 
+def _acceptance_item_sha256(acceptance_item: str) -> str:
+    return _canonical_sha256({"acceptance_item": acceptance_item})
+
+
+def _validation_command_sha256(validation_command: str) -> str:
+    return _canonical_sha256({"validation_command": validation_command})
+
+
+def _candidate_tree_sha256(files: Mapping[str, str]) -> str:
+    return _canonical_sha256(
+        {
+            path: hashlib.sha256(content.encode("utf-8")).hexdigest()
+            for path, content in sorted(files.items())
+        }
+    )
+
+
+def _candidate_diff_paths(
+    *,
+    baseline_files: Mapping[str, str],
+    candidate_files: Mapping[str, str],
+    allowed_scope: Sequence[str],
+) -> tuple[str, ...]:
+    if (
+        not isinstance(candidate_files, Mapping)
+        or not set(candidate_files) <= set(allowed_scope)
+        or any(not isinstance(value, str) for value in candidate_files.values())
+    ):
+        raise ValueError("SUBSCRIPTION_ACCEPTANCE_CANDIDATE_INVALID")
+    return tuple(
+        path
+        for path in allowed_scope
+        if (path in baseline_files) != (path in candidate_files)
+        or baseline_files.get(path) != candidate_files.get(path)
+    )
+
+
+def _normalize_acceptance_evidence_obligations(
+    value: object,
+    *,
+    acceptance_set: tuple[str, ...],
+    validation_set: tuple[str, ...],
+    allowed_scope: tuple[str, ...],
+) -> tuple[dict[str, object], ...]:
+    if (
+        not isinstance(value, list)
+        or len(value) != len(acceptance_set)
+        or len(validation_set) != len(acceptance_set)
+    ):
+        raise ValueError("SUBSCRIPTION_ACCEPTANCE_EVIDENCE_COVERAGE_MISMATCH")
+    normalized: list[dict[str, object]] = []
+    seen_commands: set[str] = set()
+    expected_keys = {
+        "obligation_version",
+        "acceptance_item",
+        "acceptance_item_sha256",
+        "evidence_type",
+        "validation_command",
+        "validation_command_sha256",
+        "expected_stdout_sha256",
+        "expected_stderr_sha256",
+        "expected_diff_paths",
+        "candidate_assertions",
+        "obligation_sha256",
+    }
+    for acceptance_item, expected_command, raw in zip(
+        acceptance_set,
+        validation_set,
+        value,
+        strict=True,
+    ):
+        if not isinstance(raw, Mapping) or set(raw) != expected_keys:
+            raise ValueError("SUBSCRIPTION_ACCEPTANCE_EVIDENCE_SHAPE_MISMATCH")
+        if raw["obligation_version"] != _SUBSCRIPTION_ACCEPTANCE_OBLIGATION_VERSION:
+            raise ValueError("SUBSCRIPTION_ACCEPTANCE_EVIDENCE_VERSION_MISMATCH")
+        if raw["acceptance_item"] != acceptance_item:
+            raise ValueError("SUBSCRIPTION_ACCEPTANCE_EVIDENCE_ITEM_MISMATCH")
+        acceptance_digest = _acceptance_item_sha256(acceptance_item)
+        if raw["acceptance_item_sha256"] != acceptance_digest:
+            raise ValueError("SUBSCRIPTION_ACCEPTANCE_EVIDENCE_ITEM_DIGEST_MISMATCH")
+        evidence_type = raw["evidence_type"]
+        if evidence_type not in _SUBSCRIPTION_ACCEPTANCE_EVIDENCE_TYPES:
+            raise ValueError("SUBSCRIPTION_ACCEPTANCE_EVIDENCE_TYPE_UNSUPPORTED")
+        command = raw["validation_command"]
+        if (
+            not isinstance(command, str)
+            or command != expected_command
+            or command in seen_commands
+        ):
+            raise ValueError("SUBSCRIPTION_ACCEPTANCE_EVIDENCE_COMMAND_MISMATCH")
+        seen_commands.add(command)
+        command_digest = _validation_command_sha256(command)
+        if raw["validation_command_sha256"] != command_digest:
+            raise ValueError(
+                "SUBSCRIPTION_ACCEPTANCE_EVIDENCE_COMMAND_DIGEST_MISMATCH"
+            )
+        for field in ("expected_stdout_sha256", "expected_stderr_sha256"):
+            if (
+                not isinstance(raw[field], str)
+                or _SHA256.fullmatch(str(raw[field])) is None
+            ):
+                raise ValueError(
+                    "SUBSCRIPTION_ACCEPTANCE_EVIDENCE_OUTPUT_DIGEST_INVALID"
+                )
+        expected_diff_paths = _bounded_subscription_values(
+            raw["expected_diff_paths"],
+            field="acceptance_evidence.expected_diff_paths",
+            maximum=128,
+            repository_paths=True,
+        )
+        if not set(expected_diff_paths) <= set(allowed_scope):
+            raise ValueError("SUBSCRIPTION_ACCEPTANCE_EVIDENCE_SCOPE_DRIFT")
+        assertions = raw["candidate_assertions"]
+        if not isinstance(assertions, list) or len(assertions) != len(
+            expected_diff_paths
+        ):
+            raise ValueError(
+                "SUBSCRIPTION_ACCEPTANCE_EVIDENCE_ASSERTION_COVERAGE_MISMATCH"
+            )
+        normalized_assertions: list[dict[str, str]] = []
+        for path, assertion in zip(expected_diff_paths, assertions, strict=True):
+            if not isinstance(assertion, Mapping) or assertion.get("path") != path:
+                raise ValueError(
+                    "SUBSCRIPTION_ACCEPTANCE_EVIDENCE_ASSERTION_PATH_MISMATCH"
+                )
+            state = assertion.get("state")
+            if state == "present":
+                if set(assertion) != {"path", "state", "content_sha256"}:
+                    raise ValueError(
+                        "SUBSCRIPTION_ACCEPTANCE_EVIDENCE_ASSERTION_SHAPE_MISMATCH"
+                    )
+                content_sha256 = assertion.get("content_sha256")
+                if (
+                    not isinstance(content_sha256, str)
+                    or _SHA256.fullmatch(content_sha256) is None
+                ):
+                    raise ValueError(
+                        "SUBSCRIPTION_ACCEPTANCE_EVIDENCE_ASSERTION_DIGEST_INVALID"
+                    )
+                normalized_assertions.append(
+                    {
+                        "path": path,
+                        "state": "present",
+                        "content_sha256": content_sha256,
+                    }
+                )
+            elif state == "absent":
+                if set(assertion) != {"path", "state"}:
+                    raise ValueError(
+                        "SUBSCRIPTION_ACCEPTANCE_EVIDENCE_ASSERTION_SHAPE_MISMATCH"
+                    )
+                normalized_assertions.append({"path": path, "state": "absent"})
+            else:
+                raise ValueError(
+                    "SUBSCRIPTION_ACCEPTANCE_EVIDENCE_ASSERTION_STATE_INVALID"
+                )
+        body: dict[str, object] = {
+            "obligation_version": _SUBSCRIPTION_ACCEPTANCE_OBLIGATION_VERSION,
+            "acceptance_item": acceptance_item,
+            "acceptance_item_sha256": acceptance_digest,
+            "evidence_type": evidence_type,
+            "validation_command": command,
+            "validation_command_sha256": command_digest,
+            "expected_stdout_sha256": raw["expected_stdout_sha256"],
+            "expected_stderr_sha256": raw["expected_stderr_sha256"],
+            "expected_diff_paths": list(expected_diff_paths),
+            "candidate_assertions": normalized_assertions,
+        }
+        obligation = {**body, "obligation_sha256": _canonical_sha256(body)}
+        if dict(raw) != obligation:
+            raise ValueError("SUBSCRIPTION_ACCEPTANCE_EVIDENCE_DIGEST_MISMATCH")
+        normalized.append(obligation)
+    if seen_commands != set(validation_set):
+        raise ValueError("SUBSCRIPTION_ACCEPTANCE_EVIDENCE_COMMAND_COVERAGE_MISMATCH")
+    return tuple(normalized)
+
+
+def _candidate_assertions_match(
+    candidate_files: Mapping[str, str],
+    obligation: Mapping[str, object],
+) -> bool:
+    assertions = obligation.get("candidate_assertions")
+    if not isinstance(assertions, list):
+        return False
+    for assertion in assertions:
+        if not isinstance(assertion, Mapping):
+            return False
+        path = assertion.get("path")
+        if not isinstance(path, str):
+            return False
+        state = assertion.get("state")
+        if state == "present":
+            content = candidate_files.get(path)
+            if (
+                not isinstance(content, str)
+                or hashlib.sha256(content.encode("utf-8")).hexdigest()
+                != assertion.get("content_sha256")
+            ):
+                return False
+        elif state == "absent":
+            if path in candidate_files:
+                return False
+        else:
+            return False
+    return True
+
+
+def _acceptance_evidence_receipt(
+    *,
+    contract: FrozenDevelopmentContract,
+    obligation: Mapping[str, object],
+    candidate_tree: str,
+    actual_diff_paths: tuple[str, ...],
+) -> dict[str, object]:
+    body: dict[str, object] = {
+        "receipt_version": _SUBSCRIPTION_ACCEPTANCE_RECEIPT_VERSION,
+        "acceptance_item_sha256": obligation["acceptance_item_sha256"],
+        "evidence_obligation_sha256": obligation["obligation_sha256"],
+        "evidence_type": obligation["evidence_type"],
+        "contract_digest": contract.task_digest,
+        "candidate_tree": candidate_tree,
+        "actual_diff_paths": list(actual_diff_paths),
+        "validation_command_sha256": obligation["validation_command_sha256"],
+        "exit_code": 0,
+        "stdout_sha256": obligation["expected_stdout_sha256"],
+        "stderr_sha256": obligation["expected_stderr_sha256"],
+        "candidate_assertions_sha256": _canonical_sha256(
+            obligation["candidate_assertions"]
+        ),
+        "status": "PASS",
+    }
+    return {**body, "receipt_sha256": _canonical_sha256(body)}
+
+
+def _receipt_from_validation_record(record: object) -> Mapping[str, object] | None:
+    if not isinstance(record, Mapping) or record.get("status") != "PASS":
+        return None
+    diagnostic = record.get("diagnostic")
+    if not isinstance(diagnostic, str):
+        return None
+    try:
+        receipt = json.loads(diagnostic)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    return receipt if isinstance(receipt, Mapping) else None
+
+
 def _execution_binding(
     *,
     manifest: Mapping[str, object],
@@ -880,6 +1151,7 @@ def _execution_binding(
         "addable_scope_paths",
         "allowed_scope",
         "acceptance_set",
+        "acceptance_evidence_obligations",
         "validation_set",
         "worker_configuration_sha256",
         "branch_name",
@@ -942,6 +1214,12 @@ def _execution_binding(
         raise ValueError("SUBSCRIPTION_EXECUTION_ACCEPTANCE_MISMATCH")
     if observed_validation != validation_set:
         raise ValueError("SUBSCRIPTION_EXECUTION_VALIDATION_MISMATCH")
+    evidence_obligations = _normalize_acceptance_evidence_obligations(
+        observed["acceptance_evidence_obligations"],
+        acceptance_set=acceptance_set,
+        validation_set=validation_set,
+        allowed_scope=allowed_scope,
+    )
     finite = observed["finite_budgets"]
     if not isinstance(finite, Mapping) or set(finite) != {
         "max_cycles",
@@ -998,6 +1276,9 @@ def _execution_binding(
         "addable_scope_paths": list(addable_scope),
         "allowed_scope": list(allowed_scope),
         "acceptance_set": list(acceptance_set),
+        "acceptance_evidence_obligations": [
+            dict(obligation) for obligation in evidence_obligations
+        ],
         "validation_set": list(validation_set),
         "worker_configuration_sha256": worker_configuration_sha256,
         "branch_name": branch_name,
@@ -1136,6 +1417,7 @@ def _build_public_entry_validator(
     autonomy_policy_path: str | Path,
     baseline_files: Mapping[str, str],
     contract: FrozenDevelopmentContract,
+    evidence_obligations: tuple[dict[str, object], ...],
     timeout_seconds: int,
     max_output_bytes: int,
     cancellation_requested: Callable[[], bool] | None,
@@ -1198,34 +1480,75 @@ def _build_public_entry_validator(
                 for record in command_result.get("command_results", [])
                 if isinstance(record, Mapping)
             }
+            try:
+                actual_diff_paths = _candidate_diff_paths(
+                    baseline_files=baseline_files,
+                    candidate_files=candidate_files,
+                    allowed_scope=contract.allowed_scope,
+                )
+                candidate_tree = _candidate_tree_sha256(candidate_files)
+            except ValueError:
+                actual_diff_paths = ()
+                candidate_tree = ""
+            obligation_by_command = {
+                str(obligation["validation_command"]): obligation
+                for obligation in evidence_obligations
+            }
             validation_results: dict[str, dict[str, object]] = {}
+            satisfied_acceptance_items: list[str] = []
             for command in contract.validation_set:
                 record = observed_results.get(command)
+                obligation = obligation_by_command.get(command)
                 passed = (
                     command_result.get("status") == "PASS"
                     and isinstance(record, Mapping)
                     and record.get("exit_code") == 0
+                    and isinstance(record.get("stdout"), str)
+                    and isinstance(record.get("stderr"), str)
+                    and isinstance(obligation, Mapping)
+                    and hashlib.sha256(
+                        str(record["stdout"]).encode("utf-8")
+                    ).hexdigest()
+                    == obligation.get("expected_stdout_sha256")
+                    and hashlib.sha256(
+                        str(record["stderr"]).encode("utf-8")
+                    ).hexdigest()
+                    == obligation.get("expected_stderr_sha256")
+                    and tuple(obligation.get("expected_diff_paths", ()))
+                    == actual_diff_paths
+                    and bool(actual_diff_paths)
+                    and _candidate_assertions_match(candidate_files, obligation)
                 )
                 diagnostic = None
-                if not passed:
+                if passed:
+                    receipt = _acceptance_evidence_receipt(
+                        contract=contract,
+                        obligation=obligation,
+                        candidate_tree=candidate_tree,
+                        actual_diff_paths=actual_diff_paths,
+                    )
+                    diagnostic = json.dumps(
+                        receipt,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                    satisfied_acceptance_items.append(
+                        str(obligation["acceptance_item"])
+                    )
+                else:
                     diagnostic = (
                         f"exit_code={record.get('exit_code')}"
                         if isinstance(record, Mapping)
-                        else "validated command did not complete"
+                        else "machine-verifiable acceptance evidence did not complete"
                     )
                 validation_results[command] = {
                     "status": "PASS" if passed else "BLOCK",
                     "diagnostic": diagnostic,
                 }
-            all_passed = all(
-                record["status"] == "PASS"
-                for record in validation_results.values()
-            )
             return {
                 "validation_results": validation_results,
-                "satisfied_acceptance_items": (
-                    list(contract.acceptance_set) if all_passed else []
-                ),
+                "satisfied_acceptance_items": satisfied_acceptance_items,
             }
 
     return validator
@@ -1233,18 +1556,50 @@ def _build_public_entry_validator(
 
 def _public_entry_code_reviewer(
     contract: FrozenDevelopmentContract,
+    *,
+    baseline_files: Mapping[str, str],
+    evidence_obligations: tuple[dict[str, object], ...],
 ) -> Callable[[Mapping[str, object]], Mapping[str, object]]:
     def reviewer(review_input: Mapping[str, object]) -> Mapping[str, object]:
         files = review_input.get("candidate_files")
-        invalid = (
-            not isinstance(files, Mapping)
-            or not set(files) <= set(contract.allowed_scope)
-            or any(not isinstance(value, str) for value in files.values())
-        )
+        violations: list[str] = []
+        try:
+            if not isinstance(files, Mapping):
+                raise TypeError
+            candidate_files = dict(files)
+            actual_diff_paths = _candidate_diff_paths(
+                baseline_files=baseline_files,
+                candidate_files=candidate_files,
+                allowed_scope=contract.allowed_scope,
+            )
+            candidate_tree = _candidate_tree_sha256(candidate_files)
+        except (AttributeError, TypeError, ValueError):
+            candidate_files = {}
+            actual_diff_paths = ()
+            candidate_tree = ""
+        validation = review_input.get("validation_results")
+        for obligation in evidence_obligations:
+            item = str(obligation["acceptance_item"])
+            command = str(obligation["validation_command"])
+            record = validation.get(command) if isinstance(validation, Mapping) else None
+            receipt = _receipt_from_validation_record(record)
+            if (
+                tuple(obligation["expected_diff_paths"]) != actual_diff_paths
+                or not actual_diff_paths
+                or review_input.get("task_digest") != contract.task_digest
+                or candidate_tree != review_input.get("candidate_tree")
+                or not _candidate_assertions_match(candidate_files, obligation)
+                or receipt
+                != _acceptance_evidence_receipt(
+                    contract=contract,
+                    obligation=obligation,
+                    candidate_tree=candidate_tree,
+                    actual_diff_paths=actual_diff_paths,
+                )
+            ):
+                violations.append(item)
         return {
-            "violated_acceptance_items": (
-                list(contract.acceptance_set) if invalid else []
-            ),
+            "violated_acceptance_items": violations,
             "suggestions": [],
         }
 
@@ -1253,24 +1608,75 @@ def _public_entry_code_reviewer(
 
 def _public_entry_contract_reviewer(
     contract: FrozenDevelopmentContract,
+    *,
+    evidence_obligations: tuple[dict[str, object], ...],
 ) -> Callable[[Mapping[str, object]], Mapping[str, object]]:
     def reviewer(review_input: Mapping[str, object]) -> Mapping[str, object]:
         validation = review_input.get("validation_results")
-        invalid = (
-            not isinstance(validation, Mapping)
-            or set(validation) != set(contract.validation_set)
-            or any(
-                not isinstance(record, Mapping)
-                or record.get("status") != "PASS"
-                for record in validation.values()
+        violations: list[str] = []
+        exact_topology = (
+            isinstance(validation, Mapping)
+            and set(validation) == set(contract.validation_set)
+            and review_input.get("task_digest") == contract.task_digest
+            and tuple(review_input.get("acceptance_set", ()))
+            == contract.acceptance_set
+            and len(evidence_obligations) == len(contract.acceptance_set)
+            and tuple(
+                str(obligation["acceptance_item"])
+                for obligation in evidence_obligations
             )
-            or tuple(review_input.get("acceptance_set", ()))
-            != contract.acceptance_set
+            == contract.acceptance_set
+            and len(
+                {
+                    str(obligation["acceptance_item_sha256"])
+                    for obligation in evidence_obligations
+                }
+            )
+            == len(contract.acceptance_set)
         )
+        candidate_tree = review_input.get("candidate_tree")
+        for obligation in evidence_obligations:
+            item = str(obligation["acceptance_item"])
+            command = str(obligation["validation_command"])
+            record = validation.get(command) if isinstance(validation, Mapping) else None
+            receipt = _receipt_from_validation_record(record)
+            if (
+                not exact_topology
+                or not isinstance(receipt, Mapping)
+                or set(receipt) != _SUBSCRIPTION_ACCEPTANCE_RECEIPT_KEYS
+                or receipt.get("receipt_version")
+                != _SUBSCRIPTION_ACCEPTANCE_RECEIPT_VERSION
+                or receipt.get("acceptance_item_sha256")
+                != obligation["acceptance_item_sha256"]
+                or receipt.get("evidence_obligation_sha256")
+                != obligation["obligation_sha256"]
+                or receipt.get("evidence_type") != obligation["evidence_type"]
+                or receipt.get("contract_digest") != contract.task_digest
+                or receipt.get("candidate_tree") != candidate_tree
+                or receipt.get("validation_command_sha256")
+                != obligation["validation_command_sha256"]
+                or receipt.get("stdout_sha256")
+                != obligation["expected_stdout_sha256"]
+                or receipt.get("stderr_sha256")
+                != obligation["expected_stderr_sha256"]
+                or receipt.get("candidate_assertions_sha256")
+                != _canonical_sha256(obligation["candidate_assertions"])
+                or receipt.get("actual_diff_paths")
+                != obligation["expected_diff_paths"]
+                or receipt.get("status") != "PASS"
+                or receipt.get("exit_code") != 0
+                or receipt.get("receipt_sha256")
+                != _canonical_sha256(
+                    {
+                        key: value
+                        for key, value in receipt.items()
+                        if key != "receipt_sha256"
+                    }
+                )
+            ):
+                violations.append(item)
         return {
-            "violated_acceptance_items": (
-                list(contract.acceptance_set) if invalid else []
-            ),
+            "violated_acceptance_items": violations,
             "suggestions": [],
         }
 
@@ -1501,6 +1907,10 @@ def run_subscription_public_entry_execution(
             binding=binding,
             config=normalized_codex_config,
         )
+        evidence_obligations = tuple(
+            dict(obligation)
+            for obligation in binding["acceptance_evidence_obligations"]
+        )
         existing_scope = tuple(binding["existing_scope_paths"])
         addable_scope = tuple(binding["addable_scope_paths"])
         if (
@@ -1615,6 +2025,7 @@ def run_subscription_public_entry_execution(
                 autonomy_policy_path=autonomy_policy_path,
                 baseline_files=baseline_files,
                 contract=contract,
+                evidence_obligations=evidence_obligations,
                 timeout_seconds=int(binding["validation_timeout_seconds"]),
                 max_output_bytes=int(binding["max_validation_output_bytes"]),
                 cancellation_requested=cancellation_requested,
@@ -1636,8 +2047,15 @@ def run_subscription_public_entry_execution(
                 baseline_files=baseline_files,
                 worker=worker,
                 validator=validator,
-                code_reviewer=_public_entry_code_reviewer(contract),
-                contract_reviewer=_public_entry_contract_reviewer(contract),
+                code_reviewer=_public_entry_code_reviewer(
+                    contract,
+                    baseline_files=baseline_files,
+                    evidence_obligations=evidence_obligations,
+                ),
+                contract_reviewer=_public_entry_contract_reviewer(
+                    contract,
+                    evidence_obligations=evidence_obligations,
+                ),
                 limits=limits,
                 lease_seconds=durable_lease_seconds,
                 cancellation_requested=cancellation_requested,

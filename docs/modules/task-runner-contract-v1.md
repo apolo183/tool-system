@@ -8,6 +8,10 @@ read-only snapshot inspection plus pure compilation. The subscription-developmen
 adapter kind. A separately exact-bound public execution route composes isolated
 candidate validation and remote-free local Git, while API, source/target mutation,
 remote publication, production, cleanup, and rollback remain unauthorized.
+That execution route also requires one canonical machine-verifiable evidence
+obligation per frozen acceptance item and seals no candidate until independent
+code and contract review revalidate the runner-issued receipts against the
+actual diff, candidate tree, and frozen contract.
 
 <!-- MODULE-COMPOUND-CONTRACT:BEGIN -->
 ~~~yaml
@@ -18,14 +22,14 @@ module_compound_contract:
   identity:
     canonical_module_id: task-runner
     current_module_id: task_runner
-    module_version: 1.2.0
+    module_version: 2.0.0
     aggregate_interface:
       interface_id: task-runner-api
-      interface_version: 1.1.0
+      interface_version: 2.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_runner@1.1.0
+    rollback_identity: tool-system@f9dd68909ed0ffba9dc1a40197482d908c9cc2db:task_runner@1.2.0
     python_import_identities:
       - kind: exact
         name: tool_system.gate.command_runner
@@ -38,8 +42,8 @@ module_compound_contract:
       - kind: exact
         name: tool_system.runner.task_runner
   role:
-    summary: execute validated task plans and compose guarded subscription development with a frozen-budget-derived durable lease, retry-wide call accounting, isolated validation, and one remote-free local Git commit
-    responsibility_boundary: Resolve one explicit current task pair, run validation and policy gates, optionally execute exact configured commands, byte-seal one manifest-bound repository read, and on the separately exact execution binding derive a renewable durable stage lease from worker timeout, both termination waits, validation and local-Git subprocess envelopes; then compose the guarded worker, current-candidate loop, protected validation, durable retry-wide call accounting, two deterministic reviews, and one remote-free local commit while returning redacted terminal/count/lease evidence and non-executing disposition plans.
+    summary: execute validated task plans and compose guarded subscription development with exact per-acceptance machine-verifiable evidence, a frozen-budget-derived durable lease, retry-wide call accounting, isolated validation, and one remote-free local Git commit
+    responsibility_boundary: Resolve one explicit current task pair, run validation and policy gates, optionally execute exact configured commands, byte-seal one manifest-bound repository read, and on the separately exact execution-binding-v2 require one content-addressed behavior or contract evidence obligation per acceptance item before deriving a renewable durable stage lease from worker timeout, both termination waits, validation and local-Git subprocess envelopes; then compose the guarded worker, current-candidate loop, protected validation, independent actual-diff and contract receipt reviews, durable retry-wide call accounting, and one remote-free local commit while returning redacted terminal/count/lease evidence and non-executing disposition plans.
   natural_owner_evidence_paths:
     - src/tool_system/gate/command_runner.py
     - src/tool_system/gate/test_gate.py
@@ -68,7 +72,8 @@ module_compound_contract:
       - explicit_subscription_public_entry_authority_and_bounded_selection
       - exact_manifest_bound_repository_context_and_compiler_limits
       - exact_subscription_execution_binding_worker_configuration_workspace_state_validation_and_local_git_identity
-    boundary: Accept one explicit validated manifest/change-plan pair or a validated batch, graph, or requirement route with caller-selected policies, working directory, and audit path; for subscription context, require the manifest to bind the hashed repository identity, expected commit, blueprint, module registry, milestone, acceptance, governance, query, seed, repository-read authority, and false worker/local-Git write authority exactly to the requested finite selections; or accept a frozen development contract, in-memory baseline, guarded subscription-worker adapter request, validators, reviewers, finite limits, resume state, and cancellation callback. The public execution route additionally requires a second exact manifest mapping that binds path identities, source commit/tree, existing/addable topology, current acceptance and captured plan commands, worker configuration including timeout and termination grace, total call budgets, validation limits, data transfer, isolated workspace, durable state, branch, commit message, one-commit ceiling, and hard-false API, credential, remote, target, production, cleanup, and rollback fields; its lease is a deterministic non-authorizing derivation from those frozen values.
+      - exact_per_acceptance_machine_verifiable_evidence_obligations
+    boundary: Accept one explicit validated manifest/change-plan pair or a validated batch, graph, or requirement route with caller-selected policies, working directory, and audit path; for subscription context, require the manifest to bind the hashed repository identity, expected commit, blueprint, module registry, milestone, acceptance, governance, query, seed, repository-read authority, and false worker/local-Git write authority exactly to the requested finite selections; or accept a frozen development contract, in-memory baseline, guarded subscription-worker adapter request, validators, reviewers, finite limits, resume state, and cancellation callback. The public execution route additionally requires a second exact v2 manifest mapping that binds path identities, source commit/tree, existing/addable topology, current acceptance and captured plan commands, worker configuration including timeout and termination grace, total call budgets, validation limits, data transfer, isolated workspace, durable state, branch, commit message, one-commit ceiling, and hard-false API, credential, remote, target, production, cleanup, and rollback fields. Every acceptance item must have exactly one ordered obligation with its canonical item digest, supported behavior or contract evidence type, the validation command at the same frozen position and its digest, expected stdout and stderr digests, the complete expected baseline-to-candidate diff, and one present-content or absent-state assertion for every changed path. Missing, duplicate, swapped, extra, unsupported, self-inconsistent, or unmachine-verifiable evidence fails closed. The lease is a deterministic non-authorizing derivation from the other frozen values.
   output_contract:
     registered_outputs:
       - pipeline_result_gate_decision_and_audit_record
@@ -76,7 +81,8 @@ module_compound_contract:
       - nonexecuting_subscription_public_entry_authority_packet
       - redacted_manifest_bound_context_and_blueprint_compilation_packet
       - redacted_subscription_local_commit_and_nonexecuting_draft_pr_plan
-    boundary: Return pair resolution, validation, gate, command, batch, graph, stage, status, reason, and optional audit-path evidence; a passing public-entry preflight returns a canonical packet with hashed repository-root, task-pair input, and exact authority-binding evidence; the manifest-bound context stage returns redacted exact-snapshot evidence, deterministic compiled task DAG and hashes without repository-root or selected-content disclosure; the subscription development path returns the bounded in-memory result; the exact public execution route returns only hashes, retry-wide durable worker count, exact safe terminal status, derived lease seconds, finite worker usage, local branch/commit/tree identity, and non-executing disposition plans, with zero API, provider, credential, source/target mutation, remote-repository, production, cleanup, and rollback operations.
+      - internal_content_addressed_acceptance_evidence_receipts
+    boundary: Return pair resolution, validation, gate, command, batch, graph, stage, status, reason, and optional audit-path evidence; a passing public-entry preflight returns a canonical packet with hashed repository-root, task-pair input, and exact authority-binding evidence; the manifest-bound context stage returns redacted exact-snapshot evidence, deterministic compiled task DAG and hashes without repository-root or selected-content disclosure; the subscription development path returns the bounded in-memory result. For every satisfied acceptance item the public execution validator creates one canonical receipt binding the obligation digest, evidence type, frozen contract digest, actual candidate tree, complete actual diff, validation-command digest, exit code, captured output digests, and candidate-assertion digest. The code reviewer independently recomputes the actual diff, candidate tree, assertions, and receipt; the contract reviewer independently checks exact acceptance coverage, obligation identity, validation receipt, candidate tree, contract digest, and receipt digest. Only then may the route return its existing redacted hashes, retry-wide durable worker count, exact safe terminal status, derived lease seconds, finite worker usage, local branch/commit/tree identity, and non-executing disposition plans, with zero API, provider, credential, source/target mutation, remote-repository, production, cleanup, and rollback operations.
   error_contract:
     registered_error_semantics:
       - first_failed_gate_or_command_stops_pipeline
@@ -85,7 +91,8 @@ module_compound_contract:
       - missing_mismatched_ambiguous_or_drifting_snapshot_authority_binding_blocks_before_context
       - unclassified_stale_dirty_unsafe_malformed_or_rejected_context_blocks_compilation
       - missing_mismatched_or_drifting_execution_binding_workspace_state_scope_validation_or_git_identity_blocks_before_unreceipted_commit
-    boundary: Missing current pair, invalid replay request, invalid repository identity or bounded public-entry selection, absent, duplicate, mismatched, authority-bearing, or byte-drifting manifest binding, failed authority, stale or dirty snapshot, unsafe or missing evidence, invalid committed YAML mappings, rejected compilation, manifest, plan, policy, gate, command, graph, batch, unsupported subscription adapter, invalid structured worker result, exhausted durable total call budget, candidate validation command failure, unsafe workspace or state path, lease/receipt ambiguity, or blocked development-loop input stops before any unreceipted commit or downstream execution. A worker timeout remains SUBSCRIPTION_WORKER_TIMEOUT with its durable nonzero call count and cannot be collapsed to a generic state conflict.
+      - missing_duplicate_extra_unsupported_stale_or_tampered_acceptance_evidence_blocks_before_local_commit
+    boundary: Missing current pair, invalid replay request, invalid repository identity or bounded public-entry selection, absent, duplicate, mismatched, authority-bearing, or byte-drifting manifest binding, failed authority, stale or dirty snapshot, unsafe or missing evidence, invalid committed YAML mappings, rejected compilation, manifest, plan, policy, gate, command, graph, batch, unsupported subscription adapter, invalid structured worker result, exhausted durable total call budget, candidate validation command failure, empty or mismatched candidate diff, mismatched candidate assertion, wrong command output, wrong acceptance digest, stale candidate tree, wrong contract digest, tampered receipt, unsafe workspace or state path, lease/receipt ambiguity, or blocked development-loop input stops before any unreceipted commit or downstream execution. A command exit status alone never satisfies an acceptance item. Natural-language acceptance without a complete supported machine-verifiable obligation fails closed. A worker timeout remains SUBSCRIPTION_WORKER_TIMEOUT with its durable nonzero call count and cannot be collapsed to a generic state conflict.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes:
@@ -146,13 +153,13 @@ module_compound_contract:
         classification_grants_authority: false
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve explicit-pair resolution, separate execution-binding closure, deterministic lease derivation from already frozen fields, retry-wide worker count and safe terminal preservation, input byte sealing, exact manifest-bound repository-read authorization, gate order, stop behavior, command-result fields, batch and graph aggregation, non-executing public-entry packet fields and digests, exact-snapshot context and freshness checks, deterministic compiler output, redaction, guarded subscription-adapter selection, structured in-memory candidate results, hard-zero downstream write and external effect fields, no-target flags, and audit result shapes.
-    interface_incompatible_change: Weakening exact execution binding, adding source/remote/production effects, or changing the public result shape requires a new aggregate interface version and revalidation of the CLI plus every upstream validation and planning boundary.
+    interface_compatible_replacement: Preserve explicit-pair resolution, execution-binding-v2 exact per-item obligation closure, runner-issued receipt fields and digests, independent code and contract review, deterministic lease derivation from already frozen fields, retry-wide worker count and safe terminal preservation, input byte sealing, exact manifest-bound repository-read authorization, gate order, stop behavior, command-result fields, batch and graph aggregation, non-executing public-entry packet fields and digests, exact-snapshot context and freshness checks, deterministic compiler output, redaction, guarded subscription-adapter selection, structured in-memory candidate results, hard-zero downstream write and external effect fields, no-target flags, and audit result shapes.
+    interface_incompatible_change: Accepting execution-binding v1, weakening per-item machine evidence or exact receipt review, adding source/remote/production effects, or changing the public result shape requires a new aggregate interface version and revalidation of the CLI plus every upstream validation and planning boundary.
   rollback_contract:
-    rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:task_runner@1.1.0
+    rollback_identity: tool-system@f9dd68909ed0ffba9dc1a40197482d908c9cc2db:task_runner@1.2.0
     method: Revert through a separately audited pull request and preserve prior task, batch, graph, stage, command, and audit evidence.
   replacement_contract:
-    activation_rule: Replace only after explicit-pair, replay-block, policy, command, batch, graph, stage, audit, public-entry input denial, exact binding pass and mismatch, duplicate, byte-drift, stale-snapshot, context/compiler composition, redaction, derived-lease bounds, pre-process durable-call observation, fake timeout terminal/count preservation, retry-wide budget, guarded subscription-adapter, unsupported-adapter denial, no-target-mutation, and CLI tests pass.
+    activation_rule: Replace only after explicit-pair, replay-block, policy, command, batch, graph, stage, audit, public-entry input denial, execution-binding-v2 pass and v1 denial, missing/duplicate/extra obligation denial, wrong-code plus unrelated-PASS denial, swapped passing acceptance-command denial, wrong acceptance receipt, stale tree, empty diff and tampered receipt denial, correct remote-free Python and TypeScript fake-I/O success, byte-drift, stale-snapshot, context/compiler composition, redaction, derived-lease bounds, pre-process durable-call observation, fake timeout terminal/count preservation, retry-wide budget, guarded subscription-adapter, unsupported-adapter denial, no-target-mutation, and CLI tests pass.
     parallel_active_mainlines_allowed: false
   replacement_revalidation_boundary:
     module_implementation: true
@@ -229,7 +236,7 @@ module_compound_contract:
         mode: separately exact-bound isolated local execution
         evidence_paths:
           - src/tool_system/runner/task_runner.py
-        boundary: Compose local-git-api and durable-orchestrator-api only after the current task pair and execution binding match; derive and pass one renewable stage-covering lease from the frozen worker, validation, and local-Git limits, consume every worker call durably before process start, create at most one remote-free local commit, and return only non-executing remote, cleanup, and rollback plans.
+        boundary: Compose local-git-api and durable-orchestrator-api only after the current task pair and execution-binding-v2 obligations match; derive and pass one renewable stage-covering lease from the frozen worker, validation, and local-Git limits, consume every worker call durably before process start, require all per-item candidate-bound receipts and both independent reviews before sealing, create at most one remote-free local commit, and return only non-executing remote, cleanup, and rollback plans.
       - system_id: codex-cli-subscription-worker
         mode: explicitly injected guarded adapter only
         evidence_paths:

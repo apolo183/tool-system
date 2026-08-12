@@ -231,6 +231,45 @@ INDEPENDENT_AUDIT_REOPEN_FILES = {
     "examples/task_manifests/tool_system_independent_audit_acceptance_reopen_v1.yaml",
     "tests/test_phase_alignment.py",
 }
+SEMANTIC_EVIDENCE_CORRECTION_REPORT = (
+    ROOT
+    / "docs"
+    / "reports"
+    / "subscription_worker_semantic_acceptance_evidence_correction_v1.md"
+)
+SEMANTIC_EVIDENCE_CORRECTION_MAPPING = (
+    ROOT
+    / "docs"
+    / "reports"
+    / "subscription_worker_semantic_acceptance_evidence_correction_mapping_v1.yaml"
+)
+SEMANTIC_EVIDENCE_CORRECTION_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml"
+)
+SEMANTIC_EVIDENCE_CORRECTION_CHANGE_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml"
+)
+SEMANTIC_EVIDENCE_CORRECTION_FILES = {
+    "REPO_MANIFEST.md",
+    "config/module_registry_v1.yaml",
+    "docs/modules/task-runner-contract-v1.md",
+    "docs/reports/subscription_worker_semantic_acceptance_evidence_correction_v1.md",
+    "docs/reports/subscription_worker_semantic_acceptance_evidence_correction_mapping_v1.yaml",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml",
+    "examples/task_manifests/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml",
+    "src/tool_system/runner/task_runner.py",
+    "tests/test_module_registry.py",
+    "tests/test_phase_alignment.py",
+    "tests/test_task_runner.py",
+}
 SUBSCRIPTION_DURABLE_CORRECTION_REPORT = (
     ROOT
     / "docs"
@@ -1435,7 +1474,7 @@ def test_subscription_public_entry_acceptance_preserves_external_stops() -> None
     )
     assert state["current_phase"]["id"] == EXPECTED_PHASE
     assert acceptance["status"] == (
-        "reopened_confirmed_blockers_pending_correction_and_reacceptance"
+        "reopened_ts_b01_corrected_pending_reacceptance_ts_b02_blocked"
     )
     assert acceptance["historical_status"] == (
         "accepted_subscription_worker_public_entry_core"
@@ -1452,10 +1491,12 @@ def test_subscription_public_entry_acceptance_preserves_external_stops() -> None
     assert acceptance["current_disposition"] == {
         "accepted": False,
         "real_repository_execution_blocked": True,
-        "blocking_findings": ["TS-B01", "TS-B02"],
+        "blocking_findings": ["TS-B02"],
+        "corrected_pending_reacceptance_findings": ["TS-B01"],
+        "ts_b01_reaccepted": False,
         "historical_fixes_retained": [217, 218, 219, 220],
         "git_rollback_performed": False,
-        "correction_authorized": False,
+        "correction_authorized": True,
     }
     assert acceptance["evidence_closure"][
         "stopped_unmerged_attempt_pull_request"
@@ -1473,6 +1514,138 @@ def test_subscription_public_entry_acceptance_preserves_external_stops() -> None
         "grants no real Codex execution",
         "No such operation occurs",
         "separately authorized future lifecycle",
+    ):
+        assert marker in report
+
+
+def test_semantic_acceptance_evidence_correction_is_exact_and_non_authorizing() -> None:
+    manifest_result = validate_task_manifest(
+        SEMANTIC_EVIDENCE_CORRECTION_MANIFEST,
+        REPO_WRITE_POLICY,
+        AUTONOMY_POLICY,
+    )
+    plan_result = validate_change_plan(
+        SEMANTIC_EVIDENCE_CORRECTION_CHANGE_PLAN
+    )
+    manifest = load_yaml_file(SEMANTIC_EVIDENCE_CORRECTION_MANIFEST)
+    plan = load_yaml_file(SEMANTIC_EVIDENCE_CORRECTION_CHANGE_PLAN)
+    mapping = load_yaml_file(SEMANTIC_EVIDENCE_CORRECTION_MAPPING)
+    state = load_yaml_file(PROJECT_STATE)
+    correction = state[
+        "subscription_worker_semantic_acceptance_evidence_correction"
+    ]
+    public_entry = state["subscription_worker_public_entry_acceptance"]
+    report = SEMANTIC_EVIDENCE_CORRECTION_REPORT.read_text(encoding="utf-8")
+
+    assert manifest_result["status"] == "PASS", manifest_result
+    assert plan_result["status"] == "PASS", plan_result
+    assert set(manifest["allowed_files"]) == SEMANTIC_EVIDENCE_CORRECTION_FILES
+    assert set(manifest["scope"]["in_scope"]) == (
+        SEMANTIC_EVIDENCE_CORRECTION_FILES
+    )
+    assert set(plan["changed_files"]) == SEMANTIC_EVIDENCE_CORRECTION_FILES
+    assert len(SEMANTIC_EVIDENCE_CORRECTION_FILES) == 13
+    closure = manifest["bounded_closure"]["frozen_before_execution"]
+    assert closure["task_identity"] == (
+        "TOOL-SYSTEM-TS-B01-SEMANTIC-ACCEPTANCE-EVIDENCE-CORRECTION-v1"
+    )
+    assert closure["baseline_commit"] == (
+        "f9dd68909ed0ffba9dc1a40197482d908c9cc2db"
+    )
+    assert closure["baseline_tree"] == (
+        "aa12da08d6707beca83fe164339dbda9a3260d0a"
+    )
+    assert closure["allowed_scope"] == "exact_13_paths_listed_below"
+    assert closure["finite_budgets"]["real_codex_worker_invocations"] == 0
+    assert closure["finite_budgets"]["api_provider_invocations"] == 0
+    assert manifest["publication"]["retain_feature_branch"] is True
+    assert manifest["publication"]["branch_deletion_authorized"] is False
+
+    assert mapping["finding_id"] == "TS-B01"
+    assert mapping["decision"] == "corrected_pending_reacceptance"
+    assert mapping["authorized_path_count"] == 13
+    assert mapping["registry_seal_sync"] == {
+        "path": "tests/test_module_registry.py",
+        "raw_byte_length": 126_424,
+        "raw_sha256": (
+            "eef4b374eaa25ecaac5a40b8f16b0f1a697a316f8bc70c6dff9f85f38151cddb"
+        ),
+        "semantic_sha256": (
+            "d3843c1b3d0fc4c71f5c43db5b8cd27adae2c823ee0452a65cec1250b5937120"
+        ),
+    }
+    assert correction["authorized_path_count"] == 13
+    assert correction["registry_seal_sync"] == {
+        "test_path": "tests/test_module_registry.py",
+        "raw_byte_length": 126_424,
+        "raw_sha256": (
+            "eef4b374eaa25ecaac5a40b8f16b0f1a697a316f8bc70c6dff9f85f38151cddb"
+        ),
+        "semantic_sha256": (
+            "d3843c1b3d0fc4c71f5c43db5b8cd27adae2c823ee0452a65cec1250b5937120"
+        ),
+    }
+    boundary = mapping["corrected_runtime_boundary"]
+    assert boundary["execution_binding_version"] == (
+        "subscription_public_entry_execution_binding_v2"
+    )
+    assert boundary["supported_evidence_types"] == ["behavior", "contract"]
+    assert boundary["ordered_item_command_pairing_required"] is True
+    assert boundary["command_pass_alone_satisfies_acceptance"] is False
+    assert boundary["natural_language_without_machine_evidence_fails_closed"]
+    assert boundary["v1_execution_binding_accepted"] is False
+    assert {
+        case["case"] for case in mapping["deterministic_adversarial_evidence"]
+    } == {
+        "wrong_code_with_unrelated_pass",
+        "wrong_acceptance_test_pass",
+        "wrong_acceptance_receipt",
+        "stale_candidate_tree",
+        "missing_obligation_mapping",
+        "duplicate_obligation_mapping",
+        "empty_diff",
+        "tampered_receipt_with_recomputed_digest",
+    }
+    assert mapping["acceptance_disposition"] == {
+        "ts_b01": "corrected_pending_reacceptance",
+        "subscription_worker_public_entry_core": "reopened",
+        "public_entry_reaccepted": False,
+        "real_repository_execution_blocked": True,
+        "blocking_findings": ["TS-B02"],
+    }
+    assert set(mapping["remaining_authority"].values()) == {False}
+    assert set(mapping["zero_operation_boundary"].values()) == {0}
+
+    assert correction["status"] == "corrected_pending_reacceptance"
+    assert correction["authority_effect"] == "none"
+    assert correction["module"] == {
+        "module_id": "task_runner",
+        "previous_module_version": "1.2.0",
+        "module_version": "2.0.0",
+        "previous_aggregate_interface_version": "1.1.0",
+        "aggregate_interface_version": "2.0.0",
+        "rollback_identity": (
+            "tool-system@f9dd68909ed0ffba9dc1a40197482d908c9cc2db:"
+            "task_runner@1.2.0"
+        ),
+    }
+    assert public_entry["current_disposition"]["accepted"] is False
+    assert public_entry["current_disposition"]["blocking_findings"] == [
+        "TS-B02"
+    ]
+    assert public_entry["current_disposition"][
+        "corrected_pending_reacceptance_findings"
+    ] == ["TS-B01"]
+    assert set(correction["remaining_authority"].values()) == {False}
+    assert set(correction["zero_operation_boundary"].values()) == {0}
+    for marker in (
+        "corrected_pending_reacceptance",
+        "subscription_public_entry_execution_binding_v2",
+        "wrong candidate content",
+        "command exit zero is only one prerequisite",
+        "TS-B02",
+        "public entry is not reaccepted",
+        "work stops",
     ):
         assert marker in report
 
@@ -1711,7 +1884,8 @@ def test_independent_audit_reopen_updates_current_descriptive_state() -> None:
     assert p16i["status"] == (
         "affected_dependency_closure_revalidation_required"
     )
-    assert package["confirmed_blockers"] == ["TS-B01", "TS-B02"]
+    assert package["confirmed_blockers"] == ["TS-B02"]
+    assert package["corrected_pending_reacceptance_findings"] == ["TS-B01"]
     assert package["unresolved_high_risk_findings"] == [
         "TS-H01",
         "TS-H02",

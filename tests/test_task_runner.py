@@ -91,6 +91,33 @@ SNAPSHOT_BINDING_FILES = {
     "tests/test_root_cli.py",
     "tests/test_task_runner.py",
 }
+SEMANTIC_EVIDENCE_CORRECTION_MANIFEST = (
+    ROOT
+    / "examples"
+    / "task_manifests"
+    / "tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml"
+)
+SEMANTIC_EVIDENCE_CORRECTION_PLAN = (
+    ROOT
+    / "examples"
+    / "change_plans"
+    / "tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml"
+)
+SEMANTIC_EVIDENCE_CORRECTION_FILES = {
+    "REPO_MANIFEST.md",
+    "config/module_registry_v1.yaml",
+    "docs/modules/task-runner-contract-v1.md",
+    "docs/reports/subscription_worker_semantic_acceptance_evidence_correction_v1.md",
+    "docs/reports/subscription_worker_semantic_acceptance_evidence_correction_mapping_v1.yaml",
+    "docs/tool_system_module_registry_contract_v1.md",
+    "docs/tool_system_project_state_v1.yaml",
+    "examples/change_plans/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml",
+    "examples/task_manifests/tool_system_subscription_worker_semantic_acceptance_evidence_correction_v1.yaml",
+    "src/tool_system/runner/task_runner.py",
+    "tests/test_module_registry.py",
+    "tests/test_phase_alignment.py",
+    "tests/test_task_runner.py",
+}
 
 
 
@@ -776,6 +803,275 @@ def test_snapshot_authority_binding_package_freezes_exact_scope() -> None:
         "finite_budgets"
     ]["real_downstream_accesses"] == 0
 
+
+def test_semantic_evidence_correction_package_freezes_exact_scope() -> None:
+    manifest_result = validate_task_manifest(
+        SEMANTIC_EVIDENCE_CORRECTION_MANIFEST,
+        ROOT / "policy/repo_write_policy.yaml",
+        ROOT / "policy/autonomy_policy.yaml",
+    )
+    plan_result = validate_change_plan(SEMANTIC_EVIDENCE_CORRECTION_PLAN)
+    manifest = load_yaml_file(SEMANTIC_EVIDENCE_CORRECTION_MANIFEST)
+    plan = load_yaml_file(SEMANTIC_EVIDENCE_CORRECTION_PLAN)
+
+    assert manifest_result["status"] == "PASS", manifest_result
+    assert plan_result["status"] == "PASS", plan_result
+    assert set(manifest["allowed_files"]) == SEMANTIC_EVIDENCE_CORRECTION_FILES
+    assert set(manifest["scope"]["in_scope"]) == SEMANTIC_EVIDENCE_CORRECTION_FILES
+    assert set(plan["changed_files"]) == SEMANTIC_EVIDENCE_CORRECTION_FILES
+    assert len(SEMANTIC_EVIDENCE_CORRECTION_FILES) == 13
+    closure = manifest["bounded_closure"]["frozen_before_execution"]
+    assert closure["baseline_commit"] == (
+        "f9dd68909ed0ffba9dc1a40197482d908c9cc2db"
+    )
+    assert closure["baseline_tree"] == (
+        "aa12da08d6707beca83fe164339dbda9a3260d0a"
+    )
+    assert closure["finite_budgets"]["real_codex_worker_invocations"] == 0
+    assert manifest["publication"]["branch_deletion_authorized"] is False
+
+
+def _acceptance_evidence_obligation(
+    *,
+    acceptance_item: str,
+    evidence_type: str,
+    validation_command: str,
+    expected_diff_paths: list[str],
+    candidate_assertions: list[dict[str, str]],
+    stdout: str = "",
+    stderr: str = "",
+) -> dict[str, object]:
+    body: dict[str, object] = {
+        "obligation_version": "subscription_acceptance_evidence_obligation_v1",
+        "acceptance_item": acceptance_item,
+        "acceptance_item_sha256": (
+            task_runner_module._acceptance_item_sha256(acceptance_item)
+        ),
+        "evidence_type": evidence_type,
+        "validation_command": validation_command,
+        "validation_command_sha256": (
+            task_runner_module._validation_command_sha256(validation_command)
+        ),
+        "expected_stdout_sha256": hashlib.sha256(
+            stdout.encode("utf-8")
+        ).hexdigest(),
+        "expected_stderr_sha256": hashlib.sha256(
+            stderr.encode("utf-8")
+        ).hexdigest(),
+        "expected_diff_paths": expected_diff_paths,
+        "candidate_assertions": candidate_assertions,
+    }
+    return {
+        **body,
+        "obligation_sha256": task_runner_module._canonical_sha256(body),
+    }
+
+
+def _semantic_review_fixture() -> tuple[
+    FrozenDevelopmentContract,
+    dict[str, str],
+    dict[str, str],
+    dict[str, object],
+    dict[str, object],
+]:
+    acceptance_item = "calculator behavior returns the original value"
+    validation_command = 'python -c "assert True"'
+    source = "src/calculator.py"
+    baseline_files = {source: "def total(value):\n    return value * 100\n"}
+    candidate_files = {source: "def total(value):\n    return value\n"}
+    obligation = _acceptance_evidence_obligation(
+        acceptance_item=acceptance_item,
+        evidence_type="behavior",
+        validation_command=validation_command,
+        expected_diff_paths=[source],
+        candidate_assertions=[
+            {
+                "path": source,
+                "state": "present",
+                "content_sha256": hashlib.sha256(
+                    candidate_files[source].encode("utf-8")
+                ).hexdigest(),
+            }
+        ],
+    )
+    contract = FrozenDevelopmentContract(
+        task_digest="a" * 64,
+        baseline_tree="b" * 40,
+        allowed_scope=(source,),
+        acceptance_set=(acceptance_item,),
+        validation_set=(validation_command,),
+    )
+    candidate_tree = task_runner_module._candidate_tree_sha256(candidate_files)
+    receipt = task_runner_module._acceptance_evidence_receipt(
+        contract=contract,
+        obligation=obligation,
+        candidate_tree=candidate_tree,
+        actual_diff_paths=(source,),
+    )
+    review_input: dict[str, object] = {
+        "task_digest": contract.task_digest,
+        "candidate_tree": candidate_tree,
+        "candidate_files": candidate_files,
+        "acceptance_set": list(contract.acceptance_set),
+        "validation_results": {
+            validation_command: {
+                "status": "PASS",
+                "diagnostic": json.dumps(
+                    receipt,
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                    sort_keys=True,
+                ),
+            }
+        },
+    }
+    return contract, baseline_files, candidate_files, obligation, review_input
+
+
+def test_semantic_reviewers_accept_exact_machine_evidence() -> None:
+    contract, baseline, _, obligation, review_input = _semantic_review_fixture()
+    code_review = task_runner_module._public_entry_code_reviewer(
+        contract,
+        baseline_files=baseline,
+        evidence_obligations=(obligation,),
+    )(review_input)
+    contract_review = task_runner_module._public_entry_contract_reviewer(
+        contract,
+        evidence_obligations=(obligation,),
+    )(review_input)
+
+    assert code_review["violated_acceptance_items"] == []
+    assert contract_review["violated_acceptance_items"] == []
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["wrong_code", "wrong_acceptance", "stale_tree", "tampered_receipt"],
+)
+def test_semantic_reviewers_reject_adversarial_evidence(mutation: str) -> None:
+    contract, baseline, candidate, obligation, review_input = (
+        _semantic_review_fixture()
+    )
+    if mutation == "wrong_code":
+        review_input["candidate_files"] = {
+            next(iter(candidate)): "def total(value):\n    return value * 2\n"
+        }
+    elif mutation == "stale_tree":
+        review_input["candidate_tree"] = "c" * 64
+    else:
+        validation = review_input["validation_results"]
+        assert isinstance(validation, dict)
+        record = validation[next(iter(validation))]
+        assert isinstance(record, dict)
+        receipt = json.loads(str(record["diagnostic"]))
+        if mutation == "wrong_acceptance":
+            receipt["acceptance_item_sha256"] = "d" * 64
+        else:
+            receipt["stdout_sha256"] = "e" * 64
+        receipt["receipt_sha256"] = task_runner_module._canonical_sha256(
+            {
+                key: value
+                for key, value in receipt.items()
+                if key != "receipt_sha256"
+            }
+        )
+        record["diagnostic"] = json.dumps(
+            receipt,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+    code_review = task_runner_module._public_entry_code_reviewer(
+        contract,
+        baseline_files=baseline,
+        evidence_obligations=(obligation,),
+    )(review_input)
+    contract_review = task_runner_module._public_entry_contract_reviewer(
+        contract,
+        evidence_obligations=(obligation,),
+    )(review_input)
+
+    assert (
+        code_review["violated_acceptance_items"]
+        or contract_review["violated_acceptance_items"]
+    )
+
+
+def test_semantic_code_reviewer_rejects_empty_diff() -> None:
+    contract, baseline, _, obligation, review_input = _semantic_review_fixture()
+    review_input["candidate_files"] = dict(baseline)
+    review_input["candidate_tree"] = task_runner_module._candidate_tree_sha256(
+        baseline
+    )
+
+    result = task_runner_module._public_entry_code_reviewer(
+        contract,
+        baseline_files=baseline,
+        evidence_obligations=(obligation,),
+    )(review_input)
+
+    assert result["violated_acceptance_items"] == list(contract.acceptance_set)
+
+
+@pytest.mark.parametrize("obligations", [[], ["duplicate"]])
+def test_semantic_evidence_mapping_rejects_missing_or_duplicate_coverage(
+    obligations: list[object],
+) -> None:
+    contract, _, _, obligation, _ = _semantic_review_fixture()
+    observed = [] if not obligations else [obligation, obligation]
+
+    with pytest.raises(
+        ValueError,
+        match="SUBSCRIPTION_ACCEPTANCE_EVIDENCE_COVERAGE_MISMATCH",
+    ):
+        task_runner_module._normalize_acceptance_evidence_obligations(
+            observed,
+            acceptance_set=contract.acceptance_set,
+            validation_set=contract.validation_set,
+            allowed_scope=contract.allowed_scope,
+        )
+
+
+def test_semantic_evidence_mapping_rejects_wrong_acceptance_test_pass() -> None:
+    source = "src/calculator.py"
+    acceptance_set = ("preserves capital", "rounds tax")
+    validation_set = ("python tests/capital.py", "python tests/tax.py")
+    assertion = [
+        {
+            "path": source,
+            "state": "present",
+            "content_sha256": hashlib.sha256(b"candidate").hexdigest(),
+        }
+    ]
+    swapped = [
+        _acceptance_evidence_obligation(
+            acceptance_item=acceptance_set[0],
+            evidence_type="behavior",
+            validation_command=validation_set[1],
+            expected_diff_paths=[source],
+            candidate_assertions=assertion,
+        ),
+        _acceptance_evidence_obligation(
+            acceptance_item=acceptance_set[1],
+            evidence_type="behavior",
+            validation_command=validation_set[0],
+            expected_diff_paths=[source],
+            candidate_assertions=assertion,
+        ),
+    ]
+
+    with pytest.raises(
+        ValueError,
+        match="SUBSCRIPTION_ACCEPTANCE_EVIDENCE_COMMAND_MISMATCH",
+    ):
+        task_runner_module._normalize_acceptance_evidence_obligations(
+            swapped,
+            acceptance_set=acceptance_set,
+            validation_set=validation_set,
+            allowed_scope=(source,),
+        )
+
+
 def _bound_subscription_execution_pair(
     tmp_path: Path,
     *,
@@ -814,8 +1110,24 @@ def _bound_subscription_execution_pair(
     )
     manifest = load_yaml_file(manifest_path)
     manifest["verification"]["commands"] = [validation_command]
+    target_content = "def total(value: int) -> int:\n    return value\n"
+    evidence_obligation = _acceptance_evidence_obligation(
+        acceptance_item=acceptance[0],
+        evidence_type="behavior",
+        validation_command=validation_command,
+        expected_diff_paths=["src/billing/service.py"],
+        candidate_assertions=[
+            {
+                "path": "src/billing/service.py",
+                "state": "present",
+                "content_sha256": hashlib.sha256(
+                    target_content.encode("utf-8")
+                ).hexdigest(),
+            }
+        ],
+    )
     manifest["subscription_public_entry_execution"] = {
-        "binding_version": "subscription_public_entry_execution_binding_v1",
+        "binding_version": "subscription_public_entry_execution_binding_v2",
         "enabled": True,
         "repository_root_identity_sha256": hashlib.sha256(
             str(repository_root).encode("utf-8")
@@ -838,6 +1150,7 @@ def _bound_subscription_execution_pair(
             "tests/test_billing.py",
         ],
         "acceptance_set": acceptance,
+        "acceptance_evidence_obligations": [evidence_obligation],
         "validation_set": [validation_command],
         "worker_configuration_sha256": (
             task_runner_module._worker_configuration_sha256(config)
@@ -1465,8 +1778,23 @@ milestones:
     )
     manifest = load_yaml_file(manifest_path)
     manifest["verification"]["commands"] = [spec["command"]]
+    evidence_obligation = _acceptance_evidence_obligation(
+        acceptance_item=acceptance[0],
+        evidence_type="behavior",
+        validation_command=spec["command"],
+        expected_diff_paths=[spec["source"]],
+        candidate_assertions=[
+            {
+                "path": spec["source"],
+                "state": "present",
+                "content_sha256": hashlib.sha256(
+                    spec["target"].encode("utf-8")
+                ).hexdigest(),
+            }
+        ],
+    )
     manifest["subscription_public_entry_execution"] = {
-        "binding_version": "subscription_public_entry_execution_binding_v1",
+        "binding_version": "subscription_public_entry_execution_binding_v2",
         "enabled": True,
         "repository_root_identity_sha256": hashlib.sha256(
             str(repository).encode()
@@ -1483,6 +1811,7 @@ milestones:
         "addable_scope_paths": [],
         "allowed_scope": scope,
         "acceptance_set": acceptance,
+        "acceptance_evidence_obligations": [evidence_obligation],
         "validation_set": [spec["command"]],
         "worker_configuration_sha256": (
             task_runner_module._worker_configuration_sha256(config)
@@ -1600,6 +1929,45 @@ def _run_multi_stack(
     )
 
 
+def _replace_multi_stack_with_unrelated_pass(context: dict[str, Any]) -> None:
+    unrelated_command = 'python -c "pass"'
+    plan = load_yaml_file(context["plan"])
+    plan["verification"]["commands"] = [unrelated_command]
+    context["plan"].write_text(
+        yaml.safe_dump(plan, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    manifest = load_yaml_file(context["manifest"])
+    manifest["verification"]["commands"] = [unrelated_command]
+    execution = manifest["subscription_public_entry_execution"]
+    acceptance_item = execution["acceptance_set"][0]
+    source = context["spec"]["source"]
+    execution["validation_set"] = [unrelated_command]
+    execution["acceptance_evidence_obligations"] = [
+        _acceptance_evidence_obligation(
+            acceptance_item=acceptance_item,
+            evidence_type="behavior",
+            validation_command=unrelated_command,
+            expected_diff_paths=[source],
+            candidate_assertions=[
+                {
+                    "path": source,
+                    "state": "present",
+                    "content_sha256": hashlib.sha256(
+                        context["spec"]["target"].encode("utf-8")
+                    ).hexdigest(),
+                }
+            ],
+        )
+    ]
+    execution["finite_budgets"]["max_cycles"] = 1
+    execution["finite_budgets"]["max_worker_calls"] = 1
+    context["manifest"].write_text(
+        yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+
+
 def _assert_zero_external_effects(result: dict[str, object]) -> None:
     for key in (
         "provider_invocations", "provider_credential_value_accesses",
@@ -1608,6 +1976,34 @@ def _assert_zero_external_effects(result: dict[str, object]) -> None:
     ):
         assert result[key] == 0
     assert result["api_mode_enabled"] is False
+
+
+@pytest.mark.parametrize("stack", ["python", "typescript"])
+def test_unrelated_pass_does_not_satisfy_wrong_candidate(
+    tmp_path: Path,
+    stack: str,
+) -> None:
+    context = _multi_stack_context(tmp_path, stack)
+    _replace_multi_stack_with_unrelated_pass(context)
+    calls: list[dict[str, object]] = []
+
+    result = _run_multi_stack(
+        context,
+        _multi_stack_adapter(context, "repair", calls),
+    )
+
+    assert result["status"] == "BLOCK", result
+    assert result["terminal_code"] == "CYCLE_BUDGET_EXHAUSTED"
+    assert result["worker_invocations"] == 1
+    assert len(calls) == 1
+    assert _fixture_git(
+        context["workspace"],
+        "rev-list",
+        "--count",
+        f"{context['head']}..HEAD",
+    ) == "0"
+    assert _fixture_git(context["workspace"], "branch", "--show-current") == ""
+    _assert_zero_external_effects(result)
 
 
 @pytest.mark.parametrize("stack", ["python", "typescript"])

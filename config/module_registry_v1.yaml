@@ -721,12 +721,12 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: task-runner
-  module_version: 1.2.0
-  role: execute validated task plans and compose guarded subscription development with a frozen-budget-derived durable lease, retry-wide call accounting, isolated validation, and one remote-free local Git commit. Resolve one explicit current task pair, run validation and policy gates, optionally execute exact configured commands, byte-seal one manifest-bound repository read, and on the separately exact execution binding derive a renewable durable stage lease from worker timeout, both termination waits, validation and local-Git subprocess envelopes; then compose the guarded worker, current-candidate loop, protected validation, durable retry-wide call accounting, two deterministic reviews, and one remote-free local commit while returning redacted terminal/count/lease evidence and non-executing disposition plans.
+  module_version: 2.0.0
+  role: execute validated task plans and compose guarded subscription development with exact per-acceptance machine-verifiable evidence, a frozen-budget-derived durable lease, retry-wide call accounting, isolated validation, and one remote-free local Git commit. Resolve one explicit current task pair, run validation and policy gates, optionally execute exact configured commands, byte-seal one manifest-bound repository read, and on the separately exact execution-binding-v2 require one content-addressed behavior or contract evidence obligation per acceptance item before deriving a renewable durable stage lease from worker timeout, both termination waits, validation and local-Git subprocess envelopes; then compose the guarded worker, current-candidate loop, protected validation, independent actual-diff and contract receipt reviews, durable retry-wide call accounting, and one remote-free local commit while returning redacted terminal/count/lease evidence and non-executing disposition plans.
   owner: task-runner
   public_interface_refs:
   - interface_id: task-runner-api
-    interface_version: 1.1.0
+    interface_version: 2.0.0
   internal_dependencies:
   - interface_id: blueprint-compiler-api
     interface_version: 1.0.0
@@ -786,7 +786,7 @@ modules:
     target_boundary_id: code-003
     effect_contract:
       repo_relative_path: docs/modules/task-runner-contract-v1.md
-      sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+      sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: direct-effects-code-004
@@ -797,7 +797,7 @@ modules:
     target_boundary_id: code-004
     effect_contract:
       repo_relative_path: docs/modules/task-runner-contract-v1.md
-      sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+      sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: direct-effects-code-005
@@ -808,7 +808,7 @@ modules:
     target_boundary_id: code-005
     effect_contract:
       repo_relative_path: docs/modules/task-runner-contract-v1.md
-      sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+      sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-001
@@ -824,7 +824,7 @@ modules:
     target_boundary_id: code-001
     effect_contract:
       repo_relative_path: docs/modules/task-runner-contract-v1.md
-      sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+      sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   - effect_id: conditional-delegated-effects-code-005
@@ -840,17 +840,17 @@ modules:
     target_boundary_id: code-005
     effect_contract:
       repo_relative_path: docs/modules/task-runner-contract-v1.md
-      sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+      sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
       format_identity: tool-system-module-compound-contract-v1
       schema_identity: tool-system-module-compound-contract-schema-v1
   rollback_boundary:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+    sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+    sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: role-runtime
@@ -1320,7 +1320,7 @@ modules:
   - interface_id: task-planner-api
     interface_version: 1.0.0
   - interface_id: task-runner-api
-    interface_version: 1.1.0
+    interface_version: 2.0.0
   external_dependencies: []
   boundaries:
     code:
@@ -2261,38 +2261,38 @@ interfaces:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: task-runner-api
-  interface_version: 1.1.0
+  interface_version: 2.0.0
   provider_module_id: task-runner
   consumers:
   - consumer_module_id: cli-frontend
   input_contract:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+    sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+    sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+    sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+    sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+    sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/task-runner-contract-v1.md
-    sha256: 1d97e004ce93f8ef513886785689aafddc83395b5534a5f7e92a1e4f0598ca41
+    sha256: b8190816c835bc7681cc4ecd819510756ebb997f2513ea85c911655289c54f5f
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: role-runtime-api
