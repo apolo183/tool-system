@@ -1,0 +1,78 @@
+plan_id: tool-system-subscription-worker-ts-b02a-hosted-isolation-backend-and-trust-enablement-prerequisite-spec-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml
+changed_files:
+  - docs/reports/subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_specification_v1.md
+  - examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml
+  - examples/change_plans/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Add only the exact three-path non-executing prerequisite specification and preserve every runtime and acceptance blocker.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestone_module_invariant
+    scope: Keep the prerequisite non-durable and separate enablement proof CI consumption TS-B02A B C D and public reacceptance.
+authority_effect: none
+implementation:
+  - cite the complete tool-system fresh state at commit be9e9db8a48b6a18c006aa9f377296b506b30da7 and tree e1cbd597ce6bcba376c9049414a16665fb869128 plus current finance-governance and official backend material
+  - record that the unchanged standard ubuntu-latest caller has passwordless sudo and no independent enforcement signer attestation or persistent replay authority
+  - reject shell false Python audit hooks Codex sandbox self-report Docker presence mock backend fake receipt skip and xfail as acceptance substitutes
+  - evaluate both authorized candidate classes and freeze the single disposition NO_VERIFIABLE_ARCHITECTURE because no governed natural owner repository trust domain exact path closure or cost authority exists
+  - freeze caller workload supervisor auditor verifier and trust-root separation without instantiating or enabling any domain
+  - freeze independent filesystem complete process-tree default-deny network audit completeness capability-preflight and fail-before-workload-PID requirements
+  - freeze absolute non-symlink executable content SHA-256 stat interpreter loader and descriptor-equivalent exec-critical-point identity binding
+  - freeze receipt key custody attestation rotation revocation freshness monotonic sequence anti-replay atomic consumption and hard-zero projection requirements
+  - record BACKEND_TRUST_ENABLEMENT HOSTED_PROOF_OF_CAPABILITY and TOOL_SYSTEM_CI_CONSUMER_ENABLEMENT as exact empty blocked package ledgers with zero writes and no invented repo base branch commit or path
+  - record the conditional twenty-path TS-B02A closure without implementation authority and require a new path analysis if any client dependency config workflow fixture CLI or additional path is needed
+  - freeze real Hosted adversarial coverage for filesystem network child PATH binary backend receipt false-zero TOCTOU configuration and audit-incompleteness cases
+  - preserve TS-B01 worker-adapter task-runner agent-worker-runtime every unrelated audit finding public status project status workflow supply chain and one-milestone-one-module invariant
+  - publish only the three new retained non-authority paths and stop before every backend proof CI consumer runtime or reacceptance action
+verification:
+  commands:
+    - git diff --check
+    - python -c "from pathlib import Path; import yaml; paths=['docs/reports/subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml']; assert all(Path(p).is_file() and not Path(p).is_symlink() for p in paths); assert all(yaml.safe_load(Path(p).read_text(encoding='utf-8')) for p in paths[1:])"
+    - python -c "import subprocess; expected=sorted(['docs/reports/subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml']); actual=sorted(subprocess.check_output(['git','diff','--name-only','be9e9db8a48b6a18c006aa9f377296b506b30da7...HEAD'],text=True).splitlines()); assert actual == expected, (actual, expected)"
+    - python -c "from pathlib import Path; import yaml; m=yaml.safe_load(Path('examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml').read_text()); p=yaml.safe_load(Path('examples/change_plans/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml').read_text()); assert m['allowed_files']==p['changed_files']; assert m['authority_effect']==p['authority_effect']=='none'; assert p['publication']['exact_base']==m['bounded_closure']['frozen_before_execution']['baseline_commit']; assert p['publication']['exact_base_tree']==m['bounded_closure']['frozen_before_execution']['baseline_tree']; assert p['publication']['exact_path_count']==3 and p['publication']['exact_commit_count']==1"
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_task_manifest_policy.py tests/test_change_plan_gate.py tests/test_agent_worker_interface.py tests/test_process_worker_runtime_preflight.py tests/test_process_worker_runtime_execution.py tests/test_process_worker_runtime_adversarial.py tests/test_command_runner.py tests/test_worker_adapter_contract.py tests/test_worker_adapter_orchestration.py tests/test_task_runner.py tests/test_milestone_module_invariant.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_module_registry.py tests/test_phase_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-ts-b02a-hosted-isolation-trust-prerequisite-spec-v1
+  exact_commit_message: Specify TS-B02A hosted isolation trust prerequisite
+  exact_base: be9e9db8a48b6a18c006aa9f377296b506b30da7
+  exact_base_tree: e1cbd597ce6bcba376c9049414a16665fb869128
+  exact_path_count: 3
+  exact_commit_count: 1
+  draft_pr_required: true
+  ready_requires_hosted_ci_success: true
+  ready_requires_unchanged_base_head_scope_comments_reviews_and_threads: true
+  squash_merge_authorized: true
+  retain_feature_branch: true
+  restore_exact_branch_after_automatic_deletion: true
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@be9e9db8a48b6a18c006aa9f377296b506b30da7
+  execution_authorized: false
+stop:
+  on_canonical_base_or_tree_drift: true
+  on_required_fourth_path: true
+  on_unprovable_backend_or_trust_model: true
+  on_incomplete_official_evidence: true
+  on_validation_or_hosted_ci_failure: true
+  on_base_head_scope_comment_review_or_thread_drift: true
+  after_guarded_merge: true
+  enable_backend_or_trust_service: false
+  modify_runner_workflow_permissions_or_supply_chain: false
+  start_hosted_proof_or_ci_consumer_enablement: false
+  start_ts_b02a: false
+  start_ts_b02b_c_or_d: false
+  modify_worker_adapter_or_task_runner: false
+  reaccept_public_entry: false
