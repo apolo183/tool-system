@@ -1,0 +1,259 @@
+task_id: tool-system-subscription-worker-ts-b02a-hosted-isolation-backend-and-trust-enablement-prerequisite-spec-v1
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-ts-b02a-hosted-isolation-trust-prerequisite-spec-v1
+phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestone_module_invariant
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_ts_b02_isolated_execution_boundary_correction_specification_v1.md
+    section_or_key: TS-B02A and Hosted CI adversarial proof
+    scope: Perform only the read-only architecture and dependency closure needed to state whether a governed Hosted isolation and receipt trust prerequisite is plannable.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: milestone_module_invariant
+    scope: Keep this prerequisite specification non-durable and preserve one durable module or versioned public interface per later milestone.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: TOOL-SYSTEM-TS-B02A-PREREQUISITE-HOSTED-ISOLATION-BACKEND-AND-TRUST-ENABLEMENT-SPEC-v1
+    baseline_commit: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    baseline_tree: e1cbd597ce6bcba376c9049414a16665fb869128
+    allowed_scope: exact_3_new_paths_listed_below
+    acceptance_set:
+      - exact GitHub App main ref and commit object match the frozen canonical commit and tree before any write and publication
+      - the unchanged standard ubuntu-latest workflow is explicitly infeasible for complete TS-B02A because caller sudo or daemon control independent enforcement receipt trust and durable replay authority are not established
+      - candidate hardened runner and candidate external independent service are each evaluated from official evidence without treating component availability as integrated proof
+      - the single disposition is NO_VERIFIABLE_ARCHITECTURE and neither architecture candidate is selected or enabled
+      - caller workload supervisor auditor verifier and trust root domains have frozen permitted and forbidden control surfaces
+      - a future backend must independently enforce filesystem process tree detached and timeout survivor default-deny network audit-completeness and exec-critical-point boundaries
+      - backend capability permission or audit incompleteness fails closed before any workload PID exists
+      - absolute non-symlink regular executable content SHA-256 stat and file identity interpreter and loader identity and race-free exec-point observation are required
+      - PATH symlink binary interpreter TOCTOU source policy backend configuration and environment drift all block
+      - receipt key custody attestation rotation revocation freshness anti-replay monotonic sequence and atomic one-use consumption requirements are frozen
+      - caller and workload cannot access signer material request arbitrary signatures or mutate challenge sequence receipt consumption or revocation state
+      - missing fabricated replayed tampered expired incomplete stale or identity-mismatched receipts block and public hard-zero fields derive only from a matching consumed receipt
+      - runner workflow permissions CI supply-chain dependencies configuration external service trust and cost surfaces remain unchanged and unowned in this package
+      - future BACKEND_TRUST_ENABLEMENT HOSTED_PROOF_OF_CAPABILITY and TOOL_SYSTEM_CI_CONSUMER_ENABLEMENT ledgers are exact empty blocked closures rather than invented repositories or paths
+      - a later user must first choose one architecture and provide natural owner canonical repository base runner or service trust permission cost and rollback identities before fresh-state path planning
+      - the conditional TS-B02A twenty-path closure is recorded but grants zero implementation authority and any client dependency configuration workflow CLI fixture or additional path requires a new authorization
+      - real Hosted proof must cover filesystem network and child escape PATH substitution binary replacement backend unavailable receipt tamper or replay false-zero fabrication TOCTOU configuration drift and audit incompleteness
+      - shell false Python audit hooks Codex self-reported sandbox mock backend fake receipt skip and xfail are prohibited as acceptance substitutes
+      - one milestone changes at most one durable module or versioned public interface and prerequisite enablement proof CI consumption TS-B02A B C D and public reacceptance remain separate packages
+      - TS-B01 worker-adapter task-runner agent-worker runtime every unrelated audit finding public entry and current project acceptance status remain unchanged
+      - exact three retained non-authority files require no REPO_MANIFEST modification and any validator requirement for a fourth path stops before write
+      - authority_effect remains none and no real Codex ChatGPT Web provider credential subscription transport downstream runtime remote infrastructure production deployment cleanup or rollback operation occurs
+      - guarded publication stops after merge without starting backend enablement proof CI consumer enablement TS-B02A B C D or public reacceptance
+    validation_set:
+      - exact canonical base commit and tree verified through GitHub App before write and again before publication
+      - exact three new regular paths with no existing-path modification deletion rename mode change or fourth path
+      - report task manifest and change plan parse and agree on base tree branch commit message authority effect NO_VERIFIABLE_ARCHITECTURE blocked ledgers and terminal stop
+      - current task-manifest change-plan process-authority module-registry and repository-manifest validators
+      - focused existing process-execution worker-adapter task-runner registry manifest milestone-invariant and phase-alignment tests
+      - complete deterministic pytest suite and current Hosted CI verify check
+      - unchanged base exact single PR head commit exact three paths and no added comments reviews or unresolved review threads before Ready and squash merge
+    terminal_predicate: One exact three-new-path prerequisite specification commit is published from the frozen canonical base through one Draft PR, Hosted CI passes without drift, the PR becomes Ready and squash-merges with the original branch retained at the original PR head, and work stops with NO_VERIFIABLE_ARCHITECTURE and every implementation still blocked.
+    finite_budgets:
+      specification_cycles: 1
+      repair_cycles: 2
+      review_cycles: 1
+      hosted_ci_runs: 4
+      changed_paths: 3
+      runtime_source_changes: 0
+      module_registry_changes: 0
+      module_contract_changes: 0
+      project_state_changes: 0
+      existing_test_changes: 0
+      workflow_or_supply_chain_changes: 0
+      runner_or_permission_changes: 0
+      external_service_operations: 0
+      infrastructure_operations: 0
+      real_codex_worker_invocations: 0
+      chatgpt_web_automation_operations: 0
+      subscription_transport_operations: 0
+      api_provider_invocations: 0
+      credential_value_accesses: 0
+      real_downstream_repository_accesses: 0
+      runtime_remote_repository_operations: 0
+      production_operations: 0
+      deployment_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, specification_digest, blocker_set, architecture_disposition, future_package_ledger, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, specification_digest, blocker_set, architecture_disposition, future_package_ledger, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Add only the non-executing TS-B02A Hosted isolation backend and receipt-trust prerequisite blocker specification and its exact task pair.
+  in_scope: &ts_b02a_prerequisite_spec_files
+    - docs/reports/subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_specification_v1.md
+    - examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml
+    - examples/change_plans/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml
+  out_of_scope:
+    - any fourth path or modification deletion rename permission or mode change to an existing path
+    - selecting enabling provisioning deploying or operating a hardened runner external service supervisor auditor verifier TPM HSM KMS persistent store or cloud resource
+    - workflow CI supply-chain permission OIDC dependency configuration secret credential cost account or infrastructure changes
+    - isolated-execution TS-B02A TS-B02B TS-B02C TS-B02D implementation proof or affected-closure execution
+    - module registry module contract runtime source existing test project state blueprint policy process-authority README AGENTS or repository-manifest changes
+    - TS-B01 worker-adapter task-runner agent-worker-runtime or other audit-finding modification
+    - public-entry reacceptance or real-repository execution
+    - real Codex ChatGPT Web API provider credential subscription transport downstream remote production deployment cleanup or rollback operation
+evidence:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Requires direct current governance consumption bounded authority natural ownership and one durable module or versioned interface per milestone.
+  - repo: apolo183/tool-system
+    path: REPO_MANIFEST.md
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Classifies all three authorized locations as retained non-authority evidence and makes a fourth path unnecessary.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Owns the product objective isolation non-claim and milestone-module invariant.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Requires fail-closed evidence bounded closure natural ownership and dependency revalidation.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_project_state_v1.yaml
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Preserves TS-B01 pending reacceptance public acceptance false and TS-B02 real-repository blocking.
+  - repo: apolo183/tool-system
+    path: docs/reports/independent_audit_acceptance_reopen_v1.md
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Confirms ordinary host validation and constructed zero-effect evidence defects.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_ts_b02_isolated_execution_boundary_correction_specification_v1.md
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Freezes TS-B02A isolation trust receipt Hosted proof and ordered-package requirements.
+  - repo: apolo183/tool-system
+    path: config/module_registry_v1.yaml
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Proves no current isolated-execution provider or registered external backend.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_module_registry_contract_v1.md
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Freezes registry mapping and dependency direction.
+  - repo: apolo183/tool-system
+    path: docs/reports/p14mr_milestone_module_invariant.md
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Requires one durable module or versioned public interface per milestone.
+  - repo: apolo183/tool-system
+    path: docs/modules/agent-worker-runtime-contract-v1.md
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Proves the module remains fixture-only and application guarded.
+  - repo: apolo183/tool-system
+    path: docs/modules/worker-adapter-contract-v1.md
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Proves current worker execution does not seal binary identity or return independent observations.
+  - repo: apolo183/tool-system
+    path: docs/modules/task-runner-contract-v1.md
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Establishes validation and public aggregation ownership.
+  - repo: apolo183/tool-system
+    path: .github/workflows/tool-system-ci.yml
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Uses standard ubuntu-latest with contents read and no OIDC external service or capability proof.
+  - repo: apolo183/tool-system
+    path: pyproject.toml
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Contains no isolation client cryptographic attestation or receipt dependency.
+  - repo: apolo183/tool-system
+    path: src/tool_system/gate/command_runner.py
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Executes validation as an ordinary host subprocess with shell false but no OS isolation.
+  - repo: apolo183/tool-system
+    path: src/tool_system/agent_worker/process_runtime.py
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Uses fixture-only application guards and a Python audit hook rather than a general OS sandbox.
+  - repo: apolo183/tool-system
+    path: src/tool_system/worker_adapter/contract.py
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Uses command-name selection and self-reported sandbox mode without an exec identity seal.
+  - repo: apolo183/tool-system
+    path: src/tool_system/runner/task_runner.py
+    commit_sha: be9e9db8a48b6a18c006aa9f377296b506b30da7
+    why_relevant: Launches ordinary validation and constructs public hard-zero effect fields without an independent receipt.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: 518c77dd4203d739380f774fdc67a18f38237dfd
+    why_relevant: Current central governance requires bounded authority fail-closed evidence and finite correction closure.
+  - repo: apolo183/finance-governance
+    path: config/repo_registry_v1.yaml
+    commit_sha: 518c77dd4203d739380f774fdc67a18f38237dfd
+    why_relevant: Registers no hardened-runner isolation-service audit-service or infrastructure natural owner.
+allowed_files: *ts_b02a_prerequisite_spec_files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - pyproject.toml
+  - .gitignore
+  - .github/**
+  - blueprint/**
+  - config/**
+  - docs/modules/**
+  - docs/tool_system_global_development_principles_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - harness/**
+  - policy/**
+  - src/**
+  - tests/**
+  - examples/active_gates.yaml
+  - examples/batches/**
+  - examples/cleanup/**
+  - examples/fixtures/**
+  - examples/github_states/**
+  - examples/operator_config/**
+  - examples/repo_write_decisions/**
+  - examples/requirements/**
+  - examples/target_repo_dry_runs/**
+  - examples/target_repo_pr_previews/**
+  - examples/task_graphs/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check
+    - python -c "from pathlib import Path; import yaml; paths=['docs/reports/subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml']; assert all(Path(p).is_file() and not Path(p).is_symlink() for p in paths); assert all(yaml.safe_load(Path(p).read_text(encoding='utf-8')) for p in paths[1:])"
+    - python -c "import subprocess; expected=sorted(['docs/reports/subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml']); actual=sorted(subprocess.check_output(['git','diff','--name-only','be9e9db8a48b6a18c006aa9f377296b506b30da7...HEAD'],text=True).splitlines()); assert actual == expected, (actual, expected)"
+    - python -c "from pathlib import Path; import yaml; m=yaml.safe_load(Path('examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml').read_text()); p=yaml.safe_load(Path('examples/change_plans/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml').read_text()); assert m['allowed_files']==p['changed_files']; assert m['authority_effect']==p['authority_effect']=='none'; assert p['publication']['exact_base']==m['bounded_closure']['frozen_before_execution']['baseline_commit']; assert p['publication']['exact_base_tree']==m['bounded_closure']['frozen_before_execution']['baseline_tree']; assert p['publication']['exact_path_count']==3 and p['publication']['exact_commit_count']==1"
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_task_manifest_policy.py tests/test_change_plan_gate.py tests/test_agent_worker_interface.py tests/test_process_worker_runtime_preflight.py tests/test_process_worker_runtime_execution.py tests/test_process_worker_runtime_adversarial.py tests/test_command_runner.py tests/test_worker_adapter_contract.py tests/test_worker_adapter_orchestration.py tests/test_task_runner.py tests/test_milestone_module_invariant.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_module_registry.py tests/test_phase_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+  pass_conditions:
+    - exact three new regular files and zero existing-path modification deletion rename mode change or fourth path
+    - report manifest and change plan agree on canonical base tree branch commit message authority effect NO_VERIFIABLE_ARCHITECTURE exact blocked package ledgers conditional TS-B02A closure and terminal stop
+    - no validator or test invokes real Codex ChatGPT Web API provider credentials subscription transport downstream remote infrastructure production deployment cleanup or rollback
+    - TS-B01 remains corrected_pending_reacceptance the public entry remains not reaccepted and real-repository execution remains blocked by TS-B02
+    - Hosted CI verify succeeds on the exact single PR head commit with no base scope comment review or thread drift
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_reviews_and_threads: true
+  exact_commit_message: Specify TS-B02A hosted isolation trust prerequisite
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  restore_exact_branch_after_automatic_deletion: true
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@be9e9db8a48b6a18c006aa9f377296b506b30da7
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-13-TOOL-SYSTEM-TS-B02A-PREREQUISITE-HOSTED-ISOLATION-BACKEND-AND-TRUST-ENABLEMENT-SPEC-v1
+  approved_at: 2026-08-13 UTC+09:00
