@@ -1,0 +1,84 @@
+plan_id: tool-system-subscription-worker-ts-b02-blueprint-boundary-and-isolation-assurance-realignment-spec-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml
+changed_files:
+  - docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md
+  - examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml
+  - examples/change_plans/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml
+    section_or_key: bounded_closure.frozen_before_execution.acceptance_set
+    scope: Add only the exact three-path non-executing boundary and assurance realignment and preserve every runtime audit and acceptance blocker.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Specify the bounded approved-workload TS-B02 assurance boundary while retaining real OS isolation evidence and the milestone-module invariant.
+authority_effect: none
+implementation:
+  - cite the complete tool-system fresh state at commit d99afa8f2835fb663c7db958b0060d45ab9dd349 and tree d7c4b97a16986d762d79f2c05b69ce9573a086b5 plus current finance-governance inputs
+  - formally distinguish ts_b02_core_local_os_v1 from a future optional independent-attestation assurance profile
+  - freeze the trusted operator host kernel OS provider and control-plane boundary and the approved bounded unprivileged workload containment subject
+  - exclude arbitrary hostile-code service malicious operator or kernel independent non-repudiation cross-host attestation and durable global replay guarantees from the TS-B02 core-isolation claim
+  - freeze OS-enforced filesystem complete-process-tree cleanup default-deny-network exec-and-interpreter identity TOCTOU streaming-output timeout and current-run evidence guarantees
+  - freeze raw-byte stream accounting and execution-owned scratch and output filesystem quotas plus provider control-surface denial
+  - freeze the execution evidence matching predicate and prohibit application-built or workload-self-reported OS evidence
+  - prohibit absolute zero-effect and hard-zero claims and permit numeric zero only as a scoped observation from complete matching current-run OS evidence
+  - move cloud isolation KMS HSM TPM OIDC external verifier persistent anti-replay and atomic cross-run receipt consumption to a future optional higher-assurance module with no owner path or authorization here
+  - preserve the earlier NO_VERIFIABLE_ARCHITECTURE result only for the independent-attestation profile examined by that report
+  - assign executable selection expected identity request construction and first-level worker-record validation to worker-adapter while assigning identity seal race-resistant exec OS enforcement and evidence production to isolated-execution
+  - require task-runner to independently match every worker and validation record and join them with TS-B01 v2 semantic evidence before any execution-or-effect-dependent public projection
+  - refreeze the exact order-zero bounded non-live synthetic backend feasibility probe and path closure then TS-B02A isolated-execution TS-B02B worker-adapter TS-B02C task-runner TS-B02D affected closure and later public reacceptance sequence
+  - require a fresh authorization base check exact path closure one-module boundary feasible supported-environment backend and real core adversarial matrix at every later step while leaving integrated conformance to A and D
+  - retain deny_all for A through D and leave subscription_transport_only as a later separately versioned functional gate distinct from optional independent attestation
+  - record that implementing the isolated-execution streaming limit cannot itself mark TS-M01 corrected
+  - preserve TS-B01 corrected_pending_reacceptance TS-B02 blocking public-entry unreaccepted real-repository execution blocked and TS-H01 H02 H03 M01 M02 unchanged
+  - publish only the three new retained non-authority paths and stop before feasibility probe implementation acceptance transport enablement or real execution
+verification:
+  commands:
+    - git diff --check d99afa8f2835fb663c7db958b0060d45ab9dd349...HEAD
+    - python -c "from pathlib import Path; import yaml; paths=['docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml']; assert all(Path(p).is_file() and not Path(p).is_symlink() for p in paths); assert all(yaml.safe_load(Path(p).read_text(encoding='utf-8')) for p in paths[1:])"
+    - python -c "import subprocess; paths=sorted(['docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml']); rows=[tuple(line.split('\\t',1)) for line in subprocess.check_output(['git','diff','--name-status','--no-renames','d99afa8f2835fb663c7db958b0060d45ab9dd349...HEAD'],text=True).splitlines()]; assert sorted(rows)==[('A',p) for p in paths], rows; staged=subprocess.check_output(['git','ls-files','--stage','--',*paths],text=True).splitlines(); assert len(staged)==3 and all(line.startswith('100644 ') for line in staged), staged"
+    - python -c "from pathlib import Path; import yaml; mp=Path('examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml'); pp=Path('examples/change_plans/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml'); m=yaml.safe_load(mp.read_text()); p=yaml.safe_load(pp.read_text()); exact=['docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md',str(mp),str(pp)]; f=m['bounded_closure']['frozen_before_execution']; pub=p['publication']; assert m['allowed_files']==p['changed_files']==exact; assert f['task_identity']=='TOOL-SYSTEM-TS-B02-BLUEPRINT-BOUNDARY-AND-ISOLATION-ASSURANCE-REALIGNMENT-SPEC-v1'; assert m['target_repo']==p['target_repo']=='apolo183/tool-system'; assert m['target_branch']==pub['branch']=='agent/subscription-worker-ts-b02-blueprint-boundary-isolation-assurance-realignment-spec-v1'; assert m['authority_effect']==p['authority_effect']=='none'; assert f['assurance_profile']=='ts_b02_core_local_os_v1'; assert pub['exact_base']==f['baseline_commit']=='d99afa8f2835fb663c7db958b0060d45ab9dd349'; assert pub['exact_base_tree']==f['baseline_tree']=='d7c4b97a16986d762d79f2c05b69ce9573a086b5'; assert pub['exact_commit_message']==m['publication']['exact_commit_message']=='Specify TS-B02 blueprint boundary and isolation assurance realignment'; assert pub['exact_path_count']==3 and pub['exact_commit_count']==1; assert p['stop']['after_guarded_merge']; false_stops=['start_order_zero_feasibility_probe','start_ts_b02a','start_ts_b02b_c_or_d','start_public_reacceptance','start_real_execution','enable_optional_higher_assurance_service','modify_runtime_or_acceptance_state','modify_ci_runner_permissions_or_supply_chain']; assert all(p['stop'][k] is False for k in false_stops)"
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_task_manifest_policy.py tests/test_change_plan_gate.py tests/test_agent_worker_interface.py tests/test_process_worker_runtime_preflight.py tests/test_process_worker_runtime_execution.py tests/test_process_worker_runtime_adversarial.py tests/test_command_runner.py tests/test_worker_adapter_contract.py tests/test_worker_adapter_orchestration.py tests/test_task_runner.py tests/test_milestone_module_invariant.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_module_registry.py tests/test_phase_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-ts-b02-blueprint-boundary-isolation-assurance-realignment-spec-v1
+  exact_commit_message: Specify TS-B02 blueprint boundary and isolation assurance realignment
+  exact_base: d99afa8f2835fb663c7db958b0060d45ab9dd349
+  exact_base_tree: d7c4b97a16986d762d79f2c05b69ce9573a086b5
+  exact_path_count: 3
+  exact_commit_count: 1
+  draft_pr_required: true
+  ready_requires_hosted_ci_success: true
+  ready_requires_unchanged_base_head_scope_comments_reviews_and_threads: true
+  squash_merge_authorized: true
+  retain_feature_branch: true
+  restore_exact_branch_after_automatic_deletion: true
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@d99afa8f2835fb663c7db958b0060d45ab9dd349
+  execution_authorized: false
+stop:
+  on_canonical_base_or_tree_drift: true
+  on_required_fourth_path: true
+  on_unprovable_core_backend: true
+  on_validation_or_hosted_ci_failure: true
+  on_base_head_scope_comment_review_or_thread_drift: true
+  after_guarded_merge: true
+  start_order_zero_feasibility_probe: false
+  start_ts_b02a: false
+  start_ts_b02b_c_or_d: false
+  start_public_reacceptance: false
+  start_real_execution: false
+  enable_optional_higher_assurance_service: false
+  modify_runtime_or_acceptance_state: false
+  modify_ci_runner_permissions_or_supply_chain: false
