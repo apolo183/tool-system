@@ -1,0 +1,250 @@
+task_id: tool-system-subscription-worker-ts-b02-blueprint-boundary-and-isolation-assurance-realignment-spec-v1
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-ts-b02-blueprint-boundary-isolation-assurance-realignment-spec-v1
+phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective.non_goals
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestone_module_invariant
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_specification_v1.md
+    section_or_key: 10. Dependency and publication order
+    scope: Realign only the future TS-B02 assurance target where the earlier prerequisite made independent external trust infrastructure a TS-B02 core-isolation gate.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded approved development-workload isolation and the arbitrary-untrusted-code-containment non-goal while retaining the one-module-or-interface milestone invariant.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: TOOL-SYSTEM-TS-B02-BLUEPRINT-BOUNDARY-AND-ISOLATION-ASSURANCE-REALIGNMENT-SPEC-v1
+    baseline_commit: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    baseline_tree: d7c4b97a16986d762d79f2c05b69ce9573a086b5
+    allowed_scope: exact_3_new_paths_listed_below
+    assurance_profile: ts_b02_core_local_os_v1
+    acceptance_set:
+      - exact GitHub App main ref and commit object match the frozen canonical commit and tree before any write and publication
+      - the blueprint arbitrary_untrusted_code_containment non-goal and the earlier TS-B02 independent-trust requirements are formally separated into core and optional assurance profiles
+      - the TS-B02 blueprint-aligned core-isolation profile trusts the authorized operator host kernel OS provider and control plane while containing only an approved bounded unprivileged development workload and all descendants
+      - malicious operator administrator kernel hypervisor control plane and arbitrary hostile-code containment independent non-repudiation and cross-host attestation remain outside the TS-B02 core-isolation claim
+      - the core filesystem boundary freezes canonical workspace cwd approved roots symlink descriptor mount and teardown constraints
+      - the core process boundary accounts for children grandchildren reparented detached and timeout-surviving descendants and proves complete termination and cleanup
+      - the core network profile is OS-enforced default deny before the first workload PID and covers sockets DNS loopback inherited handles and namespace bridges
+      - the core executable seal binds absolute non-symlink regular-file content and stable identity plus the actual interpreter and loader chain
+      - descriptor-based execution exec-critical-point revalidation immutable snapshot or equivalent race-resistant enforcement blocks executable interpreter loader policy workspace and backend TOCTOU
+      - stdout and stderr are drained incrementally with bounded storage finite byte accounting whole-tree termination on breach and recorded emitted retained and discarded counts
+      - raw bytes are counted before decoding with explicit per-stream and combined semantics and execution-owned scratch and output files have OS-enforced finite quotas
+      - provider-enforced monotonic timeout performs bounded graceful then forced whole-tree termination and survivor verification
+      - current-run OS-derived execution evidence binds request policy workspace source candidate executable interpreter backend process stream deadline termination cleanup and completeness observations
+      - workload cannot access provider control descriptors namespace cgroup mount ptrace supervisor or privilege-escalation surfaces or move processes or resources from containment
+      - application and workload assertions constants configured modes command exit codes and self-report cannot substitute for matching OS-derived evidence
+      - application code cannot construct default or publish absolute zero-effect hard-zero or universal no-side-effect conclusions
+      - a numeric zero is permitted only as a scoped observation from a complete matching evidence record and missing or mismatched evidence blocks every execution-or-effect-dependent acceptance claim
+      - independent cloud isolation KMS HSM TPM OIDC external attestation persistent verifier global monotonic replay state and atomic cross-run receipt consumption are optional future higher-assurance capabilities rather than core gates
+      - the earlier NO_VERIFIABLE_ARCHITECTURE disposition remains evidence only for its independent-attestation profile and does not block TS-B02 core local-OS planning
+      - TS-B02A owns isolated-execution OS enforcement identity seal TOCTOU-free exec cleanup and evidence production while worker-adapter owns selection expectation request construction and first-level worker-record validation
+      - task-runner independently matches every worker and validation record and joins them with TS-B01 v2 semantic evidence before any execution-or-effect-dependent projection
+      - TS-B02B changes worker-adapter only TS-B02C changes task-runner and its owned validation/public projection only and TS-B02D revalidates the affected TS-B02 closure only
+      - the exact next eligible action is a separately authorized bounded non-live TS-B02A core-backend feasibility probe and path closure and not runtime implementation
+      - the feasibility package may use only synthetic creator-owned temporary execution units with bounded cleanup and no real repository or business workload
+      - the feasibility package demonstrates required OS primitives permissions architecture and Hosted availability with no known blocker and freezes capability gates request/evidence schema exact TS-B02A paths dependencies and adversarial matrix without claiming integrated conformance
+      - deny_all is the A-through-D network baseline while any future subscription_transport_only profile is a separate versioned functional gate and not the optional independent-attestation module
+      - public reacceptance is an evidence and status decision only and neither enables subscription transport nor authorizes real execution
+      - one milestone changes at most one durable module or versioned public interface and every feasibility A B C D and public-reacceptance step has a fresh authorization and base check
+      - TS-B01 remains corrected_pending_reacceptance TS-B02 remains a blocker the public entry remains unreaccepted and real-repository execution remains blocked
+      - TS-H01 TS-H02 TS-H03 TS-M01 and TS-M02 remain unchanged and no implementation of the TS-B02 streaming requirement marks TS-M01 corrected
+      - exact three retained non-authority files require no REPO_MANIFEST modification and any validator requirement for a fourth path stops before publication
+      - no blueprint project-state module contract source existing test CI runner supply-chain permission service infrastructure or public-acceptance path changes
+      - no real Codex ChatGPT Web provider credential subscription transport downstream runtime remote production deployment cleanup rollback or runtime/security external-service operation beyond authorized GitHub publication occurs
+      - guarded publication stops after merge without starting the order-zero feasibility probe TS-B02A B C D public reacceptance or real execution
+    validation_set:
+      - exact canonical base commit and tree verified through GitHub App before write and again before publication
+      - exact three new regular mode-100644 paths with no existing-path modification deletion rename mode change or fourth path
+      - report task manifest and change plan parse and agree on task identity base tree branch commit message authority effect assurance profile preserved states and terminal stop
+      - current task-manifest change-plan active-gates process-authority module-registry and repository-manifest validators
+      - focused existing process-execution worker-adapter task-runner registry manifest milestone-invariant and phase-alignment tests
+      - complete deterministic pytest suite and current unchanged Hosted CI verify check
+      - unchanged base exact single PR head commit exact three paths and no added comments reviews or unresolved review threads before Ready and squash merge
+    terminal_predicate: One exact three-new-path non-authority realignment specification commit is published from the frozen canonical base through one Draft PR, Hosted CI passes without drift, the PR becomes Ready and squash-merges with the original branch retained at the original PR head, and work stops with every implementation and acceptance action unstarted.
+    finite_budgets:
+      specification_cycles: 1
+      repair_cycles: 2
+      review_cycles: 1
+      hosted_ci_runs: 4
+      changed_paths: 3
+      runtime_source_changes: 0
+      module_registry_changes: 0
+      module_contract_changes: 0
+      project_state_changes: 0
+      existing_test_changes: 0
+      workflow_or_supply_chain_changes: 0
+      runner_or_permission_changes: 0
+      runtime_or_security_external_service_operations: 0
+      infrastructure_operations: 0
+      real_codex_worker_invocations: 0
+      chatgpt_web_automation_operations: 0
+      subscription_transport_operations: 0
+      api_provider_invocations: 0
+      credential_value_accesses: 0
+      real_downstream_repository_accesses: 0
+      runtime_remote_repository_operations: 0
+      production_operations: 0
+      deployment_operations: 0
+      cleanup_operations: 0
+      rollback_operations: 0
+  per_cycle_state: [candidate_tree, specification_digest, blocker_set, assurance_profile, package_order, satisfied_acceptance_items, validation_results, material_evidence, attempt_number]
+  recurrence_fingerprint: [task_identity, candidate_tree, specification_digest, blocker_set, assurance_profile, package_order, validation_results]
+  recurrence_fingerprint_excludes: [attempt_number, timestamps, receipts, pull_request_metadata, status_text]
+scope:
+  summary: Add only the non-executing TS-B02 blueprint boundary and isolation assurance realignment report and its exact task pair.
+  in_scope: &ts_b02_realignment_spec_files
+    - docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md
+    - examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml
+    - examples/change_plans/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml
+  out_of_scope:
+    - any fourth path or modification deletion rename permission or mode change to an existing path
+    - any runtime implementation capability probe workload launch or real repository execution
+    - selecting enabling provisioning deploying or operating a cloud service external auditor verifier KMS HSM TPM OIDC identity replay store or infrastructure
+    - workflow CI supply-chain permission runner dependency configuration secret credential cost account or infrastructure changes
+    - isolated-execution worker-adapter task-runner agent-worker-runtime module contract registry source test fixture CLI or project-state changes
+    - TS-B01 TS-H01 TS-H02 TS-H03 TS-M01 TS-M02 correction disposition or acceptance upgrade
+    - public-entry reacceptance or any real Codex ChatGPT Web API provider credential subscription transport downstream remote production deployment cleanup or rollback operation
+evidence:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Requires direct current-governance consumption bounded authority natural ownership one module or interface per milestone and explicit revalidation.
+  - repo: apolo183/tool-system
+    path: REPO_MANIFEST.md
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Classifies all three authorized paths as retained non-authority evidence and makes a fourth path unnecessary.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Owns the bounded product objective arbitrary-untrusted-code-containment non-goal isolation controls completion boundary and milestone-module invariant.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Requires fail-closed evidence bounded closure natural ownership and dependency revalidation.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_project_state_v1.yaml
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Preserves TS-B01 corrected-pending status public acceptance false and TS-B02 real-repository blocking.
+  - repo: apolo183/tool-system
+    path: docs/reports/independent_audit_acceptance_reopen_v1.md
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Freezes the actual audit findings including ordinary-host validation command identity and constructed zero-effect evidence defects.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_ts_b02_isolated_execution_boundary_correction_specification_v1.md
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Provides the prior isolation guarantee owner interface and package-order plan that this report realigns.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_ts_b02a_hosted_isolation_backend_and_trust_enablement_prerequisite_specification_v1.md
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Provides the independent-trust external-service and persistent-replay prerequisite profile moved to optional higher assurance here.
+  - repo: apolo183/tool-system
+    path: config/module_registry_v1.yaml
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Proves there is no current isolated-execution module or registered external isolation provider.
+  - repo: apolo183/tool-system
+    path: src/tool_system/gate/command_runner.py
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Shows validation currently uses an ordinary host subprocess and therefore remains blocked.
+  - repo: apolo183/tool-system
+    path: src/tool_system/worker_adapter/contract.py
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Shows current command-name selection and self-reported sandbox fields without an execution-critical identity seal.
+  - repo: apolo183/tool-system
+    path: src/tool_system/runner/task_runner.py
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Owns validation orchestration and currently constructs public zero-effect fields.
+  - repo: apolo183/tool-system
+    path: .github/workflows/tool-system-ci.yml
+    commit_sha: d99afa8f2835fb663c7db958b0060d45ab9dd349
+    why_relevant: Freezes the unchanged standard Hosted workflow that this specification must not modify.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    commit_sha: 518c77dd4203d739380f774fdc67a18f38237dfd
+    why_relevant: Current central governance requires bounded authority fail-closed evidence natural ownership and finite correction closure.
+  - repo: apolo183/finance-governance
+    path: config/repo_registry_v1.yaml
+    commit_sha: 518c77dd4203d739380f774fdc67a18f38237dfd
+    why_relevant: Registers tool-system but no external cloud isolation audit trust or infrastructure natural owner.
+allowed_files: *ts_b02_realignment_spec_files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - pyproject.toml
+  - .gitignore
+  - .github/**
+  - blueprint/**
+  - config/**
+  - docs/modules/**
+  - docs/tool_system_global_development_principles_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - harness/**
+  - policy/**
+  - src/**
+  - tests/**
+  - examples/active_gates.yaml
+  - examples/batches/**
+  - examples/cleanup/**
+  - examples/fixtures/**
+  - examples/github_states/**
+  - examples/operator_config/**
+  - examples/repo_write_decisions/**
+  - examples/requirements/**
+  - examples/target_repo_dry_runs/**
+  - examples/target_repo_pr_previews/**
+  - examples/task_graphs/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check d99afa8f2835fb663c7db958b0060d45ab9dd349...HEAD
+    - python -c "from pathlib import Path; import yaml; paths=['docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml']; assert all(Path(p).is_file() and not Path(p).is_symlink() for p in paths); assert all(yaml.safe_load(Path(p).read_text(encoding='utf-8')) for p in paths[1:])"
+    - python -c "import subprocess; paths=sorted(['docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml']); rows=[tuple(line.split('\\t',1)) for line in subprocess.check_output(['git','diff','--name-status','--no-renames','d99afa8f2835fb663c7db958b0060d45ab9dd349...HEAD'],text=True).splitlines()]; assert sorted(rows)==[('A',p) for p in paths], rows; staged=subprocess.check_output(['git','ls-files','--stage','--',*paths],text=True).splitlines(); assert len(staged)==3 and all(line.startswith('100644 ') for line in staged), staged"
+    - python -c "from pathlib import Path; import yaml; mp=Path('examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml'); pp=Path('examples/change_plans/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml'); m=yaml.safe_load(mp.read_text()); p=yaml.safe_load(pp.read_text()); exact=['docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md',str(mp),str(pp)]; f=m['bounded_closure']['frozen_before_execution']; pub=p['publication']; assert m['allowed_files']==p['changed_files']==exact; assert f['task_identity']=='TOOL-SYSTEM-TS-B02-BLUEPRINT-BOUNDARY-AND-ISOLATION-ASSURANCE-REALIGNMENT-SPEC-v1'; assert m['target_repo']==p['target_repo']=='apolo183/tool-system'; assert m['target_branch']==pub['branch']=='agent/subscription-worker-ts-b02-blueprint-boundary-isolation-assurance-realignment-spec-v1'; assert m['authority_effect']==p['authority_effect']=='none'; assert f['assurance_profile']=='ts_b02_core_local_os_v1'; assert pub['exact_base']==f['baseline_commit']=='d99afa8f2835fb663c7db958b0060d45ab9dd349'; assert pub['exact_base_tree']==f['baseline_tree']=='d7c4b97a16986d762d79f2c05b69ce9573a086b5'; assert pub['exact_commit_message']==m['publication']['exact_commit_message']=='Specify TS-B02 blueprint boundary and isolation assurance realignment'; assert pub['exact_path_count']==3 and pub['exact_commit_count']==1; assert p['stop']['after_guarded_merge']; false_stops=['start_order_zero_feasibility_probe','start_ts_b02a','start_ts_b02b_c_or_d','start_public_reacceptance','start_real_execution','enable_optional_higher_assurance_service','modify_runtime_or_acceptance_state','modify_ci_runner_permissions_or_supply_chain']; assert all(p['stop'][k] is False for k in false_stops)"
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_spec_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_task_manifest_policy.py tests/test_change_plan_gate.py tests/test_agent_worker_interface.py tests/test_process_worker_runtime_preflight.py tests/test_process_worker_runtime_execution.py tests/test_process_worker_runtime_adversarial.py tests/test_command_runner.py tests/test_worker_adapter_contract.py tests/test_worker_adapter_orchestration.py tests/test_task_runner.py tests/test_milestone_module_invariant.py tests/test_module_contracts.py tests/test_module_import_graph.py tests/test_module_registry.py tests/test_phase_alignment.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+  pass_conditions:
+    - exact three new regular mode-100644 files and zero existing-path modification deletion rename mode change or fourth path
+    - report manifest and change plan agree on canonical base tree branch commit message authority effect TS-B02 core profile package order state preservation and terminal stop
+    - task pair validators focused tests full tests and every current authority or manifest validator pass without invoking a live provider or remote runtime operation
+    - TS-B01 remains corrected_pending_reacceptance TS-B02 remains blocking public entry remains unreaccepted real-repository execution remains blocked and TS-H01 H02 H03 M01 M02 remain uncorrected
+    - Hosted CI verify succeeds on the exact single PR head commit with no base scope comment review or thread drift
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_ci_comments_reviews_and_threads: true
+  exact_commit_message: Specify TS-B02 blueprint boundary and isolation assurance realignment
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  restore_exact_branch_after_automatic_deletion: true
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: tool-system@d99afa8f2835fb663c7db958b0060d45ab9dd349
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-13-TOOL-SYSTEM-TS-B02-BLUEPRINT-BOUNDARY-AND-ISOLATION-ASSURANCE-REALIGNMENT-SPEC-v1
+  approved_at: 2026-08-13 UTC+09:00
