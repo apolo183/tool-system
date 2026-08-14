@@ -35,6 +35,9 @@ DURABLE_SIDECAR_CORRECTION_RETAINED_FILES = {
     "examples/change_plans/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml",
     "examples/task_manifests/tool_system_durable_orchestrator_sqlite_sidecar_race_correction_v1.yaml",
 }
+TS_B02A_HOSTED_OBSERVATION_CASCADE_REPAIR_PROBE = (
+    "tests/test_ts_b02a_core_local_os_isolation_backend_feasibility.py"
+)
 
 
 def _exact_row(path: str, upstream: str = "ROOT") -> str:
@@ -124,7 +127,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
     assert legacy_reasons == []
-    assert len(rows) == 291
+    assert len(rows) == 292
     assert EXACT_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
     assert all(
         not any(character in row["path"] for character in "*?[]{}") for row in rows
@@ -132,13 +135,43 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_file_count"] == 291
+    assert result["formal_file_count"] == 292
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == len(retained_paths)
     assert BOUNDED_CLOSURE_PAIR <= retained_paths
     assert DURABLE_SIDECAR_CORRECTION_RETAINED_FILES <= retained_paths
     rows_by_path = {row["path"]: row for row in rows}
+    assert rows_by_path[TS_B02A_HOSTED_OBSERVATION_CASCADE_REPAIR_PROBE] == {
+        "path": TS_B02A_HOSTED_OBSERVATION_CASCADE_REPAIR_PROBE,
+        "role": (
+            "executable TS-B02A Hosted observation/cascade-repaired "
+            "replacement probe suite"
+        ),
+        "purpose": (
+            "Probe from a clean canonical base on GitHub Hosted Ubuntu x86_64, "
+            "using only bounded synthetic fixtures, the frozen local-OS "
+            "isolation prerequisites, repaired observation semantics, "
+            "non-cascading outcome classification, observation completeness, "
+            "and creator-owned cleanup without implementing runtime code or "
+            "executing a real workload."
+        ),
+        "owner": "test maintainers and TS-B02 feasibility evidence owner",
+        "lifecycle": "ACTIVE",
+        "upstream": (
+            "docs/tool_system_global_development_principles_v1.md; "
+            "blueprint/tool_system_v0.yaml"
+        ),
+        "downstream": (
+            "synthetic TS-B02A Hosted capability evidence and separately "
+            "authorized implementation planning"
+        ),
+        "validation": (
+            "focused clean-base Hosted replacement probe, repository manifest, "
+            "full tests, unchanged Hosted CI"
+        ),
+        "status": "REGISTERED",
+    }
     assert rows_by_path["src/tool_system/orchestrator/durable.py"]["owner"] == (
         "durable-orchestrator module"
     )
