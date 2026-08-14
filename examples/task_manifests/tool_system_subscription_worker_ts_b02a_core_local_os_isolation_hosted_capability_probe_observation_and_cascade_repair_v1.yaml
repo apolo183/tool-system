@@ -1,0 +1,565 @@
+task_id: tool-system-subscription-worker-ts-b02a-core-local-os-isolation-hosted-capability-probe-observation-and-cascade-repair-v1
+task_type: test_add
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-ts-b02a-hosted-capability-probe-observation-cascade-repair-v1
+phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective.non_goals
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestone_module_invariant
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md
+    section_or_key: 6.1 Exact next implementation prerequisite
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md
+    section_or_key: 6.1 Exact next implementation prerequisite
+    scope: Repair only the separately authorized synthetic Hosted probe observation and cascade defects on the clean canonical base while preserving every core-isolation prerequisite.
+  failed_predecessor:
+    document: docs/reports/subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_v1.md
+    pull_request: 227
+    head_sha: daad39047e4ad05443a1eb0776f9a1ff38239af4
+    hosted_run_id: 31711740297
+    hosted_job_id: 94486178632
+    scope: Use the retained Draft failure only as causal evidence; grant it no authority and perform no mutation against it.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve the bounded approved-workload and arbitrary-untrusted-code non-goal boundary with no public acceptance or external trust change.
+authority_effect: none
+bounded_closure:
+  frozen_before_execution:
+    task_identity: TOOL-SYSTEM-TS-B02A-CORE-LOCAL-OS-ISOLATION-HOSTED-CAPABILITY-PROBE-OBSERVATION-AND-CASCADE-REPAIR-v1
+    baseline_commit: 71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc
+    baseline_tree: 27bea1f06a51c3f416963724ac132aebd8c16a1f
+    probe_source_sha256: 1b51c92fa54585c95d304b32a41437a4e8c0f12f4f4f3701e32f30706d895990
+    backend_profile: linux_native_supervisor_v1
+    supported_host: Linux/x86_64
+    allowed_scope: exact_4_add_2_modify_paths_listed_below
+    preserved_failed_predecessor:
+      pull_request: 227
+      branch: agent/subscription-worker-ts-b02a-core-local-os-isolation-hosted-capability-probe-v1
+      head_sha: daad39047e4ad05443a1eb0776f9a1ff38239af4
+      workflow_run_id: 31711740297
+      workflow_job_id: 94486178632
+      mutation_authorized: false
+      rerun_authorized: false
+      ready_merge_or_close_authorized: false
+    failure_causality:
+      direct_failure: loopback administrative-down proof incorrectly required operstate literal down but actual operstate was unknown
+      cascade_boundary: the namespace helper stopped before pivot_root path swap native exec interpreter and loader observation detached descendant and per-stream emission
+      prohibited_interpretation: missing dependent observations are not independent backend failures
+    network_observation_contract:
+      administrative_state_source: SIOCGIFFLAGS/IFF_UP
+      operstate_role: diagnostic_only
+      operstate_shapes:
+        - value_label
+        - unavailable_true_with_error_type
+      endpoint_control: observe_admin_up_then_create_one_exact_listener_for_positive_exchange_and_keep_same_listener_active_through_down_denial
+      inherited_fd_and_seccomp_denial_retained: true
+      inheritable_fd_positive_control: true
+      native_and_interpreter_exec_stop_fd_absence_field: inherited_network_fd_absent_at_exec
+      exec_stop_fd_absence_observer: _fd_absent_at_exec_stop
+      exact_exec_stop_fields:
+        - native_inherited_network_fd_absent_at_exec
+        - interpreter_inherited_network_fd_absent_at_exec
+      absence_proof_errno: ENOENT_only
+      observation_method: explicit_lstat_then_readlink_if_present
+      lexists_authorized: false
+      permission_or_other_observation_error: HOSTED_CAPABILITY_BLOCKER
+    stage_observation_contract:
+      stage_results_field: stage_results
+      check_results_field: check_results
+      stage_dependencies_field: stage_dependencies
+      check_dependencies_field: check_dependencies
+      statuses:
+        - PASS
+        - FAIL
+        - NOT_REACHED
+      fail_field: failure
+      not_reached_dependency_field: blocked_by
+      any_fail_or_not_reached_blocks: true
+      cleanup_overrides_all_passes: true
+      independent_domains:
+        - composition
+        - stream_limit
+        - timeout
+        - ownership
+        - cleanup
+      cascade_scope: only_declared_dependency_edges
+      inside_report_schema_validator: _validate_inside_stage_schema
+      dependency_builder: _build_stage_dependencies
+      causal_graph_validator: _assert_causal_result_graph
+      causal_graph_control_runner: _run_causal_graph_negative_controls
+      causal_graph_control_count: 10
+      frozen_cross_domain_edges:
+        inside.namespace_set:
+          - root.composition_setup
+          - root.inside_report
+        root.live_host_mount_observation:
+          - root.inside_report
+        root.process_tree:
+          - root.live_host_mount_observation
+          - inside.process_tree_fixture
+        root.stdout_stream_safety:
+          - root.stream_cgroup_setup
+        root.stderr_stream_safety:
+          - root.stream_cgroup_setup
+          - root.stdout_stream_safety
+        root.combined_stream_safety:
+          - root.stream_cgroup_setup
+          - root.stdout_stream_safety
+          - root.stderr_stream_safety
+        root.stream_cgroup_release:
+          - root.stream_cgroup_setup
+        root.timeout_cgroup_setup:
+          - root.parent_cgroup_setup
+          - root.stream_cgroup_release
+      graph_requirements:
+        - exact_result_and_dependency_key_sets
+        - known_unique_acyclic_dependencies
+        - no_pass_over_failed_dependency
+        - each_blocker_is_a_reachable_ancestor
+        - every_not_reached_chain_terminates_at_fail
+        - exact_check_dependency_consistency
+      exact_causal_controls:
+        - parent_setup_fail_cascade_accepted
+        - malformed_report_fail_cascade_accepted
+        - stdout_unsafe_cleanup_cascade_accepted
+        - stderr_unsafe_cleanup_cascade_accepted
+        - parent_setup_unknown_blocker_rejected
+        - malformed_inside_report_rejected
+        - stdout_unsafe_cleanup_false_blocker_rejected
+        - stderr_unsafe_cleanup_false_blocker_rejected
+        - safety_fail_to_later_not_reached_accepted
+        - pass_over_fail_dependency_rejected
+    cgroup_ownership_contract:
+      exact_claim_count: 4
+      exact_paths:
+        - /sys/fs/cgroup/<execution_id>
+        - /sys/fs/cgroup/<execution_id>/composition
+        - /sys/fs/cgroup/<execution_id>/combined-stream
+        - /sys/fs/cgroup/<execution_id>/timeout
+      ownership_nonce: exactly_64_lowercase_hex
+      marker_creation: O_EXCL_O_NOFOLLOW_mode_0600_inside_exact_temp_root
+      journal_binding:
+        - execution_id
+        - ownership_nonce
+        - creator_uid
+        - temporary_parent_device
+        - temporary_parent_inode
+        - exact_temporary_root
+      cgroup_journal_states:
+        - claiming
+        - owned_with_device_and_inode
+        - released
+      cleanup_identity_recheck: device_and_inode_must_match_owned_claim
+      unknown_or_mismatched_claim_cleanup: refuse_and_block
+      parent_release: no_cgroup_kill_after_present_children_released_missing_children_absent_and_parent_populated_zero
+      parent_collision_disposition: preserve_without_kill_and_block
+      parent_only_early_exit_release: allowed_only_when_owned_and_all_child_paths_absent
+      all_four_released_and_absent_required: true
+    root_helper_lifecycle_contract:
+      creator_claim: O_EXCL_O_NOFOLLOW_mode_0600_before_launch
+      binding:
+        - execution_id
+        - nonce_sha256
+        - pid
+        - proc_starttime
+        - argv_sha256
+        - source_device_inode_identity
+        - executable_identity
+      pid_reuse_disposition: gone_not_killed
+      identity_mismatch_disposition: refuse_termination_and_block
+      termination_transport: pidfd_open_then_identity_validate_then_pidfd_send_signal_then_pidfd_readable_exit
+      numeric_pid_signal_authorized: false
+      cleanup_order: validate_and_pidfd_terminate_exact_helper_before_any_resource_cleanup
+      exact_matching_helper_termination_required: true
+      hosted_pass_fields:
+        - root_helper_identity_bound
+        - helper_identity_validated
+        - helper_terminated
+        - helper_termination
+        - lifecycle_removed
+        - root_helper_lifecycle_closed
+      helper_termination_fields:
+        - initial_state
+        - helper_was_active
+        - helper_pidfd_opened
+        - helper_pidfd_open_esrch
+        - helper_pid_reuse_observed
+        - helper_sigkill_sent
+        - helper_signal_esrch
+        - helper_pidfd_exit_observed
+        - helper_terminated
+      pre_gate_unbound_exit:
+        - popen_fully_reaped
+        - exact_launching_record_unchanged
+        - temporary_root_absent
+        - all_four_cgroup_paths_absent
+        - creator_removes_only_lifecycle_record
+        - unbound_lifecycle_reaped
+        - capability_pass_forbidden
+    live_host_mount_observation_contract:
+      stage: root.live_host_mount_observation
+      process_tree_stage_depends_on:
+        - root.live_host_mount_observation
+        - inside.process_tree_fixture
+      observation_time: while_composition_namespace_process_is_alive
+      host_source: /proc/self/mountinfo
+      host_mounts_during_live_namespace: []
+      namespace_alive_during_host_mount_observation: true
+      post_exit_absence_is_insufficient: true
+    inside_report_transport_contract:
+      report_delivery: serialize_fsync_close_for_success_or_failure
+      post_delivery_state: pause_inside_composition_cgroup
+      termination: single_composition_cgroup_kill
+      expected_transport_exit: SIGKILL
+      stage_authority: delivered_inside_stage_results
+      transport_sigkill_is_independent_failure: false
+    stream_observation_contract:
+      probes:
+        stdout_probe: stdout_raw_stream_limit
+        stderr_probe: stderr_raw_stream_limit
+        combined_probe: combined_raw_stream_limit
+      independent_finite_controls: true
+      shared_cgroup_safety_stages:
+        - root.stdout_stream_safety
+        - root.stderr_stream_safety
+        - root.combined_stream_safety
+      single_stream_write_count_each: 64
+      single_stream_write_bytes: 4096
+      combined_stream_write_count: 32
+      combined_stream_write_bytes: 8192
+      theoretical_stream_payload_bytes: 786432
+      composition_handshake_bytes: 57
+      theoretical_total_output_bytes: 786489
+      hard_output_cap_bytes: 1048576
+      each_requires_cgroup_kill_pidfd_exit_populated_zero_and_exact_accounting: true
+    process_tree_identity_contract:
+      detached_binding_order: map_host_pid_then_pidfd_open_then_revalidate_starttime_nspid_and_exact_cgroup
+      member_binding: pidfd_open_with_before_after_starttime_and_exact_cgroup_revalidation
+      numeric_pid_signal_authorized: false
+      detached_term_transport: pidfd_send_signal_SIGTERM
+      pid_reuse_or_identity_drift: HOSTED_CAPABILITY_BLOCKER_without_signal
+      before_cgroup_kill: every_bound_member_pidfd_must_be_unreadable
+      evidence_fields:
+        - detached_pidfd_bound_before_term
+        - detached_identity_revalidated
+        - detached_term_sent_via_pidfd
+        - detached_pidfd_unreadable_after_term
+        - all_member_pidfds_identity_bound
+        - all_member_pidfds_unreadable_before_kill
+    public_result_contract:
+      prefix: TS_B02A_HOSTED_PROBE_RESULT=
+      exactly_one_per_top_level_execution: true
+      root_helper_prefix: TS_B02A_ROOT_PROBE_RESULT=
+      exact_root_helper_matches: 1
+      diagnostic_prefix: TS_B02A_HOSTED_PROBE_DIAGNOSTIC=
+      diagnostic_character_limit: 16384
+      diagnostic_is_not_public_result: true
+      required_hosted_pass_projection:
+        root_helper_lifecycle_closed: true
+        host_mounts_during_live_namespace: []
+        inherited_network_fd_absent_at_exec: true
+        cleanup_complete: true
+      cleanup_blocker_precedes_capability_pass: true
+    hosted_dispositions:
+      - NOT_EXECUTED
+      - HOSTED_CAPABILITY_PASS
+      - HOSTED_CAPABILITY_BLOCKER
+    acceptance_set:
+      - authenticated GitHub App sequential base-ref and commit-object reads match the frozen clean canonical commit and tree before writes
+      - Draft PR 227 its branch head run job and failure evidence remain read-only and unchanged
+      - non-GitHub-Hosted execution records only NOT_EXECUTED with capability_pass false and invokes no privileged probe
+      - actual Hosted execution proves GitHub-hosted repository run Linux x86_64 and passwordless-root identity before capability PASS
+      - loopback administrative state is read from SIOCGIFFLAGS IFF_UP while operstate is only a bounded value or unavailable-error diagnostic object and cannot independently pass or fail the control
+      - only after loopback administrative-up observation one exact bound listener is created for the positive exchange and that same listener remains active through the down new-connection denial control
+      - an intentionally inheritable network FD is absent at both native and interpreter PTRACE_EVENT_EXEC stops only when explicit lstat readlink observation returns ENOENT while permission or other observation errors block and seccomp socket EPERM denial remains mandatory
+      - each reached stage is PASS or FAIL while each dependent unreached stage is NOT_REACHED with exact blocked_by and no unreached stage is reported as an independent failure
+      - the exact inside report schema is validated before evidence use and complete stage_dependencies and check_dependencies maps restrict NOT_REACHED cascades to reachable declared ancestors ending at a real FAIL while all ten causal controls pass
+      - live host-mount observation is a distinct root stage and stdout stderr combined stream-safety stages gate only declared later shared-cgroup work while stream release remains independently reachable for cleanup and timeout setup waits for release
+      - any FAIL NOT_REACHED missing observation or cleanup residue produces HOSTED_CAPABILITY_BLOCKER
+      - one same-execution-id composition still proves five namespaces private propagation private root unprivileged zero-capability execution private cgroup sealed exec ptrace observation streams termination and cleanup
+      - positive and denial controls still prove cgroup kill populated zero pivot_root tmpfs byte and inode ENOSPC openat2 execveat interpreter loader pidfd stream limits and monotonic timeout
+      - exactly four execution-ID cgroup paths are nonce-journaled through claim owned device-inode and release and unknown or mismatched ownership refuses cleanup and blocks PASS
+      - a colliding parent cgroup is preserved without cgroup.kill while an owned early-exit parent may be removed without kill only when every present child claim is released every missing child is absent and parent populated is zero
+      - a creator-owned root-helper lifecycle record binds execution ID nonce PID starttime argv source and executable identity and outer cleanup opens pidfd first validates identity signals only via pidfd observes pidfd-readable exit before resource cleanup then removes the record and publishes root_helper_lifecycle_closed
+      - an unbound pre-gate helper is fully reaped and only an unchanged launching record with no temporary root or cgroup resource permits creator-side lifecycle deletion and never capability PASS
+      - while the composition namespace is alive the host observes no mount under the exact temporary root and post-exit absence cannot substitute for that live negative control
+      - the detached process and every exact composition-cgroup member are pidfd-bound with starttime and cgroup revalidation before any TERM-ignore or cgroup-kill control and PID reuse identity drift or observation loss blocks without numeric-PID signalling
+      - inside success or failure stage_results are serialized fsynced and closed before pause then root propagates the delivered causal stages and uses one composition cgroup kill without treating expected SIGKILL transport as another capability failure
+      - stdout_probe stderr_probe and combined_probe independently trigger their exact finite limits and account for 786432 stream bytes plus 57 handshake bytes equal to 786489 within the 1048576 hard cap
+      - exactly one public TS_B02A_HOSTED_PROBE_RESULT record is emitted while one captured root result and bounded diagnostic use distinct non-public prefixes
+      - actual native executable interpreter and loader identities are observed at PTRACE_EVENT_EXEC and match sealed OS objects
+      - selected backend supported matrix capability gate IsolationRequestV1 ExecutionEvidenceV1 owners exact 17-path TS-B02A closure dependencies license boundary and adversarial matrix remain frozen
+      - exactly four additions and two modifications are regular mode-100644 paths in one commit and one new PR
+      - workflow runner permissions pyproject dependencies supply chain runtime source module registry project state public acceptance and all findings remain unchanged
+      - integrated_conformance_proved is false ts_b02a_implementation_authorized is false and public_acceptance_changed is false
+      - success alone permits guarded Ready and squash merge with the new original branch retained while both success and blocker outcomes stop before TS-B02A
+    validation_set:
+      - focused Hosted capability and repository-manifest tests
+      - full pytest suite
+      - current active-gate process-authority module-registry and repository-manifest validators
+      - task-manifest and change-plan pair validators
+      - exact six-path four-add two-modify mode-100644 one-commit diff and git diff check
+      - source checks for IFF_UP diagnostic operstate exact live endpoint ENOENT-only exec-stop FD absence complete causal DAG ten graph controls live-mount split stream-safety stages process-tree pidfd identity and PASS FAIL NOT_REACHED blocked_by semantics
+      - deterministic source and contract checks pin the probe SHA four cgroup claims ownership journal parent no-kill collision and early-exit handling root-helper PID-starttime lifecycle pidfd-first termination pre-gate zero-resource reap inside-report pause and cgroup-kill transport live host-mount negative observation inheritable-FD exec-stop absence diagnostic-only operstate three stream probes exact 786489 accounting dependency maps unique public result bounded diagnostic and cleanup blocker precedence
+      - Hosted job has no skip xfail mock fallback missing observation or temporary-resource residue
+    terminal_predicate: Either the exact repaired Hosted probe passes and the unchanged one-commit six-path new PR is guardedly merged with its original branch retained, or any Hosted capability fails and the new PR remains Draft with HOSTED_CAPABILITY_BLOCKER; both outcomes stop with PR 227 untouched and TS-B02A unstarted.
+    finite_budgets:
+      construction_cycles: 1
+      pre_publication_validation_repairs: 2
+      review_cycles: 1
+      hosted_pr_runs: 1
+      hosted_capability_repair_cycles: 0
+      changed_paths: 6
+      added_paths: 4
+      modified_paths: 2
+      commits: 1
+      branches: 1
+      pull_requests: 1
+      prior_pr_mutations: 0
+      synthetic_temp_roots: 1
+      synthetic_processes: 64
+      synthetic_namespace_sets: 1
+      synthetic_cgroup_subtrees: 4
+      synthetic_stream_bytes: 1048576
+      synthetic_stream_payload_bytes: 786432
+      synthetic_composition_handshake_bytes: 57
+      synthetic_total_output_bytes: 786489
+      synthetic_stream_hard_cap_bytes: 1048576
+      synthetic_filesystem_bytes: 16777216
+      hosted_probe_helper_wall_seconds: 90
+      hosted_probe_overall_wall_seconds: 120
+      runtime_source_changes: 0
+      workflow_or_supply_chain_changes: 0
+      runner_or_permission_changes: 0
+      dependency_changes: 0
+      real_repository_or_business_workloads: 0
+      provider_or_subscription_operations: 0
+      production_or_infrastructure_operations: 0
+      repository_or_remote_cleanup_operations: 0
+      creator_owned_synthetic_cleanup_required: true
+  per_cycle_state:
+    - candidate_tree
+    - acceptance_digest
+    - blocker_set
+    - satisfied_acceptance_items
+    - validation_results
+    - material_evidence
+    - attempt_number
+  recurrence_fingerprint:
+    - task_identity
+    - candidate_tree
+    - acceptance_digest
+    - blocker_set
+    - validation_results
+  recurrence_fingerprint_excludes:
+    - attempt_number
+    - timestamps
+    - receipts
+    - pull_request_metadata
+    - status_text
+scope:
+  summary: Add one clean-base repair of the bounded synthetic GitHub Hosted local-OS capability probe observation, causal reporting, resource ownership, and root-helper lifecycle assurance while preserving every original capability gate.
+  in_scope: &repair_files
+    - docs/reports/subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.md
+    - examples/task_manifests/tool_system_subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.yaml
+    - examples/change_plans/tool_system_subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.yaml
+    - tests/test_ts_b02a_core_local_os_isolation_backend_feasibility.py
+    - REPO_MANIFEST.md
+    - tests/test_repo_manifest.py
+  out_of_scope:
+    - any seventh repository path
+    - any mutation rerun ready merge close or branch move for PR 227 or its branch
+    - TS-B02A or any other runtime implementation
+    - any real repository business Codex subscription or provider workload
+    - any workflow runner permission dependency supply-chain service infrastructure project-state public-acceptance or finding change
+    - arbitrary untrusted-code service independent attestation or external trust implementation
+evidence:
+  - repo: apolo183/tool-system
+    path: AGENTS.md
+    commit_sha: 71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc
+    why_relevant: Defines local evidence exact-scope clean-base failed-branch and terminal-stop rules.
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: 71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc
+    why_relevant: Owns the bounded product objective arbitrary-untrusted-code non-goal and milestone-module invariant.
+  - repo: apolo183/tool-system
+    path: docs/tool_system_global_development_principles_v1.md
+    commit_sha: 71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc
+    why_relevant: Requires frozen bounded closure side-effect preflight single branch no-progress stop and retained failed-branch evidence.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md
+    commit_sha: 71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc
+    why_relevant: Is the stable parent for the synthetic Hosted capability prerequisite.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_v1.md
+    commit_sha: daad39047e4ad05443a1eb0776f9a1ff38239af4
+    why_relevant: Freezes the valid backend interfaces owners closure license matrix and terminal failure semantics inherited by this repair.
+  - repo: apolo183/tool-system
+    pull_request: 227
+    head_sha: daad39047e4ad05443a1eb0776f9a1ff38239af4
+    workflow_run_id: 31711740297
+    workflow_job_id: 94486178632
+    why_relevant: Provides the retained actual Hosted failure and cleanup evidence and the observation-cascade defect.
+  - repo: apolo183/tool-system
+    path: .github/workflows/tool-system-ci.yml
+    commit_sha: 71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc
+    why_relevant: Provides unchanged ubuntu-latest pytest discovery and current validators.
+  - repo: apolo183/tool-system
+    path: REPO_MANIFEST.md
+    commit_sha: 71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc
+    why_relevant: Requires exact formal registration of the repaired test while the report and task pair remain non-authority.
+  - repo: apolo183/tool-system
+    path: tests/test_repo_manifest.py
+    commit_sha: 71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc
+    why_relevant: Freezes the formal-file count and exact new probe registration.
+  - repo: apolo183/finance-governance
+    path: docs/global_development_principles_v1.md
+    ref: main
+    why_relevant: Current central governance requires evidence-first bounded fail-closed execution and explicit authorization for a new clean-base task.
+  - repo: apolo183/finance-governance
+    path: config/repo_registry_v1.yaml
+    ref: main
+    why_relevant: Current central registry identifies apolo183/tool-system as domain-neutral shared tooling.
+allowed_files: *repair_files
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - pyproject.toml
+  - .gitignore
+  - .github/**
+  - blueprint/**
+  - config/**
+  - docs/modules/**
+  - docs/tool_system_global_development_principles_v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - docs/tool_system_project_state_v1.yaml
+  - harness/**
+  - policy/**
+  - src/**
+  - examples/active_gates.yaml
+  - examples/batches/**
+  - examples/cleanup/**
+  - examples/fixtures/**
+  - examples/github_states/**
+  - examples/operator_config/**
+  - examples/repo_write_decisions/**
+  - examples/requirements/**
+  - examples/target_repo_dry_runs/**
+  - examples/target_repo_pr_previews/**
+  - examples/task_graphs/**
+write_mode: pull_request
+verification:
+  commands:
+    - git diff --check 71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc...HEAD
+    - python -c "from pathlib import Path; import yaml; paths=['docs/reports/subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.md','examples/task_manifests/tool_system_subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.yaml','examples/change_plans/tool_system_subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.yaml','tests/test_ts_b02a_core_local_os_isolation_backend_feasibility.py','REPO_MANIFEST.md','tests/test_repo_manifest.py']; assert all(Path(p).is_file() and not Path(p).is_symlink() for p in paths); assert all(yaml.safe_load(Path(p).read_text(encoding='utf-8')) for p in paths[1:3])"
+    - python -c "import subprocess; expected=sorted([('A','docs/reports/subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.md'),('A','examples/task_manifests/tool_system_subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.yaml'),('A','examples/change_plans/tool_system_subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.yaml'),('A','tests/test_ts_b02a_core_local_os_isolation_backend_feasibility.py'),('M','REPO_MANIFEST.md'),('M','tests/test_repo_manifest.py')]); actual=sorted(tuple(line.split('\\t',1)) for line in subprocess.check_output(['git','diff','--name-status','--no-renames','71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc...HEAD'],text=True).splitlines()); assert actual==expected,(actual,expected); paths=[p for _,p in expected]; tree=subprocess.check_output(['git','ls-tree','-r','HEAD','--',*paths],text=True).splitlines(); parsed=[]; [parsed.append((*line.split('\\t',1)[0].split()[:2],line.split('\\t',1)[1])) for line in tree]; assert sorted(parsed)==sorted([('100644','blob',p) for p in paths]),parsed"
+    - >-
+      python -c "from pathlib import Path; import yaml;
+      mp=Path('examples/task_manifests/tool_system_subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.yaml');
+      pp=Path('examples/change_plans/tool_system_subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.yaml');
+      m=yaml.safe_load(mp.read_text()); p=yaml.safe_load(pp.read_text());
+      exact=['docs/reports/subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.md',str(mp),str(pp),'tests/test_ts_b02a_core_local_os_isolation_backend_feasibility.py','REPO_MANIFEST.md','tests/test_repo_manifest.py'];
+      f=m['bounded_closure']['frozen_before_execution']; b=f['finite_budgets']; stage=f['stage_observation_contract']; network=f['network_observation_contract']; cg=f['cgroup_ownership_contract']; life=f['root_helper_lifecycle_contract']; live=f['live_host_mount_observation_contract']; inside=f['inside_report_transport_contract']; stream=f['stream_observation_contract']; process=f['process_tree_identity_contract']; public=f['public_result_contract']; pub=p['publication']; stop=p['stop']; old=f['preserved_failed_predecessor']; report=Path(exact[0]).read_text();
+      assert m['allowed_files']==p['changed_files']==exact;
+      assert m['target_repo']==p['target_repo']=='apolo183/tool-system' and m['authority_effect']==p['authority_effect']=='none';
+      assert m['target_branch']==pub['branch']=='agent/subscription-worker-ts-b02a-hosted-capability-probe-observation-cascade-repair-v1';
+      assert f['baseline_commit']==pub['exact_base']=='71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc' and f['baseline_tree']==pub['exact_base_tree']=='27bea1f06a51c3f416963724ac132aebd8c16a1f';
+      assert f['probe_source_sha256']==pub['exact_probe_source_sha256']=='1b51c92fa54585c95d304b32a41437a4e8c0f12f4f4f3701e32f30706d895990';
+      assert m['verification']['commands']==p['verification']['commands'] and len(m['verification']['commands'])==14;
+      assert (pub['exact_path_count'],pub['exact_add_count'],pub['exact_modify_count'],pub['exact_commit_count'])==(6,4,2,1) and (b['changed_paths'],b['added_paths'],b['modified_paths'],b['hosted_pr_runs'],b['hosted_capability_repair_cycles'])==(6,4,2,1,0);
+      assert (b['synthetic_stream_payload_bytes'],b['synthetic_composition_handshake_bytes'],b['synthetic_total_output_bytes'],b['synthetic_stream_hard_cap_bytes'])==(786432,57,786489,1048576);
+      assert old['pull_request']==227 and old['head_sha']=='daad39047e4ad05443a1eb0776f9a1ff38239af4' and old['mutation_authorized'] is False;
+      assert network['administrative_state_source']=='SIOCGIFFLAGS/IFF_UP' and network['operstate_role']=='diagnostic_only' and network['absence_proof_errno']=='ENOENT_only' and network['lexists_authorized'] is False and network['exact_exec_stop_fields']==['native_inherited_network_fd_absent_at_exec','interpreter_inherited_network_fd_absent_at_exec'];
+      assert stage['inside_report_schema_validator']=='_validate_inside_stage_schema' and stage['dependency_builder']=='_build_stage_dependencies' and stage['causal_graph_validator']=='_assert_causal_result_graph' and stage['causal_graph_control_runner']=='_run_causal_graph_negative_controls' and stage['causal_graph_control_count']==10;
+      edges=stage['frozen_cross_domain_edges']; assert edges['inside.namespace_set']==['root.composition_setup','root.inside_report'] and edges['root.live_host_mount_observation']==['root.inside_report'] and edges['root.process_tree']==['root.live_host_mount_observation','inside.process_tree_fixture'] and edges['root.stream_cgroup_release']==['root.stream_cgroup_setup'] and edges['root.timeout_cgroup_setup']==['root.parent_cgroup_setup','root.stream_cgroup_release'];
+      assert len(stage['exact_causal_controls'])==10 and {'parent_setup_fail_cascade_accepted','malformed_report_fail_cascade_accepted','stdout_unsafe_cleanup_cascade_accepted','stderr_unsafe_cleanup_cascade_accepted','pass_over_fail_dependency_rejected'}<=set(stage['exact_causal_controls']);
+      assert cg['exact_claim_count']==4 and cg['exact_paths']==['/sys/fs/cgroup/<execution_id>','/sys/fs/cgroup/<execution_id>/composition','/sys/fs/cgroup/<execution_id>/combined-stream','/sys/fs/cgroup/<execution_id>/timeout'] and cg['parent_collision_disposition']=='preserve_without_kill_and_block';
+      assert life['termination_transport']=='pidfd_open_then_identity_validate_then_pidfd_send_signal_then_pidfd_readable_exit' and life['numeric_pid_signal_authorized'] is False and life['cleanup_order']=='validate_and_pidfd_terminate_exact_helper_before_any_resource_cleanup';
+      assert live['stage']=='root.live_host_mount_observation' and live['host_mounts_during_live_namespace']==[] and live['namespace_alive_during_host_mount_observation'] is True;
+      assert inside['report_delivery']=='serialize_fsync_close_for_success_or_failure' and inside['post_delivery_state']=='pause_inside_composition_cgroup' and inside['transport_sigkill_is_independent_failure'] is False;
+      assert stream['probes']=={'stdout_probe':'stdout_raw_stream_limit','stderr_probe':'stderr_raw_stream_limit','combined_probe':'combined_raw_stream_limit'} and stream['shared_cgroup_safety_stages']==['root.stdout_stream_safety','root.stderr_stream_safety','root.combined_stream_safety'] and (stream['theoretical_stream_payload_bytes'],stream['composition_handshake_bytes'],stream['theoretical_total_output_bytes'],stream['hard_output_cap_bytes'])==(786432,57,786489,1048576);
+      assert process['numeric_pid_signal_authorized'] is False and process['detached_term_transport']=='pidfd_send_signal_SIGTERM' and process['before_cgroup_kill']=='every_bound_member_pidfd_must_be_unreadable' and len(process['evidence_fields'])==6;
+      assert public['exactly_one_per_top_level_execution'] and public['exact_root_helper_matches']==1 and public['diagnostic_character_limit']==16384 and public['required_hosted_pass_projection']=={'root_helper_lifecycle_closed':True,'host_mounts_during_live_namespace':[],'inherited_network_fd_absent_at_exec':True,'cleanup_complete':True} and public['cleanup_blocker_precedes_capability_pass'];
+      assert all(token in report for token in ('1b51c92fa54585c95d304b32a41437a4e8c0f12f4f4f3701e32f30706d895990','_build_stage_dependencies','root.live_host_mount_observation','root.stdout_stream_safety','ENOENT','native_inherited_network_fd_absent_at_exec','detached_pidfd_bound_before_term','786489','signal.pause()'));
+      assert stop['on_any_hosted_capability_failure'] and stop['failed_pr_remains_draft'] and stop['hosted_failure_repair_authorized'] is False and stop['preserve_pr_227_read_only'] and stop['after_guarded_merge'] and stop['start_ts_b02a_or_later'] is False and stop['start_real_execution'] is False and stop['modify_public_state'] is False"
+    - >-
+      python -c "import ast,hashlib; from pathlib import Path;
+      q=Path('tests/test_ts_b02a_core_local_os_isolation_backend_feasibility.py'); raw=q.read_bytes();
+      assert hashlib.sha256(raw).hexdigest()=='1b51c92fa54585c95d304b32a41437a4e8c0f12f4f4f3701e32f30706d895990';
+      s=raw.decode('utf-8'); t=ast.parse(s); imports={n.names[0].name for n in ast.walk(t) if isinstance(n,(ast.Import,ast.ImportFrom)) and n.names};
+      required=['SIOCGIFFLAGS','IFF_UP','admin_up_observed','admin_down_observed','operstate_after_up','operstate_after_down','_fd_absent_at_exec_stop','native_inherited_network_fd_absent_at_exec','interpreter_inherited_network_fd_absent_at_exec','inherited_network_fd_absent_at_exec','_validate_inside_stage_schema','_build_stage_dependencies','_assert_causal_result_graph','_run_causal_graph_negative_controls','root.live_host_mount_observation','root.stdout_stream_safety','root.stderr_stream_safety','root.combined_stream_safety','parent_setup_fail_cascade_accepted','malformed_report_fail_cascade_accepted','stdout_unsafe_cleanup_cascade_accepted','stderr_unsafe_cleanup_cascade_accepted','pass_over_fail_dependency_rejected','stage_results','check_results','stage_dependencies','check_dependencies','NOT_REACHED','blocked_by','stdout_probe','stderr_probe','combined_probe','SYNTHETIC_STREAM_BYTE_BUDGET','COMPOSITION_HANDSHAKE_BYTES','OWNERSHIP_MARKER_NAME','HELPER_LIFECYCLE_SUFFIX','_create_ownership_journal','_load_ownership_journal','_create_helper_lifecycle','_bind_helper_lifecycle','_terminate_bound_helper','pidfd_send_signal','helper_pidfd_exit_observed','unbound_lifecycle_reaped','_release_owned_parent_cgroup','parent cgroup no-kill','marker_created_with_o_excl','root_helper_identity_bound','root_helper_lifecycle_closed','detached_pidfd_bound_before_term','detached_identity_revalidated','detached_term_sent_via_pidfd','detached_pidfd_unreadable_after_term','all_member_pidfds_identity_bound','all_member_pidfds_unreadable_before_kill','cgroup_claim_count','exact_cgroup_paths','cleanup_blocker','signal.pause','RESULT_PREFIX','ROOT_RESULT_PREFIX','DIAGNOSTIC_PREFIX','DIAGNOSTIC_CHARACTER_LIMIT'];
+      assert all(token in s for token in required),[token for token in required if token not in s]; assert 'pytest' not in imports and 'unittest.mock' not in imports;
+      assert s.count('print(RESULT_PREFIX + json.dumps(')==3 and s.count('print(ROOT_RESULT_PREFIX + json.dumps(')==1;
+      parent=s.split('def _release_owned_parent_cgroup',1)[1].split('def _kill_and_remove_cgroup',1)[0]; assert 'cgroup.kill' not in parent and '_kill_and_remove_cgroup' not in parent;
+      inside=s.split('def _inside_namespace',1)[1].split('def _spawn_gated',1)[0]; assert inside.index('os.fsync(report_fd)') < inside.index('signal.pause()');
+      cleanup=s.split('def _root_cleanup',1)[1].split('def _root_watchdog_exit',1)[0]; assert cleanup.index('_terminate_bound_helper') < cleanup.index('_load_ownership_journal');
+      termination=s.split('def _terminate_bound_helper',1)[1].split('def _remove_bound_helper_lifecycle',1)[0]; assert termination.index('os.pidfd_open') < termination.index('_inspect_bound_helper') < termination.index('signal.pidfd_send_signal') < termination.index('poller.select');
+      fd=s.split('def _fd_absent_at_exec_stop',1)[1].split('def _ptraced_exec',1)[0]; assert 'lexists' not in fd and fd.index('os.lstat') < fd.index('errno.ENOENT') < fd.index('os.readlink');
+      graph=s.split('def _build_stage_dependencies',1)[1].split('def _cgroup_populated',1)[0]; assert all(token in graph for token in ('root.live_host_mount_observation','root.stdout_stream_safety','root.stderr_stream_safety','root.combined_stream_safety','blocker chain does not terminate in FAIL','pass_over_fail_dependency_rejected'));
+      composition=s.split('def _run_composition_domain',1)[1].split('def _root_probe',1)[0]; assert composition.index('os.pidfd_open(detached_host_pid)') < composition.index('revalidated_starttime') < composition.index('signal.pidfd_send_signal') < composition.index('detached_pidfd_unreadable_after_term') < composition.index('(composition_cgroup / \"cgroup.kill\")')"
+    - >-
+      PYTHONDONTWRITEBYTECODE=1 python -c "import importlib.util; from pathlib import Path;
+      q=Path('tests/test_ts_b02a_core_local_os_isolation_backend_feasibility.py'); spec=importlib.util.spec_from_file_location('ts_b02a_probe_contract',q); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m);
+      assert (m.SINGLE_STREAM_WRITE_COUNT,m.COMBINED_STREAM_WRITE_COUNT,m.COMPOSITION_HANDSHAKE_BYTES,m.SYNTHETIC_STREAM_BYTE_BUDGET)==(64,32,57,1048576); stream_bytes=2*m.SINGLE_STREAM_WRITE_COUNT*4096+m.COMBINED_STREAM_WRITE_COUNT*8192; assert stream_bytes==786432 and stream_bytes+m.COMPOSITION_HANDSHAKE_BYTES==786489<=m.SYNTHETIC_STREAM_BYTE_BUDGET;
+      execution_id='ts-b02a-contract'; suffixes=('', 'composition','combined-stream','timeout'); assert [str(m._safe_cgroup_path(execution_id,s)) for s in suffixes]==['/sys/fs/cgroup/ts-b02a-contract','/sys/fs/cgroup/ts-b02a-contract/composition','/sys/fs/cgroup/ts-b02a-contract/combined-stream','/sys/fs/cgroup/ts-b02a-contract/timeout']; m._validate_nonce('0'*64);
+      dependencies=m._build_stage_dependencies(); assert set(dependencies)=={*(f'inside.{name}' for name in m.INSIDE_STAGE_ORDER),*(f'root.{name}' for name in m.ROOT_STAGE_ORDER),'cleanup'};
+      assert dependencies['inside.namespace_set']==('root.composition_setup','root.inside_report') and dependencies['root.live_host_mount_observation']==('root.inside_report',) and dependencies['root.process_tree']==('root.live_host_mount_observation','inside.process_tree_fixture');
+      assert dependencies['root.stdout_stream_safety']==('root.stream_cgroup_setup',) and dependencies['root.stderr_stream_safety']==('root.stream_cgroup_setup','root.stdout_stream_safety') and dependencies['root.combined_stream_safety']==('root.stream_cgroup_setup','root.stdout_stream_safety','root.stderr_stream_safety');
+      assert dependencies['root.stream_cgroup_release']==('root.stream_cgroup_setup',) and dependencies['root.timeout_cgroup_setup']==('root.parent_cgroup_setup','root.stream_cgroup_release');
+      controls=m._run_causal_graph_negative_controls(); expected={'parent_setup_fail_cascade_accepted','malformed_report_fail_cascade_accepted','stdout_unsafe_cleanup_cascade_accepted','stderr_unsafe_cleanup_cascade_accepted','parent_setup_unknown_blocker_rejected','malformed_inside_report_rejected','stdout_unsafe_cleanup_false_blocker_rejected','stderr_unsafe_cleanup_false_blocker_rejected','safety_fail_to_later_not_reached_accepted','pass_over_fail_dependency_rejected'}; assert set(controls)==expected and all(controls.values());
+      order=m.INSIDE_STAGE_ORDER; i=order.index('network'); inside={name:{'status':m.STAGE_PASS} for name in order[:i]}; inside['network']={'status':m.STAGE_FAIL,'failure':'direct'}; m._mark_not_reached(inside,order,'inside.network'); assert m._first_blocking_stage(inside)=='inside.network' and all(inside[name]=={'status':'NOT_REACHED','blocked_by':'inside.network'} for name in order[i+1:])"
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02a_core_local_os_isolation_hosted_capability_probe_observation_and_cascade_repair_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_ts_b02a_core_local_os_isolation_backend_feasibility.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+  pass_conditions:
+    - exact four added and two modified regular mode-100644 paths and zero deletion rename mode change seventh path or second commit
+    - task pair report and repository registration agree on clean base failed-predecessor preservation backend profile host request evidence owners 17-path closure licenses matrix non-authority and stop
+    - non-Hosted execution yields only NOT_EXECUTED while actual Hosted execution yields full conjunctive capability PASS or a failing job and HOSTED_CAPABILITY_BLOCKER
+    - IFF_UP is the loopback administrative-state authority operstate is diagnostic only and one exact live endpoint supplies both positive and denial controls
+    - native and interpreter exec-stop FD absence accepts only explicit ENOENT while permission or observation loss blocks and every process-tree signal uses a pidfd after starttime and cgroup revalidation
+    - every dependent cascade is NOT_REACHED with a reachable blocked_by chain ending at a real FAIL and any FAIL or NOT_REACHED blocks PASS
+    - exact inside schema complete dependency maps ten causal controls live-mount split and stream-safety stages preserve independent domains while exactly four nonce-journaled cgroup claims and releases plus ownership-authenticated cleanup are conjunctive blockers
+    - stdout_probe stderr_probe and combined_probe produce exactly 786432 theoretical stream bytes plus 57 handshake bytes equal to 786489 within the 1048576 cap and exactly one bounded public result is emitted
+    - no Hosted skip xfail mock fallback missing observation or cleanup residue can pass
+    - task pair focused tests full tests and every current validator pass on the exact new PR head
+    - workflow runner permissions dependencies supply chain source runtime project state public acceptance findings and PR 227 remain unchanged
+    - Hosted success plus unchanged base head six-path scope one commit comments reviews and threads are required before Ready and squash merge
+publication:
+  draft_pr_required: true
+  ready_authorized: true
+  review_authorized: false
+  squash_merge_authorized: true
+  merge_requires_unchanged_base_head_scope_commit_ci_comments_reviews_and_threads: true
+  exact_commit_message: Repair TS-B02A Hosted capability probe observation cascade
+  exact_commit_count: 1
+  exact_path_count: 6
+  exact_add_count: 4
+  exact_modify_count: 2
+  retain_feature_branch: true
+  branch_deletion_authorized: false
+  restore_exact_branch_after_automatic_deletion: true
+  live_execution_during_publication: synthetic_hosted_probe_only
+rollback:
+  method: git_revert
+  reference: tool-system@71544c0c3bb37b1f4cb8bacbf4dc332477c94ccc
+  execution_authorized: false
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message:2026-08-15-agreed-recommended-clean-base-observation-cascade-repair
+  approved_at: 2026-08-15 UTC+09:00
