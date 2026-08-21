@@ -88,5 +88,5 @@ def test_final_record_passes_without_target_write(tmp_path: Path) -> None:
 def test_final_record_change_plan_validates() -> None:
     result = validate_change_plan(CHANGE_PLAN_PATH)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])

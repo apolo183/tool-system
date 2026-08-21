@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import yaml
+
 from tool_system.cli.run_stage import main as run_stage_main
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
+from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.runner.stage_runner import run_stage_pipeline
 
 
@@ -11,11 +14,23 @@ ROOT = Path(__file__).resolve().parents[1]
 INPUT_PATH = ROOT / "examples" / "requirements" / "tool_system_p7d.yaml"
 BLUEPRINT_PATH = ROOT / "blueprint" / "tool_system_v0.yaml"
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_stage.yaml"
+STRICT_MANIFEST_PATH = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_task_manifest_v1.yaml"
+STRICT_PLAN_PATH = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_change_plan_v1.yaml"
+
+
+def _strict_requirement(tmp_path: Path) -> Path:
+    requirement = load_yaml_file(INPUT_PATH)
+    for work_item in requirement["work_items"]:
+        work_item["task_manifest"] = STRICT_MANIFEST_PATH.as_posix()
+        work_item["change_plan"] = STRICT_PLAN_PATH.as_posix()
+    path = tmp_path / "strict_requirement.yaml"
+    path.write_text(yaml.safe_dump(requirement, sort_keys=False), encoding="utf-8")
+    return path
 
 
 def test_stage_runner_executes_compiled_batch_without_commands(tmp_path: Path) -> None:
     result = run_stage_pipeline(
-        input_path=INPUT_PATH,
+        input_path=_strict_requirement(tmp_path),
         blueprint_path=BLUEPRINT_PATH,
         audit_path=tmp_path / "stage_runner.jsonl",
         execute_commands=False,
@@ -34,7 +49,7 @@ def test_stage_runner_executes_compiled_batch_without_commands(tmp_path: Path) -
 
 def test_stage_runner_cli(tmp_path: Path, capsys) -> None:
     exit_code = run_stage_main([
-        str(INPUT_PATH),
+        str(_strict_requirement(tmp_path)),
         "--blueprint",
         str(BLUEPRINT_PATH),
         "--audit-path",
@@ -49,5 +64,5 @@ def test_stage_runner_cli(tmp_path: Path, capsys) -> None:
 def test_stage_runner_change_plan_validates() -> None:
     result = validate_change_plan(CHANGE_PLAN_PATH)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])

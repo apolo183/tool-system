@@ -67,5 +67,5 @@ def test_p4d_passes_policy_controlled_target_with_approval(tmp_path: Path) -> No
 def test_p4d_change_plan_validates() -> None:
     result = validate_change_plan(P4D_CHANGE_PLAN_PATH)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])

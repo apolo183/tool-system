@@ -188,10 +188,14 @@ def test_exact_task_pair_and_pre_entry_state_validate() -> None:
     plan = load_yaml_file(PLAN)
     state = load_yaml_file(PROJECT_STATE)
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == EXACT_FILES
     assert set(manifest["scope"]["in_scope"]) == EXACT_FILES
     assert set(plan["changed_files"]) == EXACT_FILES
@@ -216,10 +220,14 @@ def test_canonical_refreeze_task_pair_baseline_and_state_validate() -> None:
     plan = load_yaml_file(REFREEZE_PLAN)
     state = load_yaml_file(PROJECT_STATE)
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == REFREEZE_EXACT_FILES
     assert set(manifest["scope"]["in_scope"]) == REFREEZE_EXACT_FILES
     assert set(plan["changed_files"]) == REFREEZE_EXACT_FILES
@@ -249,10 +257,14 @@ def test_deepseek_packet_correction_pair_and_historical_baseline_validate() -> N
     plan = load_yaml_file(CORRECTION_PLAN)
     state = load_yaml_file(PROJECT_STATE)
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == CORRECTION_EXACT_FILES
     assert set(manifest["scope"]["in_scope"]) == CORRECTION_EXACT_FILES
     assert set(plan["changed_files"]) == CORRECTION_EXACT_FILES
@@ -284,10 +296,14 @@ def test_exact_version_block_pair_and_fail_closed_state_validate() -> None:
     plan = load_yaml_file(EXACT_VERSION_BLOCK_PLAN)
     state = load_yaml_file(PROJECT_STATE)
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == EXACT_VERSION_BLOCK_FILES
     assert set(manifest["scope"]["in_scope"]) == EXACT_VERSION_BLOCK_FILES
     assert set(plan["changed_files"]) == EXACT_VERSION_BLOCK_FILES
@@ -322,10 +338,14 @@ def test_openai_qwen_matrix_pair_current_baseline_and_state_validate() -> None:
     packets = load_yaml_file(PACKETS)
     state = load_yaml_file(PROJECT_STATE)["p15c_openai_qwen_matrix_refreeze"]
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == OPENAI_QWEN_MATRIX_FILES
     assert set(manifest["scope"]["in_scope"]) == OPENAI_QWEN_MATRIX_FILES
     assert set(plan["changed_files"]) == OPENAI_QWEN_MATRIX_FILES

@@ -37,8 +37,8 @@ REPLAY = ROOT / "config" / "replay_snapshot_v1.yaml"
 ACTIVE_GATES = ROOT / "examples" / "active_gates.yaml"
 GRAPH = ROOT / "examples" / "task_graphs" / "tool_system_p7a_task_graph.yaml"
 BLUEPRINT = ROOT / "blueprint" / "tool_system_v0.yaml"
-MANIFEST = ROOT / "examples" / "task_manifests" / "tool_system_run_entry.yaml"
-PLAN = ROOT / "examples" / "change_plans" / "tool_system_run_entry.yaml"
+MANIFEST = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_task_manifest_v1.yaml"
+PLAN = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_change_plan_v1.yaml"
 OTHER_MANIFEST = (
     ROOT / "examples" / "task_manifests" / "tool_system_audit_bundle.yaml"
 )

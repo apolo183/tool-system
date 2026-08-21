@@ -1,0 +1,6 @@
+task_manifests:
+  - tests/fixtures/manifest_validation/forward_valid_task_manifest_v1.yaml
+change_plans:
+  - tests/fixtures/manifest_validation/forward_valid_change_plan_v1.yaml
+alignment:
+  enabled: false

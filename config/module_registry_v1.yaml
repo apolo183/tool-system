@@ -70,7 +70,7 @@ modules:
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: manifest-validation
-  module_version: 1.0.0
+  module_version: 1.0.1
   role: load and validate task manifests, change plans, alignment gates, and repository write policy. Validate document structure, alignment, scope, and policy without executing configured commands or manufacturing authority.
   owner: manifest-validation
   public_interface_refs:
@@ -128,7 +128,23 @@ modules:
       location_kind: repository_local
       path_kind: exact
       path: src/tool_system/policy/repo_write_policy.py
-    data: []
+    data:
+    - boundary_id: data-001
+      location_kind: repository_local
+      path_kind: exact
+      path: harness/task_manifest.schema.json
+    - boundary_id: data-002
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/fixtures/manifest_validation/forward_valid_task_manifest_v1.yaml
+    - boundary_id: data-003
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/fixtures/manifest_validation/forward_valid_change_plan_v1.yaml
+    - boundary_id: data-004
+      location_kind: repository_local
+      path_kind: exact
+      path: tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
     tests:
     - boundary_id: tests-001
       location_kind: repository_local
@@ -139,12 +155,12 @@ modules:
   permitted_side_effects: []
   rollback_boundary:
     repo_relative_path: docs/modules/manifest-validation-contract-v1.md
-    sha256: bd3b0f369d1ab8e58fd037d4abf8fc3f5f9eee58a904a95784a3aa325e39c333
+    sha256: 8fede4b7088d02de8b58fd170a77fd0cb6ec588a1555f340cb29b5981a569f72
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_boundary:
     repo_relative_path: docs/modules/manifest-validation-contract-v1.md
-    sha256: bd3b0f369d1ab8e58fd037d4abf8fc3f5f9eee58a904a95784a3aa325e39c333
+    sha256: 8fede4b7088d02de8b58fd170a77fd0cb6ec588a1555f340cb29b5981a569f72
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - module_id: agent-worker-runtime
@@ -1977,32 +1993,32 @@ interfaces:
   - consumer_module_id: task-runner
   input_contract:
     repo_relative_path: docs/modules/manifest-validation-contract-v1.md
-    sha256: bd3b0f369d1ab8e58fd037d4abf8fc3f5f9eee58a904a95784a3aa325e39c333
+    sha256: 8fede4b7088d02de8b58fd170a77fd0cb6ec588a1555f340cb29b5981a569f72
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   output_contract:
     repo_relative_path: docs/modules/manifest-validation-contract-v1.md
-    sha256: bd3b0f369d1ab8e58fd037d4abf8fc3f5f9eee58a904a95784a3aa325e39c333
+    sha256: 8fede4b7088d02de8b58fd170a77fd0cb6ec588a1555f340cb29b5981a569f72
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   error_contract:
     repo_relative_path: docs/modules/manifest-validation-contract-v1.md
-    sha256: bd3b0f369d1ab8e58fd037d4abf8fc3f5f9eee58a904a95784a3aa325e39c333
+    sha256: 8fede4b7088d02de8b58fd170a77fd0cb6ec588a1555f340cb29b5981a569f72
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   side_effect_contract:
     repo_relative_path: docs/modules/manifest-validation-contract-v1.md
-    sha256: bd3b0f369d1ab8e58fd037d4abf8fc3f5f9eee58a904a95784a3aa325e39c333
+    sha256: 8fede4b7088d02de8b58fd170a77fd0cb6ec588a1555f340cb29b5981a569f72
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   compatibility_policy:
     repo_relative_path: docs/modules/manifest-validation-contract-v1.md
-    sha256: bd3b0f369d1ab8e58fd037d4abf8fc3f5f9eee58a904a95784a3aa325e39c333
+    sha256: 8fede4b7088d02de8b58fd170a77fd0cb6ec588a1555f340cb29b5981a569f72
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
   replacement_revalidation_boundary:
     repo_relative_path: docs/modules/manifest-validation-contract-v1.md
-    sha256: bd3b0f369d1ab8e58fd037d4abf8fc3f5f9eee58a904a95784a3aa325e39c333
+    sha256: 8fede4b7088d02de8b58fd170a77fd0cb6ec588a1555f340cb29b5981a569f72
     format_identity: tool-system-module-compound-contract-v1
     schema_identity: tool-system-module-compound-contract-schema-v1
 - interface_id: agent-worker-runtime-api

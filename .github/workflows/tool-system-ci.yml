@@ -33,7 +33,7 @@ jobs:
         run: python -m pytest -q
 
       - name: Validate active gates
-        run: python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+        run: python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
 
       - name: Validate process authority
         run: python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml

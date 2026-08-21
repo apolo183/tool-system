@@ -127,7 +127,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
     assert legacy_reasons == []
-    assert len(rows) == 292
+    assert len(rows) == 295
     assert EXACT_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
     assert all(
         not any(character in row["path"] for character in "*?[]{}") for row in rows
@@ -135,13 +135,18 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_file_count"] == 292
+    assert result["formal_file_count"] == 295
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == len(retained_paths)
     assert BOUNDED_CLOSURE_PAIR <= retained_paths
     assert DURABLE_SIDECAR_CORRECTION_RETAINED_FILES <= retained_paths
     rows_by_path = {row["path"]: row for row in rows}
+    assert {
+        "tests/fixtures/manifest_validation/forward_valid_task_manifest_v1.yaml",
+        "tests/fixtures/manifest_validation/forward_valid_change_plan_v1.yaml",
+        "tests/fixtures/manifest_validation/strict_active_gates_v1.yaml",
+    } <= rows_by_path.keys()
     assert rows_by_path[TS_B02A_HOSTED_OBSERVATION_CASCADE_REPAIR_PROBE] == {
         "path": TS_B02A_HOSTED_OBSERVATION_CASCADE_REPAIR_PROBE,
         "role": (

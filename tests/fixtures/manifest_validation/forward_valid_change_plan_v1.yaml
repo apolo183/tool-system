@@ -1,0 +1,12 @@
+plan_id: manifest-validation-forward-valid-v1
+target_repo: apolo183/tool-system
+task_manifest: tests/fixtures/manifest_validation/forward_valid_task_manifest_v1.yaml
+changed_files:
+  - tests/fixtures/manifest_validation/forward_valid_task_manifest_v1.yaml
+verification:
+  commands: []
+  pass_conditions:
+    - No command or repository effect occurs.
+rollback:
+  method: manual_review
+  reference: Synthetic fixture only; no write is executed.

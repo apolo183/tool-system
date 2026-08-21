@@ -45,4 +45,4 @@ approval:
   required: true
   approved_by: synthetic_fixture_owner
   approval_source: committed_non_authorizing_fixture
-  approved_at: 2026-08-03T00:00:00+09:00
+  approved_at: "2026-08-03T00:00:00+09:00"

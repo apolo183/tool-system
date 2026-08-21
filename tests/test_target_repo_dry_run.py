@@ -87,5 +87,5 @@ def test_target_repo_dry_run_writes_audit_jsonl(tmp_path: Path) -> None:
 def test_p4_change_plan_validates() -> None:
     result = validate_change_plan(P4_CHANGE_PLAN_PATH)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])

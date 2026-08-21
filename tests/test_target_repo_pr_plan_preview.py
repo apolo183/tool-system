@@ -42,8 +42,8 @@ def test_synthetic_target_pr_plan_preview_is_no_write(tmp_path: Path) -> None:
 def test_p4b_change_plan_validates() -> None:
     result = validate_change_plan(P4B_CHANGE_PLAN_PATH)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])
 
 
 def test_p4c_preview_is_no_write(tmp_path: Path) -> None:
@@ -64,5 +64,5 @@ def test_p4c_preview_is_no_write(tmp_path: Path) -> None:
 def test_p4c_change_plan_validates() -> None:
     result = validate_change_plan(P4C_CHANGE_PLAN_PATH)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])

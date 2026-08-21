@@ -42,7 +42,7 @@ mapping_contract:
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:architecture_registry@1.1.0
     - current_module_id: manifest_validation
       canonical_module_id: manifest-validation
-      current_module_version: 1.0.0
+      current_module_version: 1.0.1
       aggregate_interface_id: manifest-validation-api
       aggregate_interface_version: 1.0.0
       runtime_id_preserved: true
@@ -66,7 +66,7 @@ mapping_contract:
         - task_planner
         - task_runner
       change_risk: "critical: shared validation foundation with nine direct consumers"
-      rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:manifest_validation@1.0.0
+      rollback_identity: tool-system@427046c7c99dea569b67f2768fa1577dfe838faf:manifest_validation@1.0.0
     - current_module_id: agent_worker_runtime
       canonical_module_id: agent-worker-runtime
       current_module_version: 1.0.0

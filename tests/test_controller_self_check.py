@@ -15,8 +15,8 @@ from tool_system.repo_controller.self_check import (
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "policy" / "repo_write_policy.yaml"
 GATE_DECISION = {"status": "PASS", "reasons": []}
-CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p3f_controller_self_check.yaml"
-MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_p3f_controller_self_check.yaml"
+CHANGE_PLAN_PATH = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_change_plan_v1.yaml"
+MANIFEST_PATH = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_task_manifest_v1.yaml"
 
 
 def _lifecycle_approval() -> dict[str, object]:

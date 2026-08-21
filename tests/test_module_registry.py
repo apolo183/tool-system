@@ -249,10 +249,10 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
     "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
 )
 
-EXPECTED_RAW_SHA256 = "eef4b374eaa25ecaac5a40b8f16b0f1a697a316f8bc70c6dff9f85f38151cddb"
-EXPECTED_BYTE_LENGTH = 126_424
+EXPECTED_RAW_SHA256 = "65696938d1180ef86ff61a5af2a75b611d6e1102bd9c7aa62f6c937d32c3058d"
+EXPECTED_BYTE_LENGTH = 127_062
 EXPECTED_SEMANTIC_SHA256 = (
-    "d3843c1b3d0fc4c71f5c43db5b8cd27adae2c823ee0452a65cec1250b5937120"
+    "535d2b17d263d3818de9f19a98c7127c151e5c96180fad52fe01a67082a5d3ab"
 )
 EXPECTED_MANAGED_PYTHON_FILE_COUNT = 122
 EXPECTED_MODULE_IDS = {
@@ -631,10 +631,14 @@ def test_qwen_runtime_adapter_pair_scope_and_zero_io_state_validate() -> None:
     state = load_yaml_file(PROJECT_STATE)["p15c_qwen_runtime_adapter"]
     report = QWEN_ADAPTER_REPORT.read_text(encoding="utf-8")
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == QWEN_ADAPTER_FILES
     assert set(manifest["scope"]["in_scope"]) == QWEN_ADAPTER_FILES
     assert set(plan["changed_files"]) == QWEN_ADAPTER_FILES
@@ -672,10 +676,14 @@ def test_qwen_economics_correction_pair_scope_and_zero_io_state_validate() -> No
     state = load_yaml_file(PROJECT_STATE)["p15c_qwen_economics_consistency_correction"]
     report = QWEN_ECONOMICS_REPORT.read_text(encoding="utf-8")
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == QWEN_ECONOMICS_FILES
     assert set(manifest["scope"]["in_scope"]) == QWEN_ECONOMICS_FILES
     assert set(plan["changed_files"]) == QWEN_ECONOMICS_FILES
@@ -714,10 +722,14 @@ def test_openai_qwen_matrix_pair_scope_module_and_zero_io_state_validate() -> No
     packet = load_yaml_file(PACKET_CONFIG)
     report = OPENAI_QWEN_MATRIX_REPORT.read_text(encoding="utf-8")
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == OPENAI_QWEN_MATRIX_FILES
     assert set(manifest["scope"]["in_scope"]) == OPENAI_QWEN_MATRIX_FILES
     assert set(plan["changed_files"]) == OPENAI_QWEN_MATRIX_FILES
@@ -767,10 +779,14 @@ def test_p15d_prerequisite_scope_module_and_stage_stop_validate() -> None:
     corpus = load_yaml_file(P15D_PREREQUISITE_CONFIG)
     report = P15D_PREREQUISITE_REPORT.read_text(encoding="utf-8")
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == P15D_PREREQUISITE_FILES
     assert set(manifest["scope"]["in_scope"]) == P15D_PREREQUISITE_FILES
     assert set(plan["changed_files"]) == P15D_PREREQUISITE_FILES
@@ -803,10 +819,14 @@ def test_p15d_failure_control_scope_module_and_stage_stop_validate() -> None:
     state = load_yaml_file(PROJECT_STATE)["p15d_prerequisite_failure_control_fixture"]
     report = P15D_FAILURE_CONTROL_REPORT.read_text(encoding="utf-8")
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == P15D_FAILURE_CONTROL_FILES
     assert set(manifest["scope"]["in_scope"]) == P15D_FAILURE_CONTROL_FILES
     assert set(plan["changed_files"]) == P15D_FAILURE_CONTROL_FILES
@@ -840,10 +860,14 @@ def test_durable_sidecar_race_correction_scope_and_boundary_validate() -> None:
     ]
     report = DURABLE_SIDECAR_RACE_REPORT.read_text(encoding="utf-8")
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == DURABLE_SIDECAR_RACE_FILES
     assert set(manifest["scope"]["in_scope"]) == DURABLE_SIDECAR_RACE_FILES
     assert set(plan["changed_files"]) == DURABLE_SIDECAR_RACE_FILES
@@ -885,10 +909,14 @@ def test_ai_worker_runtime_realignment_scope_module_and_stage_stop_validate() ->
     )
     report = AI_WORKER_REALIGNMENT_REPORT.read_text(encoding="utf-8")
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == AI_WORKER_REALIGNMENT_FILES
     assert set(manifest["scope"]["in_scope"]) == AI_WORKER_REALIGNMENT_FILES
     assert set(plan["changed_files"]) == AI_WORKER_REALIGNMENT_FILES
@@ -938,10 +966,14 @@ def test_provider_portfolio_realignment_scope_module_and_stage_stop_validate() -
     )
     report = PROVIDER_PORTFOLIO_REALIGNMENT_REPORT.read_text(encoding="utf-8")
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == PROVIDER_PORTFOLIO_REALIGNMENT_FILES
     assert set(manifest["scope"]["in_scope"]) == (
         PROVIDER_PORTFOLIO_REALIGNMENT_FILES
@@ -1116,6 +1148,15 @@ def test_manifest_selector_and_unique_registry_authority_path() -> None:
         boundary["path"]
         for boundary in modules["manifest-validation"]["boundaries"]["tests"]
     ] == ["tests/test_task_manifest_policy.py"]
+    assert [
+        boundary["path"]
+        for boundary in modules["manifest-validation"]["boundaries"]["data"]
+    ] == [
+        "harness/task_manifest.schema.json",
+        "tests/fixtures/manifest_validation/forward_valid_task_manifest_v1.yaml",
+        "tests/fixtures/manifest_validation/forward_valid_change_plan_v1.yaml",
+        "tests/fixtures/manifest_validation/strict_active_gates_v1.yaml",
+    ]
     assert [
         path.relative_to(ROOT).as_posix()
         for path in ROOT.rglob("*module_registry*.y*ml")

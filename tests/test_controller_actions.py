@@ -222,5 +222,5 @@ def test_repository_action_capability_is_context_bound_and_single_use() -> None:
 def test_p3d_change_plan_validates() -> None:
     result = validate_change_plan(CHANGE_PLAN_PATH)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])

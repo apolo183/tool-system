@@ -1,0 +1,47 @@
+task_id: manifest-validation-forward-valid-v1
+task_type: read_only_audit
+target_repo: apolo183/tool-system
+target_branch: main
+phase: TS_M03_SYNTHETIC_VALIDATION
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/task_manifest_schema_cli_authority_equivalence_realignment_specification_v1.md
+    section_or_key: 10. Adversarial and compatibility matrix
+    scope: Provide a strict non-authorizing manifest-validation fixture.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Exercise deterministic validation without executing commands or writes.
+scope:
+  summary: Validate one strict synthetic tool-system task pair without executing commands or repository writes.
+  in_scope:
+    - tests/fixtures/manifest_validation/forward_valid_task_manifest_v1.yaml
+  out_of_scope:
+    - command execution
+    - repository mutation
+evidence:
+  - repo: apolo183/tool-system
+    path: harness/task_manifest.schema.json
+    why_relevant: Defines the strict synthetic manifest structure.
+allowed_files:
+  - tests/fixtures/manifest_validation/forward_valid_task_manifest_v1.yaml
+forbidden_files:
+  - finance/**
+  - trading/**
+write_mode: read_only
+verification:
+  commands: []
+  pass_conditions:
+    - Structural, policy, and autonomy validation pass without any command execution.
+rollback:
+  method: manual_review
+  reference: Synthetic fixture only; no write is executed.
+approval:
+  required: true
+  approved_by: synthetic_fixture_owner
+  approval_source: committed_non_authorizing_fixture
+  approved_at: "2026-08-21T00:00:00+09:00"

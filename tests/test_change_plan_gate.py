@@ -12,8 +12,8 @@ from tool_system.manifest.task_manifest import load_yaml_file
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_p2_gate_foundation.yaml"
-PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_p2_gate_foundation.yaml"
+MANIFEST_PATH = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_task_manifest_v1.yaml"
+PLAN_PATH = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_change_plan_v1.yaml"
 
 
 def test_change_plan_passes_structure_and_manifest_scope() -> None:

@@ -62,6 +62,8 @@ def _manifest() -> dict[str, object]:
         "approval": {
             "required": True,
             "approved_by": "implementation_milestone_authorization",
+            "approval_source": "committed_non_authorizing_fixture",
+            "approved_at": "2026-08-21T00:00:00+09:00",
         },
     }
 
@@ -127,9 +129,14 @@ def test_named_target_merge_approval_blocks_without_check_policy() -> None:
     decision = _evaluate()
 
     assert decision["status"] == "BLOCK"
-    assert decision["reasons"] == [
+    assert (
         f"required status checks are not configured for repository: {TARGET_REPO}"
-    ]
+        in decision["reasons"]
+    )
+    assert any(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in decision["reasons"]
+    )
 
 
 def test_packet_preparation_approval_cannot_authorize_merge() -> None:

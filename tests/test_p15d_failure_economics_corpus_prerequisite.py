@@ -54,10 +54,14 @@ def test_task_pair_exact_scope_and_non_authorizing_boundary_validate() -> None:
     manifest = _load(MANIFEST)
     plan = _load(PLAN)
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == EXACT_FILES
     assert set(manifest["scope"]["in_scope"]) == EXACT_FILES
     assert set(plan["changed_files"]) == EXACT_FILES

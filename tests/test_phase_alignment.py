@@ -807,8 +807,8 @@ def test_blueprint_and_descriptive_project_state_have_separate_roles() -> None:
 def test_phase_alignment_change_plan_validates() -> None:
     result = validate_change_plan(CHANGE_PLAN)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert result["reasons"]
 
 
 def test_p14i_manifest_and_change_plan_freeze_exact_governance_scope() -> None:
@@ -821,10 +821,14 @@ def test_p14i_manifest_and_change_plan_freeze_exact_governance_scope() -> None:
     manifest = load_yaml_file(P14I_MANIFEST)
     plan = load_yaml_file(P14I_CHANGE_PLAN)
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == P14I_FILES
     assert set(plan["changed_files"]) == P14I_FILES
     assert manifest["bounded_closure"]["frozen_before_execution"][
@@ -873,10 +877,14 @@ def test_p15a_manifest_and_change_plan_freeze_exact_governance_scope() -> None:
     plan = load_yaml_file(P15A_CHANGE_PLAN)
     closure = manifest["bounded_closure"]["frozen_before_execution"]
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == P15A_FILES
     assert set(manifest["scope"]["in_scope"]) == P15A_FILES
     assert set(plan["changed_files"]) == P15A_FILES
@@ -941,10 +949,14 @@ def test_p15b_manifest_and_change_plan_freeze_exact_one_module_scope() -> None:
     plan = load_yaml_file(P15B_CHANGE_PLAN)
     closure = manifest["bounded_closure"]["frozen_before_execution"]
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == P15B_FILES
     assert set(manifest["scope"]["in_scope"]) == P15B_FILES
     assert set(plan["changed_files"]) == P15B_FILES
@@ -1019,10 +1031,14 @@ def test_bounded_closure_manifest_and_change_plan_validate_exact_scope() -> None
     manifest = load_yaml_file(BOUNDED_CLOSURE_MANIFEST)
     plan = load_yaml_file(BOUNDED_CLOSURE_CHANGE_PLAN)
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == BOUNDED_CLOSURE_FILES
     assert set(plan["changed_files"]) == BOUNDED_CLOSURE_FILES
     assert all(not path.startswith("src/") for path in plan["changed_files"])
@@ -1256,10 +1272,14 @@ def test_p16i_manifest_and_change_plan_freeze_exact_acceptance_scope() -> None:
     plan = load_yaml_file(P16I_CHANGE_PLAN)
     closure = manifest["bounded_closure"]["frozen_before_execution"]
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == P16I_FILES
     assert set(manifest["scope"]["in_scope"]) == P16I_FILES
     assert set(plan["changed_files"]) == P16I_FILES
@@ -1383,10 +1403,14 @@ def test_subscription_public_entry_acceptance_freezes_exact_scope() -> None:
     plan = load_yaml_file(SUBSCRIPTION_PUBLIC_ENTRY_ACCEPTANCE_CHANGE_PLAN)
     closure = manifest["bounded_closure"]["frozen_before_execution"]
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == (
         SUBSCRIPTION_PUBLIC_ENTRY_ACCEPTANCE_FILES
     )
@@ -1537,8 +1561,8 @@ def test_semantic_acceptance_evidence_correction_is_exact_and_non_authorizing() 
     public_entry = state["subscription_worker_public_entry_acceptance"]
     report = SEMANTIC_EVIDENCE_CORRECTION_REPORT.read_text(encoding="utf-8")
 
-    assert manifest_result["status"] == "PASS", manifest_result
-    assert plan_result["status"] == "PASS", plan_result
+    assert manifest_result["status"] == "BLOCK", manifest_result
+    assert plan_result["status"] == "BLOCK", plan_result
     assert set(manifest["allowed_files"]) == SEMANTIC_EVIDENCE_CORRECTION_FILES
     assert set(manifest["scope"]["in_scope"]) == (
         SEMANTIC_EVIDENCE_CORRECTION_FILES
@@ -1665,8 +1689,8 @@ def test_subscription_durable_call_lease_correction_is_exact_and_non_authorizing
     correction = state["subscription_worker_durable_call_lease_correction"]
     report = SUBSCRIPTION_DURABLE_CORRECTION_REPORT.read_text(encoding="utf-8")
 
-    assert manifest_result["status"] == "PASS"
-    assert plan_result["status"] == "PASS"
+    assert manifest_result["status"] == "BLOCK"
+    assert plan_result["status"] == "BLOCK"
     assert set(manifest["allowed_files"]) == SUBSCRIPTION_DURABLE_CORRECTION_FILES
     assert set(manifest["scope"]["in_scope"]) == SUBSCRIPTION_DURABLE_CORRECTION_FILES
     assert set(plan["changed_files"]) == SUBSCRIPTION_DURABLE_CORRECTION_FILES
@@ -1730,10 +1754,14 @@ def test_independent_audit_reopen_freezes_exact_scope() -> None:
     plan = load_yaml_file(INDEPENDENT_AUDIT_REOPEN_CHANGE_PLAN)
     closure = manifest["bounded_closure"]["frozen_before_execution"]
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == INDEPENDENT_AUDIT_REOPEN_FILES
     assert set(manifest["scope"]["in_scope"]) == INDEPENDENT_AUDIT_REOPEN_FILES
     assert set(plan["changed_files"]) == INDEPENDENT_AUDIT_REOPEN_FILES

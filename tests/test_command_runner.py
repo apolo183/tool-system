@@ -18,9 +18,9 @@ from tool_system.gate.command_runner import (
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY = ROOT / "config/process_authority_v1.yaml"
-MANIFEST = ROOT / "examples/task_manifests/tool_system_run_entry.yaml"
+MANIFEST = ROOT / "tests/fixtures/manifest_validation/forward_valid_task_manifest_v1.yaml"
 OTHER_MANIFEST = ROOT / "examples/task_manifests/tool_system_audit_bundle.yaml"
-PLAN = ROOT / "examples/change_plans/tool_system_run_entry.yaml"
+PLAN = ROOT / "tests/fixtures/manifest_validation/forward_valid_change_plan_v1.yaml"
 POLICY = ROOT / "policy/repo_write_policy.yaml"
 AUTONOMY_POLICY = ROOT / "policy/autonomy_policy.yaml"
 
@@ -50,11 +50,19 @@ def _record_subprocess(monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
     return calls
 
 
-def _copy_explicit_pair(tmp_path: Path) -> tuple[Path, Path]:
+def _copy_explicit_pair(
+    tmp_path: Path,
+    commands: list[str] | None = None,
+) -> tuple[Path, Path]:
     manifest = tmp_path / "manifest.yaml"
-    manifest.write_bytes(MANIFEST.read_bytes())
+    manifest_value = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
+    manifest_value["verification"]["commands"] = commands or []
+    manifest.write_text(
+        yaml.safe_dump(manifest_value, sort_keys=False), encoding="utf-8"
+    )
     plan_value = yaml.safe_load(PLAN.read_text(encoding="utf-8"))
     plan_value["task_manifest"] = manifest.as_posix()
+    plan_value["verification"]["commands"] = commands or []
     plan = tmp_path / "plan.yaml"
     plan.write_text(yaml.safe_dump(plan_value, sort_keys=False), encoding="utf-8")
     return manifest, plan
@@ -269,12 +277,18 @@ def test_input_mutation_between_validation_and_dispatch_blocks(
     assert calls == []
 
 def test_cancellation_blocks_before_command_dispatch(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     calls = _record_subprocess(monkeypatch)
+    manifest, plan = _copy_explicit_pair(tmp_path, ["python -V"])
 
     result = run_commands(
-        **_protected_kwargs(cancellation_requested=lambda: True)
+        **_protected_kwargs(
+            task_manifest_path=manifest,
+            change_plan_path=plan,
+            cancellation_requested=lambda: True,
+        )
     )
 
     assert result["status"] == "BLOCK"
@@ -284,8 +298,10 @@ def test_cancellation_blocks_before_command_dispatch(
 
 
 def test_command_output_limit_and_timeout_fail_closed(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    manifest, plan = _copy_explicit_pair(tmp_path, ["python -V"])
     def oversized(
         args: list[str],
         **_: Any,
@@ -299,7 +315,11 @@ def test_command_output_limit_and_timeout_fail_closed(
 
     monkeypatch.setattr(command_runner.subprocess, "run", oversized)
     limited = run_commands(
-        **_protected_kwargs(max_output_bytes=32)
+        **_protected_kwargs(
+            task_manifest_path=manifest,
+            change_plan_path=plan,
+            max_output_bytes=32,
+        )
     )
     assert limited["status"] == "BLOCK"
     assert limited["subprocess_call_count"] == 1
@@ -312,7 +332,13 @@ def test_command_output_limit_and_timeout_fail_closed(
         raise subprocess.TimeoutExpired(args, 1)
 
     monkeypatch.setattr(command_runner.subprocess, "run", timeout)
-    timed_out = run_commands(**_protected_kwargs(timeout_seconds=1))
+    timed_out = run_commands(
+        **_protected_kwargs(
+            task_manifest_path=manifest,
+            change_plan_path=plan,
+            timeout_seconds=1,
+        )
+    )
     assert timed_out["status"] == "BLOCK"
     assert timed_out["subprocess_call_count"] == 1
     assert timed_out["command_results"] == []
@@ -320,8 +346,10 @@ def test_command_output_limit_and_timeout_fail_closed(
 
 
 def test_command_environment_excludes_provider_credentials(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    manifest, plan = _copy_explicit_pair(tmp_path, ["python -V"])
     observed_environments: list[dict[str, str]] = []
 
     def fake_run(
@@ -333,7 +361,12 @@ def test_command_environment_excludes_provider_credentials(
 
     monkeypatch.setattr(command_runner.subprocess, "run", fake_run)
     monkeypatch.setenv("OPENAI_API_KEY", "not-forwarded")
-    result = run_commands(**_protected_kwargs())
+    result = run_commands(
+        **_protected_kwargs(
+            task_manifest_path=manifest,
+            change_plan_path=plan,
+        )
+    )
 
     assert result["status"] == "PASS"
     assert observed_environments
@@ -341,4 +374,3 @@ def test_command_environment_excludes_provider_credentials(
         "OPENAI_API_KEY" not in environment
         for environment in observed_environments
     )
-
