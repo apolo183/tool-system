@@ -1,0 +1,69 @@
+plan_id: tool-system-ts-m03-task-manifest-schema-cli-authority-equivalence-realignment-spec-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml
+changed_files:
+  - docs/reports/task_manifest_schema_cli_authority_equivalence_realignment_specification_v1.md
+  - examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml
+  - examples/change_plans/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml
+implementation:
+  - Re-read the canonical main ref and corresponding commit object and stop on commit or tree drift.
+  - Record the current formal Schema, shared validator, application consumers, retained-corpus matrix, and module ownership.
+  - Freeze one structural authority, deterministic equivalence semantics, dependency and license, exact correction paths, adversarial tests, affected-consumer closure, and preserved findings.
+  - Add only this report and its paired non-authority task manifest and change plan.
+verification:
+  commands:
+    - python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml --policy policy/repo_write_policy.yaml --autonomy-policy policy/autonomy_policy.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - git diff --check 1373c98296bfc2999d0142de41926a3111b3f55f HEAD
+    - git diff --name-status --no-renames 1373c98296bfc2999d0142de41926a3111b3f55f HEAD
+    - git ls-tree -r HEAD -- docs/reports/task_manifest_schema_cli_authority_equivalence_realignment_specification_v1.md examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml examples/change_plans/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml
+    - git rev-list --count 1373c98296bfc2999d0142de41926a3111b3f55f..HEAD
+    - >-
+      python -c "import subprocess; b='1373c98296bfc2999d0142de41926a3111b3f55f'; p=['docs/reports/task_manifest_schema_cli_authority_equivalence_realignment_specification_v1.md','examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml','examples/change_plans/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml']; ns=subprocess.check_output(['git','diff','--name-status','--no-renames',b,'HEAD'],text=True).splitlines(); assert sorted(ns)==sorted('A\t'+x for x in p),ns; assert int(subprocess.check_output(['git','rev-list','--count',b+'..HEAD'],text=True))==1; rows=subprocess.check_output(['git','ls-tree','-r','HEAD','--',*p],text=True).splitlines(); modes={row.split('\t',1)[1]:row.split()[0] for row in rows}; assert modes=={x:'100644' for x in p},modes"
+  pass_conditions:
+    - Exactly three retained non-authority paths are added and no tracked path is modified or deleted.
+    - The current task manifest uses only formal vocabulary and current CLI checks pass without being misrepresented as formal-Schema execution.
+    - The report freezes the sealed 189-file frozen-base compatibility cohort and does not promote retained evidence.
+    - The report freezes the exact 58-path future correction and no correction code is present.
+    - Existing Hosted CI and governance validators pass with no workflow or runner change.
+    - Draft-to-Ready-to-squash publication is drift-free and retains or exactly restores the source branch.
+publication:
+  branch: agent/ts-m03-task-manifest-schema-cli-authority-equivalence-realignment-spec-v1
+  commit_message: Specify TS-M03 task-manifest schema and CLI authority equivalence
+  exact_base: 1373c98296bfc2999d0142de41926a3111b3f55f
+  exact_base_tree: b854500a7e74ae79de1fda27c119c99d4403de49
+  exact_path_count: 3
+  exact_add_count: 3
+  exact_modify_count: 0
+  exact_delete_or_rename_count: 0
+  exact_file_mode: "100644"
+  exact_commit_count: 1
+  pull_request_count: 1
+  initial_state: draft
+  ready_gate: Hosted CI success and no base, head, path, commit, comment, review, or thread drift.
+  merge_method: squash
+  retain_source_branch: true
+  restore_exact_head_if_automatically_deleted: true
+  stop_after_merge: true
+authority_effect:
+  value: none
+  execution_authorized: false
+  implementation_authorized: false
+  project_state_change_authorized: false
+  public_acceptance_change_authorized: false
+stop:
+  on_hosted_failure: Keep the pull request Draft, record the blocker, and stop without weakening the package.
+  after_guarded_merge: true
+  start_ts_m03_implementation: false
+  start_ts_b02a_or_later: false
+  start_real_execution: false
+  modify_project_state: false
+  modify_public_acceptance: false
+rollback:
+  method: git_revert
+  reference: A later, separately authorized revert pull request may revert the squash-merge commit.
