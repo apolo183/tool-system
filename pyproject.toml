@@ -9,6 +9,7 @@ description = "Domain-agnostic spec-driven harness and policy gate for controlle
 requires-python = ">=3.10"
 dependencies = [
   "PyYAML>=6.0",
+  "jsonschema==4.26.0",
   "tomli>=2.0; python_version < '3.11'",
 ]
 

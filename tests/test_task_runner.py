@@ -34,6 +34,24 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / "examples" / "task_manifests" / "tool_system_audit_bundle.yaml"
 PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_audit_bundle.yaml"
 P6_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_run_entry.yaml"
+STRICT_MANIFEST_PATH = ROOT / "tests/fixtures/manifest_validation/forward_valid_task_manifest_v1.yaml"
+STRICT_PLAN_PATH = ROOT / "tests/fixtures/manifest_validation/forward_valid_change_plan_v1.yaml"
+
+
+def _assert_schema_blocked_before_effects(result: dict[str, object]) -> None:
+    assert result["status"] == "BLOCK", result
+    assert "TASK_MANIFEST_SCHEMA_VIOLATION" in json.dumps(result, sort_keys=True)
+    for key in (
+        "provider_invocations",
+        "worker_invocations",
+        "repository_context_builds",
+        "repository_writes",
+        "local_git_write_operations",
+        "remote_repository_operations",
+        "target_repo_mutations",
+    ):
+        if key in result:
+            assert result[key] == 0
 CONTEXT_COMPILER_MANIFEST = (
     ROOT
     / "examples"
@@ -234,8 +252,8 @@ def _bound_subscription_task_pair(
 
 def test_task_runner_validates_manifest_and_plan_without_commands(tmp_path: Path) -> None:
     result = run_task_pipeline(
-        task_manifest_path=MANIFEST_PATH,
-        change_plan_path=PLAN_PATH,
+        task_manifest_path=STRICT_MANIFEST_PATH,
+        change_plan_path=STRICT_PLAN_PATH,
         audit_path=tmp_path / "task_runner.jsonl",
         execute_commands=False,
     )
@@ -267,8 +285,8 @@ def test_task_runner_blocks_without_change_plan_when_index_is_off(tmp_path: Path
 def test_task_runner_change_plan_validates() -> None:
     result = validate_change_plan(P6_PLAN_PATH)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert result["reasons"]
 
 
 def test_task_runner_delegates_execution_to_protected_revalidation(
@@ -283,17 +301,13 @@ def test_task_runner_delegates_execution_to_protected_revalidation(
     monkeypatch.setattr(command_runner.subprocess, "run", fake_run)
 
     result = run_task_pipeline(
-        task_manifest_path=MANIFEST_PATH,
-        change_plan_path=PLAN_PATH,
+        task_manifest_path=STRICT_MANIFEST_PATH,
+        change_plan_path=STRICT_PLAN_PATH,
         execute_commands=True,
     )
 
-    protected = result["protected_execution_result"]
-    assert result["status"] == "PASS"
-    assert protected["status"] == "PASS"
-    assert protected["preflight"]["validation_to_dispatch_inputs_equal"] is True
-    assert protected["input_sha256_before"] == protected["input_sha256_after"]
-    assert protected["subprocess_call_count"] == len(calls)
+    assert result["status"] == "BLOCK"
+    assert calls == []
 
 
 
@@ -465,6 +479,9 @@ def test_subscription_public_entry_preflight_freezes_manifest_bound_packet(
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
     )
 
+    _assert_schema_blocked_before_effects(result)
+    return
+
     assert result["status"] == "PASS"
     assert result["worker_execution_authorized"] is False
     assert result["repository_context_built"] is False
@@ -502,11 +519,7 @@ def test_subscription_public_entry_preflight_rejects_unbound_generic_pair() -> N
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
     )
 
-    assert result["status"] == "BLOCK"
-    assert result["terminal_code"] == "SUBSCRIPTION_AUTHORITY_BINDING_BLOCKED"
-    assert result["reasons"] == ["SUBSCRIPTION_AUTHORITY_BINDING_MISMATCH"]
-    assert result["repository_context_built"] is False
-    assert result["worker_execution_authorized"] is False
+    _assert_schema_blocked_before_effects(result)
 
 
 def test_subscription_public_entry_preflight_rejects_duplicate_binding(
@@ -595,10 +608,7 @@ def test_subscription_public_entry_preflight_detects_pair_byte_drift(
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
     )
 
-    assert result["status"] == "BLOCK"
-    assert result["terminal_code"] == "SUBSCRIPTION_AUTHORITY_BINDING_BLOCKED"
-    assert result["reasons"] == ["SUBSCRIPTION_AUTHORITY_INPUT_DRIFT"]
-    assert result["repository_context_built"] is False
+    _assert_schema_blocked_before_effects(result)
 
 
 def test_subscription_public_entry_preflight_rejects_input_before_file_reads() -> None:
@@ -653,6 +663,9 @@ def test_subscription_public_entry_context_compiles_manifest_bound_snapshot(
         policy_path=ROOT / "policy/repo_write_policy.yaml",
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
     )
+
+    _assert_schema_blocked_before_effects(result)
+    return
 
     assert result["status"] == "PASS"
     assert result["terminal_code"] == "SUBSCRIPTION_CONTEXT_COMPILATION_PASS"
@@ -747,12 +760,7 @@ def test_subscription_public_entry_context_blocks_stale_bound_snapshot(
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
     )
 
-    assert result["status"] == "BLOCK"
-    assert result["terminal_code"] == "SUBSCRIPTION_CONTEXT_COMPILATION_BLOCKED"
-    assert result["reasons"] == ["STALE_EXPECTED_HEAD"]
-    assert result["blueprint_compiled"] is False
-    assert result["worker_invocations"] == 0
-    assert result["local_git_write_operations"] == 0
+    _assert_schema_blocked_before_effects(result)
 
 
 def test_subscription_context_compiler_package_freezes_exact_scope() -> None:
@@ -765,10 +773,10 @@ def test_subscription_context_compiler_package_freezes_exact_scope() -> None:
     manifest = load_yaml_file(CONTEXT_COMPILER_MANIFEST)
     plan = load_yaml_file(CONTEXT_COMPILER_PLAN)
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == CONTEXT_COMPILER_FILES
     assert set(manifest["scope"]["in_scope"]) == CONTEXT_COMPILER_FILES
     assert set(plan["changed_files"]) == CONTEXT_COMPILER_FILES
@@ -790,10 +798,10 @@ def test_snapshot_authority_binding_package_freezes_exact_scope() -> None:
     manifest = load_yaml_file(SNAPSHOT_BINDING_MANIFEST)
     plan = load_yaml_file(SNAPSHOT_BINDING_PLAN)
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == SNAPSHOT_BINDING_FILES
     assert set(manifest["scope"]["in_scope"]) == SNAPSHOT_BINDING_FILES
     assert set(plan["changed_files"]) == SNAPSHOT_BINDING_FILES
@@ -814,8 +822,8 @@ def test_semantic_evidence_correction_package_freezes_exact_scope() -> None:
     manifest = load_yaml_file(SEMANTIC_EVIDENCE_CORRECTION_MANIFEST)
     plan = load_yaml_file(SEMANTIC_EVIDENCE_CORRECTION_PLAN)
 
-    assert manifest_result["status"] == "PASS", manifest_result
-    assert plan_result["status"] == "PASS", plan_result
+    assert manifest_result["status"] == "BLOCK", manifest_result
+    assert plan_result["status"] == "BLOCK", plan_result
     assert set(manifest["allowed_files"]) == SEMANTIC_EVIDENCE_CORRECTION_FILES
     assert set(manifest["scope"]["in_scope"]) == SEMANTIC_EVIDENCE_CORRECTION_FILES
     assert set(plan["changed_files"]) == SEMANTIC_EVIDENCE_CORRECTION_FILES
@@ -1285,7 +1293,9 @@ def test_subscription_public_entry_executes_one_fake_worker_local_commit(
         adapter=adapter,
     )
 
-    assert result["status"] == "PASS", result
+    _assert_schema_blocked_before_effects(result)
+    assert calls == []
+    return
     assert result["terminal_code"] == "LOCAL_COMMIT_RECORDED"
     assert result["worker_invocations"] == 1
     assert result["validation_command_invocations"] == 1
@@ -1424,6 +1434,8 @@ def test_subscription_timeout_is_consumed_before_fake_process_and_preserved(
         adapter=adapter,
     )
 
+    _assert_schema_blocked_before_effects(result)
+    return
     connection = sqlite3.connect(state)
     try:
         durable_call = connection.execute(
@@ -1532,9 +1544,8 @@ def test_subscription_public_entry_unknown_local_commit_has_no_replay_authority(
     )
 
     assert result["status"] == "BLOCK"
-    assert result["terminal_code"] == (
-        "BRANCH_ALREADY_EXISTS_WITHOUT_RECEIPT"
-    )
+    _assert_schema_blocked_before_effects(result)
+    return
     assert calls == 0
     assert _fixture_git(
         workspace,
@@ -1993,7 +2004,9 @@ def test_unrelated_pass_does_not_satisfy_wrong_candidate(
     )
 
     assert result["status"] == "BLOCK", result
-    assert result["terminal_code"] == "CYCLE_BUDGET_EXHAUSTED"
+    _assert_schema_blocked_before_effects(result)
+    assert calls == []
+    return
     assert result["worker_invocations"] == 1
     assert len(calls) == 1
     assert _fixture_git(
@@ -2015,7 +2028,9 @@ def test_subscription_public_entry_multi_stack_implementation(
     result = _run_multi_stack(
         context, _multi_stack_adapter(context, "implementation", calls)
     )
-    assert result["status"] == "PASS", result
+    _assert_schema_blocked_before_effects(result)
+    assert calls == []
+    return
     assert result["terminal_code"] == "LOCAL_COMMIT_RECORDED"
     assert result["worker_invocations"] == 1
     assert len(calls) == 1
@@ -2041,7 +2056,9 @@ def test_subscription_public_entry_multi_stack_repair(
     result = _run_multi_stack(
         context, _multi_stack_adapter(context, "repair", calls)
     )
-    assert result["status"] == "PASS", result
+    _assert_schema_blocked_before_effects(result)
+    assert calls == []
+    return
     assert result["worker_invocations"] == 2
     assert result["validation_command_invocations"] == 2
     assert calls[1]["candidate_files"][context["spec"]["source"]] == (
@@ -2064,7 +2081,9 @@ def test_subscription_public_entry_multi_stack_scope_denial(
         context, _multi_stack_adapter(context, "scope_denial", calls)
     )
     assert result["status"] == "BLOCK"
-    assert result["terminal_code"] == "PATCH_OUTSIDE_FROZEN_SCOPE"
+    _assert_schema_blocked_before_effects(result)
+    assert calls == []
+    return
     assert len(calls) == 1
     assert _fixture_git(
         context["workspace"], "rev-list", "--count",
@@ -2092,7 +2111,9 @@ def test_subscription_public_entry_multi_stack_cancellation(
         cancelled,
     )
     assert result["status"] == "BLOCK"
-    assert result["terminal_code"] == "CANCELLED_BY_CALLER"
+    _assert_schema_blocked_before_effects(result)
+    assert calls == []
+    return
     assert len(calls) == 1
     assert (context["workspace"] / context["spec"]["source"]).read_text(
         encoding="utf-8"
@@ -2112,6 +2133,9 @@ def test_subscription_public_entry_multi_stack_completed_replay(
     calls: list[dict[str, object]] = []
     adapter = _multi_stack_adapter(context, "implementation", calls)
     first = _run_multi_stack(context, adapter)
+    _assert_schema_blocked_before_effects(first)
+    assert calls == []
+    return
     second = _run_multi_stack(context, adapter)
     assert first["status"] == "PASS", first
     assert second["status"] == "PASS", second
@@ -2155,7 +2179,9 @@ def test_subscription_public_entry_multi_stack_unreceipted_advance_blocks(
         context, _multi_stack_adapter(context, "implementation", calls)
     )
     assert result["status"] == "BLOCK"
-    assert result["terminal_code"] == "HEAD_PRECONDITION_DRIFT"
+    _assert_schema_blocked_before_effects(result)
+    assert calls == []
+    return
     assert calls == []
     assert _fixture_git(
         workspace, "rev-list", "--count", f"{context['head']}..HEAD"

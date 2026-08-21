@@ -8,7 +8,13 @@ from tool_system.cli.validate_active_gates import validate
 
 
 ROOT = Path(__file__).resolve().parents[1]
-INDEX_PATH = ROOT / "examples" / "active_gates.yaml"
+INDEX_PATH = (
+    ROOT
+    / "tests"
+    / "fixtures"
+    / "manifest_validation"
+    / "strict_active_gates_v1.yaml"
+)
 
 
 def _write_yaml(path: Path, value: dict[str, object]) -> None:
@@ -50,7 +56,12 @@ def _manifest(task_id: str) -> dict[str, object]:
             "pass_conditions": ["pytest exits 0"],
         },
         "rollback": {"method": "git_revert", "reference": "fixture commit"},
-        "approval": {"required": True, "approved_by": "test"},
+        "approval": {
+            "required": True,
+            "approved_by": "test",
+            "approval_source": "synthetic_test_fixture",
+            "approved_at": "2026-08-21T00:00:00+09:00",
+        },
     }
 
 

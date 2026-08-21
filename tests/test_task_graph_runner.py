@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import yaml
+
 from tool_system.cli.run_task_graph import main as run_task_graph_main
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
+from tool_system.manifest.task_manifest import load_yaml_file
 from tool_system.runner.task_graph_runner import run_task_graph_pipeline
 
 
@@ -11,11 +14,23 @@ ROOT = Path(__file__).resolve().parents[1]
 GRAPH_PATH = ROOT / "examples" / "task_graphs" / "tool_system_p7a_task_graph.yaml"
 BLUEPRINT_PATH = ROOT / "blueprint" / "tool_system_v0.yaml"
 CHANGE_PLAN_PATH = ROOT / "examples" / "change_plans" / "tool_system_graph_run.yaml"
+STRICT_MANIFEST_PATH = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_task_manifest_v1.yaml"
+STRICT_PLAN_PATH = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_change_plan_v1.yaml"
+
+
+def _strict_graph(tmp_path: Path) -> Path:
+    graph = load_yaml_file(GRAPH_PATH)
+    for task in graph["tasks"]:
+        task["task_manifest"] = STRICT_MANIFEST_PATH.as_posix()
+        task["change_plan"] = STRICT_PLAN_PATH.as_posix()
+    path = tmp_path / "strict_graph.yaml"
+    path.write_text(yaml.safe_dump(graph, sort_keys=False), encoding="utf-8")
+    return path
 
 
 def test_task_graph_runner_executes_compiled_batch_without_commands(tmp_path: Path) -> None:
     result = run_task_graph_pipeline(
-        graph_path=GRAPH_PATH,
+        graph_path=_strict_graph(tmp_path),
         blueprint_path=BLUEPRINT_PATH,
         audit_path=tmp_path / "task_graph_runner.jsonl",
         execute_commands=False,
@@ -33,7 +48,7 @@ def test_task_graph_runner_executes_compiled_batch_without_commands(tmp_path: Pa
 
 def test_task_graph_runner_cli(tmp_path: Path, capsys) -> None:
     exit_code = run_task_graph_main([
-        str(GRAPH_PATH),
+        str(_strict_graph(tmp_path)),
         "--blueprint",
         str(BLUEPRINT_PATH),
         "--audit-path",
@@ -48,5 +63,5 @@ def test_task_graph_runner_cli(tmp_path: Path, capsys) -> None:
 def test_task_graph_runner_change_plan_validates() -> None:
     result = validate_change_plan(CHANGE_PLAN_PATH)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])

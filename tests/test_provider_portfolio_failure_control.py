@@ -411,10 +411,14 @@ def test_frozen_corpus_task_pair_state_and_non_authorizing_scope_remain_aligned(
     state = load_yaml_file(PROJECT_STATE)["p15d_prerequisite_failure_control_fixture"]
     report = REPORT.read_text(encoding="utf-8")
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == EXACT_FILES
     assert set(manifest["scope"]["in_scope"]) == EXACT_FILES
     assert set(plan["changed_files"]) == EXACT_FILES

@@ -1,0 +1,104 @@
+plan_id: tool-system-ts-m03-task-manifest-schema-cli-authority-equivalence-correction-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_correction_v1.yaml
+changed_files:
+  - docs/reports/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_correction_v1.md
+  - examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_correction_v1.yaml
+  - examples/change_plans/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_correction_v1.yaml
+  - tests/fixtures/manifest_validation/forward_valid_task_manifest_v1.yaml
+  - tests/fixtures/manifest_validation/forward_valid_change_plan_v1.yaml
+  - tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+  - REPO_MANIFEST.md
+  - .github/workflows/tool-system-ci.yml
+  - harness/task_manifest.schema.json
+  - src/tool_system/manifest/task_manifest.py
+  - pyproject.toml
+  - docs/modules/manifest-validation-contract-v1.md
+  - docs/tool_system_module_registry_contract_v1.md
+  - config/module_registry_v1.yaml
+  - tests/fixtures/target_repo/task_manifest.yaml
+  - tests/test_repo_manifest.py
+  - tests/test_active_gate_resolver.py
+  - tests/test_active_gates.py
+  - tests/test_audit_bundle.py
+  - tests/test_blueprint_compiler.py
+  - tests/test_change_plan_gate.py
+  - tests/test_cleanup_plan.py
+  - tests/test_command_runner.py
+  - tests/test_controller_actions.py
+  - tests/test_controller_run.py
+  - tests/test_controller_self_check.py
+  - tests/test_execution_approval.py
+  - tests/test_execution_state_snapshot.py
+  - tests/test_final_record.py
+  - tests/test_github_state_adapter.py
+  - tests/test_global_principles.py
+  - tests/test_live_github_collector.py
+  - tests/test_main_ci.py
+  - tests/test_module_registry.py
+  - tests/test_multi_task.py
+  - tests/test_mutation_command_packet.py
+  - tests/test_p10r_a_machine_policy_enforcement.py
+  - tests/test_p15c_execution_packet_freeze.py
+  - tests/test_p15d_failure_economics_corpus_prerequisite.py
+  - tests/test_p4d_precheck.py
+  - tests/test_phase_alignment.py
+  - tests/test_process_authority.py
+  - tests/test_provider_portfolio_failure_control.py
+  - tests/test_repo_controller.py
+  - tests/test_repository_context_builder.py
+  - tests/test_requirement_graph.py
+  - tests/test_role_runtime.py
+  - tests/test_root_cli.py
+  - tests/test_stage_runner.py
+  - tests/test_state_collector.py
+  - tests/test_target_repo_dry_run.py
+  - tests/test_target_repo_pr_plan_preview.py
+  - tests/test_task_graph.py
+  - tests/test_task_graph_runner.py
+  - tests/test_task_manifest_policy.py
+  - tests/test_task_runner.py
+  - tests/test_write_intent.py
+  - tests/test_write_packet.py
+implementation:
+  - Replace the hand-written structure checker with the guarded lazy Draft 2020-12 Schema oracle.
+  - Add only alignment and historical_fixture to the strict formal Schema and quote the synthetic target timestamp.
+  - Add the strict non-authorizing synthetic pair and point the existing Hosted active-gate command to its index.
+  - Update module and repository ownership, exact seals, affected consumers, and the correction evidence report.
+verification:
+  commands:
+    - python -m pytest -q tests/test_task_manifest_policy.py tests/test_active_gates.py tests/test_module_registry.py tests/test_repo_manifest.py
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_correction_v1.yaml --policy policy/repo_write_policy.yaml --autonomy-policy policy/autonomy_policy.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_correction_v1.yaml
+    - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - git diff --check 427046c7c99dea569b67f2768fa1577dfe838faf HEAD
+  pass_conditions:
+    - Exact Schema/CLI equivalence and deterministic diagnostics pass adversarial tests.
+    - The retained corpus remains non-authority and the legacy replay index remains byte-identical.
+    - Exactly 58 authorized paths change and no unlisted path is added, modified, deleted, or renamed.
+publication:
+  branch: agent/ts-m03-task-manifest-schema-cli-authority-equivalence-correction-v1
+  commit_message: Correct TS-M03 task-manifest schema and CLI equivalence
+  exact_base: 427046c7c99dea569b67f2768fa1577dfe838faf
+  exact_base_tree: 3a41ecfd6ff65737fb30366a5791ce77579acbd8
+  exact_path_count: 58
+  exact_add_count: 6
+  exact_modify_count: 52
+  exact_commit_count: 1
+  initial_state: draft
+  merge_method: squash
+  retain_source_branch: true
+  stop_after_merge: true
+stop:
+  on_59th_path: Stop and request a replacement exact authorization package.
+  on_extra_dependency: Stop and request a replacement exact authorization package.
+  on_hosted_failure: Keep the PR Draft, record the blocker, and stop without weakening validation.
+  start_ts_b02a_or_real_execution: false
+  modify_project_state_or_public_acceptance: false
+rollback:
+  method: git_revert
+  reference: Separately authorized revert of the correction squash-merge commit.

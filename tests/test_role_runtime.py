@@ -52,5 +52,5 @@ def test_role_runtime_cli(tmp_path: Path, capsys) -> None:
 def test_role_runtime_change_plan_validates() -> None:
     result = validate_change_plan(CHANGE_PLAN_PATH)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])

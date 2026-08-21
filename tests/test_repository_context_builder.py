@@ -388,10 +388,14 @@ def test_p14d_exact_task_pair_and_descriptive_acceptance_state_validate() -> Non
     plan = load_yaml_file(P14D_PLAN)
     state = load_yaml_file(PROJECT_STATE)
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == P14D_FILES
     assert set(manifest["scope"]["in_scope"]) == P14D_FILES
     assert set(plan["changed_files"]) == P14D_FILES

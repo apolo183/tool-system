@@ -2,13 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import yaml
+
 from tool_system.cli.main import main
 from tool_system.cli.validate_change_plan import validate as validate_change_plan
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TASK_MANIFEST = ROOT / "examples" / "task_manifests" / "tool_system_audit_bundle.yaml"
-CHANGE_PLAN = ROOT / "examples" / "change_plans" / "tool_system_audit_bundle.yaml"
+TASK_MANIFEST = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_task_manifest_v1.yaml"
+CHANGE_PLAN = ROOT / "tests" / "fixtures" / "manifest_validation" / "forward_valid_change_plan_v1.yaml"
 BATCH = ROOT / "examples" / "batches" / "tool_system_batch_runner.yaml"
 ROOT_CLI_PLAN = ROOT / "examples" / "change_plans" / "tool_system_root_cli.yaml"
 
@@ -30,9 +32,26 @@ def test_root_cli_run_subcommand(tmp_path: Path, capsys) -> None:
 
 
 def test_root_cli_batch_subcommand(tmp_path: Path, capsys) -> None:
+    batch = tmp_path / "strict_batch.yaml"
+    batch.write_text(
+        yaml.safe_dump(
+            {
+                "batch_id": "strict-root-cli-batch",
+                "halt_on_failure": True,
+                "tasks": [
+                    {
+                        "task_manifest": TASK_MANIFEST.as_posix(),
+                        "change_plan": CHANGE_PLAN.as_posix(),
+                    }
+                ],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
     exit_code = main([
         "batch",
-        str(BATCH),
+        str(batch),
         "--audit-path",
         str(tmp_path / "batch.jsonl"),
         "--skip-commands",
@@ -46,8 +65,8 @@ def test_root_cli_batch_subcommand(tmp_path: Path, capsys) -> None:
 def test_root_cli_change_plan_validates() -> None:
     result = validate_change_plan(ROOT_CLI_PLAN)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])
 
 
 def test_root_cli_develop_routes_manifest_bound_context_compilation(
@@ -186,4 +205,3 @@ def test_root_cli_develop_execute_requires_and_routes_explicit_boundaries(
     assert str(repository) not in output
     assert str(workspace) not in output
     assert str(state) not in output
-

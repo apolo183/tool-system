@@ -102,5 +102,5 @@ def test_state_snapshot_passes_with_complete_fresh_state(tmp_path: Path) -> None
 def test_state_snapshot_change_plan_validates() -> None:
     result = validate_change_plan(CHANGE_PLAN_PATH)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])

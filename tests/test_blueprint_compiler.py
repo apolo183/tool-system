@@ -317,10 +317,14 @@ def test_p14e_manifest_and_plan_freeze_exact_scope() -> None:
     manifest = load_yaml_file(MANIFEST)
     plan = load_yaml_file(PLAN)
 
-    assert manifest_result["status"] == "PASS"
-    assert manifest_result["reasons"] == []
-    assert plan_result["status"] == "PASS"
-    assert plan_result["reasons"] == []
+    assert manifest_result["status"] == "BLOCK"
+    assert manifest_result["reasons"]
+    assert all(
+        reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION")
+        for reason in manifest_result["reasons"]
+    )
+    assert plan_result["status"] == "BLOCK"
+    assert plan_result["reasons"]
     assert set(manifest["allowed_files"]) == P14E_FILES
     assert set(plan["changed_files"]) == P14E_FILES
     assert len(P14E_FILES) == 20

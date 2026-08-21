@@ -34,5 +34,5 @@ def test_entrypoints_point_to_global_principles() -> None:
 def test_global_principles_change_plan_validates() -> None:
     result = validate_change_plan(CHANGE_PLAN)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])

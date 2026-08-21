@@ -13,14 +13,14 @@ module_compound_contract:
   identity:
     canonical_module_id: manifest-validation
     current_module_id: manifest_validation
-    module_version: 1.0.0
+    module_version: 1.0.1
     aggregate_interface:
       interface_id: manifest-validation-api
       interface_version: 1.0.0
     mapping_owner:
       contract_path: docs/tool_system_module_registry_contract_v1.md
       implementation_path: src/tool_system/architecture/module_registry.py
-    rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:manifest_validation@1.0.0
+    rollback_identity: tool-system@427046c7c99dea569b67f2768fa1577dfe838faf:manifest_validation@1.0.0
     python_import_identities:
       - kind: prefix
         name: tool_system.manifest
@@ -71,7 +71,8 @@ module_compound_contract:
   input_contract:
     registered_inputs:
       - task_manifest_and_change_plan_yaml
-    boundary: Accept caller-supplied YAML, policy mappings, and alignment references as validation inputs.
+      - harness/task_manifest.schema.json
+    boundary: Accept caller-supplied YAML, policy mappings, and alignment references; the repository-local Draft 2020-12 Schema is the sole task-manifest structural authority.
   output_contract:
     registered_outputs:
       - validation_decision_and_reasons
@@ -79,7 +80,8 @@ module_compound_contract:
   error_contract:
     registered_error_semantics:
       - invalid_or_missing_input_blocks
-    boundary: Missing fields, mismatched scope, invalid policy, or failed alignment fails closed.
+      - deterministic_task_manifest_schema_codes
+    boundary: Non-JSON values, unavailable or invalid local Schema, Schema violations, mismatched scope, invalid policy, or failed alignment block deterministically without relaying validator prose.
   side_effect_contract:
     taxonomy_source: docs/tool_system_module_registry_contract_v1.md#side-effect-taxonomy
     effect_classes: []
@@ -87,10 +89,10 @@ module_compound_contract:
     delegated_effects: []
     classification_grants_authority: false
   compatibility_policy:
-    interface_compatible_replacement: Preserve required fields, fail-closed policy, validation result shapes, and the absence of configured-command execution.
+    interface_compatible_replacement: Preserve the Draft 2020-12 Schema authority, deterministic result shapes and codes, lazy jsonschema loading, fail-closed policy, and the absence of configured-command execution.
     interface_incompatible_change: Requires a new aggregate interface version and revalidation of all direct consumers.
   rollback_contract:
-    rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:manifest_validation@1.0.0
+    rollback_identity: tool-system@427046c7c99dea569b67f2768fa1577dfe838faf:manifest_validation@1.0.0
     method: Revert through a separately audited pull request and rerun manifest, policy, gate, and dependent-module tests.
   replacement_contract:
     activation_rule: Replace only after manifest, change-plan, alignment, policy, and direct-consumer compatibility pass.
@@ -106,8 +108,8 @@ module_compound_contract:
       mode: read-only-by-default
       contract: Validation reads repository-local policy and documents and performs no configured-command execution.
     data:
-      mode: caller-owned-input
-      contract: YAML mappings, policy mappings, and command results are not persisted by the validation interfaces.
+      mode: repository-schema-and-caller-owned-input
+      contract: The exact local Schema and strict synthetic fixtures are read-only validation data; YAML mappings, policy mappings, and results are not persisted by the validation interfaces.
     artifact:
       mode: in-memory-result
       contract: The module returns validation and command result records but does not independently select an artifact path.

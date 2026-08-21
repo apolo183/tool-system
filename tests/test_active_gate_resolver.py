@@ -12,9 +12,24 @@ from tool_system.runner.task_runner import run_batch_file, run_task_pipeline
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ACTIVE_GATES = ROOT / "examples" / "active_gates.yaml"
-MANIFEST = ROOT / "examples" / "task_manifests" / "tool_system_run_entry.yaml"
-RESOLVED_PLAN = Path("examples/change_plans/tool_system_run_entry.yaml")
+LEGACY_ACTIVE_GATES = ROOT / "examples" / "active_gates.yaml"
+ACTIVE_GATES = (
+    ROOT
+    / "tests"
+    / "fixtures"
+    / "manifest_validation"
+    / "strict_active_gates_v1.yaml"
+)
+MANIFEST = (
+    ROOT
+    / "tests"
+    / "fixtures"
+    / "manifest_validation"
+    / "forward_valid_task_manifest_v1.yaml"
+)
+RESOLVED_PLAN = Path(
+    "tests/fixtures/manifest_validation/forward_valid_change_plan_v1.yaml"
+)
 BATCH = ROOT / "examples" / "batches" / "tool_system_resolved_batch.yaml"
 P6E_PLAN = ROOT / "examples" / "change_plans" / "tool_system_active_gate_resolver.yaml"
 P2_MANIFEST = ROOT / "examples" / "task_manifests" / "tool_system_p2_gate_foundation.yaml"
@@ -70,7 +85,7 @@ def test_resolves_change_plan_from_active_gates() -> None:
 
 def test_current_p2_pairing_resolves_uniquely_without_repo_changes() -> None:
     protected_paths = [
-        ACTIVE_GATES,
+        LEGACY_ACTIVE_GATES,
         P2_MANIFEST,
         P2B_MANIFEST,
         ROOT / P2_PLAN,
@@ -78,7 +93,9 @@ def test_current_p2_pairing_resolves_uniquely_without_repo_changes() -> None:
     ]
     before = {path: path.read_bytes() for path in protected_paths}
 
-    resolved = resolve_change_plan_from_active_gates(P2_MANIFEST, ACTIVE_GATES)
+    resolved = resolve_change_plan_from_active_gates(
+        P2_MANIFEST, LEGACY_ACTIVE_GATES
+    )
 
     assert resolved == P2_PLAN
     assert {path: path.read_bytes() for path in protected_paths} == before
@@ -199,7 +216,9 @@ def test_resolver_blocks_invalid_active_gate_structure(tmp_path: Path) -> None:
         resolve_change_plan_from_active_gates("manifest.yaml", index)
 
 
-def test_task_runner_resolves_change_plan_when_omitted(tmp_path: Path) -> None:
+def test_task_runner_blocks_noncanonical_implicit_replay_when_plan_omitted(
+    tmp_path: Path,
+) -> None:
     result = run_task_pipeline(
         task_manifest_path=MANIFEST,
         active_gates_path=ACTIVE_GATES,
@@ -207,31 +226,61 @@ def test_task_runner_resolves_change_plan_when_omitted(tmp_path: Path) -> None:
         execute_commands=False,
     )
 
-    assert result["status"] == "PASS"
-    assert result["change_plan_path"] == str(RESOLVED_PLAN)
-    assert result["change_plan_resolution_source"] == "legacy_replay"
+    assert result["status"] == "BLOCK"
+    assert result["change_plan_path"] is None
+    assert result["change_plan_resolution_source"] == "legacy_replay_blocked"
+    assert "legacy replay requires the canonical examples/active_gates.yaml index" in result["reasons"]
     assert result["writes_target_repo"] is False
     assert result["executes_target_repo_mutation"] is False
 
 
-def test_batch_runner_resolves_omitted_change_plans(tmp_path: Path) -> None:
+def test_batch_runner_blocks_omitted_plans_outside_legacy_replay(
+    tmp_path: Path,
+) -> None:
+    batch = tmp_path / "strict_batch.yaml"
+    _write_yaml(
+        batch,
+        {
+            "batch_id": "strict-resolved-batch",
+            "halt_on_failure": True,
+            "tasks": [
+                {"task_manifest": MANIFEST.as_posix()},
+                {"task_manifest": MANIFEST.as_posix()},
+            ],
+        },
+    )
     result = run_batch_file(
-        batch_path=BATCH,
+        batch_path=batch,
         active_gates_path=ACTIVE_GATES,
         audit_path=tmp_path / "resolved_batch.jsonl",
         execute_commands=False,
     )
 
-    assert result["status"] == "PASS"
-    assert result["completed_task_count"] == 2
+    assert result["status"] == "BLOCK"
+    assert result["completed_task_count"] == 1
     assert all(
-        task["change_plan_resolution_source"] == "legacy_replay"
+        task["change_plan_resolution_source"] == "legacy_replay_blocked"
         for task in result["task_results"]
     )
+
+
+def test_task_runner_accepts_explicit_strict_pair_without_commands(
+    tmp_path: Path,
+) -> None:
+    result = run_task_pipeline(
+        task_manifest_path=MANIFEST,
+        change_plan_path=ROOT / RESOLVED_PLAN,
+        audit_path=tmp_path / "explicit.jsonl",
+        execute_commands=False,
+    )
+
+    assert result["status"] == "PASS"
+    assert result["change_plan_resolution_source"] == "explicit_process_input"
+    assert result["command_results"] == []
 
 
 def test_active_gate_resolver_change_plan_validates() -> None:
     result = validate_change_plan(P6E_PLAN)
 
-    assert result["status"] == "PASS"
-    assert result["reasons"] == []
+    assert result["status"] == "BLOCK"
+    assert any("TASK_MANIFEST_SCHEMA_VIOLATION" in reason for reason in result["reasons"])
