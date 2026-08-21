@@ -13,7 +13,7 @@ This is a tool-system-owned implementation and validation contract. It grants
 no execution, downstream-repository, cleanup, provider, or production
 authority, and it records no external policy state.
 
-## Twenty-six-row identity and aggregate-interface mapping
+## Twenty-seven-row identity and aggregate-interface mapping
 
 The canonical registry IDs use hyphens while Python package and import names
 remain unchanged. The mapping below is the local identity owner used by the
@@ -23,7 +23,7 @@ registry validator and module-contract tests.
 ~~~yaml
 mapping_contract:
   mapping_version: tool-system-module-identity-mapping-v1
-  module_count: 26
+  module_count: 27
   identity_mapping_owner: src/tool_system/architecture/module_registry.py
   mappings:
     - current_module_id: architecture_registry
@@ -80,6 +80,17 @@ mapping_contract:
         - worker_adapter
       change_risk: "high: fixture process and workspace safety boundary"
       rollback_identity: tool-system@2b86079dbb82d0426240fd6b5836868e5b9c9697:agent_worker_runtime@1.0.0
+    - current_module_id: isolated_execution
+      canonical_module_id: isolated-execution
+      current_module_version: 1.0.0
+      aggregate_interface_id: isolated-execution-api
+      aggregate_interface_version: 1.0.0
+      runtime_id_preserved: true
+      python_import_identities:
+        - {kind: prefix, name: tool_system.isolated_execution}
+      direct_consumer_module_ids: []
+      change_risk: "critical: privileged Linux/x86_64 namespace, cgroup, sealed-exec, observation-completeness, bounded-output, timeout, and cleanup boundary with no fallback"
+      rollback_identity: tool-system@fd145b8efa1d46bf864b5ac1d42e5916f897b959:isolated_execution@absent
     - current_module_id: ai_worker_runtime
       canonical_module_id: ai-worker-runtime
       current_module_version: 2.0.0
@@ -424,6 +435,7 @@ static_import_dag:
     agent_worker_runtime:
       - role_runtime
       - worker_adapter
+    isolated_execution: []
     ai_worker_runtime:
       - adaptive_model_portfolio_and_economics
     adaptive_model_portfolio_and_economics: []
@@ -483,6 +495,7 @@ static_import_dag:
     production_readiness: []
   zero_consumer_modules:
     - architecture_registry
+    - isolated_execution
     - adaptive_model_portfolio_and_economics
     - cli_frontend
     - production_readiness

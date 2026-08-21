@@ -249,16 +249,17 @@ OPENAI_QWEN_MATRIX_PACKET_SHA256 = (
     "cc8a924d73106d6f373e7cf2ddab11170be8b8409dcaed040aef5cf8cba5b34a"
 )
 
-EXPECTED_RAW_SHA256 = "65696938d1180ef86ff61a5af2a75b611d6e1102bd9c7aa62f6c937d32c3058d"
-EXPECTED_BYTE_LENGTH = 127_062
+EXPECTED_RAW_SHA256 = "90fb27efa8d3377cac3d66deb2fee28ae4c8405cf61b0e1c3481fc8037aad8fd"
+EXPECTED_BYTE_LENGTH = 131_067
 EXPECTED_SEMANTIC_SHA256 = (
-    "535d2b17d263d3818de9f19a98c7127c151e5c96180fad52fe01a67082a5d3ab"
+    "bcf3e208fdc87b8932e0594e952c60de0ff529509c2afd2c508ecafd10831f3a"
 )
-EXPECTED_MANAGED_PYTHON_FILE_COUNT = 122
+EXPECTED_MANAGED_PYTHON_FILE_COUNT = 126
 EXPECTED_MODULE_IDS = {
     "architecture_registry",
     "manifest_validation",
     "agent_worker_runtime",
+    "isolated_execution",
     "ai_worker_runtime",
     "adaptive_model_portfolio_and_economics",
     "durable_orchestrator",
@@ -297,6 +298,7 @@ TEST_SELECTORS = {
     "architecture_registry": "tests/test_module_registry.py",
     "manifest_validation": "tests/test_task_manifest_policy.py",
     "agent_worker_runtime": "tests/test_agent_worker_interface.py",
+    "isolated_execution": "tests/test_isolated_execution_contract.py",
     "ai_worker_runtime": "tests/test_ai_worker_contract.py",
     "adaptive_model_portfolio_and_economics": "tests/test_provider_portfolio_fixtures.py",
     "durable_orchestrator": "tests/test_durable_orchestrator_state.py",
@@ -322,6 +324,10 @@ TEST_SELECTORS = {
     "production_readiness": "tests/test_production_readiness.py",
 }
 ADDITIONAL_TEST_SELECTORS = {
+    "isolated_execution": (
+        "tests/test_isolated_execution_linux_backend.py",
+        "tests/test_isolated_execution_adversarial.py",
+    ),
     "adaptive_model_portfolio_and_economics": (
         "tests/test_p15d_failure_economics_corpus_prerequisite.py",
         "tests/test_provider_portfolio_failure_control.py",
@@ -417,7 +423,7 @@ def authority_code_paths() -> dict[str, list[str]]:
         for current_id, contract in contracts.items()
     }
     flattened = [path for paths in result.values() for path in paths]
-    assert len(flattened) == len(set(flattened)) == 130
+    assert len(flattened) == len(set(flattened)) == 134
     python_owners = target_python_owner_by_path()
     assert {
         path: current_id
@@ -546,8 +552,8 @@ def _registry_effect_matrix(
 
 def assert_effect_oracle(registry: dict[str, Any]) -> None:
     expanded, grouped = authority_effect_matrices()
-    assert len(expanded) == 97
-    assert len(grouped) == 45
+    assert len(expanded) == 99
+    assert len(grouped) == 47
     assert _registry_effect_matrix(registry) == grouped
 
 
@@ -1025,22 +1031,22 @@ def test_authoritative_registry_exact_seals_schema_and_counts() -> None:
     assert len(raw) == EXPECTED_BYTE_LENGTH
     assert hashlib.sha256(raw).hexdigest() == EXPECTED_RAW_SHA256
     assert hashlib.sha256(normalized).hexdigest() == EXPECTED_SEMANTIC_SHA256
-    assert len(registry["modules"]) == len(registry["interfaces"]) == 26
+    assert len(registry["modules"]) == len(registry["interfaces"]) == 27
     assert (
-        sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 130
+        sum(len(module["boundaries"]["code"]) for module in registry["modules"]) == 134
     )
     assert (
-        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 37
+        sum(len(module["boundaries"]["tests"]) for module in registry["modules"]) == 40
     )
     assert (
         sum(len(module["permitted_side_effects"]) for module in registry["modules"])
-        == 45
+        == 47
     )
-    assert len(list(_iter_contract_references(registry))) == 253
+    assert len(list(_iter_contract_references(registry))) == 263
     assert (
         sum(len(module["external_dependencies"]) for module in registry["modules"]) == 0
     )
-    assert len(target_python_owner_by_path()) == 122
+    assert len(target_python_owner_by_path()) == 126
     assert_effect_oracle(registry)
 
 
@@ -1060,12 +1066,45 @@ def test_current_current_registry_is_authority_and_tmp_copy_is_not(
     assert current["current_registry_authority"] is True
     assert current["validation_scope"] == "tool_system_current_module_registry"
     assert current["compatibility_adapter"]["applied"] is False
-    assert current["contract_reference_count"] == 253
+    assert current["contract_reference_count"] == 263
     assert current["external_provider_count"] == 0
     assert compatibility["status"] == "PASS"
     assert compatibility["current_registry_authority"] is False
     assert compatibility["validation_scope"] == "tool_system_local_compatibility_only"
     assert compatibility["compatibility_adapter"]["applied"] is False
+
+
+def test_isolated_execution_registers_exact_boundary_without_runtime_edges() -> None:
+    registry = load_yaml_file(REGISTRY)
+    modules = _modules_by_id(registry)
+    module = modules["isolated-execution"]
+    interface = next(
+        item
+        for item in registry["interfaces"]
+        if item["interface_id"] == "isolated-execution-api"
+    )
+
+    assert module["module_version"] == "1.0.0"
+    assert module["internal_dependencies"] == []
+    assert module["external_dependencies"] == []
+    assert [
+        boundary["path"] for boundary in module["boundaries"]["code"]
+    ] == [
+        "src/tool_system/isolated_execution/__init__.py",
+        "src/tool_system/isolated_execution/contract.py",
+        "src/tool_system/isolated_execution/evidence.py",
+        "src/tool_system/isolated_execution/linux_backend.py",
+    ]
+    assert [
+        boundary["path"] for boundary in module["boundaries"]["tests"]
+    ] == [
+        "tests/test_isolated_execution_contract.py",
+        "tests/test_isolated_execution_linux_backend.py",
+        "tests/test_isolated_execution_adversarial.py",
+    ]
+    assert interface["interface_version"] == "1.0.0"
+    assert interface["provider_module_id"] == "isolated-execution"
+    assert interface["consumers"] == []
 
 
 def test_legacy_registry_remains_memory_only_compatibility(

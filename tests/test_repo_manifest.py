@@ -38,6 +38,21 @@ DURABLE_SIDECAR_CORRECTION_RETAINED_FILES = {
 TS_B02A_HOSTED_OBSERVATION_CASCADE_REPAIR_PROBE = (
     "tests/test_ts_b02a_core_local_os_isolation_backend_feasibility.py"
 )
+ISOLATED_EXECUTION_FORMAL_FILES = {
+    "docs/modules/isolated-execution-contract-v1.md",
+    "src/tool_system/isolated_execution/__init__.py",
+    "src/tool_system/isolated_execution/contract.py",
+    "src/tool_system/isolated_execution/evidence.py",
+    "src/tool_system/isolated_execution/linux_backend.py",
+    "tests/test_isolated_execution_contract.py",
+    "tests/test_isolated_execution_linux_backend.py",
+    "tests/test_isolated_execution_adversarial.py",
+}
+ISOLATED_EXECUTION_RETAINED_NON_AUTHORITY_FILES = {
+    "docs/reports/subscription_worker_ts_b02a_core_local_os_isolated_execution_implementation_v1.md",
+    "examples/change_plans/tool_system_subscription_worker_ts_b02a_core_local_os_isolated_execution_v1.yaml",
+    "examples/task_manifests/tool_system_subscription_worker_ts_b02a_core_local_os_isolated_execution_v1.yaml",
+}
 
 
 def _exact_row(path: str, upstream: str = "ROOT") -> str:
@@ -127,7 +142,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
     assert legacy_reasons == []
-    assert len(rows) == 295
+    assert len(rows) == 303
     assert EXACT_MODULE_REGISTRY_PATH in {row["path"] for row in rows}
     assert all(
         not any(character in row["path"] for character in "*?[]{}") for row in rows
@@ -135,7 +150,7 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
     assert result["tracked_path_count"] == (
         result["formal_path_count"] + result["legacy_path_count"]
     )
-    assert result["formal_file_count"] == 295
+    assert result["formal_file_count"] == 303
     assert result["formal_set_count"] == 0
     assert result["legacy_set_count"] == 6
     assert result["legacy_path_count"] == len(retained_paths)
@@ -147,6 +162,9 @@ def test_current_repository_manifest_covers_every_tracked_path_once() -> None:
         "tests/fixtures/manifest_validation/forward_valid_change_plan_v1.yaml",
         "tests/fixtures/manifest_validation/strict_active_gates_v1.yaml",
     } <= rows_by_path.keys()
+    assert ISOLATED_EXECUTION_FORMAL_FILES <= rows_by_path.keys()
+    assert ISOLATED_EXECUTION_RETAINED_NON_AUTHORITY_FILES <= retained_paths
+    assert ISOLATED_EXECUTION_RETAINED_NON_AUTHORITY_FILES.isdisjoint(rows_by_path)
     assert rows_by_path[TS_B02A_HOSTED_OBSERVATION_CASCADE_REPAIR_PROBE] == {
         "path": TS_B02A_HOSTED_OBSERVATION_CASCADE_REPAIR_PROBE,
         "role": (
@@ -417,7 +435,7 @@ def test_module_contract_files_are_registered_as_local_contracts() -> None:
 
     assert parser_mode == EXACT_FORMAL_PARSER_MODE
     assert reasons == []
-    assert len(matches) == 26
+    assert len(matches) == 27
     assert all(row["role"] == "module-owned compound contracts" for row in matches)
     assert all(
         row["owner"] == "respective natural module owners" for row in matches
