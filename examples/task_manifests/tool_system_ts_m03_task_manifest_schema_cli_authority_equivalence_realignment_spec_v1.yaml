@@ -1,0 +1,86 @@
+task_id: tool-system-ts-m03-task-manifest-schema-cli-authority-equivalence-realignment-spec-v1
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: agent/ts-m03-task-manifest-schema-cli-authority-equivalence-realignment-spec-v1
+phase: P16_PRODUCTION_OPERATIONS_ACCEPTANCE
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: milestone_module_invariant.process_authority_boundary
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective.completion_definition
+scope:
+  summary: Freeze the TS-M03 formal Schema and CLI structural-equivalence correction boundary without implementing it.
+  in_scope:
+    - One non-authority specification report.
+    - Its paired non-authority task manifest and change plan.
+    - The exact future implementation paths, dependency, tests, owners, and stop conditions.
+  out_of_scope:
+    - Runtime or validator implementation.
+    - Any workflow, runner, permission, infrastructure, project-state, or public-acceptance change in this specification task; the separately authorized successor alone may perform its frozen one-argument Hosted active-gate input transition.
+    - Historical task-manifest migration or authority promotion.
+    - TS-B02A or any real repository execution.
+evidence:
+  - repo: apolo183/tool-system
+    path: harness/task_manifest.schema.json
+    commit_sha: 1373c98296bfc2999d0142de41926a3111b3f55f
+    why_relevant: Declares the strict Draft 2020-12 formal task-manifest structure.
+  - repo: apolo183/tool-system
+    path: src/tool_system/manifest/task_manifest.py
+    commit_sha: 1373c98296bfc2999d0142de41926a3111b3f55f
+    why_relevant: Implements the currently weaker hand-written structural validator.
+  - repo: apolo183/tool-system
+    path: REPO_MANIFEST.md
+    commit_sha: 1373c98296bfc2999d0142de41926a3111b3f55f
+    why_relevant: Classifies retained task manifests and change plans as non-authority inputs.
+  - repo: apolo183/tool-system
+    path: docs/reports/independent_audit_acceptance_reopen_v1.md
+    commit_sha: 1373c98296bfc2999d0142de41926a3111b3f55f
+    why_relevant: Preserves the independent audit and blocked execution state.
+allowed_files:
+  - docs/reports/task_manifest_schema_cli_authority_equivalence_realignment_specification_v1.md
+  - examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml
+  - examples/change_plans/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml
+forbidden_files:
+  - .github/**
+  - blueprint/**
+  - config/**
+  - harness/**
+  - policy/**
+  - src/**
+  - tests/**
+  - pyproject.toml
+  - REPO_MANIFEST.md
+  - docs/tool_system_project_state_v1.yaml
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml --policy policy/repo_write_policy.yaml --autonomy-policy policy/autonomy_policy.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates examples/active_gates.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - git diff --check 1373c98296bfc2999d0142de41926a3111b3f55f HEAD
+    - git diff --name-status --no-renames 1373c98296bfc2999d0142de41926a3111b3f55f HEAD
+    - git ls-tree -r HEAD -- docs/reports/task_manifest_schema_cli_authority_equivalence_realignment_specification_v1.md examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml examples/change_plans/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml
+    - git rev-list --count 1373c98296bfc2999d0142de41926a3111b3f55f..HEAD
+    - >-
+      python -c "import subprocess; b='1373c98296bfc2999d0142de41926a3111b3f55f'; p=['docs/reports/task_manifest_schema_cli_authority_equivalence_realignment_specification_v1.md','examples/task_manifests/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml','examples/change_plans/tool_system_ts_m03_task_manifest_schema_cli_authority_equivalence_realignment_spec_v1.yaml']; ns=subprocess.check_output(['git','diff','--name-status','--no-renames',b,'HEAD'],text=True).splitlines(); assert sorted(ns)==sorted('A\t'+x for x in p),ns; assert int(subprocess.check_output(['git','rev-list','--count',b+'..HEAD'],text=True))==1; rows=subprocess.check_output(['git','ls-tree','-r','HEAD','--',*p],text=True).splitlines(); modes={row.split('\t',1)[1]:row.split()[0] for row in rows}; assert modes=={x:'100644' for x in p},modes"
+  pass_conditions:
+    - The task manifest uses only the current formal Schema vocabulary; the old CLI PASS is not represented as formal-Schema execution evidence.
+    - The paired change plan passes and names exactly the same three allowed paths.
+    - Full pytest and all current governance validators pass on Hosted CI.
+    - The pull request contains exactly one commit and exactly three added mode-100644 non-authority files with zero modification deletion or rename.
+    - Base, head, checks, comments, reviews, threads, and paths do not drift before Ready and squash merge.
+    - The original branch remains or is restored at the exact head after merge and no implementation or runtime task starts.
+rollback:
+  method: git_revert
+  reference: Separately authorized revert of the specification squash-merge commit.
+approval:
+  required: true
+  approved_by: user
+  approval_source: chat_user_message_agreed_to_recommended_ts_m03_specification
+  approved_at: "2026-08-21 Asia/Tokyo; date-level approval, exact time not asserted"
