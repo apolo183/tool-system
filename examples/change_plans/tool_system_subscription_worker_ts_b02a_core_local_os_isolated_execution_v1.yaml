@@ -1,0 +1,95 @@
+plan_id: tool-system-subscription-worker-ts-b02a-core-local-os-isolated-execution-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_ts_b02a_core_local_os_isolated_execution_v1.yaml
+changed_files:
+  - REPO_MANIFEST.md
+  - config/module_registry_v1.yaml
+  - docs/tool_system_module_registry_contract_v1.md
+  - tests/test_module_contracts.py
+  - tests/test_module_registry.py
+  - tests/test_repo_manifest.py
+  - docs/modules/isolated-execution-contract-v1.md
+  - docs/reports/subscription_worker_ts_b02a_core_local_os_isolated_execution_implementation_v1.md
+  - examples/task_manifests/tool_system_subscription_worker_ts_b02a_core_local_os_isolated_execution_v1.yaml
+  - examples/change_plans/tool_system_subscription_worker_ts_b02a_core_local_os_isolated_execution_v1.yaml
+  - src/tool_system/isolated_execution/__init__.py
+  - src/tool_system/isolated_execution/contract.py
+  - src/tool_system/isolated_execution/evidence.py
+  - src/tool_system/isolated_execution/linux_backend.py
+  - tests/test_isolated_execution_contract.py
+  - tests/test_isolated_execution_linux_backend.py
+  - tests/test_isolated_execution_adversarial.py
+alignment:
+  parent:
+    document: examples/task_manifests/tool_system_subscription_worker_ts_b02a_core_local_os_isolated_execution_v1.yaml
+    section_or_key: scope
+    scope: Implement only the exact zero-consumer TS-B02A module and frozen Linux native supervisor guarantees.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve all human, target-repository, provider, public-acceptance, and arbitrary-untrusted-code boundaries.
+implementation:
+  - define immutable validated request components and canonical SHA-256 request identity
+  - define immutable ordered OS observation records and conjunctive evidence completeness
+  - implement a fail-before-workload Linux x86_64 capability gate with the exact linux_native_supervisor_v1 profile and no fallback
+  - freeze the Linux v6.18 native x86_64 syscall ABI at audited range 0 through 469 and exclusive ceiling 470, bind the number into the exact cBPF identity, and require direct syscall 470 EPERM evidence before release and in the Hosted workload
+  - enforce a private mount PID network IPC and UTS namespace composition with recursive private propagation pivot_root and quota-bound private filesystems
+  - seal executable script interpreter and loader identities through descriptor-backed selection openat2 execveat ptrace exec observation and mismatch denial
+  - enforce unprivileged UID GID empty supplementary groups zero effective capabilities no_new_privs default-deny network inherited-descriptor closure and keyring/core-dump denial
+  - deny pathless memfd resources legacy and at-family xattr mutation open_tree_attr file_setattr host-inode locks leases write hints delegation filesystem-wide and quota sync every ioctl shared legacy futex and futex2 membarrier same-UID host priority access system-wide perf events keyring controls F_SETFL packet or notification pipes and other frozen provider controls
+  - bind the complete process tree to one execution cgroup, acknowledge and retain pidfd-bound historical members before ordinary exits resume, cap the historical/live union including two fixed provider supervisors, and terminate through pidfd and cgroup.kill
+  - drain stdout and stderr incrementally as raw bytes through OS-read-back 4096-byte pipes, enforce 4097/8193 final overshoot bounds, kill limits immediately from a frozen cgroup, and preserve the full requested grace for non-limit outcomes
+  - deny secondary exec and shared VM filesystem file-table signal-handler clone state while preserving ordinary fork vfork and parent wait semantics
+  - freeze stream pipe capacity and process resource limits by denying F_SETPIPE_SZ setrlimit and prlimit64 after setup
+  - set RLIMIT_FSIZE to the larger scratch/file-output byte limit and accept EFBIG only from an FD-bound exact matching target scope and syscall ABI; pathname-backed failures never form complete LIMIT evidence
+  - execute exact-filter controls before workload release, run fork and vfork positives inside an execution-owned auxiliary cgroup after pidfd binding, and freeze the truthful outer-supervisor scope
+  - force observation-incomplete evidence for every SIGBUS and any observed positive short result from counted FD-target write ABIs, with no complete LIMIT or SUCCESS promotion
+  - preserve private-workload fsync fdatasync msync page-cache atime and host-I/O scheduling effects as explicit non-claims rather than absolute zero-effect conclusions
+  - emit only current-run OS-derived ExecutionEvidenceV1 with ordered causality observation-loss handling and cleanup-completeness precedence
+  - bind identity.seal to openat2 fstat SHA-256 and memfd-seal provenance and keep exec.ptrace separately bound to ptrace and procfs provenance
+  - exercise the frozen adversarial matrix with bounded synthetic fixtures only and report NOT_EXECUTED outside identified GitHub Hosted capability conditions
+  - register isolated-execution-api at version 1.0.0 with zero runtime consumers and exact natural-owner boundaries
+  - register the eleven new paths and preserve reports and task pairs as retained non-authority inputs
+  - preserve failed Hosted run 32526012106 and head 2c99c7141158aacb6204271ccdf1a76c44d534e2 as causal evidence, then resume the same task, branch, and Draft PR without creating a replacement task or PR
+  - use at most two additional fast-forward repair commits and Hosted runs; the first corrects the deterministic test-owned child-reap symbol defect and emits bounded provider-error and stage diagnostics without weakening any assertion
+  - permit a second repair only when the first rerun identifies a code defect correctable within the existing report, task pair, Linux backend, and two isolation tests; actual Hosted capability absence, scope expansion, or exhausted repair budget stops Draft
+verification:
+  commands:
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_isolated_execution_contract.py tests/test_isolated_execution_linux_backend.py tests/test_isolated_execution_adversarial.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_module_contracts.py tests/test_module_registry.py tests/test_repo_manifest.py
+    - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q
+    - PYTHONPATH=src python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02a_core_local_os_isolated_execution_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02a_core_local_os_isolated_execution_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - PYTHONPATH=src python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - PYTHONPATH=src python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - git diff --check fd145b8efa1d46bf864b5ac1d42e5916f897b959
+    - git diff --name-status --no-renames fd145b8efa1d46bf864b5ac1d42e5916f897b959
+  pass_conditions:
+    - Every task-manifest pass condition is satisfied on local deterministic checks and Hosted CI.
+publication:
+  method: github_app_existing_draft_pr_bounded_fast_forward_repair_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-ts-b02a-core-local-os-isolated-execution-v1
+  commit_message: Implement TS-B02A core local OS isolated execution
+  exact_base_commit: fd145b8efa1d46bf864b5ac1d42e5916f897b959
+  exact_base_tree: 5506864efd9df88fe87a6189eade4d929c364076
+  exact_path_count: 17
+  exact_modify_count: 6
+  exact_add_count: 11
+  draft_pr_required: true
+  ready_requires_hosted_ci_success: true
+  ready_requires_unchanged_base_head_path_commit_review_and_thread_state: true
+  squash_merge_authorized: true
+  retain_original_branch: true
+rollback:
+  method: git_revert
+  reference: tool-system@fd145b8efa1d46bf864b5ac1d42e5916f897b959:isolated_execution@absent
+stop:
+  on_eighteenth_path: true
+  on_new_dependency_helper_binary_workflow_runner_or_permission_requirement: true
+  on_ordinary_host_or_alternate_backend_fallback: true
+  on_real_repository_business_codex_subscription_or_provider_workload: true
+  on_public_state_or_other_finding_change: true
+  after_guarded_squash_merge: true
+  start_ts_b02b_c_d_or_real_execution: false

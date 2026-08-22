@@ -78,6 +78,7 @@ DIRECT_EFFECT_EXPECTATIONS = {
     "architecture_registry": frozenset(),
     "manifest_validation": frozenset(),
     "agent_worker_runtime": frozenset({"generated_artifact_write"}),
+    "isolated_execution": frozenset({"generated_artifact_write"}),
     "ai_worker_runtime": frozenset(
         {"network_write", "external_system_write", "data_write", "database_write"}
     ),
@@ -128,6 +129,11 @@ DELEGATED_EFFECT_EXPECTATIONS = {
     "manifest_validation": {},
     "agent_worker_runtime": {
         "fixture-sqlite-inside-ephemeral-workspace": frozenset(
+            {"data_write", "database_write"}
+        )
+    },
+    "isolated_execution": {
+        "bounded-isolated-workload-private-output": frozenset(
             {"data_write", "database_write"}
         )
     },
@@ -268,13 +274,13 @@ def _mapping_contract() -> dict[str, Any]:
 def _mappings_by_current_id() -> dict[str, dict[str, Any]]:
     rows = _mapping_contract().get("mappings")
     _require(isinstance(rows, list), "module identity mappings must be a list")
-    _require(len(rows) == 26, "module identity mappings must contain twenty-six rows")
+    _require(len(rows) == 27, "module identity mappings must contain twenty-seven rows")
     result = {
         str(row["current_module_id"]): row
         for row in rows
         if isinstance(row, dict)
     }
-    _require(len(result) == 26, "current module IDs must be unique")
+    _require(len(result) == 27, "current module IDs must be unique")
     return result
 
 
@@ -880,7 +886,7 @@ def _validate_contract_set(
     contracts: list[dict[str, Any]],
     digests: list[str],
 ) -> None:
-    _require(len(contracts) == 26, "exactly twenty-six module contracts are required")
+    _require(len(contracts) == 27, "exactly twenty-seven module contracts are required")
     for key_path in (
         ("contract_path",),
         ("identity", "current_module_id"),
@@ -915,7 +921,7 @@ def _validated_contracts() -> tuple[list[dict[str, Any]], list[str]]:
         for mapping in mappings.values()
     }
     actual_paths = set(CONTRACT_DIR.glob("*.md"))
-    _require(actual_paths == expected_paths, "contract directory must contain exactly twenty-six owners")
+    _require(actual_paths == expected_paths, "contract directory must contain exactly twenty-seven owners")
 
     contracts: list[dict[str, Any]] = []
     digests: list[str] = []
@@ -940,8 +946,8 @@ def _validated_contracts() -> tuple[list[dict[str, Any]], list[str]]:
 def test_all_module_contracts_match_module_registry_and_real_owner_evidence() -> None:
     contracts, digests = _validated_contracts()
 
-    assert len(contracts) == 26
-    assert len(digests) == len(set(digests)) == 26
+    assert len(contracts) == 27
+    assert len(digests) == len(set(digests)) == 27
     assert all(re.fullmatch(r"[0-9a-f]{64}", digest) for digest in digests)
 
 
