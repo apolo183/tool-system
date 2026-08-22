@@ -50,6 +50,9 @@ implementation:
   - exercise the frozen adversarial matrix with bounded synthetic fixtures only and report NOT_EXECUTED outside identified GitHub Hosted capability conditions
   - register isolated-execution-api at version 1.0.0 with zero runtime consumers and exact natural-owner boundaries
   - register the eleven new paths and preserve reports and task pairs as retained non-authority inputs
+  - preserve failed Hosted run 32526012106 and head 2c99c7141158aacb6204271ccdf1a76c44d534e2 as causal evidence, then resume the same task, branch, and Draft PR without creating a replacement task or PR
+  - use at most two additional fast-forward repair commits and Hosted runs; the first corrects the deterministic test-owned child-reap symbol defect and emits bounded provider-error and stage diagnostics without weakening any assertion
+  - permit a second repair only when the first rerun identifies a code defect correctable within the existing report, task pair, Linux backend, and two isolation tests; actual Hosted capability absence, scope expansion, or exhausted repair budget stops Draft
 verification:
   commands:
     - PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_isolated_execution_contract.py tests/test_isolated_execution_linux_backend.py tests/test_isolated_execution_adversarial.py
@@ -66,7 +69,7 @@ verification:
   pass_conditions:
     - Every task-manifest pass condition is satisfied on local deterministic checks and Hosted CI.
 publication:
-  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  method: github_app_existing_draft_pr_bounded_fast_forward_repair_then_guarded_ready_and_squash_merge
   branch: agent/subscription-worker-ts-b02a-core-local-os-isolated-execution-v1
   commit_message: Implement TS-B02A core local OS isolated execution
   exact_base_commit: fd145b8efa1d46bf864b5ac1d42e5916f897b959

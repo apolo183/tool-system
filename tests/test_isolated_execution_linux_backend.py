@@ -691,6 +691,31 @@ int main(void) {
     )
     evidence = LinuxNativeSupervisorV1().execute(request)
     validation = validate_execution_evidence_v1(request, evidence)
+    if evidence.outcome is not ExecutionOutcomeV1.SUCCESS:
+        print(
+            HOSTED_RESULT_PREFIX
+            + json.dumps(
+                {
+                    "capability_pass": False,
+                    "disposition": "HOSTED_CAPABILITY_BLOCKER",
+                    "observed_outcome": evidence.outcome.value,
+                    "workload_released": evidence.workload_released,
+                    "provider_errors": list(
+                        evidence.completeness.provider_errors
+                    ),
+                    "observer_errors": list(
+                        evidence.completeness.observer_errors
+                    ),
+                    "cleanup": evidence.completeness.cleanup.to_record(),
+                    "capability_stages": [
+                        item.to_record() for item in evidence.capability_stages
+                    ],
+                },
+                separators=(",", ":"),
+                sort_keys=True,
+            ),
+            flush=True,
+        )
     assert evidence.outcome is ExecutionOutcomeV1.SUCCESS, evidence.to_record()
     assert evidence.complete is True, validation.reasons
     assert validation.ok is True, validation.reasons

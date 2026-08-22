@@ -16,6 +16,7 @@ import threading
 import time
 from pathlib import Path
 
+import tool_system.isolated_execution.linux_backend as linux_backend
 from tool_system.isolated_execution.contract import (
     CLONE_NAMESPACE_FLAGS_MASK_V1,
     FUTEX_PRIVATE_FLAG_V1,
@@ -161,6 +162,32 @@ def _assert_complete(request, expected: ExecutionOutcomeV1):
     assert validation.ok, validation.reasons
     evidence = LinuxNativeSupervisorV1().execute(request)
     validation = validate_execution_evidence_v1(request, evidence)
+    if evidence.outcome is not expected and _HELPERS._is_github_hosted():
+        print(
+            HOSTED_RESULT_PREFIX
+            + json.dumps(
+                {
+                    "capability_pass": False,
+                    "disposition": "HOSTED_CAPABILITY_BLOCKER",
+                    "expected_outcome": expected.value,
+                    "observed_outcome": evidence.outcome.value,
+                    "workload_released": evidence.workload_released,
+                    "provider_errors": list(
+                        evidence.completeness.provider_errors
+                    ),
+                    "observer_errors": list(
+                        evidence.completeness.observer_errors
+                    ),
+                    "cleanup": evidence.completeness.cleanup.to_record(),
+                    "capability_stages": [
+                        item.to_record() for item in evidence.capability_stages
+                    ],
+                },
+                separators=(",", ":"),
+                sort_keys=True,
+            ),
+            flush=True,
+        )
     assert evidence.outcome is expected, evidence.to_record()
     assert evidence.complete is True, validation.reasons
     assert validation.ok is True, validation.reasons
@@ -542,9 +569,48 @@ int main(void) {
                 "priority control cleanup failed: "
                 + "; ".join(priority_cleanup_failures)
             )
+    assert priority_reaped is True
+    try:
+        os.waitpid(priority_sibling, os.WNOHANG)
+    except ChildProcessError:
+        pass
+    else:
+        raise AssertionError("same-UID priority sibling was not fully reaped")
     control_validation = validate_execution_evidence_v1(
         control_request, control_evidence
     )
+    if (
+        control_evidence.outcome is not ExecutionOutcomeV1.SUCCESS
+        and _HELPERS._is_github_hosted()
+    ):
+        print(
+            HOSTED_RESULT_PREFIX
+            + json.dumps(
+                {
+                    "capability_pass": False,
+                    "disposition": "HOSTED_CAPABILITY_BLOCKER",
+                    "expected_outcome": ExecutionOutcomeV1.SUCCESS.value,
+                    "observed_outcome": control_evidence.outcome.value,
+                    "workload_released": control_evidence.workload_released,
+                    "provider_errors": list(
+                        control_evidence.completeness.provider_errors
+                    ),
+                    "observer_errors": list(
+                        control_evidence.completeness.observer_errors
+                    ),
+                    "cleanup": (
+                        control_evidence.completeness.cleanup.to_record()
+                    ),
+                    "capability_stages": [
+                        item.to_record()
+                        for item in control_evidence.capability_stages
+                    ],
+                },
+                separators=(",", ":"),
+                sort_keys=True,
+            ),
+            flush=True,
+        )
     assert control_evidence.outcome is ExecutionOutcomeV1.SUCCESS, control_evidence.to_record()
     assert control_evidence.complete and control_validation.ok, control_validation.reasons
     assert "fork" in control_evidence.process.event_classes
@@ -786,6 +852,13 @@ int main(void) {
                 "non-root control cleanup failed: "
                 + "; ".join(nonroot_cleanup_failures)
             )
+    assert nonroot_reaped is True
+    try:
+        os.waitpid(nonroot_child, os.WNOHANG)
+    except ChildProcessError:
+        pass
+    else:
+        raise AssertionError("non-root control child was not fully reaped")
     nonroot_result = json.loads(bytes(nonroot_bytes).decode("utf-8"))
     assert nonroot_result == {
         "cgroup_exists": False,

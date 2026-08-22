@@ -41,6 +41,7 @@ scope:
     - exact-filter pre-workload-release controls, with fork/vfork positives pidfd-bound inside an execution-owned auxiliary cgroup
     - fail-closed observation-incomplete handling for every SIGBUS, observed positive short result from counted FD-target write ABIs, and pathname-backed quota error
     - bounded synthetic Hosted tests and exact registry and repository-manifest integration
+    - explicit same-task recovery of Draft PR 231 after Hosted run 32526012106, limited to the existing implementation report, task pair, Linux backend, and two Hosted isolation tests, with no assertion weakening and at most two additional Hosted repair cycles
   out_of_scope:
     - existing worker or runner integration and TS-B02B, TS-B02C, or TS-B02D
     - real repository, business workload, Codex, subscription, provider, or API execution
@@ -120,5 +121,5 @@ rollback:
 approval:
   required: true
   approved_by: repository owner
-  approval_source: user message TOOL-SYSTEM-TS-B02A-CORE-LOCAL-OS-ISOLATED-EXECUTION-IMPLEMENTATION-v1
-  approved_at: "2026-08-22T00:51:37+09:00"
+  approval_source: user messages TOOL-SYSTEM-TS-B02A-CORE-LOCAL-OS-ISOLATED-EXECUTION-IMPLEMENTATION-v1 and 2026-08-22 explicit agreement to resume only the recommended Draft PR 231 six-path Hosted blocker repair
+  approved_at: "2026-08-22T14:47:48Z"

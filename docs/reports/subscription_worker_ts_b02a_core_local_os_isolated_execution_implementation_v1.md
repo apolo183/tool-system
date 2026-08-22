@@ -293,6 +293,35 @@ runner, permission, dependency or supply-chain change is introduced.
 
 ## 9. Verification and terminal predicate
 
+### 9.1 Failed Hosted cycle and explicitly resumed bounded recovery
+
+The first Draft PR #231 Hosted run `32526012106`, job `96908064143`, at head
+`2c99c7141158aacb6204271ccdf1a76c44d534e2` remained a valid blocking
+observation. It completed `1134` tests and failed exactly two Hosted-only root
+paths. The adversarial cleanup used the intended pidfd-first kill path but then
+referenced an unbound test-module name before its bounded `waitpid`, so cleanup
+could not be proved. The implementation control independently returned
+`CAPABILITY_BLOCKER`, `workload_released=false`, before any capability
+observation; the initial assertion rendered the bounded provider error only
+inside a truncated whole-record representation.
+
+The repository owner subsequently agreed to the recommended narrow recovery.
+This resumes the same task identity, branch, and Draft PR rather than creating
+a successor task or PR. The failed head and run remain causal evidence. The
+recovery may touch only this report, the existing task pair, the Linux backend,
+and the two Hosted isolation tests, all already inside the frozen 17-path PR.
+It may use at most two additional fast-forward repair commits and Hosted runs.
+
+The first recovery cycle binds the missing test module name, proves both
+creator-owned control children are fully reaped, and emits only bounded
+provider-error, observer-error, outcome, release, and stage diagnostics on a
+Hosted blocker. No PASS condition, capability requirement, cleanup check,
+fallback prohibition, or isolation assertion is weakened. A second cycle is
+permitted only if that first rerun identifies a code defect correctable inside
+the same six-path recovery subset. Actual Hosted capability absence, any
+seventh recovery path, new dependency/helper/workflow/runner/permission, or an
+exhausted repair budget leaves the PR Draft and stops.
+
 The frozen terminal predicate requires all of the following on the terminal
 candidate:
 
@@ -312,9 +341,10 @@ candidate:
   Draft-to-Ready and squash merge.
 
 Failure of any Hosted capability or cleanup predicate leaves the pull request
-Draft and stops this task. Success permits only the authorized Ready transition
-and squash merge while retaining the original feature branch. Neither outcome
-starts TS-B02B, TS-B02C, TS-B02D or real execution.
+Draft and stops the current cycle. Only the explicitly authorized bounded
+recovery above may resume this same task. Success permits only the authorized
+Ready transition and squash merge while retaining the original feature branch.
+Neither outcome starts TS-B02B, TS-B02C, TS-B02D or real execution.
 
 ## 10. Preserved state and non-claims
 
@@ -323,6 +353,8 @@ starts TS-B02B, TS-B02C, TS-B02D or real execution.
 - The subscription-worker public entry remains unreaccepted.
 - Real repository and business execution remain blocked.
 - TS-H01, TS-H02, TS-H03, TS-M01, TS-M02 and TS-M03 remain unchanged.
+- The later independent-audit observations TS-H04, TS-H05 and TS-M04 are not
+  addressed or dispositioned by this recovery.
 - README, project state, phase alignment and public acceptance are unchanged.
 - `integrated_conformance_proved=false`.
 - `public_acceptance_changed=false`.
