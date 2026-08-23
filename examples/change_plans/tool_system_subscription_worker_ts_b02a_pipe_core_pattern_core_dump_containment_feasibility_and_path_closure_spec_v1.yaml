@@ -1,0 +1,25 @@
+plan_id: tool-system-ts-b02a-pipe-core-pattern-core-dump-containment-feasibility-path-closure-spec-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_spec_v1.yaml
+changed_files:
+  - docs/reports/subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_specification_v1.md
+  - examples/task_manifests/tool_system_subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_spec_v1.yaml
+  - examples/change_plans/tool_system_subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_spec_v1.yaml
+verification:
+  commands:
+    - python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_spec_v1.yaml --policy policy/repo_write_policy.yaml --autonomy-policy policy/autonomy_policy.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_spec_v1.yaml
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - git diff --check fd145b8efa1d46bf864b5ac1d42e5916f897b959
+  pass_conditions:
+    - The strict manifest and bound change plan pass without executing any configured repository workload.
+    - The unchanged full and governance suites pass locally where available and on Hosted CI.
+    - The candidate contains exactly the three authorized additions at mode 100644.
+    - PR 231, runtime source, tests, workflows, runners, permissions, dependencies, infrastructure, public state, and findings remain unchanged.
+rollback:
+  method: git_revert
+  reference: Revert the exact three-path squash merge through a separately authorized pull request; do not delete retained history or branches.

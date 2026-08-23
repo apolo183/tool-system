@@ -1,0 +1,100 @@
+task_id: tool-system-ts-b02a-pipe-core-pattern-core-dump-containment-feasibility-path-closure-spec-v1
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-ts-b02a-pipe-core-pattern-containment-feasibility-path-closure-spec-v1
+phase: TS_B02A_PIPE_CORE_PATTERN_PATH_CLOSURE_SPEC
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md
+    section_or_key: 2. Frozen TS-B02 blueprint-aligned core isolation guarantees
+    scope: Resolve the observed pipe core_pattern capability blocker without weakening the frozen local-OS isolation guarantees.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded blueprint-driven isolated development and the arbitrary-untrusted-code-containment non-goal.
+scope:
+  summary: Freeze the evidence-based dedicated non-pipe runner path and the exact next authority boundary without implementing or accepting TS-B02A.
+  in_scope:
+    - Confirm and classify Draft PR 231 Hosted pipe core_pattern evidence.
+    - Compare a dedicated non-pipe runner path with a research-only dumpability-equivalence path.
+    - Select the sole current path and freeze its exact next authorization prerequisites.
+    - Preserve all runtime, acceptance, finding, and real-execution state.
+  out_of_scope:
+    - Runtime, backend, worker, task-runner, test, workflow, runner, permission, dependency, supply-chain, or infrastructure implementation.
+    - Modification, rebase, merge, close, Ready transition, comment, label, or repair of Draft PR 231.
+    - TS-B02B, TS-B02C, TS-B02D, public reacceptance, subscription transport, or real repository and business workloads.
+    - TS-H01, TS-H02, TS-H03, TS-H04, TS-H05, TS-M01, TS-M02, TS-M03, or TS-M04 correction.
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: fd145b8efa1d46bf864b5ac1d42e5916f897b959
+    why_relevant: Defines the product objective and arbitrary-untrusted-code-containment non-goal.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md
+    commit_sha: fd145b8efa1d46bf864b5ac1d42e5916f897b959
+    why_relevant: Freezes the conjunctive TS-B02 local-OS guarantees and owner sequence.
+  - repo: apolo183/tool-system
+    path: https://github.com/apolo183/tool-system/pull/231
+    commit_sha: f94a9072eefe012b1d17bc9f87682b4287e1274d
+    why_relevant: Provides the unmerged candidate identity and Draft status.
+  - repo: apolo183/tool-system
+    path: https://github.com/apolo183/tool-system/actions/runs/32580223111
+    commit_sha: f94a9072eefe012b1d17bc9f87682b4287e1274d
+    why_relevant: Provides the exact Hosted core_pattern blocker and non-release evidence.
+  - repo: linux-man-pages
+    path: https://man7.org/linux/man-pages/man5/core.5.html
+    why_relevant: Defines pipe core handler execution, namespace, payload, and RLIMIT_CORE semantics.
+  - repo: linux-man-pages
+    path: https://man7.org/linux/man-pages/man2/execve.2.html
+    why_relevant: Defines the exec transition effect on process dumpability.
+  - repo: linux-man-pages
+    path: https://man7.org/linux/man-pages/man2/PR_SET_DUMPABLE.2const.html
+    why_relevant: Defines process dumpability control and its mutable values.
+allowed_files:
+  - docs/reports/subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_specification_v1.md
+  - examples/task_manifests/tool_system_subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_spec_v1.yaml
+  - examples/change_plans/tool_system_subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_spec_v1.yaml
+forbidden_files:
+  - src/**
+  - tests/**
+  - .github/**
+  - config/**
+  - blueprint/**
+  - policy/**
+  - harness/**
+  - docs/modules/**
+  - docs/tool_system_project_state_v1.yaml
+  - docs/tool_system_module_registry_contract_v1.md
+  - REPO_MANIFEST.md
+  - pyproject.toml
+  - examples/task_manifests/tool_system_subscription_worker_ts_b02a_core_local_os_isolated_execution_v1.yaml
+  - examples/change_plans/tool_system_subscription_worker_ts_b02a_core_local_os_isolated_execution_v1.yaml
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_spec_v1.yaml --policy policy/repo_write_policy.yaml --autonomy-policy policy/autonomy_policy.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_spec_v1.yaml
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - git diff --check fd145b8efa1d46bf864b5ac1d42e5916f897b959
+  pass_conditions:
+    - The exact task pair is strict-Schema valid and policy valid.
+    - Full pytest and all four current governance validators pass unchanged.
+    - The diff contains exactly three added regular files and no modification or deletion.
+    - Draft PR 231 remains Draft at its original feature head and tree.
+    - No runtime, runner, workflow, permission, dependency, infrastructure, public-state, or real-execution effect occurs.
+rollback:
+  method: git_revert
+  reference: Revert only the future squash merge containing the exact three non-authority additions through a separately reviewed pull request.
+approval:
+  required: true
+  approved_by: apolo183
+  approval_source: conversation_explicit_authorization_2026-08-23_start_next_step
+  approved_at: "2026-08-23T17:06:33+09:00"
