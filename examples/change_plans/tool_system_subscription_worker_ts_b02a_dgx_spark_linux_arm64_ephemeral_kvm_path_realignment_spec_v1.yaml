@@ -1,0 +1,108 @@
+plan_id: tool-system-ts-b02a-dgx-spark-linux-arm64-ephemeral-kvm-path-realignment-spec-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml
+changed_files:
+  - docs/reports/subscription_worker_ts_b02a_dgx_spark_linux_arm64_primary_target_and_ephemeral_kvm_isolation_path_realignment_specification_v1.md
+  - examples/task_manifests/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml
+  - examples/change_plans/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_specification_v1.md
+    section_or_key: 7. Exact next prerequisite and authorization boundary
+    scope: Replace only the primary target and candidate isolation-path decision while preserving the complete parent guarantee and blocker set.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded isolated development, explicit authorization, and the arbitrary-untrusted-code-containment non-goal.
+authority_effect: none
+implementation:
+  - Record the authenticated pre-write canonical identity as commit 1324107cb8b17e2b9829eacbe5d2d13979576f12 and tree dce37ed35d27b30b485287487163fda228aafb97.
+  - Record only the user-supplied DGX observations and distinguish observed device and kernel configuration from usable KVM capability or isolation proof.
+  - Freeze the user-owned DGX Spark Linux ARM64 host as the primary intended deployment target; record that the parent left its Linux x86_64 runner provider unknown and do not misclassify it as an existing cloud route.
+  - Reclassify the earlier dedicated ephemeral Linux x86_64 runner selection as a non-primary optional alternative rather than an accepted or implemented path.
+  - Select an ephemeral ARM64 KVM guest on the DGX as the sole current conditional candidate for TS-B02A path closure.
+  - Freeze the trusted-host boundary and bind future evidence to DGX host identity, boot identity, kernel identity, KVM device access, VMM binary and configuration, guest image, guest kernel and initrd, root filesystem, storage topology, network topology, and VM lifecycle.
+  - Require the future guest path to preserve filesystem isolation, complete process-tree containment and cleanup, default-deny network, executable/interpreter/loader sealing, TOCTOU resistance, raw streaming output limits, monotonic timeout termination, and matching current-run OS-derived evidence.
+  - Require default-deny networking to combine absent guest and host network devices and backends with an ARM64-derived identity-sealed seccomp filter or equivalent guest-OS denial of DNS, IPv4, IPv6, loopback, netlink, packet, inherited-network-descriptor, and network-namespace or bridge operations before the first workload instruction.
+  - Keep IsolationRequestV1 caller-owned and freeze TS-B02A ownership of a sealed provider-effective configuration containing actual host boot, KVM, VMM, firmware, guest image, device, cgroup, channel and overlay identities.
+  - Require a bounded one-way workload-inaccessible guest-supervisor evidence channel distinct from stdout and stderr, and bind nonce, request, boot, provider, sequence and completeness.
+  - Freeze a quiesce, detach, bounded hostile-input-safe parse and extract, validate, cleanup or quarantine, then final-evidence output lifecycle; prohibit ordinary live host mounts of guest filesystems.
+  - Freeze guest post-exec descendant core limits and restoration denial plus mandatory exact host-provider pipe-handler observation; do not authorize VMM crash injection or Apport side effects.
+  - Freeze no host-directory sharing, no uncontrolled host-device passthrough, no ordinary-host fallback, and no application-created absolute zero-effect or hard-zero conclusions.
+  - Freeze the future pre-release gates for actual KVM access, installed VMM identity and license, ARM64 acceleration, guest non-pipe core_pattern, cgroup v2, namespace and mount features, storage quotas, disconnected networking, evidence completeness, and verified VM destruction or reset.
+  - Freeze the exact first next task as a separately authorized read-only DGX-local hypervisor, candidate-image, cgroup, security-policy, and permission inventory returned to and explicitly accepted by the user; do not execute or delegate it from this package.
+  - Require one or more exact separately authorized enablement or acquisition packages and read-only re-verification if inventory finds any missing prerequisite; inventory itself authorizes no mutation or candidate image.
+  - Freeze the bounded synthetic ephemeral-guest capability and path-closure probe as ineligible until inventory and every conditional prerequisite are explicitly accepted.
+  - Require a fresh exact ARM64 KVM implementation closure from the then-current canonical base after an accepted probe; do not transfer the stopped 17-path PR 231 authority.
+  - Preserve Draft PR 231 without update, rebase, merge, close, Ready transition, comment, label, or branch mutation.
+  - Preserve TS-B01 corrected_pending_reacceptance, TS-B02 blocking, public-entry unreaccepted, real-repository execution blocked, and every listed TS-H and TS-M finding.
+  - Publish only the exact three non-authority additions and stop without accessing DGX or starting TS-B02A.
+verification:
+  commands:
+    - python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml --policy policy/repo_write_policy.yaml --autonomy-policy policy/autonomy_policy.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - git diff --check 1324107cb8b17e2b9829eacbe5d2d13979576f12 HEAD
+    - >-
+      python -c "import subprocess;
+      base='1324107cb8b17e2b9829eacbe5d2d13979576f12';
+      paths=sorted([
+      'docs/reports/subscription_worker_ts_b02a_dgx_spark_linux_arm64_primary_target_and_ephemeral_kvm_isolation_path_realignment_specification_v1.md',
+      'examples/task_manifests/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml',
+      'examples/change_plans/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml']);
+      assert subprocess.check_output(['git','rev-parse',base+'^{tree}'],text=True).strip()=='dce37ed35d27b30b485287487163fda228aafb97';
+      assert subprocess.check_output(['git','rev-list','--count',base+'..HEAD'],text=True).strip()=='1';
+      rows=[tuple(line.split('\t',1)) for line in subprocess.check_output(['git','diff','--name-status','--no-renames',base,'HEAD'],text=True).splitlines()];
+      assert sorted(rows)==[('A',p) for p in paths], rows;
+      tree_rows=subprocess.check_output(['git','ls-tree','-r','HEAD','--',*paths],text=True).splitlines();
+      assert len(tree_rows)==3 and all(row.startswith('100644 blob ') for row in tree_rows), tree_rows;
+      assert sorted(row.split('\t',1)[1] for row in tree_rows)==paths"
+  pass_conditions:
+    - The unchanged task-manifest and change-plan gates accept the exact pair without running any configured repository or DGX workload.
+    - Full pytest and all four governance validators pass unchanged locally where available and on Hosted CI.
+    - The diff contains exactly three added mode-100644 paths, one commit, and no existing-path mutation.
+    - DGX ARM64 and ephemeral KVM are frozen only as the primary target and conditional candidate path; no capability or acceptance claim is published.
+    - Device absence is not accepted as socket denial; the future gate binds and observes the ARM64 network-socket denial control and its exact adversarial matrix.
+    - Caller request, provider-effective plan, evidence channel, ordinary output, bounded extraction, and future transport have explicit non-overlapping identities and owners.
+    - PR 231 remains historical Draft evidence and supplies no ARM64 KVM path or lifecycle authority.
+    - Draft PR 231, runtime source, tests, workflows, runners, permissions, dependencies, infrastructure, project state, public acceptance, findings, and real-execution prohibition remain unchanged.
+publication:
+  method: github_app_single_commit_draft_pr_then_guarded_ready_and_squash_merge
+  branch: agent/subscription-worker-ts-b02a-dgx-spark-linux-arm64-ephemeral-kvm-path-realignment-spec-v1
+  exact_commit_message: Realign TS-B02A isolation path to DGX ARM64
+  exact_base: 1324107cb8b17e2b9829eacbe5d2d13979576f12
+  exact_base_tree: dce37ed35d27b30b485287487163fda228aafb97
+  exact_path_count: 3
+  exact_add_count: 3
+  exact_modify_count: 0
+  exact_delete_count: 0
+  exact_commit_count: 1
+  draft_pr_required: true
+  ready_requires_hosted_ci_success: true
+  ready_requires_unchanged_base_head_scope_comments_reviews_and_threads: true
+  squash_merge_authorized: true
+  retain_feature_branch: true
+  restore_exact_branch_after_automatic_deletion: true
+  live_execution_during_publication: false
+rollback:
+  method: git_revert
+  reference: Revert only the exact three-path squash merge through a separately authorized pull request; retain the original feature branch and history.
+stop:
+  on_canonical_base_or_tree_drift: true
+  on_required_fourth_path: true
+  on_validation_or_hosted_ci_failure_beyond_frozen_repair_and_run_budget: true
+  on_base_head_scope_comment_review_or_thread_drift: true
+  after_guarded_merge: true
+  access_or_modify_dgx: false
+  run_dgx_commands_or_probes: false
+  install_or_configure_kvm_qemu_libvirt: false
+  create_boot_modify_or_delete_vm: false
+  modify_runtime_tests_ci_runner_permissions_dependencies_or_infrastructure: false
+  modify_pr_231: false
+  start_ts_b02a_or_later_isolation_chain: false
+  start_public_reacceptance_or_real_execution: false
+  correct_other_findings: false
