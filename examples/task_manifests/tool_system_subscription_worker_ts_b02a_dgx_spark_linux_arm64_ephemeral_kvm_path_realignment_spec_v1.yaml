@@ -1,0 +1,134 @@
+task_id: tool-system-ts-b02a-dgx-spark-linux-arm64-ephemeral-kvm-path-realignment-spec-v1
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: agent/subscription-worker-ts-b02a-dgx-spark-linux-arm64-ephemeral-kvm-path-realignment-spec-v1
+phase: TS_B02A_DGX_SPARK_LINUX_ARM64_EPHEMERAL_KVM_PATH_REALIGNMENT_SPEC
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_specification_v1.md
+    section_or_key: 7. Exact next prerequisite and authorization boundary
+    scope: Realign the selected isolation path to the user-owned DGX Spark Linux ARM64 primary target without weakening any frozen TS-B02 guarantee.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Preserve bounded blueprint-driven isolated development and the arbitrary-untrusted-code-containment non-goal.
+scope:
+  summary: Freeze DGX Spark Linux ARM64 as the primary target and an ephemeral ARM64 KVM guest as the conditional TS-B02A isolation path without accessing DGX or implementing runtime behavior.
+  in_scope:
+    - Record the user-owned DGX Spark Linux ARM64 host as the primary intended tool-system execution target.
+    - Reclassify the previously selected dedicated Linux x86_64 runner path as non-primary rather than a current implementation prerequisite.
+    - Select an ephemeral ARM64 KVM guest on the DGX as the sole current candidate path, conditional on later separately authorized capability proof.
+    - Freeze the host, VMM, guest image, guest kernel, storage, network, lifecycle, evidence, and cleanup trust boundaries.
+    - Freeze an ARM64-derived identity-sealed network-socket denial filter or equivalent guest-OS control and its DNS, IPv4, IPv6, loopback, netlink, packet, inherited-descriptor, and namespace-bridge adversarial obligations.
+    - Preserve the caller-owned IsolationRequestV1 boundary while freezing a provider-owned effective configuration and composite host-plus-guest evidence binding.
+    - Freeze a workload-inaccessible one-way bounded evidence channel and a separate hostile-input-safe output parser and extraction lifecycle.
+    - Freeze the exact next DGX-local read-only inventory, conditional enablement or acquisition, bounded probe, and subsequent implementation-path re-derivation prerequisites.
+    - Freeze host and guest core-dump obligations without authorizing VMM crash injection or host Apport side effects.
+    - Preserve Draft PR 231, all blockers, public acceptance state, and the real-execution prohibition.
+  out_of_scope:
+    - Any access to, command execution on, read from, or modification of the DGX.
+    - Installation or configuration of QEMU, libvirt, KVM tooling, packages, groups, permissions, services, kernels, sysctls, cgroups, networks, storage, or images.
+    - Creation, boot, mutation, probing, shutdown, reset, or deletion of any virtual machine.
+    - Runtime, backend, worker, task-runner, test, workflow, runner, permission, dependency, supply-chain, external-service, or infrastructure implementation.
+    - Modification, rebase, merge, close, Ready transition, comment, label, or repair of Draft PR 231.
+    - Transfer or reuse of Draft PR 231 implementation authority for ARM64 KVM.
+    - TS-B02A implementation, TS-B02B, TS-B02C, TS-B02D, public reacceptance, subscription transport, or any real repository or business workload.
+    - Correction of TS-H01, TS-H02, TS-H03, TS-H04, TS-H05, TS-M01, TS-M02, TS-M03, or TS-M04.
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    commit_sha: 1324107cb8b17e2b9829eacbe5d2d13979576f12
+    why_relevant: Defines the product objective and arbitrary-untrusted-code-containment non-goal.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_ts_b02_blueprint_boundary_and_isolation_assurance_realignment_specification_v1.md
+    commit_sha: 1324107cb8b17e2b9829eacbe5d2d13979576f12
+    why_relevant: Freezes the conjunctive TS-B02 local-OS guarantees and owner sequence that this path realignment must preserve.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_ts_b02a_pipe_core_pattern_core_dump_containment_feasibility_and_path_closure_specification_v1.md
+    commit_sha: 1324107cb8b17e2b9829eacbe5d2d13979576f12
+    why_relevant: Is the direct parent that selected a dedicated ephemeral non-pipe Linux runner and froze the next authority boundary.
+  - repo: apolo183/tool-system
+    path: https://github.com/apolo183/tool-system/pull/231
+    commit_sha: f94a9072eefe012b1d17bc9f87682b4287e1274d
+    why_relevant: Identifies the preserved unaccepted Draft TS-B02A candidate and its Hosted capability blocker.
+  - repo: user-supplied-host-evidence
+    path: chat_user_message:2026-08-25-dgx-spark-read-only-identity-cgroup-core-pattern-kvm-observation
+    why_relevant: Supplies the bounded host observation motivating an ARM64 KVM candidate without proving KVM usability or isolation acceptance.
+allowed_files:
+  - docs/reports/subscription_worker_ts_b02a_dgx_spark_linux_arm64_primary_target_and_ephemeral_kvm_isolation_path_realignment_specification_v1.md
+  - examples/task_manifests/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml
+  - examples/change_plans/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml
+forbidden_files:
+  - AGENTS.md
+  - README.md
+  - REPO_MANIFEST.md
+  - pyproject.toml
+  - .github/**
+  - blueprint/**
+  - config/**
+  - harness/**
+  - policy/**
+  - src/**
+  - tests/**
+  - docs/modules/**
+  - docs/tool_system_project_state_v1.yaml
+  - docs/tool_system_module_registry_contract_v1.md
+  - examples/active_gates.yaml
+  - examples/batches/**
+  - examples/cleanup/**
+  - examples/fixtures/**
+  - examples/github_states/**
+  - examples/operator_config/**
+  - examples/repo_write_decisions/**
+  - examples/requirements/**
+  - examples/target_repo_dry_runs/**
+  - examples/target_repo_pr_previews/**
+  - examples/task_graphs/**
+write_mode: pull_request
+verification:
+  commands:
+    - python -m tool_system.cli.validate_task_manifest examples/task_manifests/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml --policy policy/repo_write_policy.yaml --autonomy-policy policy/autonomy_policy.yaml
+    - python -m tool_system.cli.validate_change_plan examples/change_plans/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml
+    - python -m pytest -q
+    - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+    - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - git diff --check 1324107cb8b17e2b9829eacbe5d2d13979576f12 HEAD
+    - >-
+      python -c "import subprocess;
+      base='1324107cb8b17e2b9829eacbe5d2d13979576f12';
+      paths=sorted([
+      'docs/reports/subscription_worker_ts_b02a_dgx_spark_linux_arm64_primary_target_and_ephemeral_kvm_isolation_path_realignment_specification_v1.md',
+      'examples/task_manifests/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml',
+      'examples/change_plans/tool_system_subscription_worker_ts_b02a_dgx_spark_linux_arm64_ephemeral_kvm_path_realignment_spec_v1.yaml']);
+      assert subprocess.check_output(['git','rev-parse',base+'^{tree}'],text=True).strip()=='dce37ed35d27b30b485287487163fda228aafb97';
+      assert subprocess.check_output(['git','rev-list','--count',base+'..HEAD'],text=True).strip()=='1';
+      rows=[tuple(line.split('\t',1)) for line in subprocess.check_output(['git','diff','--name-status','--no-renames',base,'HEAD'],text=True).splitlines()];
+      assert sorted(rows)==[('A',p) for p in paths], rows;
+      tree_rows=subprocess.check_output(['git','ls-tree','-r','HEAD','--',*paths],text=True).splitlines();
+      assert len(tree_rows)==3 and all(row.startswith('100644 blob ') for row in tree_rows), tree_rows;
+      assert sorted(row.split('\t',1)[1] for row in tree_rows)==paths"
+  pass_conditions:
+    - The exact task manifest and bound change plan are strict-Schema and policy valid.
+    - Full pytest and all four current governance validators pass unchanged.
+    - The candidate is exactly one commit containing three added regular mode-100644 files and no modification, deletion, rename, mode change, or fourth path.
+    - The report treats the DGX KVM route only as a conditional candidate and does not claim capability PASS, isolation acceptance, or real-execution authority.
+    - Default-deny networking requires both device and backend absence and OS-enforced denial of the frozen ARM64 network-socket ABI before the first workload instruction.
+    - Caller policy, provider-effective actual configuration, one-way evidence, ordinary output, bounded output extraction, and any future subscription transport remain separate identities and owners.
+    - Inventory cannot authorize a candidate image or mutation; missing prerequisites require separately authorized enablement and verification before any bounded probe.
+    - Draft PR 231 remains Draft at its preserved feature head and no existing blocker, finding, project state, or public acceptance state changes.
+    - No DGX access, VM action, runtime effect, workflow change, runner change, permission change, dependency change, infrastructure change, or real workload occurs.
+    - Hosted CI succeeds on the exact single PR head without base, head, scope, comment, review, or thread drift.
+rollback:
+  method: git_revert
+  reference: Revert only the future exact three-path squash merge through a separately authorized pull request.
+approval:
+  required: true
+  approved_by: apolo183
+  approval_source: conversation_explicit_authorization_2026-08-25_current_chat_github_app_exact_three_path_spec_only
+  approved_at: "2026-08-25 Asia/Tokyo; date-level approval, exact time not asserted"
