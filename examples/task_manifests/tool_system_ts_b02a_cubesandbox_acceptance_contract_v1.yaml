@@ -1,0 +1,98 @@
+task_id: tool-system-ts-b02a-cubesandbox-v070-arm64-backend-acceptance-contract-v1
+task_type: test_add
+target_repo: apolo183/tool-system
+target_branch: agent/ts-b02a-cubesandbox-v070-acceptance-contract-v1
+phase: TS_B02A_CONTRACT_ONLY
+approved_blueprint_refs:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+scope:
+  summary: Publish the exact reviewed and locally tested four-gate source/fixture candidate through one commit, ordinary same-branch push and Draft PR; no backend execution or acceptance.
+  in_scope:
+    - Latest same-task authorization permits one three-record publication update/validation batch, one exact three-record git add, one ten-file commit, one ordinary same-branch push and one Draft PR to main; existing automatic verify only, read-only CI wait at most 30 minutes with queries at least 60 seconds apart.
+    - Retain correction 4, directed 8, full suites 3, baseline 1, branch 1 and paths 10; this publication permits zero source repairs, local pytest, dependencies, ZIP exports or host operations. Seven reviewed files remain byte-identical; local 1072, author 160 and external 37/37 evidence are distinct from pending Hosted CI.
+    - Latest user authorization permits one fixed Node v24.20.0 task-only download, one three-test environment confirmation, one conditional full suite, one final governance batch and one exact three-record staging; no reviewed-source changes.
+    - Current continuation authorizes only one exact eight-file index synchronization and read-only environment inspection, with minimal manifest/plan/evidence notes; reviewed source and historical receipts are frozen.
+    - Apply only the authorized R1-R4 seven exact-input corrections in the same ten paths; preserve original 107 test semantics and all historical counts. No R5 correction, full suite, baseline rerun or new dependency.
+    - Read frozen upstream source and current central main formal rules.
+    - Specify component binding, complete reap, snapshot integrity, and attributed network cleanup.
+    - Add a local JSON Schema and test-only pure oracle using existing jsonschema and pytest mechanisms.
+    - Register formal test and schema paths in the existing repository manifest.
+    - Synchronize the existing exact-count repository-manifest test with the four added formal rows, preserving its coverage and rejection checks.
+    - Keep the original candidate branch; prior uncommitted handoff is retained history and only the latest explicit commit/push/Draft permission supersedes it.
+    - Apply the explicitly authorized same-task review correction for mandatory typed artifacts, cumulative network ownership, complete reap samples, runtime deny_all and execution-scoped restores; preserve all prior budgets and failures.
+  out_of_scope:
+    - CubeSandbox installation, service or systemd mutation, VM or VMM execution, real sandbox workload, networking or eBPF mutation.
+    - Canonical main writes, merge, auto-merge, Ready transition, force push, rebase, amend, branch deletion/replacement, publication beyond the single authorized commit/push/Draft, backend acceptance or probe authorization.
+    - Runtime adapter implementation, new governance framework, module or public interface, permission changes, cleanup execution.
+evidence:
+  - repo: apolo183/tool-system
+    path: blueprint/tool_system_v0.yaml
+    why_relevant: Bounded isolated development and independently observed evidence remain the global objective.
+  - repo: apolo183/tool-system
+    path: docs/reports/subscription_worker_ts_b02a_dgx_spark_linux_arm64_primary_target_and_ephemeral_kvm_isolation_path_realignment_specification_v1.md
+    commit_sha: 306a01fa6bf3bc8ed4204b88abdcb4f16f75360e
+    line_range: 490-570
+    why_relevant: Direct parent separates source design, read-only inventory, conditional enablement, and explicitly authorized guest probe.
+  - repo: TencentCloud/CubeSandbox
+    path: .github/workflows/release-docker-images.yml
+    commit_sha: d0081641c59822e4e5653b7462e914410b81910a
+    line_range: 725-740
+    why_relevant: Frozen ARM64 source workflow disables published provenance and SBOM attestations.
+allowed_files:
+  - docs/reports/ts_b02a_cubesandbox_backend_acceptance_contract_v1.md
+  - docs/reports/ts_b02a_cubesandbox_backend_acceptance_contract_v1_evidence.md
+  - harness/cubesandbox_backend_acceptance_v1.schema.json
+  - tests/fixtures/cubesandbox_backend_acceptance_v1.json
+  - tests/cubesandbox_contract_oracle.py
+  - tests/test_cubesandbox_backend_acceptance_contract.py
+  - examples/task_manifests/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml
+  - examples/change_plans/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml
+  - REPO_MANIFEST.md
+  - tests/test_repo_manifest.py
+forbidden_files:
+  - src/**
+  - config/**
+  - policy/**
+  - blueprint/**
+  - .github/**
+  - AGENTS.md
+  - pyproject.toml
+  - docs/tool_system_project_state_v1.yaml
+write_mode: pull_request
+verification:
+  commands:
+    - /home/rich/.pyenv/versions/3.14.3/bin/python -B /tmp/tool-system-ts-b02a-draft-publication-j80aea3j/publish.py
+    - git add -- docs/reports/ts_b02a_cubesandbox_backend_acceptance_contract_v1_evidence.md examples/task_manifests/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml examples/change_plans/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml
+    - /usr/bin/timeout --signal=TERM --kill-after=5s 1195s /home/rich/.pyenv/versions/3.14.3/bin/python -B /tmp/tool-system-ts-b02a-full-validation-wk6tvh3a/test_exec.py full
+    - /usr/bin/timeout --signal=TERM --kill-after=5s 115s /home/rich/.pyenv/versions/3.14.3/bin/python -B /tmp/tool-system-ts-b02a-full-validation-wk6tvh3a/test_exec.py three
+    - /home/rich/.pyenv/versions/3.14.3/bin/python -B /tmp/tool-system-ts-b02a-full-validation-wk6tvh3a/prepare_node.py
+    - git add -- docs/reports/ts_b02a_cubesandbox_backend_acceptance_contract_v1.md docs/reports/ts_b02a_cubesandbox_backend_acceptance_contract_v1_evidence.md harness/cubesandbox_backend_acceptance_v1.schema.json tests/cubesandbox_contract_oracle.py tests/fixtures/cubesandbox_backend_acceptance_v1.json tests/test_cubesandbox_backend_acceptance_contract.py examples/task_manifests/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml examples/change_plans/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml
+    - python -B -m pytest -q -s --tb=short -p no:cacheprovider tests/test_cubesandbox_backend_acceptance_contract.py
+    - ruff format --check tests/cubesandbox_contract_oracle.py tests/test_cubesandbox_backend_acceptance_contract.py
+    - ruff check --no-cache tests/cubesandbox_contract_oracle.py tests/test_cubesandbox_backend_acceptance_contract.py
+    - ruff format --check --no-cache tests/cubesandbox_contract_oracle.py tests/test_cubesandbox_backend_acceptance_contract.py
+    - git --no-optional-locks --no-pager diff --check --no-ext-diff --no-textconv HEAD --
+    - python -B -m pytest -q --tb=short -p no:cacheprovider tests/test_cubesandbox_backend_acceptance_contract.py
+    - python -B -m pytest -q -p no:cacheprovider tests/test_cubesandbox_backend_acceptance_contract.py
+    - python -B -m pytest -q -p no:cacheprovider
+    - ruff check tests/cubesandbox_contract_oracle.py tests/test_cubesandbox_backend_acceptance_contract.py
+    - python -B -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+    - python -B -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -B -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -B -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - git diff --check
+    - python -B -m pytest -q --tb=short -p no:cacheprovider tests/test_durable_orchestrator_reliability.py::test_text_and_json_resource_bounds_fail_before_mutation tests/test_durable_orchestrator_reliability.py::test_database_parent_identity_substitution_is_detected tests/test_p14h_multi_stack_e2e.py::test_typescript_language_neutral_flow_records_add_modify_delete
+  pass_conditions:
+    - All four gate specifications and exact requested positive and negative fixture assertions pass.
+    - Synthetic PASS never authorizes real backend acceptance; the candidate lifecycle-manager digest remains null and G1 BLOCKED.
+    - Only the ten listed paths differ; canonical main, runtime, authority contracts and public interfaces are unchanged.
+rollback:
+  method: patch_reverse
+  reference: Reverse only this ten-path candidate diff against 306a01fa6bf3bc8ed4204b88abdcb4f16f75360e after review; no automatic cleanup or main reset.
+approval:
+  required: true
+  approved_by: apolo183
+  approval_source: Latest explicit same-task publication authorization permits only one local commit, one ordinary same-branch push and one Draft PR, with automatic existing Hosted CI and read-only verification; supersedes earlier publication prohibitions only for these actions. Earlier authorization text retained as history follows. Latest explicit authorization permits the fixed task-only Node, bounded confirmation/full-suite tests and one final three-record git add, superseding prior restrictions only within that scope. Current user task TOOL-SYSTEM-TS-B02A-CUBESANDBOX-V070-ARM64-BACKEND-ACCEPTANCE-CONTRACT-v1; local source/doc/fixture work only, publication explicitly prohibited. Explicit 2026-09-09 continuation permits one exact eight-file git add and only three record updates, lifting the prior index restriction for those paths; no tests, installs or export.
+  approved_at: 2026-09-08 Australia/Adelaide; date-level task authorization
