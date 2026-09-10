@@ -1,0 +1,181 @@
+plan_id: tool-system-ts-b02a-cubesandbox-v070-arm64-backend-acceptance-contract-v1
+target_repo: apolo183/tool-system
+task_manifest: examples/task_manifests/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml
+baseline:
+  commit: 306a01fa6bf3bc8ed4204b88abdcb4f16f75360e
+  tree: ec74af108b6f1d7d4c9c7e440aec128261f3f251
+  original_local_main: 027dbb3fb83c38def70e81d58712f80dbe613483
+branch: agent/ts-b02a-cubesandbox-v070-acceptance-contract-v1
+alignment:
+  parent: docs/reports/subscription_worker_ts_b02a_dgx_spark_linux_arm64_primary_target_and_ephemeral_kvm_isolation_path_realignment_specification_v1.md sections 9-11; define evidence only and preserve future probe authorization.
+  global: blueprint/tool_system_v0.yaml:product_objective; bounded isolated development, no silent authority or runtime expansion.
+changed_files:
+  - docs/reports/ts_b02a_cubesandbox_backend_acceptance_contract_v1.md
+  - docs/reports/ts_b02a_cubesandbox_backend_acceptance_contract_v1_evidence.md
+  - harness/cubesandbox_backend_acceptance_v1.schema.json
+  - tests/fixtures/cubesandbox_backend_acceptance_v1.json
+  - tests/cubesandbox_contract_oracle.py
+  - tests/test_cubesandbox_backend_acceptance_contract.py
+  - examples/task_manifests/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml
+  - examples/change_plans/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml
+  - REPO_MANIFEST.md
+  - tests/test_repo_manifest.py
+file_disposition:
+  existing_file: REPO_MANIFEST.md
+  region: Formal Files and Retained Non-Authority Sets tables
+  action: Add only four formal schema/test/fixture rows; existing retained globs cover the two reports and explicit pair. No reclassification or cleanup.
+  dependent_test: tests/test_repo_manifest.py lines 109-143; change only the two exact formal-row count assertions from 295 to 299 after reading the first full-suite failure.
+scope_correction:
+  reason: The four new formal rows require the existing repository-manifest test to assert the new exact count. Document this immediate dependency before editing it; no acceptance scope or runtime authority changes.
+  changed_path_count_before: 9
+  changed_path_count_after: 10
+  first_full_suite: 4 failed, 964 passed in 72.36s; manifest count failure is candidate-caused, two durability failures reject group-writable fixture directories, and the TypeScript fixture cannot find node.
+  repair_cycle: 1 of 2; synchronize exact counts and fix three new-file lint diagnostics only. Do not repair the host or existing durability/TypeScript implementation.
+final_boundary_correction:
+  repair_cycle: 2 of 2
+  reason: G4 requires two clean samples by the deadline. A first clean sample exactly at the deadline must be FAIL, not BLOCKED. Add a synthetic regression before correcting this branch; preserve the existing after-deadline FAIL.
+  files: tests/cubesandbox_contract_oracle.py final clean-sample verdict; tests/test_cubesandbox_backend_acceptance_contract.py network deadline cases.
+  validation_budget: Use focused runs 2 and 3 for regression then repair. Both full-suite runs are spent; do not rerun them or repair unrelated host prerequisites.
+reuse:
+  - Use existing jsonschema Draft202012Validator, pytest and explicit task-pair/process-authority validation.
+  - The command test gate only evaluates command exits and cannot decide host acceptance. Do not feed host claims into it.
+  - The production-readiness decision is P16-specific and grants no backend evidence semantics; preserve it.
+  - Existing IsolationRequestV1 and ExecutionEvidenceV1 ownership remains with future TS-B02A/B/C; this is a test-only contract specialization, not a runtime or new public interface.
+  - Reuse the public FrozenDevelopmentContract and development-loop Validator callback; existing task-runner execution-binding-v2 evidence obligations and runner-issued receipts remain the sole code-development receipt framework, unchanged.
+budgets:
+  branch_count: 1
+  changed_path_count: 10
+  repair_cycles: 2
+  focused_test_runs: 3
+  full_suite_runs: 2
+  wall_minutes_from_scope_freeze: 90
+  external_review_cycles: 0
+  paid_api_calls: 0
+  real_backend_operations: 0
+  publication_operations: 0
+validation_environment:
+  cwd: /home/rich/projects/tool-system
+  python: /home/rich/.pyenv/versions/3.14.3/bin/python
+  PYTHONDONTWRITEBYTECODE: '1'
+  PYTHONPATH: src:/tmp/ts-b02a-cubesandbox-contract-v1-deps
+  temporary_dependency_exception: Existing pinned jsonschema and its dependencies copied from local wheelhouse into this task-only /tmp directory; retained for review, no system environment or CubeSandbox installation. Initial network attempt interrupted after sandbox denial; retain its failure in evidence.
+previous_verification_before_index_sync:
+  commands:
+    - python -B -m pytest -q -s --tb=short -p no:cacheprovider tests/test_cubesandbox_backend_acceptance_contract.py
+    - ruff check --no-cache tests/cubesandbox_contract_oracle.py tests/test_cubesandbox_backend_acceptance_contract.py
+    - ruff format --check --no-cache tests/cubesandbox_contract_oracle.py tests/test_cubesandbox_backend_acceptance_contract.py
+    - python -B -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+    - python -B -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+    - python -B -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+    - python -B -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+    - git --no-optional-locks --no-pager diff --check --no-ext-diff --no-textconv HEAD --
+previous_verification_before_node_validation:
+  commands:
+    - git add -- docs/reports/ts_b02a_cubesandbox_backend_acceptance_contract_v1.md docs/reports/ts_b02a_cubesandbox_backend_acceptance_contract_v1_evidence.md harness/cubesandbox_backend_acceptance_v1.schema.json tests/cubesandbox_contract_oracle.py tests/fixtures/cubesandbox_backend_acceptance_v1.json tests/test_cubesandbox_backend_acceptance_contract.py examples/task_manifests/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml examples/change_plans/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml
+previous_verification_before_draft_publication:
+  commands:
+    - git add -- docs/reports/ts_b02a_cubesandbox_backend_acceptance_contract_v1_evidence.md examples/task_manifests/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml examples/change_plans/tool_system_ts_b02a_cubesandbox_acceptance_contract_v1.yaml
+verification:
+  commands:
+    - /home/rich/.pyenv/versions/3.14.3/bin/python -B /tmp/tool-system-ts-b02a-draft-publication-j80aea3j/publish.py
+
+completed_validation_batch:
+  focused_command: python -B -m pytest -q -p no:cacheprovider tests/test_cubesandbox_backend_acceptance_contract.py
+  result: 56 passed in 2.57s; exit 0; protected input bytes equal before dispatch.
+  full_suite_1: 4 failed, 964 passed in 72.36s; exit 1; original lint failed with 3 diagnostics; all four repository validators passed.
+  full_suite_2: 3 failed, 965 passed in 71.52s; exit 1; lint and all four repository validators passed. Remaining failures are two group-writable fixture-directory checks and missing node in the validation PATH.
+rollback:
+  method: patch_reverse
+  reference: Reverse only the ten-path candidate patch after review; preserve original local main and all existing evidence.
+stop:
+  terminal: Latest explicit same-task publication only; one three-record update/validation batch, one exact three-record staging, one ten-file commit, one ordinary push, one Draft PR, existing automatic verify only, CI wait 30 minutes with at least 60-second queries. Keep Draft and stop on failure, refusal, unknown drift or waiting budget; no post-commit file edits. Preserve original cumulative correction 4, directed 8, full suite 3, baseline 1, branch 1, paths 10; no local pytest, source changes, install, ZIP or host action.
+  on_scope_drift: true
+  on_budget_exhaustion: true
+  on_repeated_no_progress: true
+  commit: true
+  pull_request: true
+  merge: false
+  real_backend_acceptance_authorized: false
+review_correction_authorization:
+  source: Explicit same-task user continuation after independent source review; no new branch, task identity, framework or path.
+  preserved_used_budget: 'repair 2/2; focused 3/3; full suite 2/2; branch 1/1; exact paths 10/10'
+  additional_budget: 'one correction batch; two targeted rounds (counterexamples then final regression); at most one exact-base comparison of the three historical failures; at most one full suite only if existing environment prerequisites pass'
+  reads_before_write: 'Verified index equals worktree and all nine retained source SHA256 values; read original tool receipts and local evidence; re-read both current central main formal paths. Parent section 6 binds deny_all and fresh execution state.'
+  correction_regions:
+    - 'G1 oracle _components and schema artifact/component/catalog: fixed minimum typed artifact obligations; OCI and file identities use distinct shapes; no jointly empty embedded closure PASS.'
+    - 'G2 oracle _reap and reap evidence: final two samples must each be complete and empty by deadline; PID1 retained-FD positive control is optional, scan completeness and all execution helpers remain mandatory.'
+    - 'G4 oracle _network and resource/round schema: retain immutable owned identities across every later post sample; require runtime deny_all evidence, guest device/control path absence and sealed ARM64 socket-ABI enforcement before workload and through runtime/restores.'
+    - 'G3 oracle _snapshot and snapshot/restore schema: re-evaluate restored component observations with G1; bind same execution/request, separately approved clean template and new execution, or reject cross-execution mutable state.'
+    - 'Keep tests/test_repo_manifest.py and REPO_MANIFEST.md unchanged from the initial ten-file candidate. Save raw receipts and final digest inventory inside the existing evidence report, not an eleventh file.'
+  baseline_comparison: 'Same environment, exact 306a01fa6bf3bc8ed4204b88abdcb4f16f75360e source/test/fixture dependency bytes verified before one three-node run; no checkout, new branch, permission or PATH repair.'
+  environment_stop: 'Existing Python 3.14.3, pytest 9.1.1 and retained jsonschema 4.26.0 import successfully. Node is absent. No dependency installation or full suite while this prerequisite is missing.'
+  counterexample_round: 'additional targeted 1/2; 10 failed, 58 passed in 3.00s; exit 1; all ten new review assertions failed on the verified original oracle/schema while all original regressions passed'
+  baseline_comparison_result: '1/1 used; 144 source/test/fixture dependency files equal exact baseline; 3 failed in 0.34s, exit 1, same directory-mode rejections and missing node'
+  full_suite_disposition: 'additional 0/1 used; NOT_EXECUTED_ENVIRONMENT_BLOCKED; node unavailable and existing directory-mode prerequisites fail; do not run a known failing full suite'
+  final_targeted_round: 'additional 2/2; 107 passed in 6.40s; exit 0; all original 58 regressions retained; Ruff and four repository validators PASS'
+  cumulative_used_budget: 'repair batches 3 (original 2 plus authorized 1); targeted rounds 5 (original 3 plus authorized 2); full suite runs 2 (original 2 plus additional 0); exact baseline comparisons 1; branches 1; candidate paths 10'
+  state: source_correction_complete_waiting_for_independent_review
+r1_r4_correction_authorization:
+  source: Explicit same-task R1-R4 user authorization; resumed after exact review package transfer. No additional budget from the transfer message.
+  review_zip: /tmp/ts-b02a-r1r4-review.P2FKKHYl/tool_system_cubesandbox_exact_candidate_review.zip
+  review_zip_sha256: da8843d21e5c027a356698fadf5ab0f5f8d5d7f7b6ffb0e20648513cb6c4e1b1
+  entry_used_budget: 'correction 3; directed 5; full suite 2; baseline comparison 1; branches 1; candidate paths 10'
+  additional_limits: 'correction 1; directed rounds 2; final static/governance batch 1; final export 1; active work minutes 90 including pre-transfer read-only work; dependency/full-suite/baseline/host/publication operations 0'
+  time_accounting: 'Pre-transfer inspection used approximately 5 minutes; input-wait interval was stopped, with no work or budget consumption. Resume 2026-09-09 07:37:26 UTC; retain prior usage.'
+  read_before_write: 'All ten disk/index/export/review candidate bytes equal; HEAD/tree/branch and safe patch identity match. Current central main fixed paths, local principles, parent sections 6-7, existing contract sections 6-7, oracle _reap/_snapshot/_network, schema process/restore/evidence and exact seven review inputs read.'
+  fixed_corrections:
+    - 'R1_POST_ONLY_RELABELLING and R1_POST_ONLY_CROSS_ROUND: absorb explicit pre/active/post owner or reference observations in persistent immutable-key history; preserve lawful pre-existing shared-pool release.'
+    - 'R2_FOREIGN_POOL_REFERENCE_DELETED: protect foreign exclusive owners and foreign shared references in active and post, allowing unrelated background changes.'
+    - 'R3_RUNTIME_EXECUTION_JOIN and R3_TERMINATION_EXECUTION_JOIN: join same-owner termination and runtime executions for every applicable case; distinct independent scenarios remain distinct.'
+    - 'R4_RESTORE_FOREIGN_PROCESS and R4_RESTORE_UNOBSERVED_PROCESS: bind each restore to typed host process observations and owner/execution, reject foreign keys and block missing observations; no second terminal destroy requirement.'
+  planned_rounds: 'First: original 107 plus seven exact review-input regressions against unchanged oracle/schema/fixture. Then one correction batch and final complete directed suite, including structural migration equivalence and directly related positives.'
+  final_static_batch: 'Ruff check and format --check with --no-cache on the two contract Python files; existing active-gates, process-authority, module-registry and repo-manifest validators; git diff --check; AST equality of all original test definitions and unchanged ten-path closure. No full pytest or baseline checks.'
+  scope: 'Modify only existing contract/evidence/schema/oracle/fixture/contract-tests/original manifest/plan. Keep REPO_MANIFEST.md and tests/test_repo_manifest.py byte-identical to entry.'
+  record_retention: 'Append original stdout/stderr/exit, source hashes and exact test-time pair bytes to existing evidence/final ZIP; retain all original failures and unknown historical 144-file/test-time-plan bytes.'
+  terminal: 'One final ten-file ZIP for independent review; no final source acceptance, real backend acceptance, host authorization or next stage.'
+  first_directed_result: 'Additional directed 1/2; cumulative 6. Seven exact review input hashes verified, all seven actual erroneous PASS; 7 failed, 107 passed in 7.18s; exit 1; original oracle/schema/fixture hashes unchanged.'
+  correction_batch_used: 'Additional 1/1; cumulative 4. R1-R4 only, typed restore observation migration and preservation of exact counterexample projection; source formatting included as an edit.'
+  fixture_migration: 'Added restore_process_observations for both restores; second host_processes replaced by hashes derived from synthetic typed process rows. Canonical projection removes only these changes when checking the seven original review input digests. Original 107 test assertions retained; clean-template helper binds new observations.'
+  final_directed_result: 'Additional directed 2/2; cumulative 7. 160 passed in 10.05s, exit 0: original 107 plus seven exact-input regressions and 46 related controls. Seven migrated review inputs remained schema-valid and reached exact semantic rejection reasons: six FAIL and one missing-observation BLOCKED.'
+  final_static_result: 'Additional static/governance 1/1. Ruff check and format-check, four existing validators, diff whitespace and original-test/ten-path check all exit 0. All 40 original test function ASTs and parametrizations unchanged, preserving the 107 original cases; REPO_MANIFEST.md and tests/test_repo_manifest.py equal entry.'
+  final_source_binding: 'Oracle 4bbbd58893ed41a57fa3003fa577652ebf17b1b55b9c79ed0cbb242818815326; schema 0437963d1d2e7e74e9177960825c5f498406cdd60ae40ae8b6f6197d8576486f; fixture 7ba03d4a5f7233a009a02bca2cb61a8c0197535fbf05ee15720041b240ec0f5f; tests a4320a3ad249cde550964acf7dedb05fb6acc2bfcaacc6fdc578ff5b73741785; identical before and after final dispatch. Subsequent writes only append evidence and record results.'
+  cumulative_used_budget: 'correction batches 4; directed rounds 7; full suite runs 2; baseline comparisons 1; branches 1; candidate paths 10; this authorization static batch 1, export pending final invocation (limit 1)'
+  whole_repository_status: 'NOT_PASSED; no new full suite or baseline run. Historical failures and environment conditions retained, not repaired or rechecked through host operations.'
+  state: r1_r4_fixture_correction_delivered_for_independent_source_review
+  staging_disposition: 'Automatic approval review rejected the proposed exact eight-file git add as conflicting with the earlier prohibition on index writes. Command was not executed; original index retained. Export final worktree bytes and final worktree patch, alongside separately labelled original staged patch. Index synchronization remains unauthorized/pending explicit clarification; no bypass or alternate index write.'
+
+index_sync_authorization:
+  source: Explicit latest user authorization for this same task and branch; prior index prohibition lifted for exact eight paths only.
+  entry: Reviewed ZIP and final worktree match ten files; original staged patch separately matches retained old index; no unexplained drift.
+  protected: Contract, oracle, schema, fixture, contract tests, REPO_MANIFEST.md and tests/test_repo_manifest.py remain reviewed bytes.
+  record_updates: Only original task manifest, change plan and evidence; historical receipts unchanged.
+  additional_budget: Environment inspection 1; minimal record update/pair validation batch 1; exact eight-file git add/readback 1; total 20 minutes; tests, algorithm changes, baseline, installation, ZIP export, publication and host probe 0.
+  cumulative_preserved: Correction 4; directed 7; full suites 2; baseline comparison 1; branch 1; paths 10.
+  independent_review: External user-reported R1-R4 and related review 37/37 passed; author 160-case pytest remains separate; neither rerun.
+  environment: Python 3.14.3, pytest 9.1.1, jsonschema 4.26.0, PyYAML 6.0.3 meet runtime/test declarations; setuptools and wheel missing as build requirements. No node/nodejs found in bounded PATH/config directories. umask 0002 normally makes default fixture mkdir mode 0775, triggering existing group-write rejection.
+  proposed_next_environment: Subject to separate authorization, child-only umask 0022 and PATH including a verified installed Node directory; no Node found in current checked scope. No adjustments executed.
+  stop: After one approved git add and readback, return actual receipt and stop; approval rejection stops without bypass. Full suite NOT_PASSED; real backend unexecuted and unauthorized.
+
+node_full_validation_authorization:
+  source: Explicit latest same-task user authorization; only Node archive dependency exception, task external files and three record updates.
+  task_root: /tmp/tool-system-ts-b02a-full-validation-wk6tvh3a
+  limits: Preparation 1; three-test confirmation 1 at 120s; full suite at most 1 at 1200s after confirmation PASS; final governance/identity batch 1; three-record git add 1; total 40 minutes from 2026-09-09 09:56:19 UTC. No algorithm changes, baseline rerun, publication or host operation.
+  cumulative_entry: Correction 4; directed 7; full suites 2; baseline 1; branches 1; paths 10.
+  artifact: https://nodejs.org/dist/v24.20.0/node-v24.20.0-linux-arm64.tar.xz
+  archive_sha256: 5f4ddab610c1ab2016b3c227cebdbf6d9495161487e4739c7b90090595f465f7
+  preparation: One direct HTTPS GET, verified certificates, no proxy environment or redirects, 600s deadline, 64MiB cap; verify hash before tar read; extract exact regular bin/node and LICENSE only, total at most 256MiB; no installation scripts; record binary hash then verify version/platform/arch in clean environment; no PGP claim.
+  environment: Only test children use umask 0022 and verified Node directory in PATH; explicit Python, existing PYTHONPATH, bytecode disabled, task HOME/TMPDIR, LANG/LC_ALL only; no injection variables or provider credentials. Parent PATH/umask unchanged.
+  evidence: Preserve exact pair bytes and source hashes before each dispatch, independent stdout/stderr/exit/JUnit per test run and fresh task basetemp paths. Retain logs and Node, no ZIP.
+  execution: Existing protected task-pair dispatcher; GNU timeout TERM and kill-after 5s within 120/1200s limits; stop on any failure without retry or source repair.
+  actual_results: Node preparation PASS, one download; three-test confirmation 3 passed in 0.73s, exit 0; final full suite 1072 passed in 79.62s, exit 0; both no timeout and JUnit zero skipped/errors/failures; final four validators, whitespace and identity checks PASS.
+  current_whole_repository_status: PASS_IN_TASK_SCOPED_TEST_ENVIRONMENT
+  actual_cumulative: Correction 4; directed total 8 (prior contract directed 7 plus one current-candidate three-test environment confirmation); full suites 3; baseline 1; branch 1; paths 10. No baseline rerun.
+  final_boundary: Seven reviewed files unchanged; only three records updated after tests. Final stage command pending one protected execution and readback, with actual receipt stored externally to avoid another git add. Real backend remains unexecuted and unauthorized; no ZIP or publication.
+
+# Current publication command is a task-local mechanical wrapper under the existing
+# protected task-pair dispatcher, not a new authority or runtime framework.
+# Wrapper SHA256: 940643ee88fbaf32c832f3d6fcb85a6be299c80fc9f9fe73d27c97bee6ede66c
+# External receipt/body root: /tmp/tool-system-ts-b02a-draft-publication-j80aea3j; retain for review, do not upload its raw contents or automatically clean it.
+# Entry staged patch: 8552bc02191e4ce7eebd8b99f3d20c0d13b2749c1bf0f55af3768c30ae7eb45c.
+# Seven protected files and ten-path closure bind to existing full-validation protected.json.
+# Source-region review: existing scope/approval/verification fields and stop section only; historical budget/result sections stay verbatim.

@@ -1,0 +1,1567 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/apolo183/tool-system/harness/cubesandbox_backend_acceptance_v1.schema.json",
+  "title": "CubeSandbox ARM64 backend acceptance evidence contract v1",
+  "$comment": "Design and synthetic-oracle contract only. Structural validity is not host acceptance or execution authority. Local definitions only; no remote reference resolution.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/catalog"
+    },
+    {
+      "$ref": "#/$defs/evidence"
+    },
+    {
+      "$ref": "#/$defs/result"
+    }
+  ],
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "source_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "architecture": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "artifact_type": {
+          "const": "file"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "name",
+        "source_commit",
+        "architecture",
+        "artifact_type",
+        "path"
+      ]
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "component_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "release_tag": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "source_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "architecture": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "registry": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "oci_digest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "requested_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "embedded_artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "binding_evidence": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "artifact_type": {
+          "enum": [
+            "oci_image",
+            "file"
+          ]
+        },
+        "file_identity": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/file_identity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "component_name",
+        "release_tag",
+        "source_commit",
+        "architecture",
+        "registry",
+        "requested_ref",
+        "embedded_artifacts",
+        "binding_evidence",
+        "artifact_type",
+        "file_identity"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "artifact_type": {
+                "const": "oci_image"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "registry": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "file_identity": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "registry": {
+                "type": "null"
+              },
+              "oci_digest": {
+                "type": "null"
+              },
+              "file_identity": {
+                "$ref": "#/$defs/file_identity"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "catalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "catalog_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "evidence_class": {
+          "enum": [
+            "synthetic",
+            "candidate_unexecuted"
+          ]
+        },
+        "closure_complete": {
+          "type": "boolean"
+        },
+        "required_components": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 7,
+          "maxItems": 1024
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "minItems": 7,
+          "maxItems": 1024
+        },
+        "published_attestations": {
+          "const": false
+        },
+        "required_artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/required_artifact"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "network_policy": {
+          "$ref": "#/$defs/network_policy"
+        },
+        "approved_clean_templates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/clean_template"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        }
+      },
+      "required": [
+        "catalog_id",
+        "evidence_class",
+        "closure_complete",
+        "required_components",
+        "components",
+        "published_attestations",
+        "required_artifacts",
+        "network_policy",
+        "approved_clean_templates"
+      ]
+    },
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "role": {
+          "enum": [
+            "payload",
+            "vmm",
+            "controller",
+            "helper",
+            "async_close"
+          ]
+        },
+        "host_boot_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "start_ticks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pid_namespace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "scope": {
+          "enum": [
+            "host",
+            "guest"
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "role",
+        "host_boot_id",
+        "pid",
+        "start_ticks",
+        "pid_namespace",
+        "scope"
+      ]
+    },
+    "fd": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "holder_role": {
+          "enum": [
+            "pid1",
+            "controller",
+            "helper",
+            "async_close"
+          ]
+        },
+        "holder_identity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "fd": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kernel_object": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "owner",
+        "holder_role",
+        "holder_identity",
+        "fd",
+        "kernel_object"
+      ]
+    },
+    "cgroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "identity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "populated": {
+          "type": "boolean"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        }
+      },
+      "required": [
+        "identity",
+        "populated",
+        "members"
+      ]
+    },
+    "complete": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "processes": {
+          "type": "boolean"
+        },
+        "fds": {
+          "type": "boolean"
+        },
+        "cgroups": {
+          "type": "boolean"
+        },
+        "units": {
+          "type": "boolean"
+        },
+        "helpers": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "processes",
+        "fds",
+        "cgroups",
+        "units",
+        "helpers"
+      ]
+    },
+    "reap_sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "elapsed_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "complete": {
+          "$ref": "#/$defs/complete"
+        },
+        "processes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/process"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "fds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fd"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "cgroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/cgroup"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "raw_evidence_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "elapsed_ms",
+        "complete",
+        "processes",
+        "fds",
+        "cgroups",
+        "units",
+        "raw_evidence_sha256"
+      ]
+    },
+    "termination_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scenario": {
+          "enum": [
+            "normal_exit",
+            "payload_sigkill",
+            "controller_death",
+            "vmm_death",
+            "timeout",
+            "service_forced_termination"
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "active": {
+          "$ref": "#/$defs/reap_sample"
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reap_sample"
+          },
+          "minItems": 1,
+          "maxItems": 242
+        },
+        "execution_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "scenario",
+        "owner",
+        "active",
+        "observations",
+        "execution_id"
+      ]
+    },
+    "sentinel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "content_hex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})+$",
+          "maxLength": 8192
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "path",
+        "content_hex",
+        "sha256"
+      ]
+    },
+    "checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "logical_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "state_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "logical_id",
+        "state_sha256"
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sandbox_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "instance_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "sandbox_id",
+        "instance_id",
+        "generation"
+      ]
+    },
+    "restore": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/identity"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "snapshot_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "component_manifest_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sentinel": {
+          "$ref": "#/$defs/sentinel"
+        },
+        "post_snapshot_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "checkpoint_processes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/checkpoint"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "host_processes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 3,
+          "maxItems": 1024
+        },
+        "network_owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "network_resource_keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 1,
+          "maxItems": 1024
+        },
+        "restore_mode": {
+          "enum": [
+            "same_execution",
+            "clean_template_new_execution",
+            "cross_execution_state"
+          ]
+        },
+        "execution_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "request_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "component_inventory_complete": {
+          "type": "boolean"
+        },
+        "catalog_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "state_domains": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "base",
+              "input",
+              "scratch",
+              "output",
+              "process",
+              "credentials",
+              "network_leases"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 1024,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "identity",
+        "owner",
+        "snapshot_id",
+        "component_manifest_sha256",
+        "sentinel",
+        "post_snapshot_paths",
+        "checkpoint_processes",
+        "host_processes",
+        "network_owner",
+        "network_resource_keys",
+        "restore_mode",
+        "execution_id",
+        "request_sha256",
+        "components",
+        "component_inventory_complete",
+        "catalog_id",
+        "state_domains"
+      ]
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_identity": {
+          "$ref": "#/$defs/identity"
+        },
+        "snapshot_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "component_manifest_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sentinel_before": {
+          "$ref": "#/$defs/sentinel"
+        },
+        "post_snapshot_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "checkpoint_processes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/checkpoint"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "host_processes_before": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "other_sandbox_network_keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 1,
+          "maxItems": 1024
+        },
+        "steps": {
+          "const": [
+            "restore",
+            "destroy",
+            "recreate",
+            "restore"
+          ]
+        },
+        "restores": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/restore"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "observation_complete": {
+          "type": "boolean"
+        },
+        "source_kind": {
+          "enum": [
+            "execution_state",
+            "clean_template"
+          ]
+        },
+        "source_execution_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "source_request_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "state_domains": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "base",
+              "input",
+              "scratch",
+              "output",
+              "process",
+              "credentials",
+              "network_leases"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 1024,
+          "uniqueItems": true
+        },
+        "template_content_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "template_approval_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "source_identity",
+        "snapshot_id",
+        "component_manifest_sha256",
+        "sentinel_before",
+        "post_snapshot_path",
+        "checkpoint_processes",
+        "host_processes_before",
+        "other_sandbox_network_keys",
+        "steps",
+        "restores",
+        "observation_complete",
+        "source_kind",
+        "source_execution_id",
+        "source_request_sha256",
+        "state_domains",
+        "template_content_sha256",
+        "template_approval_sha256"
+      ]
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "tap",
+            "netns",
+            "route",
+            "ip_rule",
+            "iptables",
+            "nftables",
+            "ebpf",
+            "veth",
+            "bridge_attachment",
+            "policy",
+            "socket_listener"
+          ]
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "lifetime_owner": {
+          "enum": [
+            "sandbox",
+            "shared",
+            "background",
+            "unknown"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "fingerprint_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sandbox_references": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "guest_attachment": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "key",
+        "lifetime_owner",
+        "owner",
+        "fingerprint_sha256",
+        "sandbox_references",
+        "guest_attachment"
+      ]
+    },
+    "net_sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "elapsed_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "complete_kinds": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "tap",
+              "netns",
+              "route",
+              "ip_rule",
+              "iptables",
+              "nftables",
+              "ebpf",
+              "veth",
+              "bridge_attachment",
+              "policy",
+              "socket_listener"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 11
+        },
+        "scan_errors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resource"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "raw_evidence_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "elapsed_ms",
+        "complete_kinds",
+        "scan_errors",
+        "resources",
+        "raw_evidence_sha256"
+      ]
+    },
+    "network_round": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scenario": {
+          "enum": [
+            "normal_exit",
+            "payload_sigkill",
+            "controller_death",
+            "vmm_death",
+            "timeout",
+            "service_forced_termination"
+          ]
+        },
+        "cycle_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "steps": {
+          "const": [
+            "pre",
+            "create",
+            "active",
+            "destroy_or_abnormal_termination",
+            "post"
+          ]
+        },
+        "pre": {
+          "$ref": "#/$defs/net_sample"
+        },
+        "active": {
+          "$ref": "#/$defs/net_sample"
+        },
+        "post": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/net_sample"
+          },
+          "minItems": 1,
+          "maxItems": 242
+        },
+        "runtime_network": {
+          "$ref": "#/$defs/runtime_network"
+        }
+      },
+      "required": [
+        "scenario",
+        "cycle_index",
+        "owner",
+        "steps",
+        "pre",
+        "active",
+        "post",
+        "runtime_network"
+      ]
+    },
+    "gate_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "gate": {
+          "enum": [
+            "COMPONENT_VERSION_BINDING",
+            "ABNORMAL_TERMINATION_COMPLETE_REAP",
+            "SNAPSHOT_RESTORE_INTEGRITY",
+            "NETWORK_RESOURCE_NON_LEAKAGE"
+          ]
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "BLOCKED"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "component_name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "status": {
+                "enum": [
+                  "PASS",
+                  "FAIL",
+                  "BLOCKED"
+                ]
+              },
+              "reasons": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "minItems": 0,
+                "maxItems": 1024
+              }
+            },
+            "required": [
+              "component_name",
+              "status",
+              "reasons"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        }
+      },
+      "required": [
+        "gate",
+        "status",
+        "reasons"
+      ]
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "cubesandbox_backend_acceptance_v1"
+        },
+        "evidence_class": {
+          "const": "synthetic"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "BLOCKED"
+          ]
+        },
+        "gates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gate_result"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "real_backend_acceptance_authorized": {
+          "const": false
+        },
+        "real_backend_acceptance_executed": {
+          "const": false
+        }
+      },
+      "required": [
+        "schema_version",
+        "evidence_class",
+        "status",
+        "gates",
+        "real_backend_acceptance_authorized",
+        "real_backend_acceptance_executed"
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "cubesandbox_backend_acceptance_v1"
+        },
+        "evidence_class": {
+          "enum": [
+            "synthetic",
+            "host_os"
+          ]
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "catalog_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "component_inventory_complete": {
+          "type": "boolean"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "termination_policy": {
+          "const": {
+            "termination_deadline_ms": 60000,
+            "poll_interval_ms": 250,
+            "required_process_absence": [
+              "payload",
+              "vmm",
+              "controller",
+              "helper",
+              "async_close"
+            ],
+            "required_fd_absence": [
+              "pid1_retained_stdio",
+              "controller_stdio",
+              "helper_stdio",
+              "async_close_stdio"
+            ],
+            "required_cgroup_empty": true,
+            "required_unit_absence": true,
+            "required_helper_absence": [
+              "helper",
+              "async_close"
+            ],
+            "consecutive_empty_samples": 2
+          }
+        },
+        "termination_cases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/termination_case"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "snapshot": {
+          "$ref": "#/$defs/snapshot"
+        },
+        "network_rounds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/network_round"
+          },
+          "minItems": 8,
+          "maxItems": 64
+        },
+        "real_backend_acceptance_authorized": {
+          "const": false
+        },
+        "restore_process_observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/restore_process_observation"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        }
+      },
+      "required": [
+        "schema_version",
+        "evidence_class",
+        "run_id",
+        "catalog_id",
+        "component_inventory_complete",
+        "components",
+        "termination_policy",
+        "termination_cases",
+        "snapshot",
+        "network_rounds",
+        "real_backend_acceptance_authorized",
+        "restore_process_observations"
+      ]
+    },
+    "file_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "required_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "component_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "artifact_type": {
+          "const": "file"
+        }
+      },
+      "required": [
+        "component_name",
+        "name",
+        "artifact_type"
+      ]
+    },
+    "network_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "const": "deny_all"
+        },
+        "architecture": {
+          "const": "linux/arm64"
+        },
+        "configuration_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "filter_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "socket_abi_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "required_socket_operations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 1,
+          "maxItems": 1024
+        }
+      },
+      "required": [
+        "mode",
+        "architecture",
+        "configuration_sha256",
+        "filter_sha256",
+        "socket_abi_sha256",
+        "required_socket_operations"
+      ]
+    },
+    "clean_template": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "snapshot_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "content_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "approval_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "snapshot_id",
+        "content_sha256",
+        "approval_sha256"
+      ]
+    },
+    "socket_probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "denied": {
+          "type": "boolean"
+        },
+        "errno": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "operation",
+        "denied",
+        "errno"
+      ]
+    },
+    "network_runtime_sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "enum": [
+            "before_first_instruction",
+            "running",
+            "after_restore_before_resume"
+          ]
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "enforcement_active": {
+          "type": "boolean"
+        },
+        "exposed_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        },
+        "socket_probes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/socket_probe"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        }
+      },
+      "required": [
+        "phase",
+        "sequence",
+        "complete",
+        "enforcement_active",
+        "exposed_paths",
+        "socket_probes"
+      ]
+    },
+    "runtime_network": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "execution_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "request_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "mode": {
+          "enum": [
+            "deny_all",
+            "allow_network"
+          ]
+        },
+        "architecture": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "configuration_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "filter_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "socket_abi_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "installed_before_workload": {
+          "type": "boolean"
+        },
+        "coverage_through_workload_end": {
+          "type": "boolean"
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/network_runtime_sample"
+          },
+          "minItems": 2,
+          "maxItems": 1024
+        }
+      },
+      "required": [
+        "execution_id",
+        "request_sha256",
+        "owner",
+        "mode",
+        "architecture",
+        "configuration_sha256",
+        "filter_sha256",
+        "socket_abi_sha256",
+        "installed_before_workload",
+        "coverage_through_workload_end",
+        "observations"
+      ]
+    },
+    "restore_process_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "execution_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "snapshot_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "processes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/process"
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        }
+      },
+      "required": [
+        "owner",
+        "execution_id",
+        "snapshot_id",
+        "complete",
+        "processes"
+      ]
+    }
+  }
+}
