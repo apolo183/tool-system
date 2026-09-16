@@ -1,0 +1,99 @@
+task_id: ts-b02-working-loop-delivery-plan-v1
+task_type: docs_add
+target_repo: apolo183/tool-system
+target_branch: agent/ts-b02-working-loop-delivery-plan-v1
+phase: TS-B02-delivery-arrangement-correction
+approved_blueprint_refs:
+- repo: apolo183/tool-system
+  path: blueprint/tool_system_v0.yaml
+  section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_ts_b02a_dgx_spark_linux_arm64_primary_target_and_ephemeral_kvm_isolation_path_realignment_specification_v1.md
+    section_or_key: 5-11
+    scope: Preserve ARM64/KVM, isolation and authority; change only the delivery organization
+      under the current user agreement.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Make real isolated code change, validation, bounded repair and cleanup
+      the delivery endpoint, without claiming readiness or granting runtime effects.
+scope:
+  summary: Record one end-to-end delivery arrangement and its exact planning-only
+    task pair.
+  in_scope:
+  - Three planning records
+  - Preserve sealed evidence and all runtime blockers
+  - One Draft PR and unchanged Hosted validation
+  out_of_scope:
+  - Implementation or project-state changes
+  - Host, systemd, kernel, policy or real worker effects
+  - Merge, Ready transition, cleanup or follow-on task
+evidence:
+- repo: apolo183/tool-system
+  path: docs/tool_system_project_state_v1.yaml
+  commit_sha: 75d005cee55a0e33bea17808faaba3085f740d8c
+  why_relevant: Current public-entry blockers and historical real-worker timeout.
+- repo: apolo183/tool-system
+  path: AGENTS.md
+  commit_sha: 75d005cee55a0e33bea17808faaba3085f740d8c
+  why_relevant: Existing milestone autonomy and explicit write boundary.
+- repo: apolo183/tool-system
+  path: docs/tool_system_global_development_principles_v1.md
+  commit_sha: 75d005cee55a0e33bea17808faaba3085f740d8c
+  why_relevant: Frozen acceptance and in-task repair/no-progress requirements.
+- repo: apolo183/tool-system
+  path: config/process_authority_v1.yaml
+  commit_sha: 75d005cee55a0e33bea17808faaba3085f740d8c
+  why_relevant: Actual explicit task-pair and no-runtime authority boundary.
+allowed_files:
+- docs/reports/ts_b02_first_working_loop_delivery_v1.md
+- docs/reports/ts_b02_delivery_realign_task_manifest_v1.yaml
+- docs/reports/ts_b02_delivery_realign_change_plan_v1.json
+forbidden_files:
+- src/**
+- tests/**
+- config/**
+- policy/**
+- blueprint/**
+- harness/**
+- AGENTS.md
+- REPO_MANIFEST.md
+- .github/**
+- docs/tool_system_project_state_v1.yaml
+- docs/tool_system_global_development_principles_v1.md
+write_mode: pull_request
+verification:
+  commands:
+  - python -m pytest -q
+  - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+  - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+  - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml
+    --require-current-authority
+  - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+  - Exactly the three declared planning files are added; existing files and historical
+    evidence are unchanged.
+  - The delivery endpoint requires a real isolated code-change, independent validation,
+    bounded termination and complete cleanup; reports alone cannot satisfy it.
+  - Direct dependency reads, implementation, ordinary repair and validation are grouped
+    within a subsequently approved component boundary.
+  - The selected PID1/kernel/MAC engineering proposal and deployment/runtime permissions
+    are explicit pending decisions, not implied grants.
+  - Existing contracts, no-core six stages, absolute deadlines, cleanup limits, trust
+    boundary and all retained stopped terminals are preserved.
+  - Manifest fields match the read schema by static review, explicit pair structure
+    and scope checks pass; unchanged Hosted verify succeeds for the actual PR head.
+  - Publish one Draft PR and stop; no merge, Ready transition, deployment, live worker
+    or follow-on execution.
+rollback:
+  method: manual_review
+  reference: Leave or close the unmerged Draft PR only under the applicable user decision;
+    no history or branch deletion.
+approval:
+  required: true
+  approved_by: user
+  approval_source: 'Current conversation: user 同意 to delivery-arrangement correction;
+    this planning-only three-file task and Draft publication do not grant source,
+    host, runtime, merge or deployment authority.'
+  approved_at: 2026-09-16; exact user-message time unavailable

@@ -1,0 +1,109 @@
+{
+  "plan_id": "ts-b02-working-loop-delivery-plan-v1",
+  "target_repo": "apolo183/tool-system",
+  "task_manifest": "docs/reports/ts_b02_delivery_realign_task_manifest_v1.yaml",
+  "changed_files": [
+    "docs/reports/ts_b02_first_working_loop_delivery_v1.md",
+    "docs/reports/ts_b02_delivery_realign_task_manifest_v1.yaml",
+    "docs/reports/ts_b02_delivery_realign_change_plan_v1.json"
+  ],
+  "changes": [
+    {
+      "path": "docs/reports/ts_b02_first_working_loop_delivery_v1.md",
+      "operation": "ADD"
+    },
+    {
+      "path": "docs/reports/ts_b02_delivery_realign_task_manifest_v1.yaml",
+      "operation": "ADD"
+    },
+    {
+      "path": "docs/reports/ts_b02_delivery_realign_change_plan_v1.json",
+      "operation": "ADD"
+    }
+  ],
+  "baseline_commit": "75d005cee55a0e33bea17808faaba3085f740d8c",
+  "baseline_tree": "3f3263c305b1a5d50cb7760d9bb26d37c65d095e",
+  "closure": {
+    "task_id": "ts-b02-working-loop-delivery-plan-v1",
+    "baseline_commit": "75d005cee55a0e33bea17808faaba3085f740d8c",
+    "baseline_tree": "3f3263c305b1a5d50cb7760d9bb26d37c65d095e",
+    "allowed_paths": [
+      "docs/reports/ts_b02_first_working_loop_delivery_v1.md",
+      "docs/reports/ts_b02_delivery_realign_task_manifest_v1.yaml",
+      "docs/reports/ts_b02_delivery_realign_change_plan_v1.json"
+    ],
+    "acceptance_set": [
+      "Exactly the three declared planning files are added; existing files and historical evidence are unchanged.",
+      "The delivery endpoint requires a real isolated code-change, independent validation, bounded termination and complete cleanup; reports alone cannot satisfy it.",
+      "Direct dependency reads, implementation, ordinary repair and validation are grouped within a subsequently approved component boundary.",
+      "The selected PID1/kernel/MAC engineering proposal and deployment/runtime permissions are explicit pending decisions, not implied grants.",
+      "Existing contracts, no-core six stages, absolute deadlines, cleanup limits, trust boundary and all retained stopped terminals are preserved.",
+      "Manifest fields match the read schema by static review, explicit pair structure and scope checks pass; unchanged Hosted verify succeeds for the actual PR head.",
+      "Publish one Draft PR and stop; no merge, Ready transition, deployment, live worker or follow-on execution."
+    ],
+    "validation_set": [
+      "manifest_schema_static_review",
+      "explicit_pair_structure_and_scope",
+      "exact_three_additions",
+      "whitespace",
+      "hosted_verify"
+    ],
+    "budgets": {
+      "changed_paths": 3,
+      "publication_time_seconds": 3600,
+      "repair_cycles": 1,
+      "hosted_runs": 2,
+      "independent_review_cycles": 0,
+      "branches": 1,
+      "draft_prs": 1,
+      "runtime_changes": 0,
+      "host_operations": 0,
+      "new_dependencies": 0,
+      "paid_calls": 0
+    },
+    "terminal_predicate": "One exact three-file Draft PR with matching published bytes and successful unchanged Hosted verify; then stop."
+  },
+  "task_digest": "f8619a84d491389eb29ea2f4215760b68bbee5bfd9d17aabdf75a81c575732a5",
+  "verification": {
+    "commands": [
+      "python -m pytest -q",
+      "python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml",
+      "python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml",
+      "python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority",
+      "python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md"
+    ],
+    "pass_conditions": [
+      "Exactly the three declared planning files are added; existing files and historical evidence are unchanged.",
+      "The delivery endpoint requires a real isolated code-change, independent validation, bounded termination and complete cleanup; reports alone cannot satisfy it.",
+      "Direct dependency reads, implementation, ordinary repair and validation are grouped within a subsequently approved component boundary.",
+      "The selected PID1/kernel/MAC engineering proposal and deployment/runtime permissions are explicit pending decisions, not implied grants.",
+      "Existing contracts, no-core six stages, absolute deadlines, cleanup limits, trust boundary and all retained stopped terminals are preserved.",
+      "Manifest fields match the read schema by static review, explicit pair structure and scope checks pass; unchanged Hosted verify succeeds for the actual PR head.",
+      "Publish one Draft PR and stop; no merge, Ready transition, deployment, live worker or follow-on execution."
+    ]
+  },
+  "rollback": {
+    "method": "manual_review",
+    "reference": "Leave or close the unmerged Draft PR only under the applicable user decision; no history or branch deletion."
+  },
+  "authority_effect": "none outside this explicitly supplied planning task",
+  "publication": {
+    "branch": "agent/ts-b02-working-loop-delivery-plan-v1",
+    "draft_pr": true,
+    "merge": false,
+    "ready_transition": false,
+    "delete_branch": false
+  },
+  "runtime_authority": {
+    "source_implementation": false,
+    "host_probe": false,
+    "deployment": false,
+    "live_worker": false,
+    "downstream_mutation": false,
+    "follow_on": false
+  },
+  "evidence_limits": [
+    "Published report references are inherited evidence, not source revalidation.",
+    "Initial read-only proposal preparation is not included in the publication timer; no total-turn elapsed claim."
+  ]
+}
