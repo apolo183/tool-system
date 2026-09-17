@@ -1347,6 +1347,7 @@ def test_subscription_public_entry_executes_one_fake_worker_local_commit(
     assert replay["status"] == "PASS", replay
     assert replay["terminal_code"] == "RESUMED_COMPLETED_LOCAL_COMMIT"
     assert replay["commit"] == result["commit"]
+    assert replay["validation_command_invocations"] == 0
     assert len(calls) == 1
     assert _fixture_git(
         workspace,
@@ -1441,6 +1442,9 @@ def test_subscription_timeout_is_consumed_before_fake_process_and_preserved(
             FROM worker_calls
             """
         ).fetchone()
+        terminal_states = connection.execute(
+            "SELECT tasks.status, runs.status FROM tasks JOIN runs USING (run_id)"
+        ).fetchall()
     finally:
         connection.close()
     assert observed_rows == [(1, "STARTED")]
@@ -1454,6 +1458,8 @@ def test_subscription_timeout_is_consumed_before_fake_process_and_preserved(
     assert result["terminal_code"] == "SUBSCRIPTION_WORKER_TIMEOUT"
     assert result["worker_invocations"] == 1
     assert result["durable_lease_seconds"] >= 17 + (2 * 3)
+    assert result["validation_command_invocations"] == 0
+    assert terminal_states == [("FAILED", "FAILED")]
     assert result["local_git_operations"] == 0
     assert result["branch"] is None
     assert result["commit"] is None
@@ -2067,6 +2073,7 @@ def test_subscription_public_entry_multi_stack_scope_denial(
         context, _multi_stack_adapter(context, "scope_denial", calls)
     )
     assert result["status"] == "BLOCK"
+    assert result["validation_command_invocations"] == 0
     assert len(calls) == 1
     assert _fixture_git(
         context["workspace"], "rev-list", "--count",
@@ -2094,6 +2101,7 @@ def test_subscription_public_entry_multi_stack_cancellation(
         cancelled,
     )
     assert result["status"] == "BLOCK"
+    assert result["validation_command_invocations"] == 0
     assert len(calls) == 1
     assert (context["workspace"] / context["spec"]["source"]).read_text(
         encoding="utf-8"
@@ -2118,6 +2126,8 @@ def test_subscription_public_entry_multi_stack_completed_replay(
     assert second["status"] == "PASS", second
     assert second["terminal_code"] == "RESUMED_COMPLETED_LOCAL_COMMIT"
     assert second["commit"] == first["commit"]
+    assert first["validation_command_invocations"] == 1
+    assert second["validation_command_invocations"] == 0
     assert len(calls) == 1
     assert _fixture_git(
         context["workspace"], "rev-list", "--count",
