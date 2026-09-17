@@ -1,0 +1,89 @@
+task_id: ts-h02-recovery-binding-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/ts-h02-recovery-binding-v1
+phase: BOUNDED_RECOVERY_SOURCE_REPAIR
+approved_blueprint_refs:
+- repo: apolo183/tool-system
+  path: blueprint/tool_system_v0.yaml
+  section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/independent_audit_acceptance_reopen_v1.md
+    section_or_key: TS-H02
+    scope: Correct manifest substitution in the natural recovery planner; keep reopened
+      P16 acceptance and real execution closed.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Bounded trustworthy recovery evidence and controlled implementation/test/publication
+      within one module.
+scope:
+  summary: Bind a backup verification to the exact complete ordered restore manifest,
+    with fail-closed legacy results and regression coverage.
+  in_scope: &id001
+  - src/tool_system/recovery_planning/planner.py
+  - tests/test_recovery_planning.py
+  - docs/modules/recovery-planning-contract-v1.md
+  - config/module_registry_v1.yaml
+  - docs/tool_system_project_state_v1.yaml
+  - docs/reports/ts_h02_recovery_binding_v1.md
+  - docs/reports/ts_h02_recovery_binding_v1_task.yaml
+  - docs/reports/ts_h02_recovery_binding_v1_plan.yaml
+  out_of_scope:
+  - Live backup/restore/migration/DGX/provider/backend/production
+  - TS-B02 or sealed kernel/systemd/lifecycle investigations
+  - Other source defects or PRs
+  - Blueprint/policy changes, new lifecycle values or milestone acceptance
+  - Branch deletion, force push and automatic rollback
+evidence:
+- repo: apolo183/tool-system
+  path: docs/reports/independent_audit_acceptance_reopen_v1.md
+  why_relevant: TS-H02 confirms verification-to-manifest substitution. Current source
+    read reproduces the missing identity at verify_backup and plan_restore.
+- repo: apolo183/tool-system
+  path: docs/modules/recovery-planning-contract-v1.md
+  why_relevant: Exact-set integrity, ambiguous-identity rejection and non-executing
+    output are already required.
+allowed_files: *id001
+forbidden_files:
+- finance/**
+- trading/**
+write_mode: pull_request
+verification:
+  commands:
+  - python -m pytest -q tests/test_recovery_planning.py tests/test_state_migration.py
+    tests/test_production_readiness.py tests/test_phase_alignment.py
+  - python -m pytest -q
+  - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+  - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+  - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml
+    --require-current-authority
+  - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  - git diff --check
+  pass_conditions:
+  - A PASS verification for any different manifest field or restore-entry order yields
+    BLOCKED with empty restore_order and execution_authorized=false.
+  - Verification carries deterministic SHA256 of the complete ordered manifest; observed-entry
+    iteration order does not affect this identity; equal reconstructed manifests remain
+    usable.
+  - Legacy/unbound results and PASS results carrying failure reasons fail closed;
+    backup mismatches and migration gates remain effective.
+  - The public two-argument BackupVerification constructor remains constructible with
+    missing binding defaulting to None; this does not authorize planning or execution.
+    No authentication or actual backup-byte verification is claimed.
+  - Existing non-live drill, state-migration and production-readiness contracts and
+    runtime false flags remain intact; only eight frozen paths change.
+  - Focused regression, full suite, four current governance checks, whitespace and
+    exact diff scope pass before publication. One branch and one PR maximum; no force
+    push, cleanup, real backend or production action.
+rollback:
+  method: git_revert
+  reference: Base cf696a62c14fbc70cd6204653179d3dbb9b8897e; a revert requires its
+    own authorization; retain patch and previous receipts.
+approval:
+  required: true
+  approved_by: apolo183
+  approval_source: 'User standing instruction: 你是自动开发窗口，这种流程性的决定不必问我，自行推进，直到遇到必须我介入或者大里程碑再停下来;
+    current message confirms manual PR237 merge.'
+  approved_at: '2026-09-17T06:11:23.339658+00:00'
