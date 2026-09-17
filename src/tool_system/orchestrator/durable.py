@@ -789,16 +789,19 @@ class DurableOrchestratorStore:
                     """,
                     (now, run_id, task_id),
                 )
-                raise RetryExhausted("task attempt budget is exhausted")
-            connection.execute(
-                """
-                UPDATE tasks SET status='RUNNING', attempt=attempt+1,
-                    lease_owner=?, lease_expires_at=?, updated_at=?
-                WHERE run_id=? AND task_id=?
-                """,
-                (lease_owner, now + lease_seconds, now, run_id, task_id),
-            )
-            return self._task_record(self._task_row(connection, run_id, task_id))
+                self._converge_failed_run(connection, run_id, now)
+            else:
+                connection.execute(
+                    """
+                    UPDATE tasks SET status='RUNNING', attempt=attempt+1,
+                        lease_owner=?, lease_expires_at=?, updated_at=?
+                    WHERE run_id=? AND task_id=?
+                    """,
+                    (lease_owner, now + lease_seconds, now, run_id, task_id),
+                )
+                return self._task_record(self._task_row(connection, run_id, task_id))
+        # The exhausted attempt and its run terminal must survive this exception.
+        raise RetryExhausted("task attempt budget is exhausted")
 
     def renew_task_lease(
         self,
@@ -1046,6 +1049,7 @@ class DurableOrchestratorStore:
                 """,
                 (now, run_id, task_id),
             )
+            self._converge_failed_run(connection, run_id, now)
             return self._task_record(self._task_row(connection, run_id, task_id))
 
     def fail_task(
@@ -1084,6 +1088,7 @@ class DurableOrchestratorStore:
                 """,
                 (next_status, checkpoint_json, now, run_id, task_id),
             )
+            self._converge_failed_run(connection, run_id, now)
             return self._task_record(self._task_row(connection, run_id, task_id))
 
     def recover_expired_leases(self) -> list[dict[str, object]]:
@@ -1111,6 +1116,7 @@ class DurableOrchestratorStore:
                     """,
                     (next_status, now, row["run_id"], row["task_id"]),
                 )
+                self._converge_failed_run(connection, row["run_id"], now)
                 recovered.append(
                     self._task_record(
                         self._task_row(connection, row["run_id"], row["task_id"])
@@ -1612,6 +1618,27 @@ class DurableOrchestratorStore:
         receipt_json = record.pop("receipt_json")
         record["receipt"] = json.loads(receipt_json) if receipt_json is not None else None
         return record
+
+    @staticmethod
+    def _converge_failed_run(
+        connection: sqlite3.Connection, run_id: str, now: float
+    ) -> None:
+        """Persist failure only after every registered task has terminated."""
+
+        connection.execute(
+            """
+            UPDATE runs SET status='FAILED', updated_at=?
+            WHERE run_id=? AND status='ACTIVE'
+                AND EXISTS (
+                    SELECT 1 FROM tasks WHERE run_id=? AND status='FAILED'
+                )
+                AND NOT EXISTS (
+                    SELECT 1 FROM tasks WHERE run_id=?
+                        AND status NOT IN ('COMPLETED', 'FAILED')
+                )
+            """,
+            (now, run_id, run_id, run_id),
+        )
 
     @staticmethod
     def _task_row(

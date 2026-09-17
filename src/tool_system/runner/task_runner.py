@@ -1421,6 +1421,7 @@ def _build_public_entry_validator(
     timeout_seconds: int,
     max_output_bytes: int,
     cancellation_requested: Callable[[], bool] | None,
+    command_dispatch_counts: list[int],
 ) -> Callable[[Mapping[str, str]], Mapping[str, object]]:
     def validator(candidate_files: Mapping[str, str]) -> Mapping[str, object]:
         with tempfile.TemporaryDirectory(
@@ -1474,6 +1475,9 @@ def _build_public_entry_validator(
                     "TEMP",
                     "TMP",
                 ),
+            )
+            command_dispatch_counts.append(
+                int(command_result["subprocess_call_count"])
             )
             observed_results = {
                 str(record.get("name")): record
@@ -1975,6 +1979,8 @@ def run_subscription_public_entry_execution(
             "workspace_result": workspace_result,
         }
 
+    # Dispatches belong to this call, not the durable worker's retry history.
+    command_dispatch_counts: list[int] = []
     try:
         state_parent = state_path.parent.resolve(strict=True)
         store = create_durable_local_git_store(
@@ -2029,6 +2035,7 @@ def run_subscription_public_entry_execution(
                 timeout_seconds=int(binding["validation_timeout_seconds"]),
                 max_output_bytes=int(binding["max_validation_output_bytes"]),
                 cancellation_requested=cancellation_requested,
+                command_dispatch_counts=command_dispatch_counts,
             )
             identity = LocalGitIdentity(
                 expected_head_sha=expected_head,
@@ -2072,6 +2079,7 @@ def run_subscription_public_entry_execution(
             "local_workspace_created": bool(
                 workspace_result.get("workspace_created")
             ),
+            "validation_command_invocations": sum(command_dispatch_counts),
         }
 
     status = str(local_result.get("status", "BLOCK"))
@@ -2090,9 +2098,7 @@ def run_subscription_public_entry_execution(
         "blueprint_compiled": True,
         "worker_execution_authorized": True,
         "worker_invocations": worker_calls,
-        "validation_command_invocations": (
-            len(validation_set) * worker_calls
-        ),
+        "validation_command_invocations": sum(command_dispatch_counts),
         "durable_lease_seconds": durable_lease_seconds,
         "local_workspace_created": bool(
             workspace_result.get("workspace_created")

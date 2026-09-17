@@ -74,6 +74,63 @@ def test_commands_from_change_plan_is_pure_parser() -> None:
     assert commands_from_change_plan(plan) == ["python -V"]
 
 
+@pytest.mark.parametrize("error", [FileNotFoundError, PermissionError])
+def test_failed_process_dispatch_retains_attempt_count(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: type[OSError]
+) -> None:
+    manifest, plan = _copy_explicit_pair(tmp_path, ["missing-program", "python -V"])
+    calls = []
+
+    def failed(args: list[str], **_: Any) -> subprocess.CompletedProcess[str]:
+        calls.append(args)
+        raise error("private executable details must not be returned")
+
+    monkeypatch.setattr(command_runner.subprocess, "run", failed)
+    result = run_commands(
+        **_protected_kwargs(task_manifest_path=manifest, change_plan_path=plan)
+    )
+    assert result["status"] == "BLOCK"
+    assert result["subprocess_call_count"] == len(calls) == 1
+    assert result["command_results"] == []
+    assert "private executable" not in str(result)
+
+
+@pytest.mark.parametrize("command", ['python -c "unterminated', "   "])
+def test_invalid_command_argv_does_not_count_as_dispatch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    manifest, plan = _copy_explicit_pair(tmp_path, [command])
+    calls = _record_subprocess(monkeypatch)
+    result = run_commands(
+        **_protected_kwargs(task_manifest_path=manifest, change_plan_path=plan)
+    )
+    assert result["status"] == "BLOCK"
+    assert result["subprocess_call_count"] == 0
+    assert calls == []
+
+
+def test_partial_command_dispatch_counts_timeout_attempt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    commands = ["python -V", "python slow.py", "python not-reached.py"]
+    manifest, plan = _copy_explicit_pair(tmp_path, commands)
+    calls = []
+
+    def partial(args: list[str], **_: Any) -> subprocess.CompletedProcess[str]:
+        calls.append(args)
+        if len(calls) == 2:
+            raise subprocess.TimeoutExpired(args, 1)
+        return subprocess.CompletedProcess(args, 0, stdout="first\n", stderr="")
+
+    monkeypatch.setattr(command_runner.subprocess, "run", partial)
+    result = run_commands(
+        **_protected_kwargs(task_manifest_path=manifest, change_plan_path=plan)
+    )
+    assert result["status"] == "BLOCK"
+    assert result["subprocess_call_count"] == len(calls) == 2
+    assert len(result["command_results"]) == 1
+
+
 def test_protected_execution_revalidates_real_paths(monkeypatch: pytest.MonkeyPatch) -> None:
     calls = _record_subprocess(monkeypatch)
 

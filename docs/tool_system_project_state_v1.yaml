@@ -2405,3 +2405,36 @@ ts_h04_h05_repair_and_h06_publication_record:
     real_repository_execution_blocked: true
     real_codex_execution_observed: false
     real_backend_acceptance_executed: false
+
+# Local source evidence; historical audit and v2 receipts above remain unchanged.
+ts_h01_worker_failure_accounting_and_terminal_repair:
+  role: descriptive_source_repair_evidence_only
+  authority_effect: none
+  baseline_commit: e664a2c5fbaee5aac48d848e645b47cd917974db
+  baseline_tree: 50cd400daba4e63e1b8bb56f1764c85b572ee3ca
+  record: docs/reports/ts_h01_worker_failure_repair_v1.md
+  task_manifest: docs/reports/ts_h01_worker_failure_repair_v1_task.yaml
+  change_plan: docs/reports/ts_h01_worker_failure_repair_v1_plan.yaml
+  status: source_correction_pending_publication_and_runtime_reacceptance
+  correction_scope:
+    validation_command_invocations: actual_dispatch_attempts_in_current_public_call
+    completed_replay_validation_invocations: zero
+    terminal_failed_task_set: atomically_projects_existing_failed_run_state
+    retryable_or_unfinished_task_set: remains_active
+    exhausted_claim: persists_terminal_failure_before_raising
+    historical_database_migration_performed: false
+    public_interface_or_schema_changes: false
+    timeout_root_cause_established: false
+  delivery_plan:
+    existing_draft_pr: 235
+    modified_in_this_task: false
+  publication:
+    local_patch_only: true
+    remote_writes: 0
+    ready_authorized: false
+    merge_authorized: false
+  acceptance:
+    public_entry_reaccepted: false
+    real_codex_execution_observed: false
+    real_backend_acceptance_executed: false
+    real_repository_execution_blocked: true

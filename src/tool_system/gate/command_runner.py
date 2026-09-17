@@ -274,9 +274,17 @@ def run_commands(
                 dispatch_reasons.append("command execution cancelled by caller")
                 break
         try:
+            argv = shlex.split(command)
+        except ValueError:
+            dispatch_reasons.append("configured command arguments are invalid")
+            break
+        if not argv:
+            dispatch_reasons.append("configured command arguments are empty")
+            break
+        try:
             subprocess_call_count += 1
             completed = subprocess.run(
-                shlex.split(command),
+                argv,
                 cwd=working_dir,
                 text=True,
                 capture_output=True,
@@ -287,6 +295,11 @@ def run_commands(
             )
         except subprocess.TimeoutExpired:
             dispatch_reasons.append("configured command exceeded timeout")
+            break
+        except (OSError, ValueError) as exc:
+            dispatch_reasons.append(
+                f"configured command dispatch failed: {type(exc).__name__}"
+            )
             break
         stdout = completed.stdout or ""
         stderr = completed.stderr or ""
