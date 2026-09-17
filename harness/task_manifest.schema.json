@@ -28,7 +28,17 @@
     },
     "task_type": {
       "type": "string",
-      "enum": ["read_only_audit", "docs_add", "docs_modify", "code_add", "code_modify", "test_add", "ci_add", "policy_add", "dry_run"]
+      "enum": [
+        "read_only_audit",
+        "docs_add",
+        "docs_modify",
+        "code_add",
+        "code_modify",
+        "test_add",
+        "ci_add",
+        "policy_add",
+        "dry_run"
+      ]
     },
     "target_repo": {
       "type": "string",
@@ -49,38 +59,68 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["repo", "path", "section_or_key"],
+        "required": [
+          "repo",
+          "path",
+          "section_or_key"
+        ],
         "additionalProperties": false,
         "properties": {
-          "repo": {"type": "string"},
-          "path": {"type": "string"},
-          "section_or_key": {"type": "string"},
-          "line_range": {"type": "string"}
+          "repo": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "section_or_key": {
+            "type": "string"
+          },
+          "line_range": {
+            "type": "string"
+          }
         }
       }
     },
     "alignment": {
       "type": "object",
-      "required": ["parent", "global"],
+      "required": [
+        "parent",
+        "global"
+      ],
       "additionalProperties": false,
       "properties": {
-        "parent": {"$ref": "#/$defs/alignmentReference"},
-        "global": {"$ref": "#/$defs/alignmentReference"}
+        "parent": {
+          "$ref": "#/$defs/alignmentReference"
+        },
+        "global": {
+          "$ref": "#/$defs/alignmentReference"
+        }
       }
     },
     "scope": {
       "type": "object",
-      "required": ["summary", "in_scope", "out_of_scope"],
+      "required": [
+        "summary",
+        "in_scope",
+        "out_of_scope"
+      ],
       "additionalProperties": false,
       "properties": {
-        "summary": {"type": "string", "minLength": 10},
+        "summary": {
+          "type": "string",
+          "minLength": 10
+        },
         "in_scope": {
           "type": "array",
-          "items": {"type": "string"}
+          "items": {
+            "type": "string"
+          }
         },
         "out_of_scope": {
           "type": "array",
-          "items": {"type": "string"}
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -89,84 +129,604 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["repo", "path", "why_relevant"],
+        "required": [
+          "repo",
+          "path",
+          "why_relevant"
+        ],
         "additionalProperties": false,
         "properties": {
-          "repo": {"type": "string"},
-          "path": {"type": "string"},
-          "line_range": {"type": "string"},
-          "commit_sha": {"type": "string"},
-          "why_relevant": {"type": "string", "minLength": 5}
+          "repo": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "line_range": {
+            "type": "string"
+          },
+          "commit_sha": {
+            "type": "string"
+          },
+          "why_relevant": {
+            "type": "string",
+            "minLength": 5
+          }
         }
       }
     },
     "allowed_files": {
       "type": "array",
       "minItems": 1,
-      "items": {"type": "string"}
+      "items": {
+        "type": "string"
+      }
     },
     "forbidden_files": {
       "type": "array",
-      "items": {"type": "string"}
+      "items": {
+        "type": "string"
+      }
     },
     "write_mode": {
       "type": "string",
-      "enum": ["read_only", "patch_only", "pull_request", "direct_bootstrap"]
+      "enum": [
+        "read_only",
+        "patch_only",
+        "pull_request",
+        "direct_bootstrap"
+      ]
     },
     "verification": {
       "type": "object",
-      "required": ["commands", "pass_conditions"],
+      "required": [
+        "commands",
+        "pass_conditions"
+      ],
       "additionalProperties": false,
       "properties": {
         "commands": {
           "type": "array",
-          "items": {"type": "string"}
+          "items": {
+            "type": "string"
+          }
         },
         "pass_conditions": {
           "type": "array",
-          "items": {"type": "string"}
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
     "rollback": {
       "type": "object",
-      "required": ["method", "reference"],
+      "required": [
+        "method",
+        "reference"
+      ],
       "additionalProperties": false,
       "properties": {
-        "method": {"type": "string", "enum": ["git_revert", "patch_reverse", "delete_added_files", "manual_review"]},
-        "reference": {"type": "string", "minLength": 3}
+        "method": {
+          "type": "string",
+          "enum": [
+            "git_revert",
+            "patch_reverse",
+            "delete_added_files",
+            "manual_review"
+          ]
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 3
+        }
       }
     },
     "approval": {
       "type": "object",
-      "required": ["required", "approved_by", "approval_source", "approved_at"],
+      "required": [
+        "required",
+        "approved_by",
+        "approval_source",
+        "approved_at"
+      ],
       "additionalProperties": false,
       "properties": {
-        "required": {"const": true},
-        "approved_by": {"type": "string", "minLength": 1},
-        "approval_source": {"type": "string", "minLength": 1},
-        "approved_at": {"type": "string", "minLength": 10}
+        "required": {
+          "const": true
+        },
+        "approved_by": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approval_source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approved_at": {
+          "type": "string",
+          "minLength": 10
+        }
       }
     },
     "historical_fixture": {
       "type": "object",
-      "required": ["closed", "new_work_authorized"],
+      "required": [
+        "closed",
+        "new_work_authorized"
+      ],
       "additionalProperties": false,
       "properties": {
-        "closed": {"const": true},
-        "new_work_authorized": {"const": false}
+        "closed": {
+          "const": true
+        },
+        "new_work_authorized": {
+          "const": false
+        }
       }
+    },
+    "subscription_public_entry": {
+      "$ref": "#/$defs/subscriptionPublicEntry"
+    },
+    "subscription_public_entry_execution": {
+      "$ref": "#/$defs/subscriptionPublicEntryExecution"
     }
   },
   "$defs": {
     "alignmentReference": {
       "type": "object",
-      "required": ["document", "section_or_key", "scope"],
+      "required": [
+        "document",
+        "section_or_key",
+        "scope"
+      ],
       "additionalProperties": false,
       "properties": {
-        "document": {"type": "string", "minLength": 1},
-        "section_or_key": {"type": "string", "minLength": 1},
-        "scope": {"type": "string", "minLength": 1}
+        "document": {
+          "type": "string",
+          "minLength": 1
+        },
+        "section_or_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "boundedText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000]+$"
+    },
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*[\\\\\\u0000])[^/]+(?:/[^/]+)*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "gitObject": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "subscriptionPublicEntry": {
+      "type": "object",
+      "required": [
+        "binding_version",
+        "enabled",
+        "repository_root_identity_sha256",
+        "expected_head",
+        "blueprint_path",
+        "module_registry_path",
+        "milestone_ids",
+        "acceptance_requirements",
+        "governance_paths",
+        "query_terms",
+        "seed_paths",
+        "repository_read_authorized",
+        "worker_execution_authorized",
+        "local_git_write_authorized"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "binding_version": {
+          "const": "subscription_public_entry_authority_binding_v1"
+        },
+        "enabled": {
+          "const": true
+        },
+        "repository_root_identity_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "expected_head": {
+          "$ref": "#/$defs/gitObject"
+        },
+        "blueprint_path": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "module_registry_path": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "milestone_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "acceptance_requirements": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "governance_paths": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/repositoryPath"
+          }
+        },
+        "query_terms": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "seed_paths": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/repositoryPath"
+          }
+        },
+        "repository_read_authorized": {
+          "const": true
+        },
+        "worker_execution_authorized": {
+          "const": false
+        },
+        "local_git_write_authorized": {
+          "const": false
+        }
+      }
+    },
+    "candidateAssertion": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "path",
+            "state",
+            "content_sha256"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "$ref": "#/$defs/repositoryPath"
+            },
+            "state": {
+              "const": "present"
+            },
+            "content_sha256": {
+              "$ref": "#/$defs/sha256"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "path",
+            "state"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "$ref": "#/$defs/repositoryPath"
+            },
+            "state": {
+              "const": "absent"
+            }
+          }
+        }
+      ]
+    },
+    "acceptanceEvidenceObligation": {
+      "type": "object",
+      "required": [
+        "obligation_version",
+        "acceptance_item",
+        "acceptance_item_sha256",
+        "evidence_type",
+        "validation_command",
+        "validation_command_sha256",
+        "expected_stdout_sha256",
+        "expected_stderr_sha256",
+        "expected_diff_paths",
+        "candidate_assertions",
+        "obligation_sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "obligation_version": {
+          "const": "subscription_acceptance_evidence_obligation_v1"
+        },
+        "acceptance_item": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "acceptance_item_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "evidence_type": {
+          "enum": [
+            "behavior",
+            "contract"
+          ]
+        },
+        "validation_command": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "validation_command_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "expected_stdout_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "expected_stderr_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "expected_diff_paths": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/repositoryPath"
+          }
+        },
+        "candidate_assertions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/candidateAssertion"
+          }
+        },
+        "obligation_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "finiteBudgets": {
+      "type": "object",
+      "required": [
+        "max_cycles",
+        "max_worker_calls",
+        "max_patch_operations_per_cycle",
+        "max_total_duration_ms",
+        "max_total_cost_microunits"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "max_cycles": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_worker_calls": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_patch_operations_per_cycle": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_total_duration_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_total_cost_microunits": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "subscriptionPublicEntryExecution": {
+      "type": "object",
+      "required": [
+        "binding_version",
+        "enabled",
+        "repository_root_identity_sha256",
+        "workspace_root_identity_sha256",
+        "durable_state_identity_sha256",
+        "expected_head",
+        "expected_tree",
+        "existing_scope_paths",
+        "addable_scope_paths",
+        "allowed_scope",
+        "acceptance_set",
+        "acceptance_evidence_obligations",
+        "validation_set",
+        "worker_configuration_sha256",
+        "branch_name",
+        "commit_message",
+        "finite_budgets",
+        "validation_timeout_seconds",
+        "max_validation_output_bytes",
+        "repository_read_authorized",
+        "worker_execution_authorized",
+        "validation_execution_authorized",
+        "subscription_data_transfer_authorized",
+        "local_git_write_authorized",
+        "api_mode_enabled",
+        "provider_execution_authorized",
+        "credential_value_access_authorized",
+        "remote_repository_operations_authorized",
+        "target_repo_mutation_authorized",
+        "production_operation_authorized",
+        "cleanup_execution_authorized",
+        "rollback_execution_authorized",
+        "max_local_commits"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "binding_version": {
+          "const": "subscription_public_entry_execution_binding_v2"
+        },
+        "enabled": {
+          "const": true
+        },
+        "repository_root_identity_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "workspace_root_identity_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "durable_state_identity_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "expected_head": {
+          "$ref": "#/$defs/gitObject"
+        },
+        "expected_tree": {
+          "$ref": "#/$defs/gitObject"
+        },
+        "existing_scope_paths": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/repositoryPath"
+          }
+        },
+        "addable_scope_paths": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/repositoryPath"
+          }
+        },
+        "allowed_scope": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/repositoryPath"
+          }
+        },
+        "acceptance_set": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "acceptance_evidence_obligations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/acceptanceEvidenceObligation"
+          }
+        },
+        "validation_set": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "worker_configuration_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "branch_name": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "commit_message": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "finite_budgets": {
+          "$ref": "#/$defs/finiteBudgets"
+        },
+        "validation_timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "max_validation_output_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "repository_read_authorized": {
+          "const": true
+        },
+        "worker_execution_authorized": {
+          "const": true
+        },
+        "validation_execution_authorized": {
+          "const": true
+        },
+        "subscription_data_transfer_authorized": {
+          "const": true
+        },
+        "local_git_write_authorized": {
+          "const": true
+        },
+        "api_mode_enabled": {
+          "const": false
+        },
+        "provider_execution_authorized": {
+          "const": false
+        },
+        "credential_value_access_authorized": {
+          "const": false
+        },
+        "remote_repository_operations_authorized": {
+          "const": false
+        },
+        "target_repo_mutation_authorized": {
+          "const": false
+        },
+        "production_operation_authorized": {
+          "const": false
+        },
+        "cleanup_execution_authorized": {
+          "const": false
+        },
+        "rollback_execution_authorized": {
+          "const": false
+        },
+        "max_local_commits": {
+          "type": "integer",
+          "const": 1
+        }
       }
     }
   }

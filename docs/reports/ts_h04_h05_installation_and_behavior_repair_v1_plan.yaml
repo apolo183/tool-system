@@ -1,0 +1,87 @@
+plan_id: TS-H04-H05-repair-and-H06-publication-record-v1
+target_repo: apolo183/tool-system
+task_manifest: docs/reports/ts_h04_h05_installation_and_behavior_repair_v1_task.yaml
+changed_files:
+- pyproject.toml
+- harness/build_support.py
+- harness/task_manifest.schema.json
+- src/tool_system/manifest/task_manifest.py
+- src/tool_system/runner/task_runner.py
+- tests/test_task_manifest_policy.py
+- tests/test_task_runner.py
+- tests/test_installed_manifest.py
+- .github/workflows/tool-system-ci.yml
+- docs/modules/manifest-validation-contract-v1.md
+- docs/modules/task-runner-contract-v1.md
+- config/module_registry_v1.yaml
+- REPO_MANIFEST.md
+- docs/tool_system_project_state_v1.yaml
+- docs/reports/ts_h04_h05_installation_and_behavior_repair_v1.md
+- docs/reports/ts_h04_h05_installation_and_behavior_repair_v1_task.yaml
+- docs/reports/ts_h04_h05_installation_and_behavior_repair_v1_plan.yaml
+- tests/test_repo_manifest.py
+verification:
+  commands:
+  - python -m pytest -q tests/test_task_manifest_policy.py tests/test_task_runner.py
+    tests/test_installed_manifest.py
+  - python -m pytest -q
+  - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+  - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+  - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml
+    --require-current-authority
+  - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+  - Installed non-editable wheel validates strict manifests outside the source checkout,
+    using a byte-equivalent packaged projection of the canonical schema; wheel built
+    from sdist preserves the resource.
+  - Both existing public entry mappings have closed typed schema definitions; all
+    existing exact runtime authorization and no-real-execution boundaries remain.
+  - Twelve early-return test functions reach their original behavior checks using
+    valid current fixtures; genuine schema rejection tests remain separate; necessary
+    behavior repairs remain bounded.
+  - H06 report binds observed PR234 body/events/head and states historical external
+    authorization UNKNOWN; no retroactive approval, four-Gate reopening, or lifecycle
+    mutation.
+  - Focused tests, installed artifact check, at most two full regressions, and existing
+    four governance validators pass; one new branch and one Draft PR with exact head
+    CI evidence.
+rollback:
+  method: git_revert
+  reference: Retain baseline 75d005cee55a0e33bea17808faaba3085f740d8c; close unmerged
+    PR if necessary; no automatic rollback.
+bounded_closure:
+  baseline_commit: 75d005cee55a0e33bea17808faaba3085f740d8c
+  baseline_tree: 3f3263c305b1a5d50cb7760d9bb26d37c65d095e
+  time_seconds: 7200
+  seal_reserve_seconds: 600
+  repair_cycles: 3
+  full_regressions: 2
+  independent_agents: 0
+  branches: 1
+  draft_prs: 1
+  merge: false
+process_root_exception:
+  path: /workspace/scratch/b8cceeb7ffa5/ts-h04-h05-repair-v1
+  reason: Isolated review workspace and logs, outside canonical and DGX roots; no
+    user repository checkout is overwritten.
+  retention: Retain candidate and terminal evidence through PR handoff
+  cleanup_owner: task creator; no destructive cleanup authorized
+initial_blockers:
+- H04_INSTALLED_SCHEMA
+- H05_UNREACHABLE_ASSERTIONS
+- H06_FACT_RECORD_MISSING
+terminal_predicate: Required code and fixture repairs pass finite validation and exact
+  head hosted verify; Draft PR remains unmerged; historical H06 authorization remains
+  UNKNOWN.
+direct_dependency_disposition:
+  path: tests/test_repo_manifest.py
+  change: 'Only the two exact formal-file count assertions: 299 to 301, for the two
+    already authorized added package/test files.'
+  basis: The user-authorized tests and necessary formal registration repair; AGENTS
+    section 9 routine implementation and principles section 14 repair of original
+    acceptance failures.
+  classification: direct test bookkeeping dependency within original repair objective;
+    not a new acceptance obligation
+  original_scope_enumeration_omitted_dependency: true
+  baseline_frozen_record_retained: true
+  time_and_attempt_budgets_reset: false

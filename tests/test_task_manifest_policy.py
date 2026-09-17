@@ -37,6 +37,119 @@ RETAINED_TOOL_SYSTEM_EXAMPLE_PATH = (
 TARGET_REPO = "example-org/example-target"
 
 
+def _public_entry_manifest():
+    """Schema fixture only: exact runtime digests/authority still need validation."""
+    manifest = load_yaml_file(FORWARD_VALID_PATH)
+    manifest["subscription_public_entry"] = {
+        "binding_version": "subscription_public_entry_authority_binding_v1",
+        "enabled": True,
+        "repository_root_identity_sha256": "a" * 64,
+        "expected_head": "b" * 40,
+        "blueprint_path": "blueprint.yaml",
+        "module_registry_path": "modules.yaml",
+        "milestone_ids": ["M1"],
+        "acceptance_requirements": ["bounded behavior"],
+        "governance_paths": ["AGENTS.md"],
+        "query_terms": ["fixture"],
+        "seed_paths": [],
+        "repository_read_authorized": True,
+        "worker_execution_authorized": False,
+        "local_git_write_authorized": False,
+    }
+    manifest["subscription_public_entry_execution"] = {
+        "binding_version": "subscription_public_entry_execution_binding_v2",
+        "enabled": True,
+        "repository_root_identity_sha256": "a" * 64,
+        "workspace_root_identity_sha256": "c" * 64,
+        "durable_state_identity_sha256": "d" * 64,
+        "expected_head": "b" * 40,
+        "expected_tree": "e" * 40,
+        "existing_scope_paths": ["src/example.py"],
+        "addable_scope_paths": [],
+        "allowed_scope": ["src/example.py"],
+        "acceptance_set": ["bounded behavior"],
+        "acceptance_evidence_obligations": [{
+            "obligation_version": "subscription_acceptance_evidence_obligation_v1",
+            "acceptance_item": "bounded behavior",
+            "acceptance_item_sha256": "a" * 64,
+            "evidence_type": "behavior",
+            "validation_command": "python -m pytest -q",
+            "validation_command_sha256": "b" * 64,
+            "expected_stdout_sha256": "c" * 64,
+            "expected_stderr_sha256": "d" * 64,
+            "expected_diff_paths": ["src/example.py"],
+            "candidate_assertions": [{"path": "src/example.py", "state": "present",
+                                      "content_sha256": "e" * 64}],
+            "obligation_sha256": "f" * 64,
+        }],
+        "validation_set": ["python -m pytest -q"],
+        "worker_configuration_sha256": "f" * 64,
+        "branch_name": "agent/fixture",
+        "commit_message": "Fixture",
+        "finite_budgets": {"max_cycles": 2, "max_worker_calls": 2,
+                           "max_patch_operations_per_cycle": 8,
+                           "max_total_duration_ms": 30000,
+                           "max_total_cost_microunits": 1},
+        "validation_timeout_seconds": 30,
+        "max_validation_output_bytes": 65536,
+        "repository_read_authorized": True,
+        "worker_execution_authorized": True,
+        "validation_execution_authorized": True,
+        "subscription_data_transfer_authorized": True,
+        "local_git_write_authorized": True,
+        "api_mode_enabled": False,
+        "provider_execution_authorized": False,
+        "credential_value_access_authorized": False,
+        "remote_repository_operations_authorized": False,
+        "target_repo_mutation_authorized": False,
+        "production_operation_authorized": False,
+        "cleanup_execution_authorized": False,
+        "rollback_execution_authorized": False,
+        "max_local_commits": 1,
+    }
+    return manifest
+
+
+def test_declared_public_entry_mappings_pass_structure_only():
+    manifest = _public_entry_manifest()
+    assert validate_manifest_structure(manifest) == (True, [])
+    # Absence of both optional routes remains valid for ordinary task manifests.
+    del manifest["subscription_public_entry"]
+    del manifest["subscription_public_entry_execution"]
+    assert validate_manifest_structure(manifest) == (True, [])
+
+
+@pytest.mark.parametrize("path,value", [
+    (("subscription_public_entry", "extra"), True),
+    (("subscription_public_entry", "worker_execution_authorized"), True),
+    (("subscription_public_entry", "seed_paths"), ["../outside"]),
+    (("subscription_public_entry", "expected_head"), "not-a-commit"),
+    (("subscription_public_entry_execution", "provider_execution_authorized"), True),
+    (("subscription_public_entry_execution", "binding_version"), "subscription_public_entry_execution_binding_v1"),
+    (("subscription_public_entry_execution", "max_local_commits"), True),
+    (("subscription_public_entry_execution", "finite_budgets", "max_cycles"), True),
+    (("subscription_public_entry_execution", "finite_budgets", "max_cycles"), 0),
+    (("subscription_public_entry_execution", "finite_budgets", "extra"), 1),
+    (("subscription_public_entry_execution", "acceptance_evidence_obligations", 0, "evidence_type"), "prose"),
+    (("subscription_public_entry_execution", "acceptance_evidence_obligations", 0, "candidate_assertions", 0, "extra"), True),
+])
+def test_public_entry_schema_rejects_nested_authority_or_shape_drift(path, value):
+    manifest = _public_entry_manifest()
+    parent = manifest
+    for key in path[:-1]:
+        parent = parent[key]
+    parent[path[-1]] = value
+    ok, reasons = validate_manifest_structure(manifest)
+    assert not ok
+    assert all(reason.startswith("TASK_MANIFEST_SCHEMA_VIOLATION") for reason in reasons)
+
+
+def test_public_execution_schema_requires_complete_evidence_obligation():
+    manifest = _public_entry_manifest()
+    del manifest["subscription_public_entry_execution"]["acceptance_evidence_obligations"][0]["obligation_sha256"]
+    assert validate_manifest_structure(manifest)[0] is False
+
+
 def _target_manifest() -> dict[str, object]:
     return load_yaml_file(TARGET_MANIFEST_PATH)
 
