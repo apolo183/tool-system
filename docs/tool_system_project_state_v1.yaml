@@ -2378,3 +2378,30 @@ independent_audit_acceptance_reopen:
     cleanup_operations: 0
     rollback_operations: 0
   stop_boundary: merge_governance_reopen_then_stop_before_any_finding_correction_or_v3_acceptance
+
+# Bounded correction record; no historical acceptance or execution authority changes.
+ts_h04_h05_repair_and_h06_publication_record:
+  role: descriptive_repair_evidence_only
+  authority_effect: none
+  baseline_commit: 75d005cee55a0e33bea17808faaba3085f740d8c
+  record: docs/reports/ts_h04_h05_installation_and_behavior_repair_v1.md
+  task_manifest: docs/reports/ts_h04_h05_installation_and_behavior_repair_v1_task.yaml
+  change_plan: docs/reports/ts_h04_h05_installation_and_behavior_repair_v1_plan.yaml
+  status: source_correction_pending_separate_merge_and_runtime_reacceptance
+  h06:
+    observed_pr: 234
+    observed_head: b62039d267abcf5fcbb3edcdffd0b6e07ed76263
+    observed_merge: 75d005cee55a0e33bea17808faaba3085f740d8c
+    pr_body_requests_draft: true
+    ready_and_merge_events_observed: true
+    historical_external_lifecycle_authorization: UNKNOWN
+    historical_unauthorized_action_proved: false
+    retroactive_approval_granted: false
+  current_batch:
+    draft_pr_authorized: true
+    ready_authorized: false
+    merge_authorized: false
+    auto_merge_authorized: false
+    real_repository_execution_blocked: true
+    real_codex_execution_observed: false
+    real_backend_acceptance_executed: false
