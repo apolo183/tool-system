@@ -46,7 +46,7 @@ def _record_subprocess(monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
         calls.append(args)
         return subprocess.CompletedProcess(args, 0, stdout="fixture-pass\n", stderr="")
 
-    monkeypatch.setattr(command_runner.subprocess, "run", fake_run)
+    monkeypatch.setattr(command_runner, "_run_bounded_command", fake_run)
     return calls
 
 
@@ -85,7 +85,7 @@ def test_failed_process_dispatch_retains_attempt_count(
         calls.append(args)
         raise error("private executable details must not be returned")
 
-    monkeypatch.setattr(command_runner.subprocess, "run", failed)
+    monkeypatch.setattr(command_runner, "_run_bounded_command", failed)
     result = run_commands(
         **_protected_kwargs(task_manifest_path=manifest, change_plan_path=plan)
     )
@@ -122,7 +122,7 @@ def test_partial_command_dispatch_counts_timeout_attempt(
             raise subprocess.TimeoutExpired(args, 1)
         return subprocess.CompletedProcess(args, 0, stdout="first\n", stderr="")
 
-    monkeypatch.setattr(command_runner.subprocess, "run", partial)
+    monkeypatch.setattr(command_runner, "_run_bounded_command", partial)
     result = run_commands(
         **_protected_kwargs(task_manifest_path=manifest, change_plan_path=plan)
     )
@@ -370,7 +370,7 @@ def test_command_output_limit_and_timeout_fail_closed(
             stderr="",
         )
 
-    monkeypatch.setattr(command_runner.subprocess, "run", oversized)
+    monkeypatch.setattr(command_runner, "_run_bounded_command", oversized)
     limited = run_commands(
         **_protected_kwargs(
             task_manifest_path=manifest,
@@ -388,7 +388,7 @@ def test_command_output_limit_and_timeout_fail_closed(
     def timeout(args: list[str], **_: Any) -> subprocess.CompletedProcess[str]:
         raise subprocess.TimeoutExpired(args, 1)
 
-    monkeypatch.setattr(command_runner.subprocess, "run", timeout)
+    monkeypatch.setattr(command_runner, "_run_bounded_command", timeout)
     timed_out = run_commands(
         **_protected_kwargs(
             task_manifest_path=manifest,
@@ -416,7 +416,7 @@ def test_command_environment_excludes_provider_credentials(
         observed_environments.append(dict(kwargs["env"]))
         return subprocess.CompletedProcess(args, 0, stdout="", stderr="")
 
-    monkeypatch.setattr(command_runner.subprocess, "run", fake_run)
+    monkeypatch.setattr(command_runner, "_run_bounded_command", fake_run)
     monkeypatch.setenv("OPENAI_API_KEY", "not-forwarded")
     result = run_commands(
         **_protected_kwargs(
@@ -431,3 +431,111 @@ def test_command_environment_excludes_provider_credentials(
         "OPENAI_API_KEY" not in environment
         for environment in observed_environments
     )
+
+
+def _python_command(code: str) -> str:
+    import shlex
+    import sys
+    return shlex.join([sys.executable, '-c', code])
+
+
+@pytest.mark.parametrize('fd', [1, 2])
+def test_streaming_overflow_stops_before_child_completion(tmp_path: Path, fd: int) -> None:
+    command = _python_command(
+        f'import os,time; os.write({fd}, b"x" * 4096); time.sleep(20)'
+    )
+    manifest, plan = _copy_explicit_pair(tmp_path, [command, _python_command('pass')])
+    result = run_commands(**_protected_kwargs(
+        task_manifest_path=manifest, change_plan_path=plan,
+        max_output_bytes=32, timeout_seconds=1,
+    ))
+    assert result['reasons'] == ['configured command output exceeded byte limit']
+    assert result['subprocess_call_count'] == 1
+    assert result['command_results'] == []
+
+
+@pytest.mark.parametrize('code', [
+    'import os,time; os.close(1); os.close(2); time.sleep(20)',
+    'import time; time.sleep(20)',
+])
+def test_streaming_timeout_reaps_direct_child(tmp_path: Path, monkeypatch, code: str) -> None:
+    import time
+    processes = []
+    original = command_runner.subprocess.Popen
+    def capture(*args, **kwargs):
+        child = original(*args, **kwargs)
+        processes.append(child)
+        return child
+    monkeypatch.setattr(command_runner.subprocess, 'Popen', capture)
+    manifest, plan = _copy_explicit_pair(tmp_path, [_python_command(code)])
+    started = time.monotonic()
+    result = run_commands(**_protected_kwargs(
+        task_manifest_path=manifest, change_plan_path=plan, timeout_seconds=1,
+    ))
+    assert result['reasons'] == ['configured command exceeded timeout']
+    assert result['subprocess_call_count'] == 1
+    assert time.monotonic() - started < 5
+    assert processes[0].poll() is not None
+    assert processes[0].stdout.closed and processes[0].stderr.closed
+
+
+def test_dual_pipe_draining_and_exact_limits(tmp_path: Path) -> None:
+    # More than a pipe capacity on each stream; sequential draining deadlocks.
+    limit = 131072
+    code = ('import os; '
+            '[(os.write(2,b"e"*4096),os.write(1,b"o"*4096)) for _ in range(32)]')
+    manifest, plan = _copy_explicit_pair(tmp_path, [_python_command(code)])
+    result = run_commands(**_protected_kwargs(
+        task_manifest_path=manifest, change_plan_path=plan,
+        max_output_bytes=limit, timeout_seconds=5,
+    ))
+    assert result['status'] == 'PASS'
+    assert result['command_results'][0]['stdout'] == 'o' * limit
+    assert result['command_results'][0]['stderr'] == 'e' * limit
+
+
+def test_continuous_output_has_bounded_reads_and_reaps(tmp_path: Path, monkeypatch) -> None:
+    processes = []
+    requests = []
+    original_popen = command_runner.subprocess.Popen
+    original_read = command_runner.os.read
+    def capture(*args, **kwargs):
+        child = original_popen(*args, **kwargs)
+        processes.append(child)
+        return child
+    def read(fd, count):
+        if processes and fd in (processes[0].stdout.fileno(), processes[0].stderr.fileno()):
+            requests.append(count)
+            assert count <= 1025
+        return original_read(fd, count)
+    monkeypatch.setattr(command_runner.subprocess, 'Popen', capture)
+    monkeypatch.setattr(command_runner.os, 'read', read)
+    code = 'import os\nwhile True: os.write(1,b"x"*4096)'
+    manifest, plan = _copy_explicit_pair(tmp_path, [_python_command(code)])
+    result = run_commands(**_protected_kwargs(
+        task_manifest_path=manifest, change_plan_path=plan,
+        max_output_bytes=1024, timeout_seconds=5,
+    ))
+    assert result['reasons'] == ['configured command output exceeded byte limit']
+    assert requests
+    assert processes[0].poll() is not None
+    assert processes[0].stdout.closed and processes[0].stderr.closed
+
+
+def test_streaming_preserves_utf8_newlines_and_exit_status(tmp_path: Path) -> None:
+    code = 'import os,sys; os.write(1,bytes([195,169,13,10])); os.write(2,b"err\\r"); sys.exit(7)'
+    manifest, plan = _copy_explicit_pair(tmp_path, [_python_command(code)])
+    result = run_commands(**_protected_kwargs(
+        task_manifest_path=manifest, change_plan_path=plan, max_output_bytes=4,
+    ))
+    assert result['status'] == 'PASS'  # exit interpretation belongs to caller's gate
+    record = result['command_results'][0]
+    assert (record['stdout'], record['stderr'], record['exit_code']) == ('é\n', 'err\n', 7)
+
+
+def test_real_failed_launch_count(tmp_path: Path) -> None:
+    manifest, plan = _copy_explicit_pair(tmp_path, [str(tmp_path/'nonexistent-command')])
+    result = run_commands(**_protected_kwargs(task_manifest_path=manifest, change_plan_path=plan))
+    assert result['status'] == 'BLOCK'
+    assert result['subprocess_call_count'] == 1
+    assert result['command_results'] == []

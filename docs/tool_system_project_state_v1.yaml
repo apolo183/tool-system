@@ -2468,3 +2468,20 @@ ts_h02_recovery_verification_binding_repair:
     real_codex_execution_observed: false
     real_backend_acceptance_executed: false
     real_repository_execution_blocked: true
+
+# Scoped source repair; historical findings remain retained snapshots.
+ts_m01_bounded_command_output_repair:
+  role: descriptive_source_repair_evidence_only
+  authority_effect: none
+  baseline_commit: 827821191e58ccb644750fdfcd9c62b8418707f0
+  record: docs/reports/ts_m01_bounded_output_v1.md
+  task_manifest: docs/reports/ts_m01_bounded_output_v1_task.yaml
+  change_plan: docs/reports/ts_m01_bounded_output_v1_plan.yaml
+  status: source_correction_locally_validated_pending_pr_ci
+  correction_scope: command_runner_per_stream_capture_and_direct_child_wait
+  worker_adapter_output_limit_corrected: false
+  full_ts_m01_closed: false
+  windows_execution_verified: false
+  descendant_cleanup_proved: false
+  real_backend_acceptance_executed: false
+  real_repository_execution_blocked: true

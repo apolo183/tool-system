@@ -1,0 +1,81 @@
+plan_id: ts-m01-bounded-output-v1
+target_repo: apolo183/tool-system
+task_manifest: docs/reports/ts_m01_bounded_output_v1_task.yaml
+changed_files:
+- src/tool_system/gate/command_runner.py
+- tests/test_command_runner.py
+- tests/test_task_runner.py
+- docs/tool_system_project_state_v1.yaml
+- docs/reports/ts_m01_bounded_output_v1.md
+- docs/reports/ts_m01_bounded_output_v1_task.yaml
+- docs/reports/ts_m01_bounded_output_v1_plan.yaml
+- tests/test_module_contracts.py
+verification:
+  commands:
+  - python -m pytest -q tests/test_command_runner.py tests/test_task_runner.py tests/test_durable_orchestrator_state.py
+    tests/test_process_authority.py
+  - python -m pytest -q
+  - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+  - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+  - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml
+    --require-current-authority
+  - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  - git diff --check
+  pass_conditions:
+  - Each stdout/stderr capture stays within configured limit; reads request at most
+    remaining capacity plus one detection byte; overflow blocks before process completion.
+  - Concurrent pipe draining cannot deadlock on stderr; timeout covers pipe EOF and
+    child exit; close pipes and at most one second wait after killing direct child
+    on failure.
+  - Preserve public signature, command result fields, preflight authority, exact dispatch
+    counts, per-stream limits and normal text results.
+  - Tests cover both streams, exact boundary, continuous output, closed-pipe sleeping
+    child, timeout and failure counts. No real worker or descendant cleanup claim.
+  - Focused and full tests, four current-source governance validators and scope checks
+    pass; user merges PR manually.
+rollback:
+  method: git_revert
+  reference: Base 827821191e58ccb644750fdfcd9c62b8418707f0; no automatic revert.
+reasoning: Extra high
+baseline_commit: 827821191e58ccb644750fdfcd9c62b8418707f0
+baseline_tree: 30aab41e53c1c1d7e8d083968a33c32e6bc7df23
+design:
+  capture: Nonblocking pipes with selector; bounded bytes, no full-output communicate;
+    decode only bounded successful data. Unsupported pipe readiness fails closed.
+  cleanup: Close read descriptors, kill only direct child if still running, wait at
+    most 1 second; timeout does not prove descendants cleanup.
+  tests: Inert local Python fixture children only; no Codex/provider or real target;
+    adapters remain out of scope.
+  contract: KEEP existing formal contract and module registry; result shape and public
+    inputs unchanged.
+bounded_closure:
+  time_seconds: 5400
+  seal_reserve_seconds: 180
+  repair_cycles: 2
+  full_regressions: 2
+  independent_agents: 0
+  new_branches: 1
+  new_prs: 1
+  ci_reruns: 0
+  real_runtime_effects: 0
+  paid_provider_calls: 0
+publication:
+  branch: agent/ts-m01-bounded-output-v1
+  create_pull_request_after_checks: true
+  merge: false
+  auto_merge: false
+  manual_merge_owner: user
+process_root_exception:
+  path: /workspace/scratch/b8cceeb7ffa5/ts-m01-bounded-output-v1
+  reason: Isolated worktree and task evidence separate from immutable prior tasks.
+  retention: Preserve source patch, tests and publication evidence.
+  side_effects: Current task root, one feature branch and one tool-system PR under
+    standing authorization.
+  cleanup_owner: task creator; no destructive cleanup authorized.
+terminal_predicate: Verified source repair and PR/CI, or concrete transport blocker
+  with complete reviewable handoff.
+scope_correction:
+  path: tests/test_module_contracts.py
+  reason: Direct AST effect boundary assertion must follow Popen replacement; omitted
+    initially.
+  user_scope: Necessary regression for approved TS-M01; no new acceptance or budget.

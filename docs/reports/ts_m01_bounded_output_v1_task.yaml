@@ -1,0 +1,81 @@
+task_id: ts-m01-bounded-output-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/ts-m01-bounded-output-v1
+phase: BOUNDED_COMMAND_OUTPUT_REPAIR
+approved_blueprint_refs:
+- repo: apolo183/tool-system
+  path: blueprint/tool_system_v0.yaml
+  section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/independent_audit_acceptance_reopen_v1.md
+    section_or_key: TS-M01
+    scope: Bound command output capture during execution; preserve direct dispatch
+      accounting and keep real execution closed.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Bound resource consumption of authorized validation without extending runtime
+      authority.
+scope:
+  summary: 'Stream bounded command output, abort on overflow or deadline, close pipes
+    and bounded wait for direct child; tests, report, PR. Direct test scope correction:
+    tests/test_module_contracts.py was omitted initially; update the existing subprocess
+    effect assertion for Popen, without new acceptance or budget.'
+  in_scope: &id001
+  - src/tool_system/gate/command_runner.py
+  - tests/test_command_runner.py
+  - tests/test_task_runner.py
+  - docs/tool_system_project_state_v1.yaml
+  - docs/reports/ts_m01_bounded_output_v1.md
+  - docs/reports/ts_m01_bounded_output_v1_task.yaml
+  - docs/reports/ts_m01_bounded_output_v1_plan.yaml
+  - tests/test_module_contracts.py
+  out_of_scope:
+  - Worker adapter changes or whole TS-M01 closure
+  - Descendant cleanup, sandbox, DGX/provider/real target execution
+  - Blueprint or formal interface changes
+  - Automatic merge or deletion
+evidence:
+- repo: apolo183/tool-system
+  path: src/tool_system/gate/command_runner.py
+  why_relevant: run_commands fully captures subprocess output before byte limit check;
+    direct task_runner callers consume existing result shape.
+allowed_files: *id001
+forbidden_files:
+- finance/**
+- trading/**
+write_mode: pull_request
+verification:
+  commands:
+  - python -m pytest -q tests/test_command_runner.py tests/test_task_runner.py tests/test_durable_orchestrator_state.py
+    tests/test_process_authority.py
+  - python -m pytest -q
+  - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+  - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+  - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml
+    --require-current-authority
+  - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  - git diff --check
+  pass_conditions:
+  - Each stdout/stderr capture stays within configured limit; reads request at most
+    remaining capacity plus one detection byte; overflow blocks before process completion.
+  - Concurrent pipe draining cannot deadlock on stderr; timeout covers pipe EOF and
+    child exit; close pipes and at most one second wait after killing direct child
+    on failure.
+  - Preserve public signature, command result fields, preflight authority, exact dispatch
+    counts, per-stream limits and normal text results.
+  - Tests cover both streams, exact boundary, continuous output, closed-pipe sleeping
+    child, timeout and failure counts. No real worker or descendant cleanup claim.
+  - Focused and full tests, four current-source governance validators and scope checks
+    pass; user merges PR manually.
+rollback:
+  method: git_revert
+  reference: Base 827821191e58ccb644750fdfcd9c62b8418707f0; no automatic revert.
+approval:
+  required: true
+  approved_by: apolo183
+  approval_source: User 同意下一步 accepts TS-M01 implementation, regression, PR and CI
+    task; manual merge; real execution remains closed.
+  approved_at: '2026-09-18T13:36:39.805017+00:00'
