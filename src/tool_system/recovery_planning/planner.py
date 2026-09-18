@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+import hashlib
+import json
 
 from tool_system.state_migration import MigrationPlan, MigrationStatus
 
@@ -54,6 +56,30 @@ class BackupVerificationStatus(str, Enum):
 class BackupVerification:
     status: BackupVerificationStatus
     reasons: tuple[str, ...]
+    manifest_sha256: str | None = None
+
+
+def _manifest_sha256(manifest: BackupManifest) -> str:
+    """Bind all manifest metadata, including the execution-relevant entry order."""
+    payload = {
+        "format_version": manifest.format_version,
+        "state_version": manifest.state_version,
+        "snapshot_at_utc": manifest.snapshot_at_utc,
+        "source_seal_sha256": manifest.source_seal_sha256,
+        "entries": [
+            {
+                "logical_name": entry.logical_name,
+                "sha256": entry.sha256,
+                "byte_length": entry.byte_length,
+            }
+            for entry in manifest.entries
+        ],
+    }
+    encoded = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+        allow_nan=False,
+    ).encode("ascii")
+    return hashlib.sha256(b"tool-system-backup-manifest-v1\n" + encoded).hexdigest()
 
 def verify_backup(
     *, manifest: BackupManifest, observed_entries: tuple[BackupEntry, ...]
@@ -80,7 +106,9 @@ def verify_backup(
         if not reasons
         else BackupVerificationStatus.BLOCKED
     )
-    return BackupVerification(status=status, reasons=tuple(reasons))
+    return BackupVerification(
+        status=status, reasons=tuple(reasons), manifest_sha256=_manifest_sha256(manifest)
+    )
 
 class RestoreStatus(str, Enum):
     BLOCKED = "BLOCKED"
@@ -102,8 +130,15 @@ def plan_restore(
     migration_plan: MigrationPlan,
 ) -> RestorePlan:
     reasons: list[str] = []
-    if verification.status is not BackupVerificationStatus.PASS:
+    if verification.status is not BackupVerificationStatus.PASS or verification.reasons:
         reasons.append("BACKUP_VERIFICATION_BLOCKED")
+    if verification.manifest_sha256 is None:
+        reasons.append("BACKUP_VERIFICATION_UNBOUND")
+    elif (
+        not isinstance(verification.manifest_sha256, str)
+        or verification.manifest_sha256 != _manifest_sha256(manifest)
+    ):
+        reasons.append("BACKUP_MANIFEST_IDENTITY_MISMATCH")
     if (
         migration_plan.status
         is not MigrationStatus.READY_FOR_SEPARATE_EXECUTION_AUTHORIZATION

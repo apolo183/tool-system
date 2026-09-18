@@ -2438,3 +2438,33 @@ ts_h01_worker_failure_accounting_and_terminal_repair:
     real_codex_execution_observed: false
     real_backend_acceptance_executed: false
     real_repository_execution_blocked: true
+
+# New source correction; the sealed audit and acceptance snapshots above remain historical.
+ts_h02_recovery_verification_binding_repair:
+  role: descriptive_source_repair_evidence_only
+  authority_effect: none
+  baseline_commit: cf696a62c14fbc70cd6204653179d3dbb9b8897e
+  baseline_tree: ab80752dc398de9b1428e3d634e82ee2933d037a
+  record: docs/reports/ts_h02_recovery_binding_v1.md
+  task_manifest: docs/reports/ts_h02_recovery_binding_v1_task.yaml
+  change_plan: docs/reports/ts_h02_recovery_binding_v1_plan.yaml
+  status: source_correction_verified_pending_publication_and_reacceptance
+  correction_scope:
+    complete_ordered_manifest_sha256: required_before_ready_restore_plan
+    missing_or_mismatched_binding: blocked_with_empty_restore_order
+    inconsistent_pass_with_failure_reasons: blocked
+    physical_backup_read_or_restore: false
+    caller_authentication_proved: false
+    legacy_unbound_result_authorizes_planning: false
+  local_verification:
+    focused_tests_passed: 61
+    full_tests_passed: 1112
+    current_governance_validators_passed: 4
+    independent_review_performed: false
+  acceptance:
+    p16d_reaccepted: false
+    available_for_dependent_acceptance: false
+    real_restore_executed: false
+    real_codex_execution_observed: false
+    real_backend_acceptance_executed: false
+    real_repository_execution_blocked: true

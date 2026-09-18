@@ -1,0 +1,96 @@
+plan_id: ts-h02-recovery-binding-v1
+target_repo: apolo183/tool-system
+task_manifest: docs/reports/ts_h02_recovery_binding_v1_task.yaml
+changed_files:
+- src/tool_system/recovery_planning/planner.py
+- tests/test_recovery_planning.py
+- docs/tool_system_project_state_v1.yaml
+- docs/reports/ts_h02_recovery_binding_v1.md
+- docs/reports/ts_h02_recovery_binding_v1_task.yaml
+- docs/reports/ts_h02_recovery_binding_v1_plan.yaml
+verification:
+  commands:
+  - python -m pytest -q tests/test_recovery_planning.py tests/test_state_migration.py
+    tests/test_production_readiness.py tests/test_phase_alignment.py
+  - python -m pytest -q
+  - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+  - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+  - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml
+    --require-current-authority
+  - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  - git diff --check
+  pass_conditions:
+  - A PASS verification for any different manifest field or restore-entry order yields
+    BLOCKED with empty restore_order and execution_authorized=false.
+  - Verification carries deterministic SHA256 of the complete ordered manifest; observed-entry
+    iteration order does not affect this identity; equal reconstructed manifests remain
+    usable.
+  - Legacy/unbound results and PASS results carrying failure reasons fail closed;
+    backup mismatches and migration gates remain effective.
+  - The public two-argument BackupVerification constructor remains constructible with
+    missing binding defaulting to None; this does not authorize planning or execution.
+    No authentication or actual backup-byte verification is claimed.
+  - Existing non-live drill, state-migration and production-readiness contracts and
+    runtime false flags remain intact; only eight frozen paths change.
+  - Focused regression, full suite, four current governance checks, whitespace and
+    exact diff scope pass before publication. One branch and one PR maximum; no force
+    push, cleanup, real backend or production action.
+rollback:
+  method: git_revert
+  reference: Base cf696a62c14fbc70cd6204653179d3dbb9b8897e; a revert requires its
+    own authorization; retain patch and previous receipts.
+reasoning: Extra high
+baseline_commit: cf696a62c14fbc70cd6204653179d3dbb9b8897e
+baseline_tree: ab80752dc398de9b1428e3d634e82ee2933d037a
+design:
+  manifest_identity: Domain-separated SHA256 over deterministic JSON containing format_version,
+    state_version, snapshot_at_utc, source_seal_sha256 and every ordered entry logical_name,
+    sha256 and byte_length.
+  verification_result: Add optional manifest_sha256=None after existing fields; verifier
+    fills it, planner recomputes and compares. Missing binding and inconsistent PASS
+    fail closed.
+  scope_of_proof: Caller-supplied metadata correspondence only, no trust authentication
+    or physical backup verification.
+  contract: KEEP original formal contract and registry bytes. Existing exact-set content-addressed
+    verification and fail-closed ambiguous identity cover this correction. Canonical
+    encoding and optional result-field details are recorded in the repair report;
+    no formal interface identity/version or graph change.
+  state: Append new source-correction evidence while preserving historical audit/current-reacceptance
+    snapshots and false acceptance/runtime flags.
+bounded_closure:
+  time_seconds: 5400
+  seal_reserve_seconds: 180
+  repair_cycles: 2
+  full_regressions: 2
+  independent_agents: 0
+  new_branches: 1
+  new_prs: 1
+  ci_reruns: 0
+  real_runtime_effects: 0
+  paid_provider_calls: 0
+publication:
+  branch: agent/ts-h02-recovery-binding-v1
+  create_pull_request_after_checks: true
+  ready_after_verify: true
+  merge_after_gates_if_approved_by_execution_system: true
+  merge_method: squash
+  no_bypass_or_alternate_route_after_rejection: true
+process_root_exception:
+  path: /workspace/scratch/b8cceeb7ffa5/ts-h02-recovery-binding-v1
+  reason: Isolated worktree and task evidence separate from immutable prior tasks.
+  retention: Preserve source patch, tests and publication evidence.
+  side_effects: Current task root, one feature branch and one tool-system PR under
+    standing authorization.
+  cleanup_owner: task creator; no destructive cleanup authorized.
+terminal_predicate: Verified bounded source repair published and CI checked, or exact
+  genuine approval/tool/acceptance blocker; do not claim P16 or runtime acceptance.
+candidate_disposition:
+  allowed_paths: 8
+  actual_changed_paths: 6
+  kept_after_review:
+  - docs/modules/recovery-planning-contract-v1.md
+  - config/module_registry_v1.yaml
+  reason: The first full run exposed a fixed registry-seal assertion after unnecessary
+    explanatory contract changes. Preserve the already-correct formal contract instead
+    of expanding scope to alter frozen registry tests. The original acceptance and
+    eight-path allowlist are unchanged.
