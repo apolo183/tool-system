@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import locale
 import os
 import re
+import selectors
 import signal
 import stat
 import subprocess
 import tempfile
+import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -216,7 +219,7 @@ _PATCH_RESULT_SCHEMA: dict[str, object] = {
 
 
 ProcessRunner = Callable[..., subprocess.CompletedProcess[str]]
-PopenFactory = Callable[..., subprocess.Popen[str]]
+PopenFactory = Callable[..., subprocess.Popen[bytes]]
 GroupKiller = Callable[[int, int], None]
 
 
@@ -224,7 +227,7 @@ def _kill_process_group(group_id: int, sig: int) -> None:
     os.killpg(group_id, sig)
 
 
-def _wait_for_process(process: subprocess.Popen[str], timeout: int) -> bool:
+def _wait_for_process(process: subprocess.Popen[bytes], timeout: int) -> bool:
     try:
         process.wait(timeout=timeout)
     except subprocess.TimeoutExpired:
@@ -233,7 +236,7 @@ def _wait_for_process(process: subprocess.Popen[str], timeout: int) -> bool:
 
 
 def _terminate_process_group(
-    process: subprocess.Popen[str],
+    process: subprocess.Popen[bytes],
     *,
     grace_seconds: int,
     platform_name: str,
@@ -277,12 +280,18 @@ def _run_codex_process(
     timeout: int,
     input: str,
     termination_grace_seconds: int,
+    max_output_bytes: int = 1_048_576,
     popen_factory: PopenFactory = subprocess.Popen,
     platform_name: str = os.name,
     group_killer: GroupKiller = _kill_process_group,
 ) -> subprocess.CompletedProcess[str]:
     if shell or check or not capture_output or not text:
         raise ValueError("unsupported Codex process boundary")
+    if type(max_output_bytes) is not int or not 1 <= max_output_bytes <= 16_777_216:
+        raise ValueError("invalid Codex output limit")
+    encoding = locale.getpreferredencoding(False)
+    prompt = memoryview(input.encode(encoding))
+    deadline = time.monotonic() + timeout
     popen_options: dict[str, object] = {
         "cwd": cwd,
         "env": dict(env),
@@ -290,27 +299,95 @@ def _run_codex_process(
         "stdin": subprocess.PIPE,
         "stdout": subprocess.PIPE,
         "stderr": subprocess.PIPE,
-        "text": True,
+        "text": False,
+        "bufsize": 0,
     }
     if platform_name == "posix":
         popen_options["start_new_session"] = True
-    process = popen_factory(argv, **popen_options)
-    try:
-        stdout, stderr = process.communicate(input=input, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        _terminate_process_group(
-            process,
-            grace_seconds=termination_grace_seconds,
-            platform_name=platform_name,
-            group_killer=group_killer,
-        )
-        raise
+    with selectors.DefaultSelector() as selector:
+        process = popen_factory(argv, **popen_options)
+        try:
+            stdout, stderr = _exchange_codex_streams(
+                process, selector, prompt, deadline, argv, timeout, max_output_bytes,
+            )
+        except BaseException:
+            _terminate_process_group(
+                process,
+                grace_seconds=termination_grace_seconds,
+                platform_name=platform_name,
+                group_killer=group_killer,
+            )
+            raise
+        finally:
+            for stream in (process.stdin, process.stdout, process.stderr):
+                if stream is not None:
+                    stream.close()
+    stdout, stderr = (
+        value.decode(encoding).replace("\r\n", "\n").replace("\r", "\n")
+        for value in (stdout, stderr)
+    )
+    if len(stdout.encode("utf-8")) + len(stderr.encode("utf-8")) > max_output_bytes:
+        raise OverflowError("Codex output exceeded byte limit")
     return subprocess.CompletedProcess(
         argv,
         process.returncode,
         stdout=stdout,
         stderr=stderr,
     )
+
+
+def _exchange_codex_streams(
+    process: subprocess.Popen[bytes],
+    selector: selectors.BaseSelector,
+    prompt: memoryview,
+    deadline: float,
+    argv: list[str],
+    timeout: int,
+    limit: int,
+) -> list[bytearray]:
+    """Bound combined capture while transferring stdin without a blocking writer."""
+    buffers = [bytearray(), bytearray()]
+    retained = sent = 0
+    for index, stream in enumerate((process.stdout, process.stderr)):
+        os.set_blocking(stream.fileno(), False)
+        selector.register(stream, selectors.EVENT_READ, index)
+    if prompt:
+        os.set_blocking(process.stdin.fileno(), False)
+        selector.register(process.stdin, selectors.EVENT_WRITE, 2)
+    else:
+        process.stdin.close()
+    while selector.get_map():
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise subprocess.TimeoutExpired(argv, timeout)
+        for key, _ in selector.select(min(remaining, 0.05)):
+            if key.data == 2:
+                try:
+                    sent += os.write(key.fd, prompt[sent:sent + 4096])
+                except BlockingIOError:
+                    continue
+                except BrokenPipeError:
+                    sent = len(prompt)
+                if sent == len(prompt):
+                    selector.unregister(key.fileobj)
+                    process.stdin.close()
+                continue
+            try:
+                chunk = os.read(key.fd, min(65_536, limit - retained + 1))
+            except BlockingIOError:
+                continue
+            if not chunk:
+                selector.unregister(key.fileobj)
+                continue
+            if retained + len(chunk) > limit:
+                raise OverflowError("Codex output exceeded byte limit")
+            buffers[key.data].extend(chunk)
+            retained += len(chunk)
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise subprocess.TimeoutExpired(argv, timeout)
+    process.wait(timeout=remaining)
+    return buffers
 
 
 def _write_private_file(path: Path, content: bytes) -> None:
@@ -527,6 +604,17 @@ class CodexCLISubscriptionWorkerAdapter:
                     timeout=self.config.timeout_seconds,
                     input=prompt,
                     termination_grace_seconds=self.config.termination_grace_seconds,
+                    max_output_bytes=self.config.max_output_bytes,
+                )
+            except OverflowError:
+                return self._result(
+                    request,
+                    status="BLOCK",
+                    execute=True,
+                    terminal_code="SUBSCRIPTION_WORKER_OUTPUT_LIMIT",
+                    evidence=["worker_adapter.subscription.output_limit.block"],
+                    reasons=["subscription worker output exceeded the configured byte limit"],
+                    output={"raw_output_recorded": False},
                 )
             except (OSError, subprocess.TimeoutExpired, ValueError) as exc:
                 if isinstance(exc, subprocess.TimeoutExpired):

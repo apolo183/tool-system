@@ -1,0 +1,81 @@
+plan_id: ts-m01-worker-output-v1
+target_repo: apolo183/tool-system
+task_manifest: docs/reports/ts_m01_worker_output_v1_task.yaml
+changed_files:
+- src/tool_system/worker_adapter/contract.py
+- tests/test_worker_adapter_contract.py
+- docs/tool_system_project_state_v1.yaml
+- docs/reports/ts_m01_worker_output_v1.md
+- docs/reports/ts_m01_worker_output_v1_task.yaml
+- docs/reports/ts_m01_worker_output_v1_plan.yaml
+verification:
+  commands:
+  - python -m pytest -q tests/test_worker_adapter_contract.py tests/test_task_runner.py
+    tests/test_module_contracts.py
+  - python -m pytest -q
+  - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+  - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+  - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml
+    --require-current-authority
+  - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  - git diff --check
+  pass_conditions:
+  - Stream stdout and stderr with a combined retained-byte cap and at most one extra
+    detection byte; overflow blocks before completion with stable output-limit code
+    and no raw output.
+  - Multiplex bounded stdin writes and both output pipes; one deadline covers prompt
+    transfer, EOF and child exit; retain bounded TERM/KILL group cancellation and
+    close all owned pipes.
+  - Preserve authorization, default disabled adapter, argv/environment/private result
+    schema and public result shapes; propagate configured max_output_bytes to the
+    internal process runner.
+  - Exercise overflow on both streams, combined exact boundary, blocked stdin, output-before-input,
+    timeout, early stdin close, cleanup and stable failure classification using inert
+    local children and fakes only.
+  - Focused affected-closure and full regressions, four governance validators, explicit
+    manifest/plan pair and diff checks pass; publish one PR and inspect CI; user manually
+    merges.
+rollback:
+  method: git_revert
+  reference: Base 99b579e214de9cb57478539d6bf3d7dce151c1cc; separate reviewed revert
+    only.
+reasoning: Extra high
+baseline_commit: 99b579e214de9cb57478539d6bf3d7dce151c1cc
+baseline_tree: bee34e603841d16390f0cdff683cc6e446134b60
+design:
+  owner: worker_adapter/contract.py _run_codex_process and run; tests/test_worker_adapter_contract.py
+  capture: Module-local selector drains binary outputs with combined cap and writes
+    prompt incrementally; no cross-module private helper.
+  cleanup: Existing process-group TERM/KILL bounded grace; all own streams closed;
+    no full descendant or hard deadline claim.
+  compatibility: Public adapter/config/result unchanged; private injected runner receives
+    max_output_bytes keyword; existing fake runners accept kwargs.
+  validation: Linux/POSIX inert fixture children, fake process-group cancellation;
+    no actual Codex.
+bounded_closure:
+  time_seconds: 5400
+  seal_reserve_seconds: 180
+  repair_cycles: 2
+  full_regressions: 2
+  independent_agents: 0
+  new_branches: 1
+  new_prs: 1
+  ci_reruns: 0
+  real_runtime_effects: 0
+  paid_provider_calls: 0
+publication:
+  branch: agent/ts-m01-worker-output-v1
+  create_pull_request_after_checks: true
+  merge: false
+  auto_merge: false
+  manual_merge_owner: user
+process_root_exception:
+  path: /workspace/scratch/b8cceeb7ffa5/ts-m01-worker-output-v1
+  reason: Isolated source worktree and immutable task evidence; preserve artifacts
+    for review; no cleanup authorized.
+  retention: Preserve source patch, tests and publication evidence.
+  side_effects: Current task root, one feature branch and one tool-system PR under
+    standing authorization.
+  cleanup_owner: task creator; no destructive cleanup authorized.
+terminal_predicate: Verified source repair and PR/CI, or concrete transport blocker
+  with complete reviewable handoff.
