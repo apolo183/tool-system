@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import hashlib
+import locale
 import os
+import selectors
 import shlex
 import subprocess
+import time
 from pathlib import Path
 from collections.abc import Callable, Sequence
 from typing import Any
@@ -90,6 +93,77 @@ def _run_validation(
             "reasons": [f"{label} validator did not return a mapping"],
         }
     return result
+
+
+class _OutputLimitExceeded(Exception):
+    pass
+
+
+class _ChildCleanupTimedOut(Exception):
+    pass
+
+
+def _run_bounded_command(
+    argv: list[str], *, cwd: Path, env: dict[str, str],
+    timeout: int, max_output_bytes: int,
+) -> subprocess.CompletedProcess[str]:
+    """Drain both pipes with bounded storage; own only the direct child.
+
+    No reader threads or communicate(): inherited descendant pipe handles must
+    not turn EOF or failure cleanup into an unbounded wait. Pipe readiness must
+    be supported by the host selector, otherwise dispatch fails closed.
+    """
+    deadline = time.monotonic() + timeout
+    buffers = [bytearray(), bytearray()]
+    with selectors.DefaultSelector() as selector:
+        process = subprocess.Popen(
+            argv, cwd=cwd, env=env, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, shell=False, bufsize=0,
+        )
+        try:
+            for index, stream in enumerate((process.stdout, process.stderr)):
+                os.set_blocking(stream.fileno(), False)
+                selector.register(stream, selectors.EVENT_READ, index)
+            while selector.get_map():
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise subprocess.TimeoutExpired(argv, timeout)
+                for key, _ in selector.select(min(remaining, 0.05)):
+                    buffer = buffers[key.data]
+                    # The extra byte detects overflow without retaining it.
+                    size = min(65_536, max_output_bytes - len(buffer) + 1)
+                    try:
+                        chunk = os.read(key.fd, size)
+                    except BlockingIOError:
+                        continue
+                    if not chunk:
+                        selector.unregister(key.fileobj)
+                        continue
+                    if len(buffer) + len(chunk) > max_output_bytes:
+                        raise _OutputLimitExceeded
+                    buffer.extend(chunk)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired(argv, timeout)
+            process.wait(timeout=remaining)
+        finally:
+            # Close our handles even if a descendant still holds a write end.
+            for stream in (process.stdout, process.stderr):
+                if stream is not None:
+                    stream.close()
+            if process.poll() is None:
+                process.kill()
+                try:
+                    process.wait(timeout=1.0)
+                except subprocess.TimeoutExpired as exc:
+                    raise _ChildCleanupTimedOut from exc
+    encoding = locale.getpreferredencoding(False)
+    output = [bytes(buffer).decode(encoding).replace("\r\n", "\n").replace("\r", "\n")
+              for buffer in buffers]
+    # Keep the existing UTF-8 result limit as well as the raw capture limit.
+    if any(len(value.encode("utf-8")) > max_output_bytes for value in output):
+        raise _OutputLimitExceeded
+    return subprocess.CompletedProcess(argv, process.returncode, *output)
 
 
 def run_commands(
@@ -283,16 +357,16 @@ def run_commands(
             break
         try:
             subprocess_call_count += 1
-            completed = subprocess.run(
-                argv,
-                cwd=working_dir,
-                text=True,
-                capture_output=True,
-                timeout=timeout_seconds,
-                check=False,
-                shell=False,
-                env=environment,
+            completed = _run_bounded_command(
+                argv, cwd=working_dir, env=environment,
+                timeout=timeout_seconds, max_output_bytes=max_output_bytes,
             )
+        except _OutputLimitExceeded:
+            dispatch_reasons.append("configured command output exceeded byte limit")
+            break
+        except _ChildCleanupTimedOut:
+            dispatch_reasons.append("configured command child cleanup exceeded timeout")
+            break
         except subprocess.TimeoutExpired:
             dispatch_reasons.append("configured command exceeded timeout")
             break

@@ -298,7 +298,7 @@ def test_task_runner_delegates_execution_to_protected_revalidation(
         calls.append(args)
         return subprocess.CompletedProcess(args, 0, stdout="fixture-pass\n", stderr="")
 
-    monkeypatch.setattr(command_runner.subprocess, "run", fake_run)
+    monkeypatch.setattr(command_runner, "_run_bounded_command", fake_run)
 
     result = run_task_pipeline(
         task_manifest_path=STRICT_MANIFEST_PATH,
