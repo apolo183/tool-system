@@ -1,0 +1,130 @@
+{
+  "plan_id": "ts-b02-delivery-refresh-v1",
+  "target_repo": "apolo183/tool-system",
+  "task_manifest": "docs/reports/ts_b02_delivery_realign_task_manifest_v1.yaml",
+  "changed_files": [
+    "docs/reports/ts_b02_first_working_loop_delivery_v1.md",
+    "docs/reports/ts_b02_delivery_realign_task_manifest_v1.yaml",
+    "docs/reports/ts_b02_delivery_realign_change_plan_v1.json"
+  ],
+  "changes": [
+    {
+      "path": "docs/reports/ts_b02_first_working_loop_delivery_v1.md",
+      "operation": "ADD"
+    },
+    {
+      "path": "docs/reports/ts_b02_delivery_realign_task_manifest_v1.yaml",
+      "operation": "ADD"
+    },
+    {
+      "path": "docs/reports/ts_b02_delivery_realign_change_plan_v1.json",
+      "operation": "ADD"
+    }
+  ],
+  "baseline_commit": "5138363ee8e14b44858f2990447776c2c9127570",
+  "baseline_tree": "05343e52d8faf1c328767129338cd3ffbc40cdd9",
+  "closure": {
+    "task_id": "ts-b02-delivery-refresh-v1",
+    "baseline_commit": "5138363ee8e14b44858f2990447776c2c9127570",
+    "baseline_tree": "05343e52d8faf1c328767129338cd3ffbc40cdd9",
+    "allowed_paths": [
+      "docs/reports/ts_b02_first_working_loop_delivery_v1.md",
+      "docs/reports/ts_b02_delivery_realign_task_manifest_v1.yaml",
+      "docs/reports/ts_b02_delivery_realign_change_plan_v1.json"
+    ],
+    "acceptance_set": [
+      "Exactly the original three planning paths differ from current main; no source, tests, governance, workflow or project-state changes.",
+      "PR 236-240 merged corrections are inherited, without rerunning their historical tests or claiming runtime acceptance.",
+      "The next enforcement source-engineering proposal names component responsibilities, direct dependency handling, deliverables, budgets and the major user decision; unknown exact files and readiness remain explicit.",
+      "Original ARM64/KVM and Route B contracts, six stages, absolute deadlines, cleanup limits, stopped histories and runtime block remain unchanged.",
+      "Local Llama comparison is deferred and never becomes a mainline completion gate; no comparison samples or savings are claimed.",
+      "Manifest schema, explicit pair binding, change-plan scope, task digest, whitespace and current governance checks pass.",
+      "Publish one fast-forward integration update to existing Draft PR 235, preserving its prior head and current main as parents; unchanged Hosted verify passes.",
+      "Stop before Ready, merge, source implementation, deployment, DGX access, model calls or subsequent tasks."
+    ],
+    "validation_set": [
+      "manifest_jsonschema",
+      "explicit_pair_structure_and_scope",
+      "closure_sha256",
+      "exact_three_paths_vs_current_main",
+      "whitespace",
+      "current_governance",
+      "published_head_parent_and_tree_readback",
+      "hosted_verify"
+    ],
+    "budgets": {
+      "seconds_from_record": 3600,
+      "document_repair_cycles": 2,
+      "new_branches": 0,
+      "new_prs": 0,
+      "integration_commits": 1,
+      "hosted_runs": 1,
+      "full_local_test_runs": 0,
+      "independent_review": 0,
+      "subagents": 0,
+      "host_operations": 0,
+      "dependencies_installed": 0,
+      "model_calls": 0,
+      "source_implementation": 0
+    },
+    "terminal_predicate": "Same Draft PR updated and read back with exact three-document tree against current main and successful unchanged Hosted verify; stop at component engineering decision."
+  },
+  "task_digest": "241dc74f332e2285fa9764281f0fd687217bbde3bf57f9f7b847bb96c14a646e",
+  "verification": {
+    "commands": [
+      "git diff --check",
+      "python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml",
+      "python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml",
+      "python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority",
+      "python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md"
+    ],
+    "pass_conditions": [
+      "Exactly the original three planning paths differ from current main; no source, tests, governance, workflow or project-state changes.",
+      "PR 236-240 merged corrections are inherited, without rerunning their historical tests or claiming runtime acceptance.",
+      "The next enforcement source-engineering proposal names component responsibilities, direct dependency handling, deliverables, budgets and the major user decision; unknown exact files and readiness remain explicit.",
+      "Original ARM64/KVM and Route B contracts, six stages, absolute deadlines, cleanup limits, stopped histories and runtime block remain unchanged.",
+      "Local Llama comparison is deferred and never becomes a mainline completion gate; no comparison samples or savings are claimed.",
+      "Manifest schema, explicit pair binding, change-plan scope, task digest, whitespace and current governance checks pass.",
+      "Publish one fast-forward integration update to existing Draft PR 235, preserving its prior head and current main as parents; unchanged Hosted verify passes.",
+      "Stop before Ready, merge, source implementation, deployment, DGX access, model calls or subsequent tasks."
+    ]
+  },
+  "rollback": {
+    "method": "manual_review",
+    "reference": "Original PR head 4541b66ca6016427aaddefe03373144b5ac0ad69 retains the old three documents. Any later reversal is a scoped forward correction, never branch deletion or force reset."
+  },
+  "authority_effect": "none outside this explicitly supplied planning task",
+  "publication": {
+    "branch": "agent/ts-b02-working-loop-delivery-plan-v1",
+    "draft_pr": true,
+    "merge": false,
+    "ready_transition": false,
+    "delete_branch": false,
+    "existing_pr": 235,
+    "new_pr": false,
+    "prior_head": "4541b66ca6016427aaddefe03373144b5ac0ad69",
+    "additional_parent": "5138363ee8e14b44858f2990447776c2c9127570",
+    "force": false,
+    "new_branch": false
+  },
+  "runtime_authority": {
+    "source_implementation": false,
+    "host_probe": false,
+    "deployment": false,
+    "live_worker": false,
+    "downstream_mutation": false,
+    "follow_on": false
+  },
+  "evidence_limits": [
+    "Prior source/CLI evidence is inherited, not rerun.",
+    "Timing begins at saved START_RECORD after preliminary discovery and fixed read-only intake; earlier elapsed is explicitly unmeasured, not a whole-turn runtime claim.",
+    "This records component engineering direction for user decision; next_slice_scope_ready_for_approval and full_implementation_scope_ready_for_approval remain false."
+  ],
+  "history": {
+    "supersedes_planning_text_only": "4541b66ca6016427aaddefe03373144b5ac0ad69",
+    "old_task_id": "ts-b02-working-loop-delivery-plan-v1",
+    "old_task_digest": "f8619a84d491389eb29ea2f4215760b68bbee5bfd9d17aabdf75a81c575732a5",
+    "old_terminal_and_budget_reopened": false,
+    "changes_operation_reference": "ADD relative to current main; MODIFY relative to the same PR prior head; integration inherits already merged main unchanged."
+  }
+}

@@ -1,0 +1,116 @@
+task_id: ts-b02-delivery-refresh-v1
+task_type: docs_modify
+target_repo: apolo183/tool-system
+target_branch: agent/ts-b02-working-loop-delivery-plan-v1
+phase: TS-B02-current-main-delivery-refresh
+approved_blueprint_refs:
+- repo: apolo183/tool-system
+  path: blueprint/tool_system_v0.yaml
+  section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/reports/subscription_worker_ts_b02a_dgx_spark_linux_arm64_primary_target_and_ephemeral_kvm_isolation_path_realignment_specification_v1.md
+    section_or_key: 5-11
+    scope: Preserve ARM64/KVM, isolation and authority; change only the delivery organization
+      under the current user agreement.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Make real isolated code change, validation, bounded repair and cleanup the delivery
+      endpoint, without claiming readiness or granting runtime effects.
+scope:
+  summary: Refresh the same three unmerged planning records and Draft PR with current-main repair
+    evidence and a concrete system-component engineering decision. No source work.
+  in_scope:
+  - Read current main and original PR planning records; inherit sealed source evidence
+  - Update exactly the three planning paths; one existing-branch integration commit with prior
+    head and current main parents
+  - Validate documents and unchanged governance; observe one Hosted verify
+  - Record optional local-model comparison as deferred; retain all runtime blocks
+  out_of_scope:
+  - Source, test, schema, blueprint, governance or project-state edits
+  - New branches or PRs; force pushes; Ready or merge
+  - DGX, host, VM, systemd, cgroup, pidfd, signal, MAC, local-model or provider effects
+  - Dependency installation, full local pytest, subagents or independent review
+  - Starting proposed source engineering or modifying original acceptance
+evidence:
+- repo: apolo183/tool-system
+  path: docs/tool_system_project_state_v1.yaml
+  commit_sha: 5138363ee8e14b44858f2990447776c2c9127570
+  why_relevant: Current public-entry blockers and historical real-worker timeout.
+- repo: apolo183/tool-system
+  path: AGENTS.md
+  commit_sha: 5138363ee8e14b44858f2990447776c2c9127570
+  why_relevant: Existing milestone autonomy and explicit write boundary.
+- repo: apolo183/tool-system
+  path: docs/tool_system_global_development_principles_v1.md
+  commit_sha: 5138363ee8e14b44858f2990447776c2c9127570
+  why_relevant: Frozen acceptance and in-task repair/no-progress requirements.
+- repo: apolo183/tool-system
+  path: config/process_authority_v1.yaml
+  commit_sha: 5138363ee8e14b44858f2990447776c2c9127570
+  why_relevant: Actual explicit task-pair and no-runtime authority boundary.
+- repo: apolo183/tool-system
+  path: docs/reports/ts_b02_first_working_loop_delivery_v1.md
+  commit_sha: 4541b66ca6016427aaddefe03373144b5ac0ad69
+  why_relevant: Original same-PR delivery plan and inherited sealed mechanism evidence; no source
+    re-audit.
+- repo: apolo183/tool-system
+  path: docs/reports/ts_m01_worker_output_v1.md
+  commit_sha: 5138363ee8e14b44858f2990447776c2c9127570
+  why_relevant: Merged latest repair boundary distinguishes source correction from runtime acceptance.
+allowed_files:
+- docs/reports/ts_b02_first_working_loop_delivery_v1.md
+- docs/reports/ts_b02_delivery_realign_task_manifest_v1.yaml
+- docs/reports/ts_b02_delivery_realign_change_plan_v1.json
+forbidden_files:
+- src/**
+- tests/**
+- config/**
+- policy/**
+- blueprint/**
+- harness/**
+- AGENTS.md
+- REPO_MANIFEST.md
+- .github/**
+- docs/tool_system_project_state_v1.yaml
+- docs/tool_system_global_development_principles_v1.md
+write_mode: pull_request
+verification:
+  commands:
+  - git diff --check
+  - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+  - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+  - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml --require-current-authority
+  - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+  - Exactly the original three planning paths differ from current main; no source, tests, governance,
+    workflow or project-state changes.
+  - PR 236-240 merged corrections are inherited, without rerunning their historical tests or
+    claiming runtime acceptance.
+  - The next enforcement source-engineering proposal names component responsibilities, direct
+    dependency handling, deliverables, budgets and the major user decision; unknown exact files
+    and readiness remain explicit.
+  - Original ARM64/KVM and Route B contracts, six stages, absolute deadlines, cleanup limits,
+    stopped histories and runtime block remain unchanged.
+  - Local Llama comparison is deferred and never becomes a mainline completion gate; no comparison
+    samples or savings are claimed.
+  - Manifest schema, explicit pair binding, change-plan scope, task digest, whitespace and current
+    governance checks pass.
+  - Publish one fast-forward integration update to existing Draft PR 235, preserving its prior
+    head and current main as parents; unchanged Hosted verify passes.
+  - Stop before Ready, merge, source implementation, deployment, DGX access, model calls or
+    subsequent tasks.
+rollback:
+  method: manual_review
+  reference: Original PR head 4541b66ca6016427aaddefe03373144b5ac0ad69 retains the old three
+    documents. Any later reversal is a scoped forward correction, never branch deletion or force
+    reset.
+approval:
+  required: true
+  approved_by: user
+  approval_source: 'Current conversation: standing autonomous ordinary development/process instruction
+    and current 下一步 following the delivery plan and agreed deferred Llama comparison. Covers
+    existing Draft planning update only; excludes system-component implementation, deployment,
+    Ready and merge.'
+  approved_at: 2026-09-19; exact user-message timestamp unavailable
