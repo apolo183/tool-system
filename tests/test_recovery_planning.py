@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from tool_system.recovery_planning import (
     BackupEntry,
     BackupManifest,
+    BackupVerification,
     BackupVerificationStatus,
     DisasterRecoveryStatus,
     DrillObservation,
@@ -116,3 +119,118 @@ def test_invalid_manifests_and_observations_fail_closed() -> None:
         BackupManifest(1, "3", 0, SHA_A, ())
     with pytest.raises(ValueError):
         DrillObservation(10, 11, 12)
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"format_version": 2},
+        {"state_version": "3.0.1"},
+        {"snapshot_at_utc": 1_001},
+        {"source_seal_sha256": SHA_B},
+        {"entries": tuple(reversed(_manifest().entries))},
+        {"entries": (BackupEntry("other.sqlite3", SHA_A, 12), _manifest().entries[1])},
+        {"entries": (BackupEntry("state.sqlite3", SHA_B, 12), _manifest().entries[1])},
+        {"entries": (BackupEntry("state.sqlite3", SHA_A, 13), _manifest().entries[1])},
+        {"entries": (_manifest().entries[0],)},
+        {"entries": _manifest().entries + (BackupEntry("extra.json", SHA_A, 1),)},
+    ],
+    ids=["format", "state", "time", "seal", "order", "name", "hash", "length", "missing", "extra"],
+)
+def test_restore_rejects_verification_from_another_manifest(changes) -> None:
+    original = _manifest()
+    verification = verify_backup(manifest=original, observed_entries=original.entries)
+    supplied = replace(original, **changes)
+
+    result = plan_restore(
+        manifest=supplied, verification=verification, migration_plan=_migration()
+    )
+
+    assert result.status is RestoreStatus.BLOCKED
+    assert result.reasons == ("BACKUP_MANIFEST_IDENTITY_MISMATCH",)
+    assert result.restore_order == ()
+    assert result.execution_authorized is False
+
+
+def test_restore_rejects_unbound_pass_without_breaking_legacy_construction() -> None:
+    result = plan_restore(
+        manifest=_manifest(),
+        verification=BackupVerification(BackupVerificationStatus.PASS, ()),
+        migration_plan=_migration(),
+    )
+
+    assert result.status is RestoreStatus.BLOCKED
+    assert result.reasons == ("BACKUP_VERIFICATION_UNBOUND",)
+    assert result.restore_order == ()
+    assert result.execution_authorized is False
+
+
+def test_verification_binding_is_value_based_and_observation_order_independent() -> None:
+    manifest = _manifest()
+    verification = verify_backup(manifest=manifest, observed_entries=manifest.entries)
+    reconstructed = BackupManifest(
+        manifest.format_version,
+        manifest.state_version,
+        manifest.snapshot_at_utc,
+        manifest.source_seal_sha256,
+        tuple(replace(entry) for entry in manifest.entries),
+    )
+    second = verify_backup(
+        manifest=reconstructed, observed_entries=tuple(reversed(reconstructed.entries))
+    )
+
+    assert second == verification
+    assert len(verification.manifest_sha256) == 64
+    assert set(verification.manifest_sha256) <= set("0123456789abcdef")
+    result = plan_restore(
+        manifest=reconstructed, verification=verification, migration_plan=_migration()
+    )
+    assert result.status is RestoreStatus.READY_FOR_SEPARATE_EXECUTION_AUTHORIZATION
+    assert result.restore_order == ("state.sqlite3", "audit.jsonl")
+    assert result.execution_authorized is False
+
+
+def test_restore_rejects_pass_with_failure_reasons_even_when_manifest_matches() -> None:
+    manifest = _manifest()
+    verified = verify_backup(manifest=manifest, observed_entries=manifest.entries)
+    result = plan_restore(
+        manifest=manifest,
+        verification=replace(verified, reasons=("MISSING:state.sqlite3",)),
+        migration_plan=_migration(),
+    )
+
+    assert result.status is RestoreStatus.BLOCKED
+    assert result.reasons == ("BACKUP_VERIFICATION_BLOCKED",)
+    assert result.restore_order == ()
+    assert result.execution_authorized is False
+
+
+def test_bound_failed_verification_still_blocks_restore() -> None:
+    manifest = _manifest()
+    verified = verify_backup(manifest=manifest, observed_entries=())
+    result = plan_restore(
+        manifest=manifest, verification=verified, migration_plan=_migration()
+    )
+
+    assert verified.manifest_sha256 is not None
+    assert verified.status is BackupVerificationStatus.BLOCKED
+    assert result.status is RestoreStatus.BLOCKED
+    assert result.reasons == ("BACKUP_VERIFICATION_BLOCKED",)
+    assert result.restore_order == ()
+    assert result.execution_authorized is False
+
+
+@pytest.mark.parametrize("digest", ["", "not-a-sha256", "f" * 64])
+def test_restore_rejects_invalid_or_unrelated_binding(digest: str) -> None:
+    manifest = _manifest()
+    verified = verify_backup(manifest=manifest, observed_entries=manifest.entries)
+    result = plan_restore(
+        manifest=manifest,
+        verification=replace(verified, manifest_sha256=digest),
+        migration_plan=_migration(),
+    )
+
+    assert result.status is RestoreStatus.BLOCKED
+    assert result.reasons == ("BACKUP_MANIFEST_IDENTITY_MISMATCH",)
+    assert result.restore_order == ()
+    assert result.execution_authorized is False

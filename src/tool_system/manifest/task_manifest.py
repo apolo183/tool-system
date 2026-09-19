@@ -2,14 +2,21 @@ from __future__ import annotations
 
 import json
 import math
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-_TASK_MANIFEST_SCHEMA_PATH = (
-    Path(__file__).resolve().parents[3] / "harness" / "task_manifest.schema.json"
-)
+_TASK_MANIFEST_SCHEMA_PATH = files(__package__).joinpath("task_manifest.schema.json")
+# Editable/source checkouts use the sole authority at the known src-layout root.
+# Installed distributions read their packaged projection, never a cwd-selected file.
+_SOURCE_DIRECTORY = Path(__file__).resolve().parent
+if (not _TASK_MANIFEST_SCHEMA_PATH.is_file()
+        and _SOURCE_DIRECTORY.parts[-3:] == ("src", "tool_system", "manifest")):
+    _TASK_MANIFEST_SCHEMA_PATH = (
+        _SOURCE_DIRECTORY.parents[2] / "harness" / "task_manifest.schema.json"
+    )
 
 
 def load_yaml_file(path: str | Path) -> dict[str, Any]:

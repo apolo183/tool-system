@@ -8,6 +8,7 @@ from tool_system.orchestrator import (
     AuthorizationReplay,
     DurableOrchestratorStore,
     LeaseConflict,
+    RetryExhausted,
     StateConflict,
 )
 
@@ -308,6 +309,7 @@ def test_expired_last_attempt_becomes_terminal_failed(tmp_path: Path) -> None:
     recovered = store.recover_expired_leases()
 
     assert recovered[0]["status"] == "FAILED"
+    assert _store(tmp_path, clock).get_run("run-1")["status"] == "FAILED"
     with pytest.raises(StateConflict, match="terminal"):
         store.claim_task("run-1", "task-1", lease_owner="worker-b", lease_seconds=1)
 
@@ -326,6 +328,7 @@ def test_retryable_failure_requeues_until_attempt_budget_is_used(
         retryable=True,
         checkpoint={"failed_at": 1},
     )
+    assert store.get_run("run-1")["status"] == "ACTIVE"
     store.claim_task("run-1", "task-1", lease_owner="worker", lease_seconds=10)
     second = store.fail_task(
         "run-1",
@@ -338,6 +341,57 @@ def test_retryable_failure_requeues_until_attempt_budget_is_used(
     assert first["status"] == "READY"
     assert first["checkpoint"] == {"failed_at": 1}
     assert second["status"] == "FAILED"
+    assert _store(tmp_path).get_run("run-1")["status"] == "FAILED"
+
+
+def test_exhausted_claim_commits_failure_before_raising(tmp_path: Path) -> None:
+    clock = Clock()
+    store = _store(tmp_path, clock)
+    _task(store, max_attempts=1)
+    store.claim_task("run-1", "task-1", lease_owner="first", lease_seconds=1)
+    clock.advance(2)
+
+    with pytest.raises(RetryExhausted):
+        store.claim_task("run-1", "task-1", lease_owner="second", lease_seconds=1)
+
+    reopened = _store(tmp_path, clock)
+    assert reopened.get_task("run-1", "task-1")["status"] == "FAILED"
+    assert reopened.get_task("run-1", "task-1")["attempt"] == 1
+    assert reopened.get_run("run-1")["status"] == "FAILED"
+
+
+@pytest.mark.parametrize("peer_fails", [False, True])
+def test_failed_run_converges_only_after_all_registered_tasks_are_terminal(
+    tmp_path: Path, peer_fails: bool
+) -> None:
+    store = _store(tmp_path)
+    _task(store)
+    store.add_task(
+        "run-1", "task-2", idempotency_key="peer", expected_precondition_sha=SHA
+    )
+    store.create_run("unrelated", blueprint_ref="other", manifest_ref="other")
+    store.claim_task("run-1", "task-1", lease_owner="first", lease_seconds=10)
+    store.fail_task(
+        "run-1", "task-1", lease_owner="first", attempt=1, retryable=False
+    )
+    assert store.get_run("run-1")["status"] == "ACTIVE"
+    store.claim_task("run-1", "task-2", lease_owner="second", lease_seconds=10)
+    if peer_fails:
+        store.fail_task(
+            "run-1", "task-2", lease_owner="second", attempt=1, retryable=False
+        )
+    else:
+        store.complete_task("run-1", "task-2", lease_owner="second", attempt=1)
+
+    reopened = _store(tmp_path)
+    assert reopened.get_run("run-1")["status"] == "FAILED"
+    assert reopened.get_run("unrelated")["status"] == "ACTIVE"
+    with pytest.raises(StateConflict, match="ACTIVE"):
+        reopened.add_task(
+            "run-1", "task-3", idempotency_key="new", expected_precondition_sha=SHA
+        )
+    with pytest.raises(StateConflict):
+        reopened.complete_run("run-1")
 
 
 def test_idempotent_registration_requires_identical_content(tmp_path: Path) -> None:

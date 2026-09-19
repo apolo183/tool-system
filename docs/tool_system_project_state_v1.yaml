@@ -2378,3 +2378,128 @@ independent_audit_acceptance_reopen:
     cleanup_operations: 0
     rollback_operations: 0
   stop_boundary: merge_governance_reopen_then_stop_before_any_finding_correction_or_v3_acceptance
+
+# Bounded correction record; no historical acceptance or execution authority changes.
+ts_h04_h05_repair_and_h06_publication_record:
+  role: descriptive_repair_evidence_only
+  authority_effect: none
+  baseline_commit: 75d005cee55a0e33bea17808faaba3085f740d8c
+  record: docs/reports/ts_h04_h05_installation_and_behavior_repair_v1.md
+  task_manifest: docs/reports/ts_h04_h05_installation_and_behavior_repair_v1_task.yaml
+  change_plan: docs/reports/ts_h04_h05_installation_and_behavior_repair_v1_plan.yaml
+  status: source_correction_pending_separate_merge_and_runtime_reacceptance
+  h06:
+    observed_pr: 234
+    observed_head: b62039d267abcf5fcbb3edcdffd0b6e07ed76263
+    observed_merge: 75d005cee55a0e33bea17808faaba3085f740d8c
+    pr_body_requests_draft: true
+    ready_and_merge_events_observed: true
+    historical_external_lifecycle_authorization: UNKNOWN
+    historical_unauthorized_action_proved: false
+    retroactive_approval_granted: false
+  current_batch:
+    draft_pr_authorized: true
+    ready_authorized: false
+    merge_authorized: false
+    auto_merge_authorized: false
+    real_repository_execution_blocked: true
+    real_codex_execution_observed: false
+    real_backend_acceptance_executed: false
+
+# Local source evidence; historical audit and v2 receipts above remain unchanged.
+ts_h01_worker_failure_accounting_and_terminal_repair:
+  role: descriptive_source_repair_evidence_only
+  authority_effect: none
+  baseline_commit: e664a2c5fbaee5aac48d848e645b47cd917974db
+  baseline_tree: 50cd400daba4e63e1b8bb56f1764c85b572ee3ca
+  record: docs/reports/ts_h01_worker_failure_repair_v1.md
+  task_manifest: docs/reports/ts_h01_worker_failure_repair_v1_task.yaml
+  change_plan: docs/reports/ts_h01_worker_failure_repair_v1_plan.yaml
+  status: source_correction_pending_publication_and_runtime_reacceptance
+  correction_scope:
+    validation_command_invocations: actual_dispatch_attempts_in_current_public_call
+    completed_replay_validation_invocations: zero
+    terminal_failed_task_set: atomically_projects_existing_failed_run_state
+    retryable_or_unfinished_task_set: remains_active
+    exhausted_claim: persists_terminal_failure_before_raising
+    historical_database_migration_performed: false
+    public_interface_or_schema_changes: false
+    timeout_root_cause_established: false
+  delivery_plan:
+    existing_draft_pr: 235
+    modified_in_this_task: false
+  publication:
+    local_patch_only: true
+    remote_writes: 0
+    ready_authorized: false
+    merge_authorized: false
+  acceptance:
+    public_entry_reaccepted: false
+    real_codex_execution_observed: false
+    real_backend_acceptance_executed: false
+    real_repository_execution_blocked: true
+
+# New source correction; the sealed audit and acceptance snapshots above remain historical.
+ts_h02_recovery_verification_binding_repair:
+  role: descriptive_source_repair_evidence_only
+  authority_effect: none
+  baseline_commit: cf696a62c14fbc70cd6204653179d3dbb9b8897e
+  baseline_tree: ab80752dc398de9b1428e3d634e82ee2933d037a
+  record: docs/reports/ts_h02_recovery_binding_v1.md
+  task_manifest: docs/reports/ts_h02_recovery_binding_v1_task.yaml
+  change_plan: docs/reports/ts_h02_recovery_binding_v1_plan.yaml
+  status: source_correction_verified_pending_publication_and_reacceptance
+  correction_scope:
+    complete_ordered_manifest_sha256: required_before_ready_restore_plan
+    missing_or_mismatched_binding: blocked_with_empty_restore_order
+    inconsistent_pass_with_failure_reasons: blocked
+    physical_backup_read_or_restore: false
+    caller_authentication_proved: false
+    legacy_unbound_result_authorizes_planning: false
+  local_verification:
+    focused_tests_passed: 61
+    full_tests_passed: 1112
+    current_governance_validators_passed: 4
+    independent_review_performed: false
+  acceptance:
+    p16d_reaccepted: false
+    available_for_dependent_acceptance: false
+    real_restore_executed: false
+    real_codex_execution_observed: false
+    real_backend_acceptance_executed: false
+    real_repository_execution_blocked: true
+
+# Scoped source repair; historical findings remain retained snapshots.
+ts_m01_bounded_command_output_repair:
+  role: descriptive_source_repair_evidence_only
+  authority_effect: none
+  baseline_commit: 827821191e58ccb644750fdfcd9c62b8418707f0
+  record: docs/reports/ts_m01_bounded_output_v1.md
+  task_manifest: docs/reports/ts_m01_bounded_output_v1_task.yaml
+  change_plan: docs/reports/ts_m01_bounded_output_v1_plan.yaml
+  status: source_correction_locally_validated_pending_pr_ci
+  correction_scope: command_runner_per_stream_capture_and_direct_child_wait
+  worker_adapter_output_limit_corrected: false
+  full_ts_m01_closed: false
+  windows_execution_verified: false
+  descendant_cleanup_proved: false
+  real_backend_acceptance_executed: false
+  real_repository_execution_blocked: true
+
+# Source evidence only; no runtime or independent milestone acceptance.
+ts_m01_bounded_worker_output_repair:
+  role: descriptive_source_repair_evidence_only
+  authority_effect: none
+  baseline_commit: 99b579e214de9cb57478539d6bf3d7dce151c1cc
+  record: docs/reports/ts_m01_worker_output_v1.md
+  task_manifest: docs/reports/ts_m01_worker_output_v1_task.yaml
+  change_plan: docs/reports/ts_m01_worker_output_v1_plan.yaml
+  status: source_correction_locally_validated_pending_pr_ci
+  correction_scope: combined_worker_pipe_capture_with_concurrent_stdin
+  command_source_correction_ref: docs/reports/ts_m01_bounded_output_v1.md
+  independent_ts_m01_acceptance_complete: false
+  windows_execution_verified: false
+  descendant_cleanup_proved: false
+  real_codex_execution_observed: false
+  real_backend_acceptance_executed: false
+  real_repository_execution_blocked: true

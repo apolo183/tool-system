@@ -29,8 +29,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
 
-      - name: Run tests
-        run: python -m pytest -q
+      - name: Verify installed wheel from sdist outside checkout
+        run: python -m pytest -q tests/test_installed_manifest.py
+
+      - name: Run remaining tests
+        run: python -m pytest -q --ignore=tests/test_installed_manifest.py
 
       - name: Validate active gates
         run: python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml

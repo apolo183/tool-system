@@ -215,7 +215,7 @@ def _bound_subscription_task_pair(
     query_terms: list[str],
     seed_paths: list[str],
 ) -> tuple[Path, Path]:
-    manifest = load_yaml_file(MANIFEST_PATH)
+    manifest = load_yaml_file(STRICT_MANIFEST_PATH)
     manifest["subscription_public_entry"] = {
         "binding_version": "subscription_public_entry_authority_binding_v1",
         "enabled": True,
@@ -240,7 +240,7 @@ def _bound_subscription_task_pair(
         encoding="utf-8",
     )
 
-    plan = load_yaml_file(PLAN_PATH)
+    plan = load_yaml_file(STRICT_PLAN_PATH)
     plan["task_manifest"] = manifest_path.as_posix()
     plan_path = tmp_path / "bound-change-plan.yaml"
     plan_path.write_text(
@@ -298,7 +298,7 @@ def test_task_runner_delegates_execution_to_protected_revalidation(
         calls.append(args)
         return subprocess.CompletedProcess(args, 0, stdout="fixture-pass\n", stderr="")
 
-    monkeypatch.setattr(command_runner.subprocess, "run", fake_run)
+    monkeypatch.setattr(command_runner, "_run_bounded_command", fake_run)
 
     result = run_task_pipeline(
         task_manifest_path=STRICT_MANIFEST_PATH,
@@ -479,8 +479,6 @@ def test_subscription_public_entry_preflight_freezes_manifest_bound_packet(
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
     )
 
-    _assert_schema_blocked_before_effects(result)
-    return
 
     assert result["status"] == "PASS"
     assert result["worker_execution_authorized"] is False
@@ -608,7 +606,10 @@ def test_subscription_public_entry_preflight_detects_pair_byte_drift(
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
     )
 
-    _assert_schema_blocked_before_effects(result)
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_AUTHORITY_BINDING_BLOCKED"
+    assert result["reasons"] == ["SUBSCRIPTION_AUTHORITY_INPUT_DRIFT"]
+    assert result["provider_invocations"] == 0
 
 
 def test_subscription_public_entry_preflight_rejects_input_before_file_reads() -> None:
@@ -664,8 +665,6 @@ def test_subscription_public_entry_context_compiles_manifest_bound_snapshot(
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
     )
 
-    _assert_schema_blocked_before_effects(result)
-    return
 
     assert result["status"] == "PASS"
     assert result["terminal_code"] == "SUBSCRIPTION_CONTEXT_COMPILATION_PASS"
@@ -760,7 +759,10 @@ def test_subscription_public_entry_context_blocks_stale_bound_snapshot(
         autonomy_policy_path=ROOT / "policy/autonomy_policy.yaml",
     )
 
-    _assert_schema_blocked_before_effects(result)
+    assert result["status"] == "BLOCK"
+    assert result["terminal_code"] == "SUBSCRIPTION_CONTEXT_COMPILATION_BLOCKED"
+    assert result["reasons"] == ["STALE_EXPECTED_HEAD"]
+    assert result["worker_invocations"] == 0
 
 
 def test_subscription_context_compiler_package_freezes_exact_scope() -> None:
@@ -1293,9 +1295,6 @@ def test_subscription_public_entry_executes_one_fake_worker_local_commit(
         adapter=adapter,
     )
 
-    _assert_schema_blocked_before_effects(result)
-    assert calls == []
-    return
     assert result["terminal_code"] == "LOCAL_COMMIT_RECORDED"
     assert result["worker_invocations"] == 1
     assert result["validation_command_invocations"] == 1
@@ -1348,6 +1347,7 @@ def test_subscription_public_entry_executes_one_fake_worker_local_commit(
     assert replay["status"] == "PASS", replay
     assert replay["terminal_code"] == "RESUMED_COMPLETED_LOCAL_COMMIT"
     assert replay["commit"] == result["commit"]
+    assert replay["validation_command_invocations"] == 0
     assert len(calls) == 1
     assert _fixture_git(
         workspace,
@@ -1434,8 +1434,6 @@ def test_subscription_timeout_is_consumed_before_fake_process_and_preserved(
         adapter=adapter,
     )
 
-    _assert_schema_blocked_before_effects(result)
-    return
     connection = sqlite3.connect(state)
     try:
         durable_call = connection.execute(
@@ -1444,6 +1442,9 @@ def test_subscription_timeout_is_consumed_before_fake_process_and_preserved(
             FROM worker_calls
             """
         ).fetchone()
+        terminal_states = connection.execute(
+            "SELECT tasks.status, runs.status FROM tasks JOIN runs USING (run_id)"
+        ).fetchall()
     finally:
         connection.close()
     assert observed_rows == [(1, "STARTED")]
@@ -1457,6 +1458,8 @@ def test_subscription_timeout_is_consumed_before_fake_process_and_preserved(
     assert result["terminal_code"] == "SUBSCRIPTION_WORKER_TIMEOUT"
     assert result["worker_invocations"] == 1
     assert result["durable_lease_seconds"] >= 17 + (2 * 3)
+    assert result["validation_command_invocations"] == 0
+    assert terminal_states == [("FAILED", "FAILED")]
     assert result["local_git_operations"] == 0
     assert result["branch"] is None
     assert result["commit"] is None
@@ -1544,8 +1547,6 @@ def test_subscription_public_entry_unknown_local_commit_has_no_replay_authority(
     )
 
     assert result["status"] == "BLOCK"
-    _assert_schema_blocked_before_effects(result)
-    return
     assert calls == 0
     assert _fixture_git(
         workspace,
@@ -2004,9 +2005,6 @@ def test_unrelated_pass_does_not_satisfy_wrong_candidate(
     )
 
     assert result["status"] == "BLOCK", result
-    _assert_schema_blocked_before_effects(result)
-    assert calls == []
-    return
     assert result["worker_invocations"] == 1
     assert len(calls) == 1
     assert _fixture_git(
@@ -2028,9 +2026,6 @@ def test_subscription_public_entry_multi_stack_implementation(
     result = _run_multi_stack(
         context, _multi_stack_adapter(context, "implementation", calls)
     )
-    _assert_schema_blocked_before_effects(result)
-    assert calls == []
-    return
     assert result["terminal_code"] == "LOCAL_COMMIT_RECORDED"
     assert result["worker_invocations"] == 1
     assert len(calls) == 1
@@ -2056,9 +2051,6 @@ def test_subscription_public_entry_multi_stack_repair(
     result = _run_multi_stack(
         context, _multi_stack_adapter(context, "repair", calls)
     )
-    _assert_schema_blocked_before_effects(result)
-    assert calls == []
-    return
     assert result["worker_invocations"] == 2
     assert result["validation_command_invocations"] == 2
     assert calls[1]["candidate_files"][context["spec"]["source"]] == (
@@ -2081,9 +2073,7 @@ def test_subscription_public_entry_multi_stack_scope_denial(
         context, _multi_stack_adapter(context, "scope_denial", calls)
     )
     assert result["status"] == "BLOCK"
-    _assert_schema_blocked_before_effects(result)
-    assert calls == []
-    return
+    assert result["validation_command_invocations"] == 0
     assert len(calls) == 1
     assert _fixture_git(
         context["workspace"], "rev-list", "--count",
@@ -2111,9 +2101,7 @@ def test_subscription_public_entry_multi_stack_cancellation(
         cancelled,
     )
     assert result["status"] == "BLOCK"
-    _assert_schema_blocked_before_effects(result)
-    assert calls == []
-    return
+    assert result["validation_command_invocations"] == 0
     assert len(calls) == 1
     assert (context["workspace"] / context["spec"]["source"]).read_text(
         encoding="utf-8"
@@ -2133,14 +2121,13 @@ def test_subscription_public_entry_multi_stack_completed_replay(
     calls: list[dict[str, object]] = []
     adapter = _multi_stack_adapter(context, "implementation", calls)
     first = _run_multi_stack(context, adapter)
-    _assert_schema_blocked_before_effects(first)
-    assert calls == []
-    return
     second = _run_multi_stack(context, adapter)
     assert first["status"] == "PASS", first
     assert second["status"] == "PASS", second
     assert second["terminal_code"] == "RESUMED_COMPLETED_LOCAL_COMMIT"
     assert second["commit"] == first["commit"]
+    assert first["validation_command_invocations"] == 1
+    assert second["validation_command_invocations"] == 0
     assert len(calls) == 1
     assert _fixture_git(
         context["workspace"], "rev-list", "--count",
@@ -2179,9 +2166,6 @@ def test_subscription_public_entry_multi_stack_unreceipted_advance_blocks(
         context, _multi_stack_adapter(context, "implementation", calls)
     )
     assert result["status"] == "BLOCK"
-    _assert_schema_blocked_before_effects(result)
-    assert calls == []
-    return
     assert calls == []
     assert _fixture_git(
         workspace, "rev-list", "--count", f"{context['head']}..HEAD"

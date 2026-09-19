@@ -265,6 +265,7 @@ def test_codex_subscription_adapter_uses_schema_final_message_stdin_and_minimal_
     assert observed["shell"] is False
     assert observed["timeout"] == 17
     assert observed["termination_grace_seconds"] == 3
+    assert observed["max_output_bytes"] == 1_048_576
     assert observed["schema"]["additionalProperties"] is False
     assert observed["schema"]["required"] == ["operations"]
     assert observed["schema_mode"] == 0o600
@@ -430,6 +431,7 @@ def test_codex_subscription_adapter_rejects_invalid_jsonl_event_stream() -> None
 
 class _TimeoutProcess:
     pid = 4242
+    stdin = stdout = stderr = None
     returncode = -1
 
     def __init__(self, wait_outcomes: list[str]) -> None:
@@ -471,6 +473,7 @@ class _TimeoutProcess:
 def test_codex_process_timeout_cancels_posix_process_group(
     wait_outcomes: list[str],
     expected_signals: list[int],
+    monkeypatch,
 ) -> None:
     process = _TimeoutProcess(list(wait_outcomes))
     group_signals: list[tuple[int, int]] = []
@@ -479,6 +482,12 @@ def test_codex_process_timeout_cancels_posix_process_group(
         process.popen_options = kwargs
         return process
 
+    from tool_system.worker_adapter import contract
+    def timeout_exchange(process, selector, prompt, deadline, argv, timeout, limit):
+        process.communicate_input = bytes(prompt).decode()
+        process.communicate_timeout = timeout
+        raise subprocess.TimeoutExpired(argv, timeout)
+    monkeypatch.setattr(contract, "_exchange_codex_streams", timeout_exchange)
     with pytest.raises(subprocess.TimeoutExpired):
         _run_codex_process(
             ["codex", "exec", "-"],
@@ -501,3 +510,108 @@ def test_codex_process_timeout_cancels_posix_process_group(
     assert process.communicate_input == "structured prompt"
     assert process.communicate_timeout == 17
     assert group_signals == [(process.pid, item) for item in expected_signals]
+
+
+@pytest.mark.parametrize('stream', [1, 2])
+def test_subscription_stream_overflow_is_detected_before_timeout(stream, tmp_path):
+    import functools
+    import sys
+    from tool_system.worker_adapter import contract
+
+    children = []
+    def fixture_popen(argv, **options):
+        child = subprocess.Popen(
+            [sys.executable, '-c',
+             f'import os,time; os.write({stream}, b"x" * 4096); time.sleep(20)'],
+            **options,
+        )
+        children.append(child)
+        return child
+    adapter = CodexCLISubscriptionWorkerAdapter(
+        CodexCLIAdapterConfig(executable="codex", enabled=True, max_output_bytes=32, timeout_seconds=1,
+                              termination_grace_seconds=1),
+        process_runner=functools.partial(contract._run_codex_process,
+                                        popen_factory=fixture_popen),
+        source_environment={},
+    )
+    request = _subscription_request()
+    request.context['workspace'] = str(tmp_path)
+    result = adapter.run(request)
+    assert result.terminal_code == 'SUBSCRIPTION_WORKER_OUTPUT_LIMIT'
+    assert result.status == 'BLOCK'
+    assert result.output['raw_output_recorded'] is False
+    assert len(children) == 1 and children[0].poll() is not None
+    assert all(s.closed for s in (children[0].stdin, children[0].stdout, children[0].stderr))
+
+
+def _fixture_exchange(tmp_path, code, *, prompt='', limit=1_048_576, timeout=2, children=None):
+    import sys
+    def factory(argv, **options):
+        child = subprocess.Popen(argv, **options)
+        if children is not None:
+            children.append(child)
+        return child
+    return _run_codex_process(
+        [sys.executable, '-c', code], cwd=str(tmp_path), env={}, shell=False,
+        check=False, capture_output=True, text=True, timeout=timeout, input=prompt,
+        termination_grace_seconds=1, max_output_bytes=limit, popen_factory=factory,
+    )
+
+
+def test_worker_duplex_exchange_exact_combined_limit(tmp_path):
+    prompt = 'p' * 262144
+    code = ('import os,sys; '
+            'os.write(1,b"a"*65536); os.write(2,b"b"*65536); '
+            'data=sys.stdin.buffer.read(); '
+            'sys.exit(0 if data==b"p"*262144 else 8)')
+    result = _fixture_exchange(tmp_path, code, prompt=prompt, limit=131072)
+    assert result.stdout == 'a' * 65536
+    assert result.stderr == 'b' * 65536
+    assert result.returncode == 0
+
+
+def test_worker_limit_combines_both_streams(tmp_path, monkeypatch):
+    from tool_system.worker_adapter import contract
+    reads = []
+    real_read = contract.os.read
+    def read(fd, count):
+        reads.append(count)
+        return real_read(fd, count)
+    # Popen also reads its launch-error pipe, so record only the exchange phase.
+    real_exchange = contract._exchange_codex_streams
+    def exchange(*args):
+        monkeypatch.setattr(contract.os, 'read', read)
+        return real_exchange(*args)
+    monkeypatch.setattr(contract, '_exchange_codex_streams', exchange)
+    children = []
+    with pytest.raises(OverflowError):
+        _fixture_exchange(tmp_path,
+            'import os,time; os.write(1,b"a"*24); os.write(2,b"b"*24); time.sleep(20)',
+            limit=32, children=children)
+    assert reads and max(reads) <= 33
+    assert children[0].poll() is not None
+    assert all(s.closed for s in (children[0].stdin, children[0].stdout, children[0].stderr))
+
+
+@pytest.mark.parametrize('code,prompt', [
+    ('import time; time.sleep(20)', 'p' * 262144),
+    ('import os,time; os.close(1); os.close(2); time.sleep(20)', ''),
+])
+def test_worker_deadline_covers_blocked_input_and_child_wait(tmp_path, code, prompt):
+    import time
+    children = []
+    started = time.monotonic()
+    with pytest.raises(subprocess.TimeoutExpired):
+        _fixture_exchange(tmp_path, code, prompt=prompt, timeout=1, children=children)
+    assert time.monotonic() - started < 5
+    assert children[0].poll() is not None
+    assert all(s.closed for s in (children[0].stdin, children[0].stdout, children[0].stderr))
+
+
+def test_worker_early_stdin_close_preserves_text_and_exit(tmp_path):
+    result = _fixture_exchange(tmp_path,
+        'import os,sys; os.close(0); os.write(1,b"ok\\r\\n"); os.write(2,b"err\\r"); sys.exit(7)',
+        prompt='p' * 262144)
+    assert result.stdout == 'ok\n'
+    assert result.stderr == 'err\n'
+    assert result.returncode == 7

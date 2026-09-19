@@ -1012,9 +1012,11 @@ def test_real_jsonl_and_yaml_writers_persist_data_in_task_tmp(
 
 
 def test_real_callers_prove_direct_and_delegated_effect_boundaries() -> None:
-    assert "subprocess.run" in _call_names(
+    command_calls = _call_names(
         ROOT / "src" / "tool_system" / "gate" / "command_runner.py"
     )
+    assert "subprocess.Popen" in command_calls
+    assert "subprocess.run" not in command_calls
     assert "run_commands" in _call_names(
         ROOT / "src" / "tool_system" / "runner" / "task_runner.py"
     )

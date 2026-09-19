@@ -1,0 +1,97 @@
+task_id: ts-h04-h05-repair-and-h06-publication-record-v1
+task_type: code_modify
+target_repo: apolo183/tool-system
+target_branch: agent/ts-h04-h05-installation-and-tests-v1
+phase: BOUNDED_AUDIT_REPAIR
+approved_blueprint_refs:
+- repo: apolo183/tool-system
+  path: blueprint/tool_system_v0.yaml
+  section_or_key: product_objective
+alignment:
+  parent:
+    document: docs/modules/task-runner-contract-v1.md
+    section_or_key: module_compound_contract.input_contract
+    scope: Restore strict manifest-bound declared public-entry behavior and truthful
+      tests.
+  global:
+    document: blueprint/tool_system_v0.yaml
+    section_or_key: product_objective
+    scope: Deliver reliable installation and independently exercised local fake-I/O
+      behavior without real-execution authority.
+scope:
+  summary: Repair installed manifest validation and restore public-entry fake-I/O
+    behavior coverage; document H06 observed facts.
+  in_scope: &id001
+  - pyproject.toml
+  - harness/build_support.py
+  - harness/task_manifest.schema.json
+  - src/tool_system/manifest/task_manifest.py
+  - src/tool_system/runner/task_runner.py
+  - tests/test_task_manifest_policy.py
+  - tests/test_task_runner.py
+  - tests/test_installed_manifest.py
+  - .github/workflows/tool-system-ci.yml
+  - docs/modules/manifest-validation-contract-v1.md
+  - docs/modules/task-runner-contract-v1.md
+  - config/module_registry_v1.yaml
+  - REPO_MANIFEST.md
+  - docs/tool_system_project_state_v1.yaml
+  - docs/reports/ts_h04_h05_installation_and_behavior_repair_v1.md
+  - docs/reports/ts_h04_h05_installation_and_behavior_repair_v1_task.yaml
+  - docs/reports/ts_h04_h05_installation_and_behavior_repair_v1_plan.yaml
+  - tests/test_repo_manifest.py
+  out_of_scope:
+  - real worker/provider/target execution
+  - DGX/systemd/kernel/MAC work
+  - merge/Ready/auto-merge/branch deletion
+  - unrelated audit issues
+  - PR235 changes
+evidence:
+- repo: apolo183/tool-system
+  path: src/tool_system/manifest/task_manifest.py
+  why_relevant: Schema currently resolves outside installed package.
+- repo: apolo183/tool-system
+  path: tests/test_task_runner.py
+  why_relevant: Twelve early returns prevent behavioral assertions.
+- repo: apolo183/tool-system
+  path: docs/modules/task-runner-contract-v1.md
+  why_relevant: Existing strict public-entry obligations to preserve.
+allowed_files: *id001
+forbidden_files:
+- finance/**
+- trading/**
+write_mode: pull_request
+verification:
+  commands:
+  - python -m pytest -q tests/test_task_manifest_policy.py tests/test_task_runner.py
+    tests/test_installed_manifest.py
+  - python -m pytest -q
+  - python -m tool_system.cli.validate_active_gates tests/fixtures/manifest_validation/strict_active_gates_v1.yaml
+  - python -m tool_system.cli.validate_process_authority config/process_authority_v1.yaml
+  - python -m tool_system.cli.validate_module_registry config/module_registry_v1.yaml
+    --require-current-authority
+  - python -m tool_system.cli.validate_repo_manifest REPO_MANIFEST.md
+  pass_conditions:
+  - Installed non-editable wheel validates strict manifests outside the source checkout,
+    using a byte-equivalent packaged projection of the canonical schema; wheel built
+    from sdist preserves the resource.
+  - Both existing public entry mappings have closed typed schema definitions; all
+    existing exact runtime authorization and no-real-execution boundaries remain.
+  - Twelve early-return test functions reach their original behavior checks using
+    valid current fixtures; genuine schema rejection tests remain separate; necessary
+    behavior repairs remain bounded.
+  - H06 report binds observed PR234 body/events/head and states historical external
+    authorization UNKNOWN; no retroactive approval, four-Gate reopening, or lifecycle
+    mutation.
+  - Focused tests, installed artifact check, at most two full regressions, and existing
+    four governance validators pass; one new branch and one Draft PR with exact head
+    CI evidence.
+rollback:
+  method: git_revert
+  reference: Retain baseline 75d005cee55a0e33bea17808faaba3085f740d8c; close unmerged
+    PR if necessary; no automatic rollback.
+approval:
+  required: true
+  approved_by: apolo183
+  approval_source: chat_user_message:同意授权:H04-H05-repair-H06-record
+  approved_at: '2026-09-17T00:27:35.148557+00:00'
